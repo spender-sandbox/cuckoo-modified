@@ -45,6 +45,7 @@ The following libraries are not strictly required, but their installation is rec
     * `Volatility`_ (Optional): used for forensic analysis on memory (release >=2.4)
     * `MAEC Python bindings`_ (Optional): used for MAEC reporting (use a release >=4.0, but <4.1).
     * `Chardet`_ (Optional): used for detecting string encoding.
+    * `pygal_ (Optional): for using statistics in ``web.py``
 
 Some of them are already packaged in Debian/Ubuntu and can be installed with the following command::
 
@@ -52,7 +53,7 @@ Some of them are already packaged in Debian/Ubuntu and can be installed with the
 
 Except for *python-magic*, *python-dpkt* and *python-libvirt*, the others can be installed through ``pip`` too::
 
-    $ sudo pip install jinja2 pymongo bottle pefile django chardet
+    $ sudo pip install jinja2 pymongo bottle pefile django chardet pygal
 
 To have MAEC support, you need to first install the Cybox and then the MAEC libraries::
 
@@ -78,6 +79,7 @@ If want to use KVM it's packaged too and you can install it with the following c
 .. _Volatility: https://github.com/volatilityfoundation/
 .. _MAEC Python bindings: https://pypi.python.org/pypi/maec/4.0.1.0
 .. _Chardet: https://pypi.python.org/pypi/chardet
+.. _pygal: http://pygal.org/
 
 Virtualization Software
 =======================
