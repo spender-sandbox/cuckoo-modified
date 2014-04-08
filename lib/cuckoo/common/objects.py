@@ -28,6 +28,12 @@ try:
 except ImportError:
     HAVE_YARA = False
 
+try:
+    import clamd
+    HAVE_CLAMAV = True
+except ImportError:
+    HAVE_CLAMAV = False
+    
 log = logging.getLogger(__name__)
 
 FILE_CHUNK_SIZE = 16 * 1024
@@ -251,6 +257,28 @@ class File:
                 log.warning("Unable to import yara (please compile from sources)")
 
         return matches
+    def get_clamav(self):
+        """Get Yara signatures matches.
+        @return: matched Yara signatures.
+        """
+        matches = None
+
+        if HAVE_CLAMAV:
+            if os.path.getsize(self.file_path) > 0:
+                try:
+                    cd = clamd.ClamdUnixSocket()
+                except:
+                    log.warning("failed to connect to clamd socket")
+                    return matches
+                try:
+                    r=cd.scan(self.file_path)
+                except Exception as e:
+                    log.warning("failed to scan file with clamav" % (e))
+                    return matches
+                for key in r:
+                    if r[key][0] == "FOUND":
+                        matches = r[key][1]
+        return matches
 
     def get_all(self):
         """Get all information available.
@@ -269,5 +297,5 @@ class File:
         infos["ssdeep"] = self.get_ssdeep()
         infos["type"] = self.get_type()
         infos["yara"] = self.get_yara()
-
+        infos["clamav"] = self.get_clamav()
         return infos

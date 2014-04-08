@@ -39,6 +39,16 @@
                 <td>{{analysis.target.file.ssdeep}}</td>
             </tr>
             <tr>
+                <th>ClamAV</th>
+                <td>
+                {% if analysis.target.file.clamav %}
+                    {{analysis.target.file.clamav}}
+                {% else %}
+                    None matched
+                {% endif %}
+                </th>
+            </tr>
+            <tr>
                 <th>Yara</th>
                 <td>
                 {% if analysis.target.file.yara %}
