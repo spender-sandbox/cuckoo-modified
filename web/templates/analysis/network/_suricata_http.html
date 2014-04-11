@@ -1,0 +1,17 @@
+<section id="suri_http">
+    <h4>Suricata http</h4>
+    {% if analysis.suricata.http %}
+        <table class="table table-striped table-bordered">
+            <tr>
+                <th>HTTP LOG</th>
+            </tr>
+            {% for e in analysis.suricata.http %}
+            <tr>
+                <td>{{e}}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    {% else %}
+        <p>No Suricata HTTP</p>
+    {% endif %}
+</section>

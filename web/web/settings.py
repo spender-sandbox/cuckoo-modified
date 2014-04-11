@@ -22,6 +22,12 @@ MONGO_HOST = cfg.get("host", "127.0.0.1")
 MONGO_PORT = cfg.get("port", 27017)
 MONGO_DBNAME = cfg.get("db", "cuckoo")
 
+moloch_cfg = Config("reporting").moloch
+
+MOLOCH_BASE = moloch_cfg.get("base", None)
+MOLOCH_NODE = moloch_cfg.get("node", None)
+MOLOCH_ENABLED = moloch_cfg.get("enabled", False)
+
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 

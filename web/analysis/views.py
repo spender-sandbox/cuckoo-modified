@@ -17,7 +17,7 @@ import pymongo
 from bson.objectid import ObjectId
 from django.core.exceptions import PermissionDenied
 from gridfs import GridFS
-
+from urllib import quote
 sys.path.append(settings.CUCKOO_PATH)
 
 from lib.cuckoo.core.database import Database, TASK_PENDING
@@ -46,6 +46,23 @@ def index(request):
             if db.view_errors(task.id):
                 new["errors"] = True
 
+            rtmp = results_db.analysis.find_one({"info.id": int(new["id"])},{"virustotal_summary": 1, "suri_tls_cnt": 1, "suri_alert_cnt": 1, "suri_http_cnt": 1, "suri_file_cnt": 1},sort=[("_id", pymongo.DESCENDING)])
+            if rtmp:
+                if rtmp.has_key("virustotal_summary") and rtmp["virustotal_summary"]:
+                    new["virustotal_summary"] = rtmp["virustotal_summary"] 
+                if rtmp.has_key("suri_tls_cnt") and rtmp["suri_tls_cnt"]:
+                    new["suri_tls_cnt"] = rtmp["suri_tls_cnt"]
+                if rtmp.has_key("suri_alert_cnt") and rtmp["suri_alert_cnt"]:
+                    new["suri_alert_cnt"] = rtmp["suri_alert_cnt"]
+                if rtmp.has_key("suri_file_cnt") and rtmp["suri_file_cnt"]:
+                    new["suri_file_cnt"] = rtmp["suri_file_cnt"]
+                if rtmp.has_key("suri_http_cnt") and rtmp["suri_http_cnt"]:
+                    new["suri_http_cnt"] = rtmp["suri_http_cnt"]
+
+            if settings.MOLOCH_ENABLED:
+                if settings.MOLOCH_BASE[-1] != "/":
+                    settings.MOLOCH_BASE = settings.MOLOCH_BASE + "/"
+                new["moloch_url"] = settings.MOLOCH_BASE + "?date=-1&expression=tags" + quote("\x3d\x3d\x22%s\x3a%s\x22" % (settings.MOLOCH_NODE,new["id"]),safe='')
             analyses_files.append(new)
 
     if tasks_urls:
@@ -54,6 +71,24 @@ def index(request):
 
             if db.view_errors(task.id):
                 new["errors"] = True
+
+            rtmp = results_db.analysis.find_one({"info.id": int(new["id"])},{"virustotal_summary": 1, "suri_tls_cnt": 1, "suri_alert_cnt": 1, "suri_http_cnt": 1, "suri_file_cnt": 1},sort=[("_id", pymongo.DESCENDING)])
+            if rtmp:
+                if rtmp.has_key("virustotal_summary") and rtmp["virustotal_summary"]:
+                    new["virustotal_summary"] = rtmp["virustotal_summary"]
+                if rtmp.has_key("suri_tls_cnt") and rtmp["suri_tls_cnt"]:
+                    new["suri_tls_cnt"] = rtmp["suri_tls_cnt"]
+                if rtmp.has_key("suri_alert_cnt") and rtmp["suri_alert_cnt"]:
+                    new["suri_alert_cnt"] = rtmp["suri_alert_cnt"]
+                if rtmp.has_key("suri_file_cnt") and rtmp["suri_file_cnt"]:
+                    new["suri_file_cnt"] = rtmp["suri_file_cnt"]
+                if rtmp.has_key("suri_http_cnt") and rtmp["suri_http_cnt"]:
+                    new["suri_http_cnt"] = rtmp["suri_http_cnt"]
+
+            if settings.MOLOCH_ENABLED:
+                if settings.MOLOCH_BASE[-1] != "/":
+                    settings.MOLOCH_BASE = settings.MOLOCH_BASE + "/"
+                new["moloch_url"] = settings.MOLOCH_BASE + "?date=-1&expression=tags" + quote("\x3d\x3d\x22%s\x3a%s\x22" % (settings.MOLOCH_NODE,new["id"]),safe='')
 
             analyses_urls.append(new)
 
@@ -221,7 +256,6 @@ def search_behavior(request, task_id):
 @require_safe
 def report(request, task_id):
     report = results_db.analysis.find_one({"info.id": int(task_id)}, sort=[("_id", pymongo.DESCENDING)])
-
     if not report:
         return render_to_response("error.html",
                                   {"error": "The specified analysis does not exist"},
@@ -243,6 +277,8 @@ def file(request, category, object_id):
         if category == "pcap":
             file_name += ".pcap"
             content_type = "application/vnd.tcpdump.pcap"
+        elif category == "zip":
+            file_name += ".zip"
         elif category == "screenshot":
             file_name += ".jpg"
             content_type = "image/jpeg"
@@ -324,6 +360,8 @@ def search(request):
                 records = results_db.analysis.find({"target.url": value}).sort([["_id", -1]])
             elif term == "imphash":
                 records = results_db.analysis.find({"static.pe_imphash": value}).sort([["_id", -1]])
+            elif term == "surialert":
+                records = results_db.analysis.find({"suricata.alerts": {"$regex" : value, "$options" : "-1"}}).sort([["_id", -1]])
             else:
                 return render_to_response("analysis/search.html",
                                           {"analyses": None,

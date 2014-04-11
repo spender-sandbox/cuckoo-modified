@@ -1,0 +1,81 @@
+{% if analysis.suricata.files|length > 0 %}
+   {% if analysis.suricata.suri_extracted_zip %}
+       <div class="alert alert-info center"><a class="btn btn-primary btn-small" href="{% url "analysis.views.file" "zip" analysis.suricata.suri_extracted_zip %}">Download Suri Extracted</a></div>
+    {% endif %}
+    {% for file in analysis.suricata.files %}
+        <div class="panel panel-default">
+            <table class="table table-striped">
+                <tr>
+                    <th style="border-top: 0;">File name</th>
+                    <td style="border-top: 0;"><b>{{file.filename}}</b></td>
+                </tr>
+                <tr>
+                    <th>File Size</th>
+                    <td>{{file.size}} bytes</th>
+                </tr>
+                <tr>
+                    <th>File Type</th>
+                    <td>{{file.magic}}</th>
+                </tr>
+                <tr>
+                    <th>File URL</th>
+                    <td>{{file.http_uri}}</th>
+                </tr>
+                <tr>
+                    <th>Host</th>
+                    <td>{{file.http_host}}</th>
+                </tr>
+                <tr>
+                    <th>HTTP Referer</th>
+                    <td>{{file.http_referer}}</th>
+                </tr>
+                <tr>
+                    <th>MD5</th>
+                    <td>{{file.md5}}</th>
+                </tr>
+                <tr>
+                    <th>SHA1</th>
+                    <td>{{file.file_info.sha1}}</th>
+                </tr>
+                <tr>
+                    <th>SHA256</th>
+                    <td>{{file.file_info.sha256}}</th>
+                </tr>
+                <tr>
+                    <th>CRC32</th>
+                    <td>{{file.file_info.crc32}}</th>
+                </tr>
+                <tr>
+                    <th>Ssdeep</th>
+                    <td>{{file.file_info.ssdeep}}</th>
+                </tr>
+                <tr>
+                    <th>ClamAV</th>
+                    <td>{{file.file_info.clamav}}</th>
+                </tr>
+                <tr>
+                    <th>Yara</th>
+                    <td>
+                    {% if file.yara %}
+                        <ul style="margin-bottom: 0;">
+                        {% for sign in file.fileinfo.yara %}
+                            <li>{{sign.name}} - {{sign.meta.description}}</li>
+                        {% endfor %}
+                        </ul>
+                    {% else %}
+                        None matched
+                    {% endif %}
+                    </td>
+                </tr>
+                {% if file.object_id %}
+                <tr>
+                    <th></th>
+                    <td><a href="{% url "analysis.views.file" "suricata" file.object_id %}" class="btn btn-primary btn-small">Download</a></td>
+                </tr>
+                {% endif %}
+            </table>
+        </div>
+    {% endfor %}
+{% else %}
+    <div class="alert alert-info"><b>Sorry!</b> No dropped Suricata Extracted files.</div>
+{% endif %}
