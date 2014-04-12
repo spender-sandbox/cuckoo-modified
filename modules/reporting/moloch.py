@@ -81,28 +81,29 @@ class Moloch(Report):
         except Exception,e:
             log.warning("Unable to Build Basic Moloch CMD: %s" % e)
              
-        try:
-            if self.task["category"] == "file":
-                if results.has_key('virustotal'):
-                    for key in results["virustotal"]["scans"]:
-                        if results["virustotal"]["scans"][key]["result"]:
-                            cmd = cmd + " -t \"VT:%s:%s\"" % (key,results["virustotal"]["scans"][key]["result"])
-        except Exception,e:
-             log.warning("Unable to Get VT Results For Moloch: %s" % e)
+        if self.task["category"] == "file":
+            try:
+                if self.task["category"] == "file":
+                    if results.has_key('virustotal'):
+                        for key in results["virustotal"]["scans"]:
+                            if results["virustotal"]["scans"][key]["result"]:
+                                cmd = cmd + " -t \"VT:%s:%s\"" % (key,results["virustotal"]["scans"][key]["result"])
+            except Exception,e:
+                log.warning("Unable to Get VT Results For Moloch: %s" % e)
 
 
-        if results["target"]["file"].has_key("md5") and results["target"]["file"]["md5"]:
-            cmd = cmd + " -t \"md5:%s\"" % (results["target"]["file"]["md5"])
-        if results["target"]["file"].has_key("sha1") and results["target"]["file"]["sha1"]:
-            cmd = cmd + " -t \"sha1:%s\"" % (results["target"]["file"]["sha1"])
-        if results["target"]["file"].has_key("sha256") and results["target"]["file"]["sha256"]:
-            cmd = cmd + " -t \"sha256:%s\"" % (results["target"]["file"]["sha256"])
-        if results["target"]["file"].has_key("sha512") and results["target"]["file"]["sha512"]:
-            cmd = cmd + " -t \"sha512:%s\"" % (results["target"]["file"]["sha512"])
-        if results["target"]["file"].has_key("clamav") and results["target"]["file"]["clamav"]:
-            cmd = cmd + " -t \"clamav:%s\"" % (results["target"]["file"]["clamav"])
-        if results["static"].has_key("pe_imphash") and results["static"]["pe_imphash"]:
-            cmd = cmd + " -t \"pehash:%s\"" % (results["static"]["pe_imphash"])
+            if results["target"]["file"].has_key("md5") and results["target"]["file"]["md5"]:
+                cmd = cmd + " -t \"md5:%s\"" % (results["target"]["file"]["md5"])
+            if results["target"]["file"].has_key("sha1") and results["target"]["file"]["sha1"]:
+                cmd = cmd + " -t \"sha1:%s\"" % (results["target"]["file"]["sha1"])
+            if results["target"]["file"].has_key("sha256") and results["target"]["file"]["sha256"]:
+                cmd = cmd + " -t \"sha256:%s\"" % (results["target"]["file"]["sha256"])
+            if results["target"]["file"].has_key("sha512") and results["target"]["file"]["sha512"]:
+                cmd = cmd + " -t \"sha512:%s\"" % (results["target"]["file"]["sha512"])
+            if results["target"]["file"].has_key("clamav") and results["target"]["file"]["clamav"]:
+                cmd = cmd + " -t \"clamav:%s\"" % (results["target"]["file"]["clamav"])
+            if results["static"].has_key("pe_imphash") and results["static"]["pe_imphash"]:
+                cmd = cmd + " -t \"pehash:%s\"" % (results["static"]["pe_imphash"])
 
         try:                   
             ret,stdout,stderr = self.cmd_wrapper(cmd)
