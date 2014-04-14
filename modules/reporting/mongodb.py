@@ -164,17 +164,18 @@ class MongoDB(Report):
         # Walk through the suricata extracted files, store them in GridFS and update the
         # report with the ObjectIds.
         new_suricata_files = []
-        if report["suricata"].has_key("files") and report["suricata"]["files"]:
-            for suricata_file_e in report["suricata"]["files"]:
-                if suricata_file_e.has_key("file_info"):
-                    tmp_suricata_file_d = dict(suricata_file_e)
-                    suricata_file = File(suricata_file_e["file_info"]["path"])
-                    if suricata_file.valid():
-                        suricata_file_id = self.store_file(suricata_file, filename=suricata_file_e["file_info"]["name"])
-                        tmp_suricata_file_d["object_id"] = suricata_file_id
-                        new_suricata_files.append(tmp_suricata_file_d)
+        if results.has_key("suricata") and results["suricata"]:
+            if results["suricata"].has_key("files") and results["suricata"]["files"]:
+                for suricata_file_e in results["suricata"]["files"]:
+                    if suricata_file_e.has_key("file_info"):
+                        tmp_suricata_file_d = dict(suricata_file_e)
+                        suricata_file = File(suricata_file_e["file_info"]["path"])
+                        if suricata_file.valid():
+                            suricata_file_id = self.store_file(suricata_file, filename=suricata_file_e["file_info"]["name"])
+                            tmp_suricata_file_d["object_id"] = suricata_file_id
+                            new_suricata_files.append(tmp_suricata_file_d)
 
-            report["suricata"]["files"] = new_suricata_files
+                report["suricata"]["files"] = new_suricata_files
 
         # Add screenshots.
         report["shots"] = []
