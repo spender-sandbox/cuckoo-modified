@@ -273,7 +273,7 @@ class File:
                 try:
                     r=cd.scan(self.file_path)
                 except Exception as e:
-                    log.warning("failed to scan file with clamav" % (e))
+                    log.warning("failed to scan file with clamav %s",e)
                     return matches
                 for key in r:
                     if r[key][0] == "FOUND":

@@ -362,6 +362,18 @@ def search(request):
                 records = results_db.analysis.find({"static.pe_imphash": value}).sort([["_id", -1]])
             elif term == "surialert":
                 records = results_db.analysis.find({"suricata.alerts": {"$regex" : value, "$options" : "-1"}}).sort([["_id", -1]])
+            elif term == "surihttp":
+                records = results_db.analysis.find({"suricata.http": {"$regex" : value, "$options" : "-1"}}).sort([["_id", -1]])
+            elif term == "suritls":
+                records = results_db.analysis.find({"suricata.tls": {"$regex" : value, "$options" : "-1"}}).sort([["_id", -1]])
+            elif term == "clamav":
+                records = results_db.analysis.find({"target.file.clamav": {"$regex": value, "$options": "-i"}}).sort([["_id", -1]])
+            elif term == "yaraname":
+                records = results_db.analysis.find({"target.file.yara.name": {"$regex": value, "$options": "-i"}}).sort([["_id", -1]])
+            elif term == "strings":
+                records = results_db.analysis.find({"strings": {"$regex": value, "$options": "-i"}}).sort([["_id", -1]])
+            elif term == "virustotal":
+                records = results_db.analysis.find({"virustotal.results.sig": {"$regex": value, "$options": "-i"}}).sort([["_id", -1]])
             else:
                 return render_to_response("analysis/search.html",
                                           {"analyses": None,
