@@ -28,6 +28,10 @@ def main():
     parser.add_argument("target", type=str, help="URL, path to the file or folder to analyze")
     parser.add_argument("-d", "--debug", action="store_true", help="Enable debug logging")
     parser.add_argument("--remote", type=str, action="store", default=None, help="Specify IP:port to a Cuckoo API server to submit remotely", required=False)
+    parser.add_argument("--user", type=str, action="store", default=None, help="Username for Basic Auth", required=False)
+    parser.add_argument("--password", type=str, action="store", default=None, help="Password for Basic Auth", required=False)
+    parser.add_argument("--sslnoverify", action="store_true", default=False, help="Only submit new samples, ignore duplicates", required=False)
+    parser.add_argument("--ssl", action="store_true", default=False, help="Use SSL/TLS for remote", required=False)
     parser.add_argument("--url", action="store_true", default=False, help="Specify whether the target is an URL", required=False)
     parser.add_argument("--package", type=str, action="store", default="", help="Specify an analysis package", required=False)
     parser.add_argument("--custom", type=str, action="store", default="", help="Specify any custom value", required=False)
@@ -74,7 +78,10 @@ def main():
                 print(bold(red("Error")) + ": you need to install python-requests (`pip install requests`)")
                 return False
 
-            url = "http://{0}/tasks/create/url".format(args.remote)
+            if args.ssl:
+                url = "https://{0}/tasks/create/url".format(args.remote)
+            else:
+                url = "http://{0}/tasks/create/url".format(args.remote)
 
             data = dict(
                 url=target,
@@ -91,7 +98,25 @@ def main():
             )
 
             try:
-                response = requests.post(url, data=data)
+                if args.user and args.password:
+                    if args.ssl:
+                        if args.sslnoverify:
+                            verify = False
+                        else:
+                            verify = True
+                        response = requests.post(url, auth=(args.user,args.password), data=data,verify=verify)
+                    else:
+                        response = requests.post(url, auth=(args.user,args.password), data=data)
+                else:
+                    if args.ssl:
+                        if args.sslnoverify:
+                            verify = False
+                        else:
+                            verify = True
+                        response = requests.post(url, data=data,verify=verify)
+                    else:
+                        response = requests.post(url, data=data)
+
             except Exception as e:
                 print(bold(red("Error")) + ": unable to send URL: {0}".format(e))
                 return False
@@ -163,8 +188,10 @@ def main():
                 if not HAVE_REQUESTS:
                     print(bold(red("Error")) + ": you need to install python-requests (`pip install requests`)")
                     return False
-
-                url = "http://{0}/tasks/create/file".format(args.remote)
+                if args.ssl:
+                    url = "https://{0}/tasks/create/file".format(args.remote)
+                else:
+                    url = "http://{0}/tasks/create/file".format(args.remote)
 
                 files = dict(
                     file=open(file_path, "rb"),
@@ -185,7 +212,25 @@ def main():
                 )
 
                 try:
-                    response = requests.post(url, files=files, data=data)
+                    if args.user and args.password:
+                        if args.ssl:
+                            if args.sslnoverify:
+                                verify = False
+                            else:
+                                verify = True
+                            response = requests.post(url, auth=(args.user,args.password), files=files,data=data,verify=verify)
+                        else:
+                            response = requests.post(url, auth=(args.user,args.password), files=files,data=data)
+                    else:
+                        if args.ssl:
+                            if args.sslnoverify:
+                                verify = False
+                            else:
+                                verify = True
+                            response = requests.post(url, files=files, data=data, verify=verify)
+                        else:
+                            response = requests.post(url, files=files, data=data)
+
                 except Exception as e:
                     print(bold(red("Error")) + ": unable to send file: {0}".format(e))
                     return False
