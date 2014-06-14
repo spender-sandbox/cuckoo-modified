@@ -401,7 +401,6 @@ def search(request):
         # Get data from cuckoo db.
         db = Database()
         analyses = []
-
         for result in records:
             new = db.view_task(result["info"]["id"])
 
@@ -410,14 +409,25 @@ def search(request):
 
             new = new.to_dict()
 
-            if result["info"]["category"] == "file":
-                if new["sample_id"]:
-                    sample = db.view_sample(new["sample_id"])
-                    if sample:
-                        new["sample"] = sample.to_dict()
-
+            rtmp = results_db.analysis.find_one({"info.id": int(new["id"])},{"virustotal_summary": 1, "suri_tls_cnt": 1, "suri_alert_cnt": 1, "suri_http_cnt": 1, "suri_file_cnt": 1, "mlist_cnt": 1},sort=[("_id", pymongo.DESCENDING)])
+            if rtmp:
+                if rtmp.has_key("virustotal_summary") and rtmp["virustotal_summary"]:
+                    new["virustotal_summary"] = rtmp["virustotal_summary"]
+                if rtmp.has_key("suri_tls_cnt") and rtmp["suri_tls_cnt"]:
+                    new["suri_tls_cnt"] = rtmp["suri_tls_cnt"]
+                if rtmp.has_key("suri_alert_cnt") and rtmp["suri_alert_cnt"]:
+                    new["suri_alert_cnt"] = rtmp["suri_alert_cnt"]
+                if rtmp.has_key("suri_file_cnt") and rtmp["suri_file_cnt"]:
+                    new["suri_file_cnt"] = rtmp["suri_file_cnt"]
+                if rtmp.has_key("suri_http_cnt") and rtmp["suri_http_cnt"]:
+                    new["suri_http_cnt"] = rtmp["suri_http_cnt"]
+                if rtmp.has_key("mlist_cnt") and rtmp["mlist_cnt"]:
+                    new["mlist_cnt"] = rtmp["mlist_cnt"]
+            if settings.MOLOCH_ENABLED:
+                if settings.MOLOCH_BASE[-1] != "/":
+                    settings.MOLOCH_BASE = settings.MOLOCH_BASE + "/"
+                new["moloch_url"] = settings.MOLOCH_BASE + "?date=-1&expression=tags" + quote("\x3d\x3d\x22%s\x3a%s\x22" % (settings.MOLOCH_NODE,new["id"]),safe='')
             analyses.append(new)
-
         return render_to_response("analysis/search.html",
                                   {"analyses": analyses,
                                    "term": request.POST["search"],
