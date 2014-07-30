@@ -1,0 +1,372 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{365a3967-518e-457b-972a-3c90834f0f80}</ProjectGuid>
+    <ProjectHome />
+    <StartupFile>manage.py</StartupFile>
+    <SearchPath />
+    <WorkingDirectory>.</WorkingDirectory>
+    <OutputPath>.</OutputPath>
+    <ProjectTypeGuids>{5F0BE9CA-D677-4A4D-8806-6076C0FAAD37};{349c5851-65df-11da-9384-00065b846f21};{888888a0-9f3d-457c-b088-3a5042f75d52}</ProjectTypeGuids>
+    <LaunchProvider>Django launcher</LaunchProvider>
+    <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
+    <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
+    <UseIISExpress>true</UseIISExpress>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug'" />
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'" />
+  <ItemGroup>
+    <Content Include="requirements.txt" />
+    <Compile Include="cuckoo.py" />
+    <Compile Include="agent\agent.py" />
+    <Compile Include="lib\__init__.py" />
+    <Compile Include="modules\__init__.py" />
+    <Compile Include="tests\abstracts_tests.py" />
+    <Compile Include="tests\colors_tests.py" />
+    <Compile Include="tests\config_tests.py" />
+    <Compile Include="tests\integrity.py" />
+    <Compile Include="tests\objects_tests.py" />
+    <Compile Include="tests\processor_tests.py" />
+    <Compile Include="tests\reporter_tests.py" />
+    <Compile Include="tests\sniffer_tests.py" />
+    <Compile Include="tests\utils_tests.py" />
+    <Compile Include="utils\api.py" />
+    <Compile Include="utils\community.py" />
+    <Compile Include="utils\process.py" />
+    <Compile Include="utils\stats.py" />
+    <Compile Include="utils\submit.py" />
+    <Compile Include="utils\web.py" />
+    <Compile Include="web\manage.py" />
+    <Compile Include="analyzer\windows\analyzer.py" />
+    <Compile Include="analyzer\windows\lib\__init__.py" />
+    <Compile Include="analyzer\windows\modules\__init__.py" />
+    <Compile Include="analyzer\windows\lib\api\process.py" />
+    <Compile Include="analyzer\windows\lib\api\screenshot.py" />
+    <Compile Include="analyzer\windows\lib\api\__init__.py" />
+    <Compile Include="analyzer\windows\lib\common\abstracts.py" />
+    <Compile Include="analyzer\windows\lib\common\constants.py" />
+    <Compile Include="analyzer\windows\lib\common\defines.py" />
+    <Compile Include="analyzer\windows\lib\common\errors.py" />
+    <Compile Include="analyzer\windows\lib\common\exceptions.py" />
+    <Compile Include="analyzer\windows\lib\common\hashing.py" />
+    <Compile Include="analyzer\windows\lib\common\rand.py" />
+    <Compile Include="analyzer\windows\lib\common\results.py" />
+    <Compile Include="analyzer\windows\lib\common\__init__.py" />
+    <Compile Include="analyzer\windows\lib\core\config.py" />
+    <Compile Include="analyzer\windows\lib\core\packages.py" />
+    <Compile Include="analyzer\windows\lib\core\privileges.py" />
+    <Compile Include="analyzer\windows\lib\core\startup.py" />
+    <Compile Include="analyzer\windows\lib\core\__init__.py" />
+    <Compile Include="analyzer\windows\modules\auxiliary\disguise.py" />
+    <Compile Include="analyzer\windows\modules\auxiliary\human.py" />
+    <Compile Include="analyzer\windows\modules\auxiliary\screenshots.py" />
+    <Compile Include="analyzer\windows\modules\auxiliary\__init__.py" />
+    <Compile Include="analyzer\windows\modules\packages\applet.py" />
+    <Compile Include="analyzer\windows\modules\packages\bin.py" />
+    <Compile Include="analyzer\windows\modules\packages\cpl.py" />
+    <Compile Include="analyzer\windows\modules\packages\dll.py" />
+    <Compile Include="analyzer\windows\modules\packages\doc.py" />
+    <Compile Include="analyzer\windows\modules\packages\exe.py" />
+    <Compile Include="analyzer\windows\modules\packages\generic.py" />
+    <Compile Include="analyzer\windows\modules\packages\html.py" />
+    <Compile Include="analyzer\windows\modules\packages\ie.py" />
+    <Compile Include="analyzer\windows\modules\packages\jar.py" />
+    <Compile Include="analyzer\windows\modules\packages\pdf.py" />
+    <Compile Include="analyzer\windows\modules\packages\ps1.py" />
+    <Compile Include="analyzer\windows\modules\packages\python.py" />
+    <Compile Include="analyzer\windows\modules\packages\vbs.py" />
+    <Compile Include="analyzer\windows\modules\packages\xls.py" />
+    <Compile Include="analyzer\windows\modules\packages\zip.py" />
+    <Compile Include="analyzer\windows\modules\packages\__init__.py" />
+    <Content Include="data\html\base-report.html" />
+    <Content Include="data\html\base-web.html" />
+    <Content Include="data\html\browse.html" />
+    <Content Include="data\html\error.html" />
+    <Content Include="data\html\pagination-menu.html" />
+    <Content Include="data\html\pagination-rpp.html" />
+    <Content Include="data\html\report.html" />
+    <Content Include="data\html\submit.html" />
+    <Content Include="data\html\success.html" />
+    <Content Include="data\peutils\UserDB.TXT" />
+    <Content Include="data\html\css\bootstrap-responsive.min.css" />
+    <Content Include="data\html\css\bootstrap.min.css" />
+    <Content Include="data\html\graphic\logo.html" />
+    <Content Include="data\html\img\glyphicons-halflings-white.png" />
+    <Content Include="data\html\img\glyphicons-halflings.png" />
+    <Content Include="data\html\js\bootstrap.min.js" />
+    <Content Include="data\html\js\functions.js" />
+    <Content Include="data\html\js\jquery.min.js" />
+    <Content Include="data\html\sections\behavior.html" />
+    <Content Include="data\html\sections\dropped.html" />
+    <Content Include="data\html\sections\errors.html" />
+    <Content Include="data\html\sections\file.html" />
+    <Content Include="data\html\sections\info.html" />
+    <Content Include="data\html\sections\network.html" />
+    <Content Include="data\html\sections\screenshots.html" />
+    <Content Include="data\html\sections\signatures.html" />
+    <Content Include="data\html\sections\static.html" />
+    <Content Include="data\html\sections\url.html" />
+    <Content Include="data\html\sections\volatility.html" />
+    <Compile Include="docs\book\src\conf.py" />
+    <Content Include="docs\book\src\_images\logo\cuckoo.png" />
+    <Content Include="docs\book\src\_images\schemas\architecture-main.png" />
+    <Content Include="docs\book\src\_images\screenshots\shared_folders.png" />
+    <Content Include="docs\book\src\_images\screenshots\windows_security.png" />
+    <Compile Include="lib\cuckoo\__init__.py" />
+    <Compile Include="lib\maec\maec11.py" />
+    <Compile Include="lib\maec\maec40.py" />
+    <Compile Include="lib\maec\__init__.py" />
+    <Compile Include="lib\cuckoo\common\abstracts.py" />
+    <Compile Include="lib\cuckoo\common\colors.py" />
+    <Compile Include="lib\cuckoo\common\config.py" />
+    <Compile Include="lib\cuckoo\common\constants.py" />
+    <Compile Include="lib\cuckoo\common\defines.py" />
+    <Compile Include="lib\cuckoo\common\dns.py" />
+    <Compile Include="lib\cuckoo\common\exceptions.py" />
+    <Compile Include="lib\cuckoo\common\irc.py" />
+    <Compile Include="lib\cuckoo\common\logo.py" />
+    <Compile Include="lib\cuckoo\common\logtbl.py" />
+    <Compile Include="lib\cuckoo\common\netlog.py" />
+    <Compile Include="lib\cuckoo\common\objects.py" />
+    <Compile Include="lib\cuckoo\common\utils.py" />
+    <Compile Include="lib\cuckoo\common\__init__.py" />
+    <Compile Include="lib\cuckoo\core\database.py" />
+    <Compile Include="lib\cuckoo\core\guest.py" />
+    <Compile Include="lib\cuckoo\core\plugins.py" />
+    <Compile Include="lib\cuckoo\core\resultserver.py" />
+    <Compile Include="lib\cuckoo\core\scheduler.py" />
+    <Compile Include="lib\cuckoo\core\startup.py" />
+    <Compile Include="lib\cuckoo\core\__init__.py" />
+    <Compile Include="modules\auxiliary\sniffer.py" />
+    <Compile Include="modules\auxiliary\__init__.py" />
+    <Compile Include="modules\machinery\esx.py" />
+    <Compile Include="modules\machinery\kvm.py" />
+    <Compile Include="modules\machinery\virtualbox.py" />
+    <Compile Include="modules\machinery\vmware.py" />
+    <Compile Include="modules\machinery\__init__.py" />
+    <Compile Include="modules\processing\analysisinfo.py" />
+    <Compile Include="modules\processing\behavior.py" />
+    <Compile Include="modules\processing\debug.py" />
+    <Compile Include="modules\processing\dropped.py" />
+    <Compile Include="modules\processing\memory.py" />
+    <Compile Include="modules\processing\network.py" />
+    <Compile Include="modules\processing\procmemory.py" />
+    <Compile Include="modules\processing\static.py" />
+    <Compile Include="modules\processing\strings.py" />
+    <Compile Include="modules\processing\targetinfo.py" />
+    <Compile Include="modules\processing\virustotal.py" />
+    <Compile Include="modules\processing\__init__.py" />
+    <Compile Include="modules\reporting\jsondump.py" />
+    <Compile Include="modules\reporting\maec40.py" />
+    <Compile Include="modules\reporting\mmdef.py" />
+    <Compile Include="modules\reporting\mongodb.py" />
+    <Compile Include="modules\reporting\reporthtml.py" />
+    <Compile Include="modules\reporting\__init__.py" />
+    <Compile Include="modules\signatures\creates_exe.py" />
+    <Compile Include="modules\signatures\generic_metrics.py" />
+    <Compile Include="modules\signatures\__init__.py" />
+    <Compile Include="utils\db_migration\env.py" />
+    <Compile Include="utils\db_migration\versions\from_0_6_to_1_1.py" />
+    <Compile Include="web\analysis\forms.py" />
+    <Compile Include="web\analysis\urls.py" />
+    <Compile Include="web\analysis\views.py" />
+    <Compile Include="web\analysis\__init__.py" />
+    <Compile Include="web\dashboard\urls.py" />
+    <Compile Include="web\dashboard\views.py" />
+    <Compile Include="web\dashboard\__init__.py" />
+    <Compile Include="web\submission\urls.py" />
+    <Compile Include="web\submission\views.py" />
+    <Compile Include="web\submission\__init__.py" />
+    <Content Include="web\templates\base.html" />
+    <Content Include="web\templates\error.html" />
+    <Content Include="web\templates\footer.html" />
+    <Content Include="web\templates\header.html" />
+    <Content Include="web\templates\success.html" />
+    <Compile Include="web\web\headers.py" />
+    <Compile Include="web\web\local_settings.py" />
+    <Compile Include="web\web\settings.py" />
+    <Compile Include="web\web\urls.py" />
+    <Compile Include="web\web\wsgi.py" />
+    <Compile Include="web\web\__init__.py" />
+    <Compile Include="web\analysis\templatetags\analysis_tags.py" />
+    <Compile Include="web\analysis\templatetags\__init__.py" />
+    <Content Include="web\static\css\bootstrap-responsive.min.css" />
+    <Content Include="web\static\css\bootstrap.min.css" />
+    <Content Include="web\static\css\lightbox.css" />
+    <Content Include="web\static\css\style.css" />
+    <Content Include="web\static\fonts\glyphicons-halflings-regular.svg" />
+    <Content Include="web\static\graphic\background.png" />
+    <Content Include="web\static\graphic\cuckoo.png" />
+    <Content Include="web\static\img\close.png" />
+    <Content Include="web\static\img\next.png" />
+    <Content Include="web\static\img\prev.png" />
+    <Content Include="web\static\img\loading.gif" />
+    <Content Include="web\static\js\bootstrap-fileupload.js" />
+    <Content Include="web\static\js\bootstrap.min.js" />
+    <Content Include="web\static\js\jquery.js" />
+    <Content Include="web\static\js\lightbox.js" />
+    <Content Include="web\templates\analysis\index.html" />
+    <Content Include="web\templates\analysis\pending.html" />
+    <Content Include="web\templates\analysis\report.html" />
+    <Content Include="web\templates\analysis\search.html" />
+    <Content Include="web\templates\dashboard\index.html" />
+    <Content Include="web\templates\submission\index.html" />
+    <Content Include="web\templates\analysis\admin\index.html" />
+    <Content Include="web\templates\analysis\behavior\index.html" />
+    <Content Include="web\templates\analysis\behavior\_chunk.html" />
+    <Content Include="web\templates\analysis\behavior\_processes.html" />
+    <Content Include="web\templates\analysis\behavior\_tree_process.html" />
+    <Content Include="web\templates\analysis\behavior\_tree.html" />
+    <Content Include="web\templates\analysis\dropped\index.html" />
+    <Content Include="web\templates\analysis\memory\index.html" />
+    <Content Include="web\templates\analysis\memory\_apihooks.html" />
+    <Content Include="web\templates\analysis\memory\_callbacks.html" />
+    <Content Include="web\templates\analysis\memory\_devicetree.html" />
+    <Content Include="web\templates\analysis\memory\_gdt.html" />
+    <Content Include="web\templates\analysis\memory\_idt.html" />
+    <Content Include="web\templates\analysis\memory\_malfind.html" />
+    <Content Include="web\templates\analysis\memory\_messagehooks.html" />
+    <Content Include="web\templates\analysis\memory\_modscan.html" />
+    <Content Include="web\templates\analysis\memory\_pslist.html" />
+    <Content Include="web\templates\analysis\memory\_ssdt.html" />
+    <Content Include="web\templates\analysis\memory\_svcscan.html" />
+    <Content Include="web\templates\analysis\memory\_timers.html" />
+    <Content Include="web\templates\analysis\memory\_yarascan.html" />
+    <Content Include="web\templates\analysis\network\index.html" />
+    <Content Include="web\templates\analysis\network\_dns.html" />
+    <Content Include="web\templates\analysis\network\_hosts.html" />
+    <Content Include="web\templates\analysis\network\_http.html" />
+    <Content Include="web\templates\analysis\network\_icmp.html" />
+    <Content Include="web\templates\analysis\network\_irc.html" />
+    <Content Include="web\templates\analysis\overview\index.html" />
+    <Content Include="web\templates\analysis\overview\_file.html" />
+    <Content Include="web\templates\analysis\overview\_info.html" />
+    <Content Include="web\templates\analysis\overview\_screenshots.html" />
+    <Content Include="web\templates\analysis\overview\_signatures.html" />
+    <Content Include="web\templates\analysis\overview\_summary.html" />
+    <Content Include="web\templates\analysis\overview\_url.html" />
+    <Content Include="web\templates\analysis\static\index.html" />
+    <Content Include="web\templates\analysis\static\_antivirus.html" />
+    <Content Include="web\templates\analysis\static\_pe32.html" />
+    <Content Include="web\templates\analysis\static\_strings.html" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="agent" />
+    <Folder Include="analyzer\" />
+    <Folder Include="analyzer\windows" />
+    <Folder Include="analyzer\windows\lib" />
+    <Folder Include="analyzer\windows\lib\api" />
+    <Folder Include="analyzer\windows\lib\common" />
+    <Folder Include="analyzer\windows\lib\core" />
+    <Folder Include="analyzer\windows\modules" />
+    <Folder Include="analyzer\windows\modules\auxiliary" />
+    <Folder Include="analyzer\windows\modules\packages" />
+    <Folder Include="data\" />
+    <Folder Include="data\html" />
+    <Folder Include="data\html\css" />
+    <Folder Include="data\html\graphic" />
+    <Folder Include="data\html\img" />
+    <Folder Include="data\html\js" />
+    <Folder Include="data\html\sections" />
+    <Folder Include="data\peutils" />
+    <Folder Include="docs\" />
+    <Folder Include="docs\book\" />
+    <Folder Include="docs\book\src" />
+    <Folder Include="docs\book\src\_images\" />
+    <Folder Include="docs\book\src\_images\logo" />
+    <Folder Include="docs\book\src\_images\schemas" />
+    <Folder Include="docs\book\src\_images\screenshots" />
+    <Folder Include="lib" />
+    <Folder Include="lib\cuckoo" />
+    <Folder Include="lib\cuckoo\common" />
+    <Folder Include="lib\cuckoo\core" />
+    <Folder Include="lib\maec" />
+    <Folder Include="modules" />
+    <Folder Include="modules\auxiliary" />
+    <Folder Include="modules\machinery" />
+    <Folder Include="modules\processing" />
+    <Folder Include="modules\reporting" />
+    <Folder Include="modules\signatures" />
+    <Folder Include="tests" />
+    <Folder Include="utils" />
+    <Folder Include="utils\db_migration" />
+    <Folder Include="utils\db_migration\versions" />
+    <Folder Include="web" />
+    <Folder Include="web\analysis" />
+    <Folder Include="web\analysis\templatetags" />
+    <Folder Include="web\dashboard" />
+    <Folder Include="web\static\" />
+    <Folder Include="web\static\css" />
+    <Folder Include="web\static\fonts" />
+    <Folder Include="web\static\graphic" />
+    <Folder Include="web\static\img" />
+    <Folder Include="web\static\js" />
+    <Folder Include="web\submission" />
+    <Folder Include="web\templates" />
+    <Folder Include="web\templates\analysis" />
+    <Folder Include="web\templates\analysis\admin" />
+    <Folder Include="web\templates\analysis\behavior" />
+    <Folder Include="web\templates\analysis\dropped" />
+    <Folder Include="web\templates\analysis\memory" />
+    <Folder Include="web\templates\analysis\network" />
+    <Folder Include="web\templates\analysis\overview" />
+    <Folder Include="web\templates\analysis\static" />
+    <Folder Include="web\templates\dashboard" />
+    <Folder Include="web\templates\submission" />
+    <Folder Include="web\web" />
+  </ItemGroup>
+  <ItemGroup>
+    <WebPiReference Include="https://www.microsoft.com/web/webpi/3.0/toolsproductlist.xml%3fDjango">
+      <Feed>https://www.microsoft.com/web/webpi/3.0/toolsproductlist.xml</Feed>
+      <ProductId>Django</ProductId>
+      <FriendlyName>Django 1.4</FriendlyName>
+    </WebPiReference>
+    <WebPiReference Include="https://www.microsoft.com/web/webpi/3.0/toolsproductlist.xml%3fPytho27">
+      <Feed>https://www.microsoft.com/web/webpi/3.0/toolsproductlist.xml</Feed>
+      <ProductId>Python27</ProductId>
+      <FriendlyName>Python 2.7</FriendlyName>
+    </WebPiReference>
+  </ItemGroup>
+  <Import Project="$(VSToolsPath)\Python Tools\Microsoft.PythonTools.Django.targets" />
+  <ProjectExtensions>
+    <VisualStudio>
+      <FlavorProperties GUID="{349c5851-65df-11da-9384-00065b846f21}">
+        <WebProjectProperties>
+          <UseIIS>True</UseIIS>
+          <AutoAssignPort>True</AutoAssignPort>
+          <DevelopmentServerPort>0</DevelopmentServerPort>
+          <DevelopmentServerVPath>/</DevelopmentServerVPath>
+          <IISUrl>http://localhost:1058/</IISUrl>
+          <NTLMAuthentication>False</NTLMAuthentication>
+          <UseCustomServer>False</UseCustomServer>
+          <CustomServerUrl>
+          </CustomServerUrl>
+          <SaveServerSettingsInUserFile>False</SaveServerSettingsInUserFile>
+        </WebProjectProperties>
+      </FlavorProperties>
+      <FlavorProperties GUID="{349c5851-65df-11da-9384-00065b846f21}" User="">
+        <WebProjectProperties>
+          <StartPageUrl>
+          </StartPageUrl>
+          <StartAction>CurrentPage</StartAction>
+          <AspNetDebugging>True</AspNetDebugging>
+          <SilverlightDebugging>False</SilverlightDebugging>
+          <NativeDebugging>False</NativeDebugging>
+          <SQLDebugging>False</SQLDebugging>
+          <ExternalProgram>
+          </ExternalProgram>
+          <StartExternalURL>
+          </StartExternalURL>
+          <StartCmdLineArguments>
+          </StartCmdLineArguments>
+          <StartWorkingDirectory>
+          </StartWorkingDirectory>
+          <EnableENC>True</EnableENC>
+          <AlwaysStartWebServerOnDebug>False</AlwaysStartWebServerOnDebug>
+        </WebProjectProperties>
+      </FlavorProperties>
+    </VisualStudio>
+  </ProjectExtensions>
+</Project>

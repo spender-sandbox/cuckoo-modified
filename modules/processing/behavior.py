@@ -329,6 +329,23 @@ class Summary:
             name = self._check_registry(registry, subkey, handle)
             if name and name not in self.keys:
                 self.keys.append(name)
+        elif call["api"].startswith("RegSetValueEx") or call["api"].startswith("RegQueryValueEx"):
+            handle = 0
+            valuename = ""
+
+            for argument in call["arguments"]:
+                if argument["name"] == "Handle":
+                    handle = int(argument["value"], 16)
+                elif argument["name"] == "ValueName":
+                    valuename = argument["value"]
+            if handle != 0:
+                for a in self.handles:
+                    if a["handle"] == handle:
+                       if valuename == "":
+                               valuename = "(Default)"
+                       fullkey = a["name"] + "\\" + valuename
+                       if fullkey and fullkey not in self.keys:
+                           self.keys.append(fullkey)
         elif call["api"].startswith("NtOpenKey"):
             registry = -1
             subkey = ""
@@ -771,13 +788,13 @@ class Enhanced(object):
                 event["data"]["regkey"] = "{0}{1}".format(self._get_keyhandle(args.get("Handle", "")), args.get("SubKey", ""))
 
             elif call["api"] in ["RegSetValueExA", "RegSetValueExW"]:
-                event["data"]["regkey"] = "{0}{1}".format(self._get_keyhandle(args.get("Handle", "")), args.get("ValueName", ""))
+                event["data"]["regkey"] = "{0}\\{1}".format(self._get_keyhandle(args.get("Handle", "")), args.get("ValueName", "(Default)"))
 
             elif call["api"] in ["RegQueryValueExA", "RegQueryValueExW", "RegDeleteValueA", "RegDeleteValueW"]:
-                event["data"]["regkey"] = "{0}{1}".format(self._get_keyhandle(args.get("Handle", "UNKNOWN")), args.get("ValueName", ""))
+                event["data"]["regkey"] = "{0}\\{1}".format(self._get_keyhandle(args.get("Handle", "UNKNOWN")), args.get("ValueName", "(Default)"))
 
             elif call["api"] in ["NtQueryValueKey", "NtDeleteValueKey"]:
-                event["data"]["regkey"] = "{0}{1}".format(self._get_keyhandle(args.get("KeyHandle", "UNKNOWN")), args.get("ValueName", ""))
+                event["data"]["regkey"] = "{0}\\{1}".format(self._get_keyhandle(args.get("KeyHandle", "UNKNOWN")), args.get("ValueName", "(Default)"))
 
             elif call["api"] in ["LoadLibraryA", "LoadLibraryW", "LoadLibraryExA", "LoadLibraryExW", "LdrGetDllHandle"] and call["status"]:
                 self._add_loaded_module(args.get("FileName", ""), args.get("ModuleHandle", ""))

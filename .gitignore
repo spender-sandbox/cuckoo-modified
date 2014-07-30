@@ -26,3 +26,4 @@ docs/book/src/_build/
 
 # Ignore Django secret_key
 web/web/secret_key.py
+cuckoo.v12.suo
