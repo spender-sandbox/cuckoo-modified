@@ -94,6 +94,9 @@ a.tag-label {
 .process {
     background-color: #c5e0ff;
 }
+.threading {
+    background-color: #88e0ff;
+}
 .services {
     background-color: #ccc5ff;
 }
