@@ -62,6 +62,8 @@ class NetlogParser(object):
             "S": self.read_string,
             "u": self.read_string,
             "U": self.read_string,
+            "f": self.read_string,
+            "F": self.read_string,
             "b": self.read_buffer,
             "B": self.read_buffer,
             "i": self.read_int32,
