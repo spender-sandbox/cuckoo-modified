@@ -346,7 +346,7 @@ class Summary:
                        fullkey = a["name"] + "\\" + valuename
                        if fullkey and fullkey not in self.keys:
                            self.keys.append(fullkey)
-        elif call["api"].startswith("NtOpenKey"):
+        elif call["api"].startswith("NtOpenKey") or call["api"] == "NtCreateKey":
             registry = -1
             subkeyname = ""
             subkeyhandle = -1
