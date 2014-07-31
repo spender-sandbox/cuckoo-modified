@@ -348,16 +348,22 @@ class Summary:
                            self.keys.append(fullkey)
         elif call["api"].startswith("NtOpenKey"):
             registry = -1
-            subkey = ""
+            subkeyname = ""
+            subkeyhandle = -1
             handle = 0
 
             for argument in call["arguments"]:
-                if argument["name"] == "ObjectAttributes":
-                    subkey = argument["value"]
+                if argument["name"] == "ObjectAttributesName":
+                    subkeyname = argument["value"]
+                elif argument["name"] == "ObjectAttributesHandle":
+                    subkeyhandle = argument["value"]
                 elif argument["name"] == "KeyHandle":
                     handle = int(argument["value"], 16)
 
-            name = self._check_registry(registry, subkey, handle)
+            if subkeyhandle != 0:
+                name = self._check_registry(subkeyhandle, subkeyname, handle)
+            else:
+                name = self._check_registry(registry, subkeyname, handle)
             if name and name not in self.keys:
                 self.keys.append(name)
         elif call["api"].startswith("NtDeleteValueKey"):
@@ -838,8 +844,8 @@ class Enhanced(object):
         elif call["api"] in ["RegOpenKeyExA", "RegOpenKeyExW", "RegCreateKeyExA", "RegCreateKeyExW"]:
             self._add_keyhandle(args.get("Registry", ""), args.get("SubKey", ""), args.get("Handle", ""))
 
-        elif call["api"] in ["NtOpenKey"]:
-            self._add_keyhandle(None, args.get("ObjectAttributes", ""), args.get("KeyHandle", ""))
+        elif call["api"] in ["NtOpenKey","NtOpenKeyEx","NtCreateKey"]:
+            self._add_keyhandle(args.get("ObjectAttributesHandle", None), args.get("ObjectAttributesName", ""), args.get("KeyHandle", ""))
 
         elif call["api"] in ["RegCloseKey"]:
             self._remove_keyhandle(args.get("Handle", ""))
