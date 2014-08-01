@@ -278,7 +278,19 @@ class Summary:
         self.files = []
         self.handles = []
 
-    def _check_registry(self, registry, subkey, handle):
+    def _check_regvalue(self, handle, valuename):
+        if valuename == "":
+            valuename = "(Default)"
+        if handle == 0:
+            return
+        for a in self.handles:
+           if a["handle"] == handle:
+               fullkey = a["name"] + "\\" + valuename
+               if fullkey and fullkey not in self.keys:
+                   self.keys.append(fullkey)
+
+
+    def _check_regkey(self, registry, subkey, handle):
         for known_handle in self.handles:
             if handle != 0 and handle == known_handle["handle"]:
                 return None
@@ -326,7 +338,7 @@ class Summary:
                 elif argument["name"] == "Handle":
                     handle = int(argument["value"], 16)
 
-            name = self._check_registry(registry, subkey, handle)
+            name = self._check_regkey(registry, subkey, handle)
             if name and name not in self.keys:
                 self.keys.append(name)
         elif call["api"].startswith("RegSetValueEx") or call["api"].startswith("RegQueryValueEx"):
@@ -338,14 +350,8 @@ class Summary:
                     handle = int(argument["value"], 16)
                 elif argument["name"] == "ValueName":
                     valuename = argument["value"]
-            if valuename == "":
-                valuename = "(Default)"
-            if handle != 0:
-                for a in self.handles:
-                    if a["handle"] == handle:
-                       fullkey = a["name"] + "\\" + valuename
-                       if fullkey and fullkey not in self.keys:
-                           self.keys.append(fullkey)
+
+            self._check_regvalue(handle, valuename)
         elif call["api"].startswith("NtOpenKey") or call["api"] == "NtCreateKey":
             registry = -1
             subkeyname = ""
@@ -361,9 +367,9 @@ class Summary:
                     handle = int(argument["value"], 16)
 
             if subkeyhandle != 0:
-                name = self._check_registry(subkeyhandle, subkeyname, handle)
+                name = self._check_regkey(subkeyhandle, subkeyname, handle)
             else:
-                name = self._check_registry(registry, subkeyname, handle)
+                name = self._check_regkey(registry, subkeyname, handle)
             if name and name not in self.keys:
                 self.keys.append(name)
         elif call["api"].startswith("NtDeleteValueKey") or call["api"].startswith("NtQueryValueKey"):
@@ -375,14 +381,8 @@ class Summary:
                     handle = int(argument["value"], 16)
                 elif argument["name"] == "ValueName":
                     valuename = argument["value"]
-            if valuename == "":
-                valuename = "(Default)"
-            if handle != 0:
-                for a in self.handles:
-                    if a["handle"] == handle:
-                       fullkey = a["name"] + "\\" + valuename
-                       if fullkey and fullkey not in self.keys:
-                           self.keys.append(fullkey)
+
+            self._check_regvalue(handle, valuename)
         elif call["api"].startswith("RegCloseKey"):
             handle = 0
 
