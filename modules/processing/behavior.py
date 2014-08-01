@@ -278,16 +278,22 @@ class Summary:
         self.files = []
         self.handles = []
 
+    def _get_handle_name(handle):
+        for known_handle in self.handles:
+            if known_handle["handle"] == handle:
+                return known_handle["name"]
+        return ""
+
     def _check_regvalue(self, handle, valuename):
         if valuename == "":
             valuename = "(Default)"
         if handle == 0:
             return
-        for a in self.handles:
-           if a["handle"] == handle:
-               fullkey = a["name"] + "\\" + valuename
-               if fullkey and fullkey not in self.keys:
-                   self.keys.append(fullkey)
+        handlename = self._get_handle_name(handle)
+        if handlename != "":
+           fullkey = handlename + "\\" + valuename
+           if fullkey and fullkey not in self.keys:
+               self.keys.append(fullkey)
 
 
     def _check_regkey(self, registry, subkey, handle):
@@ -312,9 +318,9 @@ class Summary:
         elif registry == 0x80000006:
             name = "HKEY_DYN_DATA\\"
         else:
-            for known_handle in self.handles:
-                if registry == known_handle["handle"]:
-                    name = known_handle["name"] + "\\"
+            handlename = self._get_handle_name(handle)
+            if handlename != "":
+                    name = handlename + "\\"
 
         key = fix_key(name + subkey)
         self.handles.append({"handle": handle, "name": key})
