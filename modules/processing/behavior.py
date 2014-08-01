@@ -278,7 +278,7 @@ class Summary:
         self.files = []
         self.handles = []
 
-    def _get_handle_name(handle):
+    def _get_handle_name(self, handle):
         for known_handle in self.handles:
             if known_handle["handle"] == handle:
                 return known_handle["name"]
