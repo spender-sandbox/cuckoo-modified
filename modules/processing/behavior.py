@@ -318,7 +318,7 @@ class Summary:
         elif registry == 0x80000006:
             name = "HKEY_DYN_DATA\\"
         else:
-            handlename = self._get_handle_name(handle)
+            handlename = self._get_handle_name(registry)
             if handlename != "":
                     name = handlename + "\\"
 
