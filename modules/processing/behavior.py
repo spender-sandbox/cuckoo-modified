@@ -291,10 +291,9 @@ class Summary:
             return
         handlename = self._get_handle_name(handle)
         if handlename != "":
-           fullkey = handlename + "\\" + valuename
-           if fullkey and fullkey not in self.keys:
-               self.keys.append(fullkey)
+           return handlename + "\\" + valuename
 
+        return None
 
     def _check_regkey(self, registry, subkey, handle):
         for known_handle in self.handles:
@@ -357,7 +356,9 @@ class Summary:
                 elif argument["name"] == "ValueName":
                     valuename = argument["value"]
 
-            self._check_regvalue(handle, valuename)
+            name = self._check_regvalue(handle, valuename)
+            if name and name not in self.keys:
+               self.keys.append(name)
         elif call["api"].startswith("NtOpenKey") or call["api"] == "NtCreateKey":
             subkeyname = ""
             subkeyhandle = -1
@@ -384,7 +385,9 @@ class Summary:
                 elif argument["name"] == "ValueName":
                     valuename = argument["value"]
 
-            self._check_regvalue(handle, valuename)
+            name = self._check_regvalue(handle, valuename)
+            if name and name not in self.keys:
+               self.keys.append(name)
         elif call["api"].startswith("RegCloseKey"):
             handle = 0
 
@@ -838,8 +841,14 @@ class Enhanced(object):
         elif call["api"] in ["CreateFileW"]:
             _add_handle(self.filehandles, call["return"], args["FileName"])
 
-        elif call["api"] in ["NtClose", "CloseHandle"]:
+        elif call["api"] in ["CloseHandle"]:
+            # this could technically be used to close a registry key as well
             _remove_handle(self.filehandles, args["Handle"])
+
+        elif call["api"] in ["NtClose"]:
+            # A handle can be either file or registry-related, we don't need to know exactly which
+            _remove_handle(self.filehandles, args["Handle"])
+            self._remove_keyhandle(args.get("Handle", ""))
 
         # Services
         elif call["api"] in ["OpenServiceW"]:
@@ -853,6 +862,7 @@ class Enhanced(object):
             self._add_keyhandle(args.get("ObjectAttributesHandle", None), args.get("ObjectAttributesName", ""), args.get("KeyHandle", ""))
 
         elif call["api"] in ["RegCloseKey"]:
+            # this could technically be used to close a file handle as well
             self._remove_keyhandle(args.get("Handle", ""))
 
         return event
