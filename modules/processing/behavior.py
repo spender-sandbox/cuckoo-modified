@@ -359,7 +359,6 @@ class Summary:
 
             self._check_regvalue(handle, valuename)
         elif call["api"].startswith("NtOpenKey") or call["api"] == "NtCreateKey":
-            registry = -1
             subkeyname = ""
             subkeyhandle = -1
             handle = 0
@@ -372,10 +371,7 @@ class Summary:
                 elif argument["name"] == "KeyHandle":
                     handle = int(argument["value"], 16)
 
-            if subkeyhandle != 0:
-                name = self._check_regkey(subkeyhandle, subkeyname, handle)
-            else:
-                name = self._check_regkey(registry, subkeyname, handle)
+            name = self._check_regkey(subkeyhandle, subkeyname, handle)
             if name and name not in self.keys:
                 self.keys.append(name)
         elif call["api"].startswith("NtDeleteValueKey") or call["api"].startswith("NtQueryValueKey"):
