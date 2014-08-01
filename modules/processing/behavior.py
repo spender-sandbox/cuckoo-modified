@@ -338,11 +338,11 @@ class Summary:
                     handle = int(argument["value"], 16)
                 elif argument["name"] == "ValueName":
                     valuename = argument["value"]
+            if valuename == "":
+                valuename = "(Default)"
             if handle != 0:
                 for a in self.handles:
                     if a["handle"] == handle:
-                       if valuename == "":
-                               valuename = "(Default)"
                        fullkey = a["name"] + "\\" + valuename
                        if fullkey and fullkey not in self.keys:
                            self.keys.append(fullkey)
@@ -366,20 +366,23 @@ class Summary:
                 name = self._check_registry(registry, subkeyname, handle)
             if name and name not in self.keys:
                 self.keys.append(name)
-        elif call["api"].startswith("NtDeleteValueKey"):
-            registry = -1
-            subkey = ""
+        elif call["api"].startswith("NtDeleteValueKey") or call["api"].startswith("NtQueryValueKey"):
             handle = 0
+            valuename = ""
 
             for argument in call["arguments"]:
-                if argument["name"] == "ValueName":
-                    subkey = argument["value"]
-                elif argument["name"] == "KeyHandle":
+                if argument["name"] == "KeyHandle":
                     handle = int(argument["value"], 16)
-
-            name = self._check_registry(registry, subkey, handle)
-            if name and name not in self.keys:
-                self.keys.append(name)
+                elif argument["name"] == "ValueName":
+                    valuename = argument["value"]
+            if valuename == "":
+                valuename = "(Default)"
+            if handle != 0:
+                for a in self.handles:
+                    if a["handle"] == handle:
+                       fullkey = a["name"] + "\\" + valuename
+                       if fullkey and fullkey not in self.keys:
+                           self.keys.append(fullkey)
         elif call["api"].startswith("RegCloseKey"):
             handle = 0
 
