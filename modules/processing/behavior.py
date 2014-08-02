@@ -297,7 +297,7 @@ class Summary:
 
     def _check_regkey(self, registry, subkey, handle):
         for known_handle in self.handles:
-            if handle != 0 and handle == known_handle["handle"]:
+            if handle == known_handle["handle"]:
                 return None
 
         name = ""
@@ -322,7 +322,9 @@ class Summary:
                     name = handlename + "\\"
 
         key = fix_key(name + subkey)
-        self.handles.append({"handle": handle, "name": key})
+        # don't add handles of 0, this generally happens due to API failure
+        if handle != 0:
+            self.handles.append({"handle": handle, "name": key})
         return key
 
     def event_apicall(self, call, process):
