@@ -368,7 +368,7 @@ class Summary:
                 if argument["name"] == "ObjectAttributesName":
                     subkeyname = argument["value"]
                 elif argument["name"] == "ObjectAttributesHandle":
-                    subkeyhandle = argument["value"]
+                    subkeyhandle = int(argument["value"], 16)
                 elif argument["name"] == "KeyHandle":
                     handle = int(argument["value"], 16)
 
