@@ -714,7 +714,7 @@ class Signature(object):
                                  regex=regex,
                                  all=all)
 
-    def check_key(self, pattern, regex=False):
+    def check_key(self, pattern, regex=False, all=False):
         """Checks for a registry key being opened.
         @param pattern: string or expression to check for.
         @param regex: boolean representing if the pattern is a regular
@@ -727,7 +727,8 @@ class Signature(object):
         subject = self.results["behavior"]["summary"]["keys"]
         return self._check_value(pattern=pattern,
                                  subject=subject,
-                                 regex=regex)
+                                 regex=regex,
+                                 all=all)
 
     def check_mutex(self, pattern, regex=False, all=False):
         """Checks for a mutex being opened.
