@@ -657,23 +657,36 @@ class Signature(object):
         self._current_call_cache = None
         self._current_call_dict = None
 
-    def _check_value(self, pattern, subject, regex=False):
+    def _check_value(self, pattern, subject, regex=False, all=False):
         """Checks a pattern against a given subject.
         @param pattern: string or expression to check for.
         @param subject: target of the check.
         @param regex: boolean representing if the pattern is a regular
                       expression or not and therefore should be compiled.
-        @return: boolean with the result of the check.
+        @param all: boolean representing if all results should be returned
+                      in a set or not
+        @return: depending on the value of param 'all', either a set of
+                      matched items or the first matched item
         """
         if regex:
+            if all:
+                retset = set()
             exp = re.compile(pattern, re.IGNORECASE)
             if isinstance(subject, list):
                 for item in subject:
                     if exp.match(item):
-                        return item
+                        if all:
+                            retset.add(item)
+                        else:
+                            return item
             else:
                 if exp.match(subject):
-                    return subject
+                    if all:
+                        retset.add(subject)
+                    else:
+                        return subject
+            if all and len(retset) > 0:
+                return retset
         else:
             if isinstance(subject, list):
                 for item in subject:
@@ -685,51 +698,67 @@ class Signature(object):
 
         return None
 
-    def check_file(self, pattern, regex=False):
+    def check_file(self, pattern, regex=False, all=False):
         """Checks for a file being opened.
         @param pattern: string or expression to check for.
         @param regex: boolean representing if the pattern is a regular
                       expression or not and therefore should be compiled.
-        @return: boolean with the result of the check.
+        @param all: boolean representing if all results should be returned
+                      in a set or not
+        @return: depending on the value of param 'all', either a set of
+                      matched items or the first matched item
         """
         subject = self.results["behavior"]["summary"]["files"]
         return self._check_value(pattern=pattern,
                                  subject=subject,
-                                 regex=regex)
+                                 regex=regex,
+                                 all=all)
 
     def check_key(self, pattern, regex=False):
         """Checks for a registry key being opened.
         @param pattern: string or expression to check for.
         @param regex: boolean representing if the pattern is a regular
                       expression or not and therefore should be compiled.
-        @return: boolean with the result of the check.
+        @param all: boolean representing if all results should be returned
+                      in a set or not
+        @return: depending on the value of param 'all', either a set of
+                      matched items or the first matched item
         """
         subject = self.results["behavior"]["summary"]["keys"]
         return self._check_value(pattern=pattern,
                                  subject=subject,
                                  regex=regex)
 
-    def check_mutex(self, pattern, regex=False):
+    def check_mutex(self, pattern, regex=False, all=False):
         """Checks for a mutex being opened.
         @param pattern: string or expression to check for.
         @param regex: boolean representing if the pattern is a regular
                       expression or not and therefore should be compiled.
-        @return: boolean with the result of the check.
+        @param all: boolean representing if all results should be returned
+                      in a set or not
+        @return: depending on the value of param 'all', either a set of
+                      matched items or the first matched item
         """
         subject = self.results["behavior"]["summary"]["mutexes"]
         return self._check_value(pattern=pattern,
                                  subject=subject,
-                                 regex=regex)
+                                 regex=regex,
+                                 all=all)
 
-    def check_api(self, pattern, process=None, regex=False):
+    def check_api(self, pattern, process=None, regex=False, all=False):
         """Checks for an API being called.
         @param pattern: string or expression to check for.
         @param process: optional filter for a specific process name.
         @param regex: boolean representing if the pattern is a regular
                       expression or not and therefore should be compiled.
-        @return: boolean with the result of the check.
+        @param all: boolean representing if all results should be returned
+                      in a set or not
+        @return: depending on the value of param 'all', either a set of
+                      matched items or the first matched item
         """
         # Loop through processes.
+        if all:
+            retset = set()
         for item in self.results["behavior"]["processes"]:
             # Check if there's a process name filter.
             if process:
@@ -739,10 +768,18 @@ class Signature(object):
             # Loop through API calls.
             for call in item["calls"]:
                 # Check if the name matches.
-                if self._check_value(pattern=pattern,
+                ret = self._check_value(pattern=pattern,
                                      subject=call["api"],
-                                     regex=regex):
-                    return call["api"]
+                                     regex=regex,
+                                     all=all)
+                if ret:
+                    if all:
+                        retset.union(ret)
+                    else:
+                        return call["api"]
+
+        if all and len(retset) > 0:
+            return retset
 
         return None
 
@@ -752,7 +789,8 @@ class Signature(object):
                             name=None,
                             api=None,
                             category=None,
-                            regex=False):
+                            regex=False,
+                            all=False):
         """Checks for a specific argument of an invoked API.
         @param call: API call information.
         @param pattern: string or expression to check for.
@@ -761,8 +799,14 @@ class Signature(object):
         @param category: optional filter for a category name.
         @param regex: boolean representing if the pattern is a regular
                       expression or not and therefore should be compiled.
-        @return: boolean with the result of the check.
+        @param all: boolean representing if all results should be returned
+                      in a set or not
+        @return: depending on the value of param 'all', either a set of
+                      matched items or the first matched item
         """
+        if all:
+            retset = set()
+
         # Check if there's an API name filter.
         if api:
             if call["api"] != api:
@@ -781,10 +825,18 @@ class Signature(object):
                     continue
 
             # Check if the argument value matches.
-            if self._check_value(pattern=pattern,
+            ret = self._check_value(pattern=pattern,
                                  subject=argument["value"],
-                                 regex=regex):
-                return argument["value"]
+                                 regex=regex,
+                                 all=all)
+            if ret:
+                if all:
+                    retset.union(ret)
+                else:
+                    return argument["value"]
+
+        if all and len(retset) > 0:
+            return retset
 
         return False
 
@@ -794,7 +846,8 @@ class Signature(object):
                        api=None,
                        category=None,
                        process=None,
-                       regex=False):
+                       regex=False,
+                       all=False):
         """Checks for a specific argument of an invoked API.
         @param pattern: string or expression to check for.
         @param name: optional filter for the argument name.
@@ -803,8 +856,14 @@ class Signature(object):
         @param process: optional filter for a specific process name.
         @param regex: boolean representing if the pattern is a regular
                       expression or not and therefore should be compiled.
-        @return: boolean with the result of the check.
+        @param all: boolean representing if all results should be returned
+                      in a set or not
+        @return: depending on the value of param 'all', either a set of
+                      matched items or the first matched item
         """
+        if all:
+            retset = set()
+
         # Loop through processes.
         for item in self.results["behavior"]["processes"]:
             # Check if there's a process name filter.
@@ -815,50 +874,90 @@ class Signature(object):
             # Loop through API calls.
             for call in item["calls"]:
                 r = self.check_argument_call(call, pattern, name,
-                                             api, category, regex)
+                                             api, category, regex, all)
                 if r:
-                    return r
+                    if all:
+                        retset.union(r)
+                    else:
+                        return r
+
+        if all and len(retset) > 0:
+            return retset
 
         return None
 
-    def check_ip(self, pattern, regex=False):
+    def check_ip(self, pattern, regex=False, all=False):
         """Checks for an IP address being contacted.
         @param pattern: string or expression to check for.
         @param regex: boolean representing if the pattern is a regular
                       expression or not and therefore should be compiled.
-        @return: boolean with the result of the check.
+        @param all: boolean representing if all results should be returned
+                      in a set or not
+        @return: depending on the value of param 'all', either a set of
+                      matched items or the first matched item
         """
         return self._check_value(pattern=pattern,
                                  subject=self.results["network"]["hosts"],
-                                 regex=regex)
+                                 regex=regex,
+                                 all=all)
 
-    def check_domain(self, pattern, regex=False):
+    def check_domain(self, pattern, regex=False, all=False):
         """Checks for a domain being contacted.
         @param pattern: string or expression to check for.
         @param regex: boolean representing if the pattern is a regular
                       expression or not and therefore should be compiled.
-        @return: boolean with the result of the check.
+        @param all: boolean representing if all results should be returned
+                      in a set or not
+        @return: depending on the value of param 'all', either a set of
+                      matched items or the first matched item
         """
+
+        if all:
+            retset = set()
+
         for item in self.results["network"]["domains"]:
-            if self._check_value(pattern=pattern,
+            ret = self._check_value(pattern=pattern,
                                  subject=item["domain"],
-                                 regex=regex):
-                return item
+                                 regex=regex,
+                                 all=all)
+            if ret:
+                if all:
+                    retset.union(ret)
+                else:
+                    return item
+
+        if all and len(retset) > 0:
+            return retset
 
         return None
 
-    def check_url(self, pattern, regex=False):
+    def check_url(self, pattern, regex=False, all=False):
         """Checks for a URL being contacted.
         @param pattern: string or expression to check for.
         @param regex: boolean representing if the pattern is a regular
                       expression or not and therefore should be compiled.
-        @return: boolean with the result of the check.
+        @param all: boolean representing if all results should be returned
+                      in a set or not
+        @return: depending on the value of param 'all', either a set of
+                      matched items or the first matched item
         """
+
+        if all:
+            retset = set()
+
         for item in self.results["network"]["http"]:
-            if self._check_value(pattern=pattern,
+            ret = self._check_value(pattern=pattern,
                                  subject=item["uri"],
-                                 regex=regex):
-                return item
+                                 regex=regex,
+                                 all=all)
+            if ret:
+                if all:
+                    retset.union(ret)
+                else:
+                    return item
+
+        if all and len(retset) > 0:
+            return retset
 
         return None
 
