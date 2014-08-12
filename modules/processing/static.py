@@ -156,8 +156,8 @@ class PortableExecutable:
         if off is None:
             return None
         overlay = {}
-        overlay["offset"] = off
-        overlay["size"] = len(self.pe.__data__) - off
+        overlay["offset"] = "0x{0:08x}".format(off)
+        overlay["size"] = "0x{0:08x}".format(len(self.pe.__data__) - off)
 
         return overlay
 
