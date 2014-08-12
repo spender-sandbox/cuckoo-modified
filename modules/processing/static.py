@@ -153,7 +153,7 @@ class PortableExecutable:
             return None
 
         off = self.pe.get_overlay_data_start_offset()
-        if not off:
+        if off is None:
             return None
         overlay = {}
         overlay["offset"] = off
