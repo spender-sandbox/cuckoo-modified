@@ -49,6 +49,28 @@
             </div>
         {% endif %}
 
+        {% if results.static.pe_overlay %}
+            <div>
+                <h4><a href="javascript:showHide('pe_overlay');">Overlay</a></h4>
+                <div id="pe_overlay" style="display: none;">
+                    <table class="table table-striped table-bordered">
+                        <colgroup>
+                            <col width="150" />
+                            <col width="*" />
+                        </colgroup>
+                        <tr>
+                            <td><strong>Offset</strong>:</td>
+                            <td>{{results.static.pe_overlay.offset}}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Size</strong>:</td>
+                            <td>{{results.static.pe_overlay.size}}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        {% endif %}
+
         {% if results.static.pe_resources %}
             <div>
                 <h4><a href="javascript:showHide('pe_resources');">Resources</a></h4>

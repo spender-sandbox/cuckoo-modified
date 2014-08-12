@@ -145,6 +145,22 @@ class PortableExecutable:
 
         return sections
 
+    def _get_overlay(self):
+        """Get information on the PE overlay
+        @return: overlay dict or None.
+        """
+        if not self.pe:
+            return None
+
+        off = self.pe.get_overlay_data_start_offset()
+        if not off:
+            return None
+        overlay = {}
+        overlay["offset"] = off
+        overlay["size"] = len(self.pe.__data__) - off
+
+        return overlay
+
     def _get_resources(self):
         """Get resources.
         @return: resources dict or None.
@@ -260,6 +276,7 @@ class PortableExecutable:
         results["pe_imports"] = self._get_imported_symbols()
         results["pe_exports"] = self._get_exported_symbols()
         results["pe_sections"] = self._get_sections()
+        results["pe_overlay"] = self._get_overlay()
         results["pe_resources"] = self._get_resources()
         results["pe_versioninfo"] = self._get_versioninfo()
         results["pe_imphash"] = self._get_imphash()
