@@ -30,7 +30,7 @@ def main():
     parser.add_argument("--remote", type=str, action="store", default=None, help="Specify IP:port to a Cuckoo API server to submit remotely", required=False)
     parser.add_argument("--user", type=str, action="store", default=None, help="Username for Basic Auth", required=False)
     parser.add_argument("--password", type=str, action="store", default=None, help="Password for Basic Auth", required=False)
-    parser.add_argument("--sslnoverify", action="store_true", default=False, help="Only submit new samples, ignore duplicates", required=False)
+    parser.add_argument("--sslnoverify", action="store_true", default=False, help="Do not validate SSL cert", required=False)
     parser.add_argument("--ssl", action="store_true", default=False, help="Use SSL/TLS for remote", required=False)
     parser.add_argument("--url", action="store_true", default=False, help="Specify whether the target is an URL", required=False)
     parser.add_argument("--package", type=str, action="store", default="", help="Specify an analysis package", required=False)
