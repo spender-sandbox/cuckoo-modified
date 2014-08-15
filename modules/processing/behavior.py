@@ -363,18 +363,15 @@ class Summary:
                self.keys.append(name)
         elif call["api"].startswith("NtOpenKey") or call["api"] == "NtCreateKey":
             subkeyname = ""
-            subkeyhandle = -1
             handle = 0
 
             for argument in call["arguments"]:
-                if argument["name"] == "ObjectAttributesName":
+                if argument["name"] == "ObjectAttributes":
                     subkeyname = argument["value"]
-                elif argument["name"] == "ObjectAttributesHandle":
-                    subkeyhandle = int(argument["value"], 16)
                 elif argument["name"] == "KeyHandle":
                     handle = int(argument["value"], 16)
 
-            name = self._check_regkey(subkeyhandle, subkeyname, handle)
+            name = self._check_regkey(0, subkeyname, handle)
             if name and name not in self.keys:
                 self.keys.append(name)
         elif call["api"].startswith("NtDeleteValueKey") or call["api"].startswith("NtQueryValueKey"):
@@ -483,11 +480,11 @@ class Enhanced(object):
         @handle: handle to base key
         @subkey: subkey to add
         """
-        if handle != 0 and handle in self.keyhandles:
+        if handle != "" and handle in self.keyhandles:
             return self.keyhandles[handle]
 
         name = ""
-        if registry and registry != "0x00000000" and \
+        if registry != "" and registry != "0x00000000" and \
                 registry in self.keyhandles:
             name = self.keyhandles[registry]
 
@@ -861,7 +858,7 @@ class Enhanced(object):
             self._add_keyhandle(args.get("Registry", ""), args.get("SubKey", ""), args.get("Handle", ""))
 
         elif call["api"] in ["NtOpenKey","NtOpenKeyEx","NtCreateKey"]:
-            self._add_keyhandle(args.get("ObjectAttributesHandle", None), args.get("ObjectAttributesName", ""), args.get("KeyHandle", ""))
+            self._add_keyhandle("", args.get("ObjectAttributes", ""), args.get("KeyHandle", ""))
 
         elif call["api"] in ["RegCloseKey"]:
             # this could technically be used to close a file handle as well
