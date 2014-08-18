@@ -292,7 +292,7 @@ class Summary:
                     name = argument["value"]
             if name and name not in self.keys:
                 self.keys.append(name)
-        elif call["api"].startswith("RegSetValue") or call["api"].startswith("NtDeleteValueKey") or call["api"].startswith("RegDeleteValue") or call["api"].startswith("RegCreateKeyEx"):
+        elif call["api"].startswith("RegSetValue") or call["api"].startswith("NtDeleteValueKey") or call["api"].startswith("RegDeleteValue"):
             # for RegCreateKey, we might also want to check lpdwDisposition if it exists
             name = None
             for argument in call["arguments"]:
@@ -303,7 +303,21 @@ class Summary:
                self.keys.append(name)
             if name and name not in self.write_keys:
                self.write_keys.append(name)
-        elif call["api"].startswith("NtOpenKey") or call["api"] == "NtCreateKey":
+        elif call["api"].startswith("RegCreateKeyEx"):
+            name = None
+            disposition = 0
+            for argument in call["arguments"]:
+                if argument["name"] == "FullName":
+                    name = argument["value"]
+                elif argument["name"] == "Disposition":
+                    disposition = int(argument["value"], 10)
+
+            if name and name not in self.keys:
+                self.keys.append(name)
+            # if disposition == 1 then we created a new key
+            if name and disposition == 1 and name not in self.write_keys:
+               self.write_keys.append(name)
+        elif call["api"].startswith("NtOpenKey"):
             name = None
             for argument in call["arguments"]:
                 if argument["name"] == "ObjectAttributes":
@@ -313,13 +327,17 @@ class Summary:
                 self.keys.append(name)
         elif call["api"] == "NtCreateKey":
             name = None
+            disposition = 0
             for argument in call["arguments"]:
                 if argument["name"] == "ObjectAttributes":
                     name = argument["value"]
+                elif argument["name"] == "Disposition":
+                    disposition = int(argument["value"], 10)
 
             if name and name not in self.keys:
                 self.keys.append(name)
-            if name and name not in self.write_keys:
+            # if disposition == 1 then we created a new key
+            if name and disposition == 1 and name not in self.write_keys:
                self.write_keys.append(name)
         elif call["api"].startswith("RegQueryValue") or call["api"].startswith("NtQueryValueKey"):
             name = None
