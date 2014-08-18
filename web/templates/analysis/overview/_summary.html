@@ -4,6 +4,8 @@
         <ul class="nav nav-pills" style="margin-bottom: 0;">
             <li class="active"><a href="#summary_files" data-toggle="tab">Files</a></li>
             <li><a href="#summary_keys" data-toggle="tab">Registry Keys</a></li>
+            <li><a href="#summary_read_keys" data-toggle="tab">Read Registry Keys</a></li>
+            <li><a href="#summary_write_keys" data-toggle="tab">Written Registry Keys</a></li>
             <li><a href="#summary_mutexes" data-toggle="tab">Mutexes</a></li>
         </ul>
         <div class="tab-content">
@@ -20,6 +22,24 @@
                 <div class="well mono">
                 {% if analysis.behavior.summary.keys %}
                     {% for key in analysis.behavior.summary.keys %}
+                        {{key}}<br />
+                    {% endfor %}
+                {% endif %}
+                </div>
+            </div>
+            <div class="tab-pane fade" id="summary_read_keys">
+                <div class="well mono">
+                {% if analysis.behavior.summary.read_keys %}
+                    {% for key in analysis.behavior.summary.read_keys %}
+                        {{key}}<br />
+                    {% endfor %}
+                {% endif %}
+                </div>
+            </div>
+            <div class="tab-pane fade" id="summary_write_keys">
+                <div class="well mono">
+                {% if analysis.behavior.summary.write_keys %}
+                    {% for key in analysis.behavior.summary.write_keys %}
                         {{key}}<br />
                     {% endfor %}
                 {% endif %}

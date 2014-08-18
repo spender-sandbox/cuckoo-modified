@@ -274,6 +274,8 @@ class Summary:
 
     def __init__(self):
         self.keys = []
+        self.read_keys = []
+        self.write_keys = []
         self.mutexes = []
         self.files = []
         self.handles = []
@@ -283,14 +285,15 @@ class Summary:
         @return: None.
         """
 
-        if call["api"].startswith("RegOpenKeyEx") or call["api"].startswith("RegCreateKeyEx"):
+        if call["api"].startswith("RegOpenKeyEx"):
             name = None
             for argument in call["arguments"]:
                 if argument["name"] == "FullName":
                     name = argument["value"]
             if name and name not in self.keys:
                 self.keys.append(name)
-        elif call["api"].startswith("RegSetValueEx") or call["api"].startswith("RegQueryValueEx"):
+        elif call["api"].startswith("RegSetValue") or call["api"].startswith("NtDeleteValueKey") or call["api"].startswith("RegDeleteValue") or call["api"].startswith("RegCreateKeyEx"):
+            # for RegCreateKey, we might also want to check lpdwDisposition if it exists
             name = None
             for argument in call["arguments"]:
                 if argument["name"] == "FullName":
@@ -298,6 +301,8 @@ class Summary:
 
             if name and name not in self.keys:
                self.keys.append(name)
+            if name and name not in self.write_keys:
+               self.write_keys.append(name)
         elif call["api"].startswith("NtOpenKey") or call["api"] == "NtCreateKey":
             name = None
             for argument in call["arguments"]:
@@ -306,7 +311,17 @@ class Summary:
 
             if name and name not in self.keys:
                 self.keys.append(name)
-        elif call["api"].startswith("NtDeleteValueKey") or call["api"].startswith("NtQueryValueKey"):
+        elif call["api"] == "NtCreateKey":
+            name = None
+            for argument in call["arguments"]:
+                if argument["name"] == "ObjectAttributes":
+                    name = argument["value"]
+
+            if name and name not in self.keys:
+                self.keys.append(name)
+            if name and name not in self.write_keys:
+               self.write_keys.append(name)
+        elif call["api"].startswith("RegQueryValue") or call["api"].startswith("NtQueryValueKey"):
             name = None
             for argument in call["arguments"]:
                 if argument["name"] == "FullName":
@@ -314,6 +329,8 @@ class Summary:
 
             if name and name not in self.keys:
                self.keys.append(name)
+            if name and name not in self.read_keys:
+               self.read_keys.append(name)
         elif call["category"] == "filesystem":
             for argument in call["arguments"]:
                 if argument["name"] == "FileName":
@@ -336,9 +353,9 @@ class Summary:
 
     def run(self):
         """Get registry keys, mutexes and files.
-        @return: Summary of keys, mutexes and files.
+        @return: Summary of keys, read keys, written keys, mutexes and files.
         """
-        return {"files": self.files, "keys": self.keys, "mutexes": self.mutexes}
+        return {"files": self.files, "keys": self.keys, "read_keys": self.read_keys, "write_keys": self.write_keys, "mutexes": self.mutexes}
 
 class Enhanced(object):
     """Generates a more extensive high-level representation than Summary."""

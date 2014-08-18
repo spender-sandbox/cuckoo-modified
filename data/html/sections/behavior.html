@@ -55,6 +55,30 @@
                 Nothing to display.
             {% endif %}
         </div>
+        <div class="well well-small">
+            <b>Read Registry Keys</b>
+            {% if results.behavior.summary["read_keys"] %}
+                <ul>
+                    {% for key in results.behavior.summary["read_keys"] %}
+                    <li><span class="mono">{{key}}</span></li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                Nothing to display.
+            {% endif %}
+        </div>
+        <div class="well well-small">
+            <b>Written Registry Keys</b>
+            {% if results.behavior.summary["write_keys"] %}
+                <ul>
+                    {% for key in results.behavior.summary["write_keys"] %}
+                    <li><span class="mono">{{key}}</span></li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                Nothing to display.
+            {% endif %}
+        </div>
     {% endif %}
 
     <div class="section-title">
