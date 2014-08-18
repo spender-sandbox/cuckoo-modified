@@ -278,153 +278,42 @@ class Summary:
         self.files = []
         self.handles = []
 
-    def _get_handle_name(self, handle):
-        for known_handle in self.handles:
-            if known_handle["handle"] == handle:
-                return known_handle["name"]
-        return ""
-
-    def _check_regvalue(self, handle, valuename):
-        if valuename == "":
-            valuename = "(Default)"
-        if handle == 0:
-            return
-        handlename = self._get_handle_name(handle)
-        if handlename != "":
-           return handlename + "\\" + valuename
-
-        return None
-
-    def _check_regkey(self, registry, subkey, handle):
-        for known_handle in self.handles:
-            if handle == known_handle["handle"]:
-                return None
-
-        name = ""
-
-        if registry == 0x80000000:
-            name = "HKEY_CLASSES_ROOT\\"
-        elif registry == 0x80000001:
-            name = "HKEY_CURRENT_USER\\"
-        elif registry == 0x80000002:
-            name = "HKEY_LOCAL_MACHINE\\"
-        elif registry == 0x80000003:
-            name = "HKEY_USERS\\"
-        elif registry == 0x80000004:
-            name = "HKEY_PERFORMANCE_DATA\\"
-        elif registry == 0x80000005:
-            name = "HKEY_CURRENT_CONFIG\\"
-        elif registry == 0x80000006:
-            name = "HKEY_DYN_DATA\\"
-        else:
-            handlename = self._get_handle_name(registry)
-            if handlename != "":
-                    name = handlename + "\\"
-
-        key = fix_key(name + subkey)
-        # don't add handles of 0, this generally happens due to API failure
-        if handle != 0:
-            self.handles.append({"handle": handle, "name": key})
-        return key
-
     def event_apicall(self, call, process):
         """Generate processes list from streamed calls/processes.
         @return: None.
         """
 
         if call["api"].startswith("RegOpenKeyEx") or call["api"].startswith("RegCreateKeyEx"):
-            registry = 0
-            subkey = ""
-            handle = 0
-            fullname = ""
-
+            name = None
             for argument in call["arguments"]:
-                if argument["name"] == "Registry":
-                    registry = int(argument["value"], 16)
-                elif argument["name"] == "SubKey":
-                    subkey = argument["value"]
-                elif argument["name"] == "Handle":
-                    handle = int(argument["value"], 16)
-                elif argument["name"] == "FullName":
-                    fullname = argument["value"]
-            if fullname != "":
-                name = fullname
-            else:
-                name = self._check_regkey(registry, subkey, handle)
+                if argument["name"] == "FullName":
+                    name = argument["value"]
             if name and name not in self.keys:
                 self.keys.append(name)
         elif call["api"].startswith("RegSetValueEx") or call["api"].startswith("RegQueryValueEx"):
-            handle = 0
-            valuename = ""
-            fullname = ""
-
+            name = None
             for argument in call["arguments"]:
-                if argument["name"] == "Handle":
-                    handle = int(argument["value"], 16)
-                elif argument["name"] == "ValueName":
-                    valuename = argument["value"]
-                elif argument["name"] == "FullName":
-                    fullname = argument["value"]
+                if argument["name"] == "FullName":
+                    name = argument["value"]
 
-            if fullname != "":
-                name = fullname
-            else:
-                name = self._check_regvalue(handle, valuename)
             if name and name not in self.keys:
                self.keys.append(name)
         elif call["api"].startswith("NtOpenKey") or call["api"] == "NtCreateKey":
-            subkeyname = ""
-            handle = 0
-            fullname = ""
-
+            name = None
             for argument in call["arguments"]:
                 if argument["name"] == "ObjectAttributes":
-                    subkeyname = argument["value"]
-                elif argument["name"] == "KeyHandle":
-                    handle = int(argument["value"], 16)
-                elif argument["name"] == "FullName":
-                    fullname = argument["value"]
+                    name = argument["value"]
 
-            if fullname != "":
-                name = fullname
-            else:
-                name = self._check_regkey(0, subkeyname, handle)
             if name and name not in self.keys:
                 self.keys.append(name)
         elif call["api"].startswith("NtDeleteValueKey") or call["api"].startswith("NtQueryValueKey"):
-            handle = 0
-            valuename = ""
-            fullname = ""
-
+            name = None
             for argument in call["arguments"]:
-                if argument["name"] == "KeyHandle":
-                    handle = int(argument["value"], 16)
-                elif argument["name"] == "ValueName":
-                    valuename = argument["value"]
-                elif argument["name"] == "FullName":
-                    fullname = argument["value"]
+                if argument["name"] == "FullName":
+                    name = argument["value"]
 
-            if fullname != "":
-                name = fullname
-            else:
-                name = self._check_regvalue(handle, valuename)
             if name and name not in self.keys:
                self.keys.append(name)
-        elif call["api"].startswith("RegCloseKey"):
-            handle = 0
-
-            for argument in call["arguments"]:
-                if argument["name"] == "Handle":
-                    handle = int(argument["value"], 16)
-
-            if handle != 0:
-                for a in self.handles:
-                    if a["handle"] == handle:
-                        try:
-                            self.handles.remove(a)
-                        except ValueError:
-                            pass
-
         elif call["category"] == "filesystem":
             for argument in call["arguments"]:
                 if argument["name"] == "FileName":
@@ -820,17 +709,8 @@ class Enhanced(object):
             if call["api"] in ["NtReadFile", "ReadFile", "NtWriteFile"]:
                 event["data"]["file"] = _get_handle(self.filehandles, args["FileHandle"])
 
-            elif call["api"] in ["RegDeleteKeyA", "RegDeleteKeyW"]:
-                event["data"]["regkey"] = "{0}{1}".format(self._get_keyhandle(args.get("Handle", "")), args.get("SubKey", ""))
-
-            elif call["api"] in ["RegSetValueExA", "RegSetValueExW"]:
-                event["data"]["regkey"] = "{0}\\{1}".format(self._get_keyhandle(args.get("Handle", "")), args.get("ValueName", "(Default)"))
-
-            elif call["api"] in ["RegQueryValueExA", "RegQueryValueExW", "RegDeleteValueA", "RegDeleteValueW"]:
-                event["data"]["regkey"] = "{0}\\{1}".format(self._get_keyhandle(args.get("Handle", "UNKNOWN")), args.get("ValueName", "(Default)"))
-
-            elif call["api"] in ["NtQueryValueKey", "NtDeleteValueKey"]:
-                event["data"]["regkey"] = "{0}\\{1}".format(self._get_keyhandle(args.get("KeyHandle", "UNKNOWN")), args.get("ValueName", "(Default)"))
+            elif call["api"] in ["RegDeleteKeyA", "RegDeleteKeyW", "RegSetValueExA", "RegSetValueExW", "RegQueryValueExA", "RegQueryValueExW", "RegDeleteValueA", "RegDeleteValueW", "NtQueryValueKey", "NtDeleteValueKey"]:
+                event["data"]["regkey"] = "{0}".format(args.get("FullName", ""))
 
             elif call["api"] in ["LoadLibraryA", "LoadLibraryW", "LoadLibraryExA", "LoadLibraryExW", "LdrGetDllHandle"] and call["status"]:
                 self._add_loaded_module(args.get("FileName", ""), args.get("ModuleHandle", ""))
