@@ -293,7 +293,6 @@ class Summary:
             if name and name not in self.keys:
                 self.keys.append(name)
         elif call["api"].startswith("RegSetValue") or call["api"].startswith("NtDeleteValueKey") or call["api"].startswith("RegDeleteValue"):
-            # for RegCreateKey, we might also want to check lpdwDisposition if it exists
             name = None
             for argument in call["arguments"]:
                 if argument["name"] == "FullName":
