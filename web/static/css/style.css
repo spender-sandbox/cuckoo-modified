@@ -95,7 +95,7 @@ a.tag-label {
     background-color: #c5e0ff;
 }
 .threading {
-    background-color: #88e0ff;
+    background-color: #d3e0ff;
 }
 .services {
     background-color: #ccc5ff;
@@ -112,7 +112,9 @@ a.tag-label {
 .synchronization {
     background-color: #f9c5ff;
 }
-
+.crypto {
+    background-color: #f0f2c5;
+}
 .page-header {
     margin-bottom: 10px;
 }
