@@ -122,6 +122,24 @@ class PortableExecutable:
 
         return exports
 
+    def _get_directory_entries(self):
+        """Gets image directory entries.
+        @return: directory entries dict or None.
+        """
+        if not self.pe:
+            return None
+
+        dirents = []
+
+        for entry in self.pe.OPTIONAL_HEADER.DATA_DIRECTORY:
+            dirent = {}
+            dirent["name"] = entry.name
+            dirent["virtual_address"] = "0x{0:08x}".format(entry.VirtualAddress)
+            dirent["size"] = "0x{0:08x}".format(entry.Size)
+            dirents.append(dirent)
+
+        return dirents
+
     def _get_sections(self):
         """Gets sections.
         @return: sections dict or None.
@@ -275,6 +293,7 @@ class PortableExecutable:
         results["peid_signatures"] = self._get_peid_signatures()
         results["pe_imports"] = self._get_imported_symbols()
         results["pe_exports"] = self._get_exported_symbols()
+        results["pe_dirents"] = self._get_directory_entries()
         results["pe_sections"] = self._get_sections()
         results["pe_overlay"] = self._get_overlay()
         results["pe_resources"] = self._get_resources()
