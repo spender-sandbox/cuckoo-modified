@@ -8,7 +8,7 @@
             {% for host in analysis.network.hosts %}
             <tr>
                 {% if host|slice:":7" != "192.168" %}
-                <td>{{host}}</td>
+                <td><a href="https://www.virustotal.com/en/ip-address/{{host}}/information/">{{host}}</a></td>
                 {% endif %}
             </tr>
             {% endfor %}

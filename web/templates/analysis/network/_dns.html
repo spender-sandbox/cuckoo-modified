@@ -8,8 +8,8 @@
             </tr>
             {% for domain in analysis.network.domains %}
             <tr>
-                <td>{{domain.domain}}</td>
-                <td>{{domain.ip}}</td>
+                <td><a href="https://www.virustotal.com/en/domain/{{domain.domain}}/information/">{{domain.domain}}</a></td>
+                <td><a href="https://www.virustotal.com/en/ip-address/{{domain.ip}}/information/">{{domain.ip}}</a></td>
             </tr>
             {% endfor %}
         </table>
