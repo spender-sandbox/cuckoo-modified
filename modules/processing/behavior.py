@@ -819,12 +819,20 @@ class Enhanced(object):
 
 
 class Anomaly(object):
+    """Anomaly detected during analysis.
+    For example: a malware tried to remove Cuckoo's hooks.
+    """
+
     key = "anomaly"
 
     def __init__(self):
         self.anomalies = []
 
     def event_apicall(self, call, process):
+        """Process API calls.
+        @param call: API call object
+        @param process: process object
+        """
         if call["category"] != "anomaly":
             return
 
@@ -846,6 +854,7 @@ class Anomaly(object):
         ))
 
     def run(self):
+        """Fetch all anomalies."""
         return self.anomalies
 
 
