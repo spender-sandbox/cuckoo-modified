@@ -60,6 +60,8 @@ def delete_folder(folder):
 
 # Don't allow all characters in "string.printable", as newlines, carriage
 # returns, tabs, \x0b, and \x0c may mess up reports.
+# The above is true, but apparently we only care about \x0b and \x0c given
+# the code below
 PRINTABLE_CHARACTERS = \
     string.letters + string.digits + string.punctuation + " \t\r\n"
 
@@ -243,13 +245,6 @@ def to_unicode(s):
         result = unicode(s, errors="replace")
 
     return result
-
-def cleanup_value(v):
-    """Cleanup utility function, strips some unwanted parts from values."""
-    v = str(v)
-    if v.startswith("\\??\\"):
-        v = v[4:]
-    return v
 
 def sanitize_filename(x):
     """Kind of awful but necessary sanitizing of filenames to

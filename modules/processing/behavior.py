@@ -194,7 +194,8 @@ class ParseProcessLog(list):
 
             argument["name"] = arg_name
 
-            argument["value"] = convert_to_printable(cleanup_value(arg_value))
+            argument["value"] = convert_to_printable(arg_value)
+            argument["raw_value"] = arg_value
             arguments.append(argument)
 
         call["timestamp"] = timestamp
@@ -206,7 +207,7 @@ class ParseProcessLog(list):
         if isinstance(return_value, int):
             call["return"] = "0x%.08x" % return_value
         else:
-            call["return"] = convert_to_printable(cleanup_value(return_value))
+            call["return"] = convert_to_printable(return_value)
 
         call["arguments"] = arguments
         call["repeated"] = 0
