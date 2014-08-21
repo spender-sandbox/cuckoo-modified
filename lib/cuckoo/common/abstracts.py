@@ -660,6 +660,8 @@ class Signature(object):
         self.results = results
         self._current_call_cache = None
         self._current_call_dict = None
+        self._current_call_raw_cache = None
+        self._current_call_raw_dict = None
 
     def _check_value(self, pattern, subject, regex=False, all=False):
         """Checks a pattern against a given subject.
@@ -986,6 +988,28 @@ class Signature(object):
             return self._current_call_dict[name]
 
         return None
+
+    def get_raw_argument(self, call, name):
+        """Retrieves the raw value of a specific argument from an API call.
+        @param call: API call object.
+        @param name: name of the argument to retrieve.
+        @return: value of the requried argument.
+        """
+        # Check if the call passed to it was cached already.
+        # If not, we can start caching it and store a copy converted to a dict.
+        if call is not self._current_call_raw_cache:
+            self._current_call_raw_cache = call
+            self._current_call_raw_dict = dict()
+
+            for argument in call["arguments"]:
+                self._current_call_raw_dict[argument["name"]] = argument["raw_value"]
+
+        # Return the required argument.
+        if name in self._current_call_raw_dict:
+            return self._current_call_raw_dict[name]
+
+        return None
+
 
     def on_call(self, call, process):
         """Notify signature about API call. Return value determines
