@@ -455,6 +455,18 @@ class RunReporting:
     def __init__(self, task_id, results):
         """@param analysis_path: analysis folder path."""
         self.task = Database().view_task(task_id).to_dict()
+
+        # remove unwanted/duplicate information from reporting
+        # to do this, we need to first convert "calls" from a ParseProcessLog
+        # to a simple list
+        for process in results["behavior"]["processes"]:
+            newcalls = []
+            for call in process["calls"]:
+                for arg in call["arguments"]:
+                    del arg["raw_value"]
+                newcalls.append(call)
+            process["calls"] = newcalls
+
         self.results = results
         self.analysis_path = os.path.join(CUCKOO_ROOT, "storage", "analyses", str(task_id))
         self.cfg = Config(cfg=os.path.join(CUCKOO_ROOT, "conf", "reporting.conf"))
