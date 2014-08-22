@@ -42,6 +42,7 @@ class ParseProcessLog(list):
         self.process_id = None
         self.process_name = None
         self.parent_id = None
+        self.module_path = None
         self.first_seen = None
         self.calls = self
         self.lastcall = None
@@ -134,6 +135,7 @@ class ParseProcessLog(list):
 
     def log_process(self, context, timestring, pid, ppid, modulepath, procname):
         self.process_id, self.parent_id, self.process_name = pid, ppid, procname
+        self.module_path = modulepath
         self.first_seen = timestring
 
     def log_thread(self, context, pid):
@@ -257,6 +259,7 @@ class Processes:
                 "process_id": current_log.process_id,
                 "process_name": current_log.process_name,
                 "parent_id": current_log.parent_id,
+                "module_path": current_log.module_path,
                 "first_seen": logtime(current_log.first_seen),
                 "calls": current_log.calls,
             })
