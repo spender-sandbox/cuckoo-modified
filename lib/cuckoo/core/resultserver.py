@@ -133,6 +133,7 @@ class ResultHandler(SocketServer.BaseRequestHandler):
         self.end_request = Event()
         self.done_event = Event()
         self.pid, self.ppid, self.procname = None, None, None
+        self.module_path = None
         self.server.register_handler(self)
 
     def finish(self):
@@ -254,6 +255,7 @@ class ResultHandler(SocketServer.BaseRequestHandler):
         self.rawlogfd.write(self.startbuf)
 
         self.pid, self.ppid, self.procname = pid, ppid, procname
+        self.module_path = modulepath
 
     def log_thread(self, context, pid):
         log.debug("New thread (tid={0}, pid={1})".format(context[3], pid))
