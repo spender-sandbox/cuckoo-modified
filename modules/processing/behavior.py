@@ -41,6 +41,7 @@ class ParseProcessLog(list):
         self.lastcall = None
         self.api_count = 0
         self.call_id = 0
+        self.conversion_cache = {}
         self.cfg = Config()
         self.api_limit = self.cfg.processing.analysis_call_limit  # Limit of API calls per process
 
@@ -272,7 +273,7 @@ class ParseProcessLog(list):
 
             argument["name"] = arg_name
 
-            argument["value"] = convert_to_printable(str(arg_value))
+            argument["value"] = convert_to_printable(str(arg_value), self.conversion_cache)
             argument["raw_value"] = arg_value
             pretty = pretty_print_arg(category, api_name, arg_name, argument["value"])
             if pretty:
@@ -290,7 +291,7 @@ class ParseProcessLog(list):
         if isinstance(return_value, int) or isinstance(return_value, long):
             call["return"] = "0x%.08x" % return_value
         else:
-            call["return"] = convert_to_printable(str(return_value))
+            call["return"] = convert_to_printable(str(return_value), self.conversion_cache)
 
         prettyret = pretty_print_retval(category, api_name, call["status"], call["return"])
         if prettyret:

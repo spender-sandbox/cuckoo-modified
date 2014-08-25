@@ -81,14 +81,20 @@ def is_printable(s):
             return False
     return True
 
-def convert_to_printable(s):
+def convert_to_printable(s, cache=None):
     """Convert char to printable.
     @param s: string.
+    @param cache: an optional cache
     @return: sanitized string.
     """
     if is_printable(s):
         return s
-    return "".join(convert_char(c) for c in s)
+
+    if cache is None:
+        return "".join(convert_char(c) for c in s)
+    elif not s in cache:
+        cache[s] = "".join(convert_char(c) for c in s)
+    return cache[s]
 
 def pretty_print_retval(category, api_name, status, retval):
     """Creates pretty-printed versions of an API return value
