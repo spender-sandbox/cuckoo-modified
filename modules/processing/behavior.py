@@ -47,16 +47,17 @@ class ParseProcessLog(list):
         if os.path.exists(log_path) and os.stat(log_path).st_size > 0:
             self.parse_first_and_reset()
 
-        self.api_call_cache = []
-        self.api_pointer = 0
+        if self.cfg.processing.ram_boost:
+            self.api_call_cache = []
+            self.api_pointer = 0
 
-        try:
-            while True:
-                i = self.real_next()
-                self.api_call_cache.append(i)
-        except StopIteration:
-            pass
-        self.api_call_cache.append(None)
+            try:
+                while True:
+                    i = self.real_next()
+                    self.api_call_cache.append(i)
+            except StopIteration:
+                pass
+            self.api_call_cache.append(None)
 
     def parse_first_and_reset(self):
         """ Open file and either init Netlog or Bson Parser. Read till first process
@@ -169,11 +170,14 @@ class ParseProcessLog(list):
         """ Just accessing the cache
         """
 
-        res = self.api_call_cache[self.api_pointer]
-        if res is None:
-            raise StopIteration()
-        self.api_pointer += 1
-        return res
+        if self.cfg.processing.ram_boost:
+            res = self.api_call_cache[self.api_pointer]
+            if res is None:
+                raise StopIteration()
+            self.api_pointer += 1
+            return res
+        else:
+            return self.real_next()
 
     def log_process(self, context, timestring, pid, ppid, modulepath, procname):
         """ log process information parsed from data file
