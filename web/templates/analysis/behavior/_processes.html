@@ -71,6 +71,7 @@ function load_filtered_chunk(pid, category) {
                 <a id="badge_process_{{process.process_id}}" class="badge process" style="color:black;">process</a>
                 <a id="badge_threading_{{process.process_id}}" class="badge threading" style="color:black;">threading</a>
                 <a id="badge_services_{{process.process_id}}" class="badge services" style="color:black;">services</a>
+                <a id="badge_device_{{process.process_id}}" class="badge device" style="color:black;">device</a>
                 <a id="badge_sync_{{process.process_id}}" class="badge synchronization" style="color:black;">synchronization</a>
                 <a id="badge_crypto_{{process.process_id}}" class="badge crypto" style="color:black;">crypto</a>
             </p>
@@ -85,6 +86,7 @@ function load_filtered_chunk(pid, category) {
                 $("#badge_process_{{process.process_id}}").click(function() { load_filtered_chunk({{process.process_id}}, "process"); });
                 $("#badge_threading_{{process.process_id}}").click(function() { load_filtered_chunk({{process.process_id}}, "threading"); });
                 $("#badge_services_{{process.process_id}}").click(function() { load_filtered_chunk({{process.process_id}}, "services"); });
+                $("#badge_device_{{process.process_id}}").click(function() { load_filtered_chunk({{process.process_id}}, "device"); });
                 $("#badge_sync_{{process.process_id}}").click(function() { load_filtered_chunk({{process.process_id}}, "synchronization"); });
                 $("#badge_crypto_{{process.process_id}}").click(function() { load_filtered_chunk({{process.process_id}}, "crypto"); });
             });
