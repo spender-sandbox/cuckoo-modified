@@ -15,9 +15,14 @@ try:
     from lib.cuckoo.common.exceptions import CuckooDependencyError
     from lib.cuckoo.core.startup import check_working_directory, check_configs
     from lib.cuckoo.core.startup import check_version, create_structure
-    from lib.cuckoo.core.startup import init_logging, init_modules, init_tasks, init_yara
+    from lib.cuckoo.core.startup import init_logging, init_modules
+    from lib.cuckoo.core.startup import init_tasks, init_yara
     from lib.cuckoo.core.scheduler import Scheduler
     from lib.cuckoo.core.resultserver import ResultServer
+
+    import bson
+
+    bson  # Pretend like it's actually being used (for static checkers.)
 except (CuckooDependencyError, ImportError) as e:
     sys.exit("ERROR: Missing dependency: {0}".format(e))
 
