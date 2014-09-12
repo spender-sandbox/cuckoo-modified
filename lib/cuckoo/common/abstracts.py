@@ -712,6 +712,38 @@ class Signature(object):
                                  regex=regex,
                                  all=all)
 
+    def check_read_file(self, pattern, regex=False, all=False):
+        """Checks for a file being read from.
+        @param pattern: string or expression to check for.
+        @param regex: boolean representing if the pattern is a regular
+                      expression or not and therefore should be compiled.
+        @param all: boolean representing if all results should be returned
+                      in a set or not
+        @return: depending on the value of param 'all', either a set of
+                      matched items or the first matched item
+        """
+        subject = self.results["behavior"]["summary"]["read_files"]
+        return self._check_value(pattern=pattern,
+                                 subject=subject,
+                                 regex=regex,
+                                 all=all)
+
+    def check_write_file(self, pattern, regex=False, all=False):
+        """Checks for a file being written to.
+        @param pattern: string or expression to check for.
+        @param regex: boolean representing if the pattern is a regular
+                      expression or not and therefore should be compiled.
+        @param all: boolean representing if all results should be returned
+                      in a set or not
+        @return: depending on the value of param 'all', either a set of
+                      matched items or the first matched item
+        """
+        subject = self.results["behavior"]["summary"]["write_files"]
+        return self._check_value(pattern=pattern,
+                                 subject=subject,
+                                 regex=regex,
+                                 all=all)
+
     def check_key(self, pattern, regex=False, all=False):
         """Checks for a registry key being opened.
         @param pattern: string or expression to check for.

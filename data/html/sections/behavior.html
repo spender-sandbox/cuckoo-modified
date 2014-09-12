@@ -20,10 +20,34 @@
             <h4>Behavior Summary</h4>
         </div>
         <div class="well well-small">
-            <b>Files</b>
+            <b>Accessed Files</b>
             {% if results.behavior.summary.files %}
                 <ul>
                     {% for file in results.behavior.summary.files %}
+                    <li><span class="mono">{{file}}</span></li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                Nothing to display.
+            {% endif %}
+        </div>
+        <div class="well well-small">
+            <b>Read Files</b>
+            {% if results.behavior.summary.files %}
+                <ul>
+                    {% for file in results.behavior.summary.read_files %}
+                    <li><span class="mono">{{file}}</span></li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                Nothing to display.
+            {% endif %}
+        </div>
+        <div class="well well-small">
+            <b>Modified Files</b>
+            {% if results.behavior.summary.files %}
+                <ul>
+                    {% for file in results.behavior.summary.write_files %}
                     <li><span class="mono">{{file}}</span></li>
                     {% endfor %}
                 </ul>

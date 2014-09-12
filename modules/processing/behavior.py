@@ -284,6 +284,8 @@ class Summary:
         self.write_keys = []
         self.mutexes = []
         self.files = []
+        self.read_files = []
+        self.write_files = []
         self.handles = []
 
     def event_apicall(self, call, process):
@@ -355,14 +357,39 @@ class Summary:
             if name and name not in self.read_keys:
                self.read_keys.append(name)
         elif call["category"] == "filesystem":
+            filename = None
+            srcfilename = None
+            dstfilename = None
+            access = None
             for argument in call["arguments"]:
                 if argument["name"] == "FileName":
-                    value = argument["value"].strip()
-                    if not value:
-                        continue
+                    filename = argument["value"].strip()
+                elif argument["name"] == "ExistingFileName":
+                    srcfilename = argument["value"].strip()
+                elif argument["name"] == "NewFileName":
+                    dstfilename = argument["value"].strip()
+                elif argument["name"] == "DesiredAccess":
+                    access = int(argument["value"], 16)
+            if filename:
+                if access and access & 0x80000000 and filename not in self.read_files:
+                    self.read_files.append(filename)
+                if access and access & 0x40000000 and filename not in self.write_files:
+                    self.write_files.append(filename)
+                if call["api"].find("Delete") != -1 and filename not in self.write_files:
+                    self.write_files.append(filename)
+                if filename not in self.files:
+                    self.files.append(filename)
+            if srcfilename:
+                if srcfilename not in self.read_files:
+                    self.read_files.append(srcfilename)
+                if srcfilename not in self.files:
+                    self.files.append(srcfilename)
+            if dstfilename:
+                if dstfilename not in self.write_files:
+                    self.write_files.append(srcfilename)
+                if dstfilename not in self.files:
+                    self.files.append(dstfilename)
 
-                    if value not in self.files:
-                        self.files.append(value)
 
         elif call["category"] == "synchronization":
             for argument in call["arguments"]:
@@ -378,7 +405,7 @@ class Summary:
         """Get registry keys, mutexes and files.
         @return: Summary of keys, read keys, written keys, mutexes and files.
         """
-        return {"files": self.files, "keys": self.keys, "read_keys": self.read_keys, "write_keys": self.write_keys, "mutexes": self.mutexes}
+        return {"files": self.files, "read_files" : self.read_files, "write_files" : self.write_files, "keys": self.keys, "read_keys": self.read_keys, "write_keys": self.write_keys, "mutexes": self.mutexes}
 
 class Enhanced(object):
     """Generates a more extensive high-level representation than Summary."""

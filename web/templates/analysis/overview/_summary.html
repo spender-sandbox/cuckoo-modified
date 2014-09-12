@@ -2,7 +2,9 @@
     <h4>Summary</h4>
     <div class="tabbable tabs">
         <ul class="nav nav-pills" style="margin-bottom: 0;">
-            <li class="active"><a href="#summary_files" data-toggle="tab">Files</a></li>
+            <li class="active"><a href="#summary_files" data-toggle="tab">Accessed Files</a></li>
+            <li><a href="#summary_read_files" data-toggle="tab">Read Files</a></li>
+            <li><a href="#summary_write_files" data-toggle="tab">Modified Files</a></li>
             <li><a href="#summary_keys" data-toggle="tab">Registry Keys</a></li>
             <li><a href="#summary_read_keys" data-toggle="tab">Read Registry Keys</a></li>
             <li><a href="#summary_write_keys" data-toggle="tab">Written Registry Keys</a></li>
@@ -13,6 +15,24 @@
                 <div class="well mono">
                 {% if analysis.behavior.summary.files %}
                     {% for file in analysis.behavior.summary.files %}
+                        {{file}}<br />
+                    {% endfor %}
+                {% endif %}
+                </div>
+            </div>
+            <div class="tab-pane fade in active" id="summary_read_files">
+                <div class="well mono">
+                {% if analysis.behavior.summary.read_files %}
+                    {% for file in analysis.behavior.summary.read_files %}
+                        {{file}}<br />
+                    {% endfor %}
+                {% endif %}
+                </div>
+            </div>
+            <div class="tab-pane fade in active" id="summary_write_files">
+                <div class="well mono">
+                {% if analysis.behavior.summary.write_files %}
+                    {% for file in analysis.behavior.summary.write_files %}
                         {{file}}<br />
                     {% endfor %}
                 {% endif %}
