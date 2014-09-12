@@ -243,6 +243,8 @@ def search(request):
                                            "error": "Invalid search term: %s" % term},
                                           context_instance=RequestContext(request))
         else:
+            # hash matching is lowercase and case sensitive
+            value = value.lower()
             if re.match(r"^([a-fA-F\d]{32})$", value):
                 records = results_db.analysis.find({"target.file.md5": value}).sort([["_id", -1]])
             elif re.match(r"^([a-fA-F\d]{40})$", value):
