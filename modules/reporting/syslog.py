@@ -177,19 +177,19 @@ class Syslog(Report):
         proto = self.options.get("protocol", None).lower()
 		# A few validations...
         if not server:
-                raise CuckooReportingError("Syslog Server IP not defined")
+                raise CuckooReportError("Syslog Server IP not defined")
         if not port:
-                raise CuckooReportingError("Syslog Server port not defined")
+                raise CuckooReportError("Syslog Server port not defined")
         if not proto:
-                raise CuckooReportingError("Syslog Protocol not defined")
+                raise CuckooReportError("Syslog Protocol not defined")
         if proto != "tcp" and proto != "udp":
-                raise CuckooReportingError("Syslog Protocol configuration error, "
+                raise CuckooReportError("Syslog Protocol configuration error, "
                                            "protocol must be TCP or UDP.")
 		# Generate the syslog string
         try:
             result = self.createLog(results)
         except:
-            raise CuckooReportingError("Error creating syslog formatted log.")
+            raise CuckooReportError("Error creating syslog formatted log.")
         # Check if the user wants it stored in the reports directory as well
         do_log = self.options.get("logfile", None)
         if do_log:
@@ -199,7 +199,7 @@ class Syslog(Report):
                 syslogfile = open(str(os.path.join(self.reports_path, logfile)), "w")
                 syslogfile.write(result)
             except:
-                raise CuckooReportingError("Error writing the syslog output file.")
+                raise CuckooReportError("Error writing the syslog output file.")
             finally:
                 syslogfile.close()
         # Attempt to connect to the syslog server
