@@ -285,8 +285,9 @@ class BsonParser(object):
         index = dec.get("I", -1)
         tid = dec.get("T", 0)
         time = dec.get("t", 0)
+        caller = dec.get("R", 0)
 
-        context = [index, 1, 0, tid, time]
+        context = [index, 1, 0, tid, time, caller]
 
         if mtype == "info":
             # API call index info message, explaining the argument names, etc.

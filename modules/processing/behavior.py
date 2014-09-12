@@ -147,13 +147,14 @@ class ParseProcessLog(list):
                              msg=msg)
 
     def log_call(self, context, apiname, category, arguments):
-        apiindex, status, returnval, tid, timediff = context
+        apiindex, status, returnval, tid, timediff, caller = context
 
         current_time = self.first_seen + datetime.timedelta(0, 0, timediff*1000)
         timestring = logtime(current_time)
 
         self.lastcall = self._parse([timestring,
                                      tid,
+                                     caller,
                                      category,
                                      apiname,
                                      status,
@@ -173,17 +174,18 @@ class ParseProcessLog(list):
         try:
             timestamp = row[0]    # Timestamp of current API call invocation.
             thread_id = row[1]    # Thread ID.
-            category = row[2]     # Win32 function category.
-            api_name = row[3]     # Name of the Windows API.
-            status_value = row[4] # Success or Failure?
-            return_value = row[5] # Value returned by the function.
+            caller = row[2]       # non-system DLL return address
+            category = row[3]     # Win32 function category.
+            api_name = row[4]     # Name of the Windows API.
+            status_value = row[5] # Success or Failure?
+            return_value = row[6] # Value returned by the function.
         except IndexError as e:
             log.debug("Unable to parse process log row: %s", e)
             return None
 
         # Now walk through the remaining columns, which will contain API
         # arguments.
-        for index in range(6, len(row)):
+        for index in range(7, len(row)):
             argument = {}
 
             # Split the argument name with its value based on the separator.
@@ -201,6 +203,7 @@ class ParseProcessLog(list):
 
         call["timestamp"] = timestamp
         call["thread_id"] = str(thread_id)
+        call["caller"] = "0x%.08x" % caller
         call["category"] = category
         call["api"] = api_name
         call["status"] = bool(int(status_value))
