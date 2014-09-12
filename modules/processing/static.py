@@ -342,7 +342,7 @@ class PDF:
 
         # Get streams, counts and format.
         streams = {}
-        for stream in pdf_data['pdfid']['keywords']['keyword']:
+        for stream in pdfid_data['pdfid']['keywords']['keyword']:
             streams[str(stream['name'])] = stream['count']
 
         result = {}
@@ -400,7 +400,7 @@ class PDF:
                         ret_data = "PyV8 not installed, unable to extract JavaScript."
 
                     obj_data["Data"] = ret_data
-                    objects.append(obj_data)
+                    retobjects.append(obj_data)
                     object_counter += 1
 
                 else:
