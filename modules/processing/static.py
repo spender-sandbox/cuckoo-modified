@@ -342,7 +342,7 @@ class PDF:
 
         # Get streams, counts and format.
         streams = {}
-        for stream in pdf['pdfid']['keywords']['keyword']:
+        for stream in pdf_data['pdfid']['keywords']['keyword']:
             streams[str(stream['name'])] = stream['count']
 
         result = {}
