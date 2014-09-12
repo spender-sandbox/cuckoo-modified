@@ -2,6 +2,8 @@
 # This file is part of Cuckoo Sandbox - http://www.cuckoosandbox.org
 # See the file 'docs/LICENSE' for copying permission.
 
+import json
+import logging
 import os
 from datetime import datetime
 
@@ -18,13 +20,46 @@ try:
 except ImportError:
     HAVE_PEFILE = False
 
+try:
+    import PyV8
+    HAVE_PYV8 = True
+except ImportError:
+    HAVE_PYV8 = False
+
 from lib.cuckoo.common.abstracts import Processing
 from lib.cuckoo.common.constants import CUCKOO_ROOT
 from lib.cuckoo.common.objects import File
 from lib.cuckoo.common.utils import convert_to_printable
 
+log = logging.getLogger(__name__)
+
 # Partially taken from
 # http://malwarecookbook.googlecode.com/svn/trunk/3/8/pescanner.py
+
+def _get_filetype(data):
+    """Gets filetype, uses libmagic if available.
+    @param data: data to be analyzed.
+    @return: file type or None.
+    """
+    if not HAVE_MAGIC:
+        return None
+
+    try:
+        ms = magic.open(magic.MAGIC_NONE)
+        ms.load()
+        file_type = ms.buffer(data)
+    except:
+        try:
+            file_type = magic.from_buffer(data)
+        except Exception:
+            return None
+    finally:
+        try:
+            ms.close()
+        except:
+            pass
+
+    return file_type
 
 class PortableExecutable:
     """PE analysis."""
@@ -34,30 +69,6 @@ class PortableExecutable:
         self.file_path = file_path
         self.pe = None
 
-    def _get_filetype(self, data):
-        """Gets filetype, uses libmagic if available.
-        @param data: data to be analyzed.
-        @return: file type or None.
-        """
-        if not HAVE_MAGIC:
-            return None
-
-        try:
-            ms = magic.open(magic.MAGIC_NONE)
-            ms.load()
-            file_type = ms.buffer(data)
-        except:
-            try:
-                file_type = magic.from_buffer(data)
-            except Exception:
-                return None
-        finally:
-            try:
-                ms.close()
-            except:
-                pass
-
-        return file_type
 
     def _get_peid_signatures(self):
         """Gets PEID signatures.
@@ -203,7 +214,7 @@ class PortableExecutable:
                             if hasattr(resource_id, "directory"):
                                 for resource_lang in resource_id.directory.entries:
                                     data = self.pe.get_data(resource_lang.data.struct.OffsetToData, resource_lang.data.struct.Size)
-                                    filetype = self._get_filetype(data)
+                                    filetype = _get_filetype(data)
                                     language = pefile.LANG.get(resource_lang.data.lang, None)
                                     sublanguage = pefile.get_sublang_name_for_lang(resource_lang.data.lang, resource_lang.data.sublang)
 
@@ -302,6 +313,115 @@ class PortableExecutable:
         results["pe_timestamp"] = self._get_timestamp()
         results["imported_dll_count"] = len([x for x in results["pe_imports"] if x.get("dll")])
         return results
+
+class PDF:
+    """PDF Analysis."""
+    def __init__(self, file_path):
+        self.file_path = file_path
+        self.pdf = None
+
+    def _parse(self, filepath):
+        """Parses the PDF for static information. Uses PyV8 from peepdf to
+        extract JavaScript from PDF objects.
+        @param filepath: Path to file to be analyzed.
+        @return: results dict or None.
+        """
+        # Load the PDF with PDFiD and convert it to JSON for processing
+        pdf_data = PDFiD(filepath, False, True)
+        pdf_json = PDFiD2JSON(pdf_data, True)
+        pdfid_data = json.loads(pdf_json)[0]
+
+        info = {}
+        info["PDF Header"] = pdfid_data['pdfid']['header']
+        info["Total Entropy"] = pdfid_data['pdfid']['totalEntropy']
+        info['Entropy In Streams'] = pdfid_data['pdfid']['streamEntropy']
+        info['Entropy Out Streams'] = pdfid_data['pdfid']['nonStreamEntropy']
+        info['Count %% EOF'] = pdfid_data['pdfid']['countEof']
+        info['Data After EOF'] = pdfid_data['pdfid']['countChatAfterLastEof']
+        dates = pdfid_data['pdfid']['dates']['date']
+
+        # Get streams, counts and format.
+        streams = {}
+        for stream in pdf['pdfid']['keywords']['keyword']:
+            streams[str(stream['name'])] = stream['count']
+
+        result = {}
+        result["Info"] = info
+        result["Dates"] = dates
+        result["Streams"] = streams
+
+        log.debug("About to parse with PDFParser")
+        parser = PDFParser()
+        ret, pdf = parser.parse(filepath, True, False)
+        objects = []
+        retobjects = []
+        count = 0
+        object_counter = 1
+
+        for i in range(len(pdf.body)):
+            body = pdf.body[count]
+            objects = body.objects
+
+            for index in objects:
+                oid = objects[index].id
+                offset = objects[index].offset
+                size = objects[index].size
+                details = objects[index].object
+
+                obj_data = {}
+                obj_data["Object ID"] = oid
+                obj_data["Offset"] = offset
+                obj_data["Size"] = size
+                if details.type == 'stream':
+                    encoded_stream = details.encodedStream
+                    decoded_stream = details.decodedStream
+                    obj_data["File Type"] = _get_filetype(decoded_stream)[:100]
+                    if HAVE_PYV8:
+                        try:
+                            jsdata = analyseJS(decoded_stream.strip())[0][0]
+                        except Exception,e:
+                            jsdata = "PyV8 failed to parse the stream."
+                        if jsdata == None:
+                            jsdata = "PyV8 did not detect JavaScript in the stream. (Possibly encrypted)"
+
+                        # The following loop is required to "JSONify" the strings returned from PyV8.
+                        # As PyV8 returns byte strings, we must parse out bytecode and
+                        # replace it with an escape '\'. We can't use encode("string_escape")
+                        # as this would mess up the new line representation which is used for
+                        # beautifying the javascript code for Django's web interface.
+                        ret_data = ""
+                        for i in xrange(len(jsdata)):
+                            if ord(jsdata[i]) > 127:
+                                tmp = "\\x" + str(jsdata[i].encode("hex"))
+                            else:
+                                tmp = jsdata[i]
+                            ret_data += tmp
+                    else:
+                        ret_data = "PyV8 not installed, unable to extract JavaScript."
+
+                    obj_data["Data"] = ret_data
+                    objects.append(obj_data)
+                    object_counter += 1
+
+                else:
+                    obj_data["File Type"] = "Encoded"
+                    obj_data["Data"] = "Encoded"
+                    retobjects.append(obj_data)
+
+            count += 1
+            result["Objects"] = retobjects
+        return result
+
+    def run(self):
+        """Run analysis.
+        @return: analysis results dict or None.
+        """
+        if not os.path.exists(self.file_path):
+            return None
+        log.debug("Starting to load PDF")
+        results = self._parse(self.file_path)
+        return results
+
 
 class Static(Processing):
     """Static analysis."""

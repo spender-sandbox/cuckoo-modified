@@ -69,6 +69,9 @@ class Syslog(Report):
             syslog += 'File_Name="' + str(results["target"]["file"]["name"]) + '" '
             syslog += 'File_Size="' + str(results["target"]["file"]["size"]) + '" '
             syslog += 'File_Type="' + str(results["target"]["file"]["type"]) + '" '
+            if "PDF" in str(results["target"]["file"]["type"]:
+                syslog += 'Object_Count="' + str(len(results["static"]["Objects"].keys())) + '" '
+                syslog += 'Total_Streams="' + str(sum(results["static"]["Streams"].values())) + '" '
         elif results["target"]["category"] == "url":
             syslog += 'URL="' + results["target"]["url"] + '" '
         # Here you can process the custom field if need be. My example stores
