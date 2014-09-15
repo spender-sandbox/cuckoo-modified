@@ -21,6 +21,46 @@
             </div>
         {% endif %}
 
+        {% if results.network.tcp %}
+            <div>
+                <h4><a href="javascript:showHide('tcp');">TCP Connections</a></h4>
+                <div id="tcp" style="display: none;">
+                    <table class="table table-striped table-bordered">
+                        <tr>
+                            <th>IP Address</th>
+                            <th>Port</th>
+                        </tr>
+                        {% for conn in results.network.tcp %}
+                        <tr>
+                            <td><span class="mono">{{conn.dst}}</span></td>
+                            <td><span class="mono">{{conn.dport}}</span></td>
+                        </tr>
+                        {% endfor %}
+                    </table>
+                </div>
+            </div>
+        {% endif %}
+
+        {% if results.network.udp %}
+            <div>
+                <h4><a href="javascript:showHide('udp');">UDP Connections</a></h4>
+                <div id="udp" style="display: none;">
+                    <table class="table table-striped table-bordered">
+                        <tr>
+                            <th>IP Address</th>
+                            <th>Port</th>
+                        </tr>
+                        {% for conn in results.network.udp %}
+                        <tr>
+                            <td><span class="mono">{{conn.dst}}</span></td>
+                            <td><span class="mono">{{conn.dport}}</span></td>
+                        </tr>
+                        {% endfor %}
+                    </table>
+                </div>
+            </div>
+        {% endif %}
+
         {% if results.network.domains %}
         <div>
             <h4><a href="javascript:showHide('dns');">DNS Requests</a></h4>

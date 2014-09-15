@@ -1,0 +1,21 @@
+<section id="tcp">
+    <h4>TCP</h4>
+    {% if analysis.network.tcp %}
+        <table class="table table-striped table-bordered">
+            <tr>
+                <th>IP Address</th>
+                <th>Port</th>
+            </tr>
+            {% for conn in analysis.network.tcp %}
+            <tr>
+                {% if conn.dst|slice:":7" != "192.168" %}
+                <td><a href="https://www.virustotal.com/en/ip-address/{{conn.dst}}/information/">{{conn.dst}}</a></td>
+                <td>{{conn.dport}}</td>
+                {% endif %}
+            </tr>
+            {% endfor %}
+        </table>
+    {% else %}
+        <p>No TCP connections.</p>
+    {% endif %}
+</section>
