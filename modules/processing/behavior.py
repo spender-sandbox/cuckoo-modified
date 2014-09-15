@@ -386,7 +386,7 @@ class Summary:
                     self.files.append(srcfilename)
             if dstfilename:
                 if dstfilename not in self.write_files:
-                    self.write_files.append(srcfilename)
+                    self.write_files.append(dstfilename)
                 if dstfilename not in self.files:
                     self.files.append(dstfilename)
 
