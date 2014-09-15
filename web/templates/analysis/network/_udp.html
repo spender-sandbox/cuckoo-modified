@@ -5,12 +5,14 @@
         <tr>
             <th>IP Address</th>
             <th>Port</th>
+            <th>Data</th>
         </tr>
         {% for conn in analysis.network.udp %}
         <tr>
             {% if conn.dst|slice:":7" != "192.168" %}
             <td><a href="https://www.virustotal.com/en/ip-address/{{conn.dst}}/information/">{{conn.dst}}</a></td>
             <td>{{conn.dport}}</td>
+            <td style="word-wrap: break-word;"><pre>{{conn.data}}</pre></td>
             {% endif %}
         </tr>
         {% endfor %}

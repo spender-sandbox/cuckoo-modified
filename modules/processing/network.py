@@ -486,6 +486,7 @@ class Pcap:
                     if len(tcp.data) > 0:
                         connection["sport"] = tcp.sport
                         connection["dport"] = tcp.dport
+                        connection["data"] = convert_to_printable(tcp.data)
                         self._tcp_dissect(connection, tcp.data)
                         self.tcp_connections.append(connection)
                     else:
@@ -496,6 +497,7 @@ class Pcap:
                     if len(udp.data) > 0:
                         connection["sport"] = udp.sport
                         connection["dport"] = udp.dport
+                        connection["data"] = convert_to_printable(udp.data)
                         self._udp_dissect(connection, udp.data)
                         self.udp_connections.append(connection)
                 elif ip.p == dpkt.ip.IP_PROTO_ICMP:

@@ -61,10 +61,10 @@ class Sniffer(Auxiliary):
         # Do not capture ResultServer traffic.
         # TODO: Now that the ResultServer port can change dynamically,
         # we need to instruct sniffer.py of the change.
-        pargs.extend(["and", "not", "(", "dst", "host", str(Config().resultserver.ip),
-                      "and", "dst", "port", str(Config().resultserver.port), ")", "and",
-                      "not", "(", "src", "host", str(Config().resultserver.ip), "and",
-                      "src", "port", str(Config().resultserver.port), ")"])
+        pargs.extend(["and", "not", "(", "dst", "host", str(self.machine.resultserver_ip),
+                      "and", "dst", "port", str(self.machine.resultserver_port), ")", "and",
+                      "not", "(", "src", "host", str(self.machine.resultserver_ip), "and",
+                      "src", "port", str(self.machine.resultserver_port), ")"])
 
         if bpf:
             pargs.extend(["and", bpf])
