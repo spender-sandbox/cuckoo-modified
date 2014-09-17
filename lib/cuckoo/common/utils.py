@@ -107,6 +107,21 @@ def pretty_print_arg(category, api_name, arg_name, arg_val):
                 4 : "FILE_OVERWRITE",
                 5 : "FILE_OVERWRITE_IF"
         }.get(val, None)
+    elif arg_name == "ShareAccess":
+        val = int(arg_val, 10)
+        res = []
+        if val & 1:
+            res.append("FILE_SHARE_READ")
+            val &= ~1
+        if val & 2:
+            res.append("FILE_SHARE_WRITE")
+            val &= ~2
+        if val & 4:
+            res.append("FILE_SHARE_DELETE")
+            val &= ~4
+        if val:
+            res.append("0x{0:08x}".format(val))
+        return "|".join(res)
     elif category == "registry" and arg_name == "Type":
         val = int(arg_val, 16)
         return {
