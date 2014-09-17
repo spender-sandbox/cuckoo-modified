@@ -106,6 +106,27 @@ def pretty_print_arg(api_name, arg_name, arg_val):
                 4 : "OPEN_ALWAYS",
                 5 : "TRUNCATE_EXISTING"
         }.get(val, None)
+    elif api_name == "CreateProcessInternalW" and arg_name == "CreationFlags":
+        val = int(arg_val, 16)
+        res = []
+        if val & 0x00000001:
+            res.append("DEBUG_PROCESS")
+            val &= ~0x00000001
+        if val & 0x00000002:
+            res.append("DEBUG_ONLY_THIS_PROCESS")
+            val &= ~0x00000002
+        if val & 0x00000004:
+            res.append("CREATE_SUSPENDED")
+            val &= ~0x00000004
+        if val & 0x00000008:
+            res.append("DETACHED_PROCESS")
+            val &= ~0x00000008
+        if val & 0x00040000:
+            res.append("CREATE_PROTECTED_PROCESS")
+            val &= ~0x00040000
+        if val:
+            res.append("0x{0:08x}".format(val))
+        return "|".join(res)
     elif (api_name == "NtCreateFile" or api_name == "NtCreateDirectoryObject" or api_name == "NtOpenDirectoryObject") and arg_name == "DesiredAccess":
         val = int(arg_val, 16)
         res = []
