@@ -93,6 +93,123 @@ def convert_to_printable(s):
         return s
     return "".join(convert_char(c) for c in s)
 
+def pretty_print_arg(api_name, arg_name, arg_val):
+    """Creates pretty-printed versions of API arguments that convert raw values in common APIs to their named-enumeration forms
+    @return: pretty-printed version of the argument value provided, or None if no conversion exists
+    """
+    if arg_name == "CreateDisposition":
+        val = int(arg_val, 16)
+        return {
+                1 : "CREATE_NEW",
+                2 : "CREATE_ALWAYS",
+                3 : "OPEN_EXISTING",
+                4 : "OPEN_ALWAYS",
+                5 : "TRUNCATE_EXISTING"
+        }.get(val, None)
+    elif (api_name == "NtCreateFile" or api_name == "NtCreateDirectoryObject" or api_name == "NtOpenDirectoryObject") and arg_name == "DesiredAccess":
+        val = int(arg_val, 16)
+        res = []
+        if val & 0x80000000:
+            res.append("GENERIC_READ")
+            val &= ~0x80000000
+        if val & 0x40000000:
+            res.append("GENERIC_WRITE")
+            val &= ~0x40000000
+        if val & 0x20000000:
+            res.append("GENERIC_EXECUTE")
+            val &= ~0x20000000
+        if val & 0x10000000:
+            res.append("GENERIC_ALL")
+            val &= ~0x10000000
+        if val & 0x00000080:
+            res.append("FILE_READ_ATTRIBUTES")
+            val &= ~0x00000080
+        if val & 0x00000100:
+            res.append("FILE_WRITE_ATTRIBUTES")
+            val &= ~0x00000100
+        if val & 0x00010000:
+            res.append("DELETE")
+            val &= ~0x00010000
+        if val & 0x00100000:
+            res.append("SYNCHRONIZE")
+            val &= ~0x00100000
+        if val:
+            res.append("0x{0:08x}".format(val))
+        return "|".join(res)
+    elif arg_name == "FileInformationClass":
+        val = int(arg_val, 10)
+        return {
+                1 : "FileDirectoryInformation",
+                2 : "FileFullDirectoryInformation",
+                3 : "FileBothDirectoryInformation",
+                4 : "FileBasicInformation",
+                5 : "FileStandardInformation",
+                6 : "FileInternalInformation",
+                7 : "FileEaInformation",
+                8 : "FileAccessInformation",
+                9 : "FileNameInformation",
+                10 : "FileRenameInformation",
+                11 : "FileLinkInformation",
+                12 : "FileNamesInformation",
+                13 : "FileDispositionInformation",
+                14 : "FilePositionInformation",
+                15 : "FileFullEaInformation",
+                16 : "FileModeInformation",
+                17 : "FileAlignmentInformation",
+                18 : "FileAllInformation",
+                19 : "FileAllocationInformation",
+                20 : "FileEndOfFileInformation",
+                21 : "FileAlternativeNameInformation",
+                22 : "FileStreamInformation",
+                23 : "FilePipeInformation",
+                24 : "FilePipeLocalInformation",
+                25 : "FilePipeRemoteInformation",
+                26 : "FileMailslotQueryInformation",
+                27 : "FileMailslotSetInformation",
+                28 : "FileCompressionInformation",
+                29 : "FileObjectIdInformation",
+                30 : "FileCompletionInformation",
+                31 : "FileMoveClusterInformation",
+                32 : "FileQuotaInformation",
+                33 : "FileReparsePointInformation",
+                34 : "FileNetworkOpenInformation",
+                35 : "FileAttributeTagInformation",
+                36 : "FileTrackingInformation",
+                37 : "FileIdBothDirectoryInformation",
+                38 : "FileIdFullDirectoryInformation",
+                39 : "FileShortNameInformation",
+                40 : "FileIoCompletionNotificationInformation",
+                41 : "FileIoStatusBlockRangeInformation",
+                42 : "FileIoPriorityHintInformation",
+                43 : "FileSfioReserveInformation",
+                44 : "FileSfioVolumeInformation",
+                45 : "FileHardLinkInformation",
+                46 : "FileProcessIdsUsingFileInformation",
+                47 : "FileNormalizedNameInformation",
+                48 : "FileNetworkPhysicalNameInformation",
+                49 : "FileIdGlobalTxDirectoryInformation",
+                50 : "FileIsRemoteDeviceInformation",
+                51 : "FileAttributeCacheInformation",
+                52 : "FileNumaNodeInformation",
+                53 : "FileStandardLinkInformation",
+                54 : "FileRemoteProtocolInformation",
+                55 : "FileReplaceCompletionInformation",
+                56 : "FileMaximumInformation"
+         }.get(val, None)
+    elif arg_name == "Registry":
+        val = int(arg_val, 16)
+        return {
+                0x80000000 : "HKEY_CLASSES_ROOT",
+                0x80000001 : "HKEY_CURRENT_USER",
+                0x80000002 : "HKEY_LOCAL_MACHINE",
+                0x80000003 : "HKEY_USERS",
+                0x80000004 : "HKEY_PERFORMANCE_DATA",
+                0x80000005 : "HKEY_CURRENT_CONFIG",
+                0x80000006 : "HKEY_DYN_DATA"
+        }.get(val, None)
+
+    return None
+
 def datetime_to_iso(timestamp):
     """Parse a datatime string and returns a datetime in iso format.
     @param timestamp: timestamp string

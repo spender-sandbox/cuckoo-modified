@@ -141,7 +141,11 @@
                         <td><span class="mono">{{call.api}}</span></td>
                         <td style="word-wrap: break-word">
                         {% for argument in call.arguments %}
-                            {{argument.name}} => <span class="mono">{{argument.value}}</span><br />
+                            {% if argument.pretty_value %}
+                                {{argument.name}} => <span class="mono">{{argument.pretty_value}}</span><br />
+                            {% else %}
+                                {{argument.name}} => <span class="mono">{{argument.value}}</span><br />
+                            {% endif %}
                         {% endfor %}
                         </td>
                         <td>{% if call.status %}SUCCESS{% else %}FAILURE{% endif %}</td>
