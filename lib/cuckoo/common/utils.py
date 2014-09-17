@@ -106,6 +106,45 @@ def pretty_print_arg(api_name, arg_name, arg_val):
                 4 : "OPEN_ALWAYS",
                 5 : "TRUNCATE_EXISTING"
         }.get(val, None)
+    elif arg_name == "Protection":
+        val = int(arg_val, 16)
+        res = []
+        if val & 0x00000001:
+            res.append("PAGE_NOACCESS")
+            val &= ~0x00000001
+        if val & 0x00000002:
+            res.append("PAGE_READONLY")
+            val &= ~0x00000002
+        if val & 0x00000004:
+            res.append("PAGE_READWRITE")
+            val &= ~0x00000004
+        if val & 0x00000008:
+            res.append("PAGE_WRITECOPY")
+            val &= ~0x00000008
+        if val & 0x00000010:
+            res.append("PAGE_EXECUTE")
+            val &= ~0x00000010
+        if val & 0x00000020:
+            res.append("PAGE_EXECUTE_READ")
+            val &= ~0x00000020
+        if val & 0x00000040:
+            res.append("PAGE_EXECUTE_READWRITE")
+            val &= ~0x00000040
+        if val & 0x00000080:
+            res.append("PAGE_EXECUTE_WRITECOPY")
+            val &= ~0x00000080
+        if val & 0x00000100:
+            res.append("PAGE_GUARD")
+            val &= ~0x00000100
+        if val & 0x00000200:
+            res.append("PAGE_NOCACHE")
+            val &= ~0x00000200
+        if val & 0x00000400:
+            res.append("PAGE_WRITECOMBINE")
+            val &= ~0x00000400
+        if val:
+            res.append("0x{0:08x}".format(val))
+        return "|".join(res)
     elif api_name == "CreateProcessInternalW" and arg_name == "CreationFlags":
         val = int(arg_val, 16)
         res = []
