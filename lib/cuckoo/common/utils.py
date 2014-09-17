@@ -106,6 +106,17 @@ def pretty_print_arg(api_name, arg_name, arg_val):
                 4 : "OPEN_ALWAYS",
                 5 : "TRUNCATE_EXISTING"
         }.get(val, None)
+    elif arg_name == "IoControlCode":
+        val = int(arg_val, 16)
+        return {
+                0x4d014 : "IOCTL_SCSI_PASS_THROUGH_DIRECT",
+                0x2d0c10 : "IOCTL_STORAGE_GET_MEDIA_SERIAL_NUMBER",
+                0x2d1080 : "IOCTL_STORAGE_GET_DEVICE_NUMBER",
+                0x2d1400 : "IOCTL_STORAGE_QUERY_PROPERTY",
+                0x70000 : "IOCTL_DISK_GET_DRIVE_GEOMETRY",
+                0x90018 : "FSCTL_LOCK_VOLUME",
+                0x9001c : "FSCTL_UNLOCK_VOLUME"
+        }.get(val, None)
     elif arg_name == "Protection":
         val = int(arg_val, 16)
         res = []
