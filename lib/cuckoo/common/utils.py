@@ -100,11 +100,12 @@ def pretty_print_arg(category, api_name, arg_name, arg_val):
     if arg_name == "CreateDisposition":
         val = int(arg_val, 16)
         return {
-                1 : "CREATE_NEW",
-                2 : "CREATE_ALWAYS",
-                3 : "OPEN_EXISTING",
-                4 : "OPEN_ALWAYS",
-                5 : "TRUNCATE_EXISTING"
+                0 : "FILE_SUPERSEDE",
+                1 : "FILE_OPEN",
+                2 : "FILE_CREATE",
+                3 : "FILE_OPEN_IF",
+                4 : "FILE_OVERWRITE",
+                5 : "FILE_OVERWRITE_IF"
         }.get(val, None)
     elif category == "registry" and arg_name == "Type":
         val = int(arg_val, 16)
