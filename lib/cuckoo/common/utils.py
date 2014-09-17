@@ -196,6 +196,22 @@ def pretty_print_arg(api_name, arg_name, arg_val):
                 55 : "FileReplaceCompletionInformation",
                 56 : "FileMaximumInformation"
          }.get(val, None)
+    elif arg_name == "Show":
+        val = int(arg_val, 10)
+        return {
+                0 : "SW_HIDE",
+                1 : "SW_SHOWNORMAL",
+                2 : "SW_SHOWMINIMIZED",
+                3 : "SW_SHOWMAXIMIZED",
+                4 : "SW_SHOWNOACTIVATE",
+                5 : "SW_SHOW",
+                6 : "SW_MINIMIZE",
+                7 : "SW_SHOWMINNOACTIVE",
+                8 : "SW_SHOWNA",
+                9 : "SW_RESTORE",
+                10 : "SW_SHOWDEFAULT",
+                11 : "SW_FORCEMINIMIZE"
+        }.get(val, None)
     elif arg_name == "Registry":
         val = int(arg_val, 16)
         return {
