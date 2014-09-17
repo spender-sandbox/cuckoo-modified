@@ -174,6 +174,22 @@ def pretty_print_arg(category, api_name, arg_name, arg_val):
     elif arg_name == "IoControlCode":
         val = int(arg_val, 16)
         return {
+                0x1200b : "IOCTL_AFD_START_LISTEN",
+                0x12010 : "IOCTL_AFD_ACCEPT",
+                0x1201b : "IOCTL_AFD_RECV_DATAGRAM",
+                0x12024 : "IOCTL_AFD_SELECT",
+                0x12023 : "IOCTL_AFD_SEND_DATAGRAM",
+                0x1207b : "IOCTL_AFD_GET_INFO",
+                0x1203b : "IOCTL_AFD_SET_INFO",
+                0x12047 : "IOCTL_AFD_SET_CONTEXT",
+                0x12003 : "IOCTL_AFD_BIND",
+                0x12007 : "IOCTL_AFD_CONNECT",
+                0x1202b : "IOCTL_AFD_DISCONNECT",
+                0x120bf : "IOCTL_AFD_DEFER_ACCEPT",
+                0x12017 : "IOCTL_AFD_RECV",
+                0x1201f : "IOCTL_AFD_SEND",
+                0x12087 : "IOCTL_AFD_EVENT_SELECT",
+                0x1208b : "IOCTL_AFD_ENUM_NETWORK_EVENTS",
                 0x4d014 : "IOCTL_SCSI_PASS_THROUGH_DIRECT",
                 0x2d0c10 : "IOCTL_STORAGE_GET_MEDIA_SERIAL_NUMBER",
                 0x2d1080 : "IOCTL_STORAGE_GET_DEVICE_NUMBER",
