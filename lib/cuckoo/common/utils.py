@@ -242,33 +242,104 @@ def pretty_print_arg(category, api_name, arg_name, arg_val):
         if val:
             res.append("0x{0:08x}".format(val))
         return "|".join(res)
+    elif arg_name == "FileAttributes":
+        val = int(arg_val, 16)
+        res = []
+        if val == 0x00000080:
+            return "FILE_ATTRIBUTE_NORMAL"
+        if val & 0x00000001:
+            res.append("FILE_ATTRIBUTE_READONLY")
+            val &= ~0x00000001
+        if val & 0x00000002:
+            res.append("FILE_ATTRIBUTE_HIDDEN")
+            val &= ~0x00000002
+        if val & 0x00000004:
+            res.append("FILE_ATTRIBUTE_SYSTEM")
+            val &= ~0x00000004
+        if val & 0x00000010:
+            res.append("FILE_ATTRIBUTE_DIRECTORY")
+            val &= ~0x00000010
+        if val & 0x00000020:
+            res.append("FILE_ATTRIBUTE_ARCHIVE")
+            val &= ~0x00000020
+        if val & 0x00000040:
+            res.append("FILE_ATTRIBUTE_DEVICE")
+            val &= ~0x00000040
+        if val & 0x00000100:
+            res.append("FILE_ATTRIBUTE_TEMPORARY")
+            val &= ~0x00000100
+        if val & 0x00000200:
+            res.append("FILE_ATTRIBUTE_SPARSE_FILE")
+            val &= ~0x00000200
+        if val & 0x00000400:
+            res.append("FILE_ATTRIBUTE_REPARSE_POINT")
+            val &= ~0x00000400
+        if val & 0x00000800:
+            res.append("FILE_ATTRIBUTE_COMPRESSED")
+            val &= ~0x00000800
+        if val & 0x00001000:
+            res.append("FILE_ATTRIBUTE_OFFLINE")
+            val &= ~0x00001000
+        if val & 0x00002000:
+            res.append("FILE_ATTRIBUTE_NOT_CONTENT_INDEXED")
+            val &= ~0x00002000
+        if val & 0x00004000:
+            res.append("FILE_ATTRIBUTE_ENCRYPTED")
+            val &= ~0x00004000
+        if val & 0x00008000:
+            res.append("FILE_ATTRIBUTE_VIRTUAL")
+            val &= ~0x00008000
+        if val:
+            res.append("0x{0:08x}".format(val))
+        return "|".join(res)
     elif (api_name == "NtCreateFile" or api_name == "NtOpenFile" or api_name == "NtCreateDirectoryObject" or api_name == "NtOpenDirectoryObject") and arg_name == "DesiredAccess":
         val = int(arg_val, 16)
+        remove = 0
         res = []
         if val & 0x80000000:
             res.append("GENERIC_READ")
-            val &= ~0x80000000
+            remove |= 0x80000000
         if val & 0x40000000:
             res.append("GENERIC_WRITE")
-            val &= ~0x40000000
+            remove |= 0x40000000
         if val & 0x20000000:
             res.append("GENERIC_EXECUTE")
-            val &= ~0x20000000
+            remove |= 0x20000000
         if val & 0x10000000:
             res.append("GENERIC_ALL")
-            val &= ~0x10000000
+            remove |= 0x10000000
+        if (val & 0x1f01ff) == 0x1f01ff:
+            res.append("FILE_ALL_ACCESS")
+            val &= ~0x1f01ff
+        if (val & 0x120089) == 0x120089:
+            res.append("FILE_GENERIC_READ")
+            remove |= 0x120089
+        if (val & 0x120116) == 0x120116:
+            res.append("FILE_GENERIC_WRITE")
+            remove |= 0x120116
+        if (val & 0x1200a0) == 0x1200a0:
+            res.append("FILE_GENERIC_EXECUTE")
+            remove |= 0x1200a0
+        val &= ~remove
+        if val & 0x00000020:
+            res.append("FILE_EXECUTE")
+            remove |= 0x00000020
+        if val & 0x00000040:
+            res.append("FILE_DELETE_CHILD")
+            remove |= 0x00000040
         if val & 0x00000080:
             res.append("FILE_READ_ATTRIBUTES")
-            val &= ~0x00000080
+            remove |= 0x00000080
         if val & 0x00000100:
             res.append("FILE_WRITE_ATTRIBUTES")
-            val &= ~0x00000100
+            remove |= 0x00000100
         if val & 0x00010000:
             res.append("DELETE")
-            val &= ~0x00010000
+            remove |= 0x00010000
         if val & 0x00100000:
             res.append("SYNCHRONIZE")
-            val &= ~0x00100000
+            remove |= 0x00100000
+        val &= ~remove
         if val:
             res.append("0x{0:08x}".format(val))
         return "|".join(res)
