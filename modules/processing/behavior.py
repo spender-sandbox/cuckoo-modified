@@ -199,7 +199,7 @@ class ParseProcessLog(list):
 
             argument["value"] = convert_to_printable(str(arg_value))
             argument["raw_value"] = arg_value
-            pretty = pretty_print_arg(api_name, arg_name, argument["value"])
+            pretty = pretty_print_arg(category, api_name, arg_name, argument["value"])
             if pretty:
                 argument["pretty_value"] = pretty
             arguments.append(argument)

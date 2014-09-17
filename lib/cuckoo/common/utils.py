@@ -93,7 +93,7 @@ def convert_to_printable(s):
         return s
     return "".join(convert_char(c) for c in s)
 
-def pretty_print_arg(api_name, arg_name, arg_val):
+def pretty_print_arg(category, api_name, arg_name, arg_val):
     """Creates pretty-printed versions of API arguments that convert raw values in common APIs to their named-enumeration forms
     @return: pretty-printed version of the argument value provided, or None if no conversion exists
     """
@@ -106,6 +106,39 @@ def pretty_print_arg(api_name, arg_name, arg_val):
                 4 : "OPEN_ALWAYS",
                 5 : "TRUNCATE_EXISTING"
         }.get(val, None)
+    elif category == "registry" and arg_name == "Access":
+        val = int(arg_val, 16)
+        res = []
+        if val == 0xf003f:
+            return "KEY_ALL_ACCESS";
+        elif val == 0x20019:
+            return "KEY_READ"
+        elif val == 0x20006:
+            return "KEY_WRITE"
+        elif val == 0x2001f:
+            return "KEY_READ|KEY_WRITE"
+
+        if val & 0x0001:
+            res.append("KEY_QUERY_VALUE")
+            val &= ~0x0001
+        if val & 0x0002:
+            res.append("KEY_SET_VALUE")
+            val &= ~0x0002
+        if val & 0x0004:
+            res.append("KEY_CREATE_SUB_KEY")
+            val &= ~0x0004
+        if val & 0x0008:
+            res.append("KEY_ENUMERATE_SUB_KEYS")
+            val &= ~0x0008
+        if val & 0x0010:
+            res.append("KEY_NOTIFY")
+            val &= ~0x0010
+        if val & 0x0020:
+            res.append("KEY_CREATE_LINK")
+            val &= ~0x0020
+        if val:
+            res.append("0x{0:08x}".format(val))
+        return "|".join(res)
     elif arg_name == "IoControlCode":
         val = int(arg_val, 16)
         return {
