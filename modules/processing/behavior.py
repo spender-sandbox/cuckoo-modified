@@ -359,6 +359,13 @@ class Summary:
                self.keys.append(name)
             if name and name not in self.read_keys:
                self.read_keys.append(name)
+        elif call["api"] == "ShellExecuteExW":
+            filename = None
+            for argument in call["arguments"]:
+                if argument["name"] == "FilePath":
+                    filename = argument["value"]
+            if filename and filename not in self.files:
+                self.files.append(filename)
         elif call["category"] == "filesystem":
             filename = None
             srcfilename = None
