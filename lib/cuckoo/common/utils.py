@@ -106,6 +106,22 @@ def pretty_print_arg(category, api_name, arg_name, arg_val):
                 4 : "OPEN_ALWAYS",
                 5 : "TRUNCATE_EXISTING"
         }.get(val, None)
+    elif category == "registry" and arg_name == "Type":
+        val = int(arg_val, 16)
+        return {
+                0 : "REG_NONE",
+                1 : "REG_SZ",
+                2 : "REG_EXPAND_SZ",
+                3 : "REG_BINARY",
+                4 : "REG_DWORD",
+                5 : "REG_DWORD_BIG_ENDIAN",
+                6 : "REG_LINK",
+                7 : "REG_MULTI_SZ",
+                8 : "REG_RESOURCE_LIST",
+                9 : "REG_FULL_RESOURCE_DESCRIPTOR",
+                10 : "REG_RESOURCE_REQUIREMENTS_LIST",
+                11 : "REG_QWORD"
+        }.get(val, None)
     elif category == "registry" and arg_name == "Access":
         val = int(arg_val, 16)
         res = []
