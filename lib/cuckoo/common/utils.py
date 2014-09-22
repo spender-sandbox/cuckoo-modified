@@ -103,6 +103,8 @@ def pretty_print_retval(category, api_name, retval):
     except ValueError:
         return None
     return {
+            0x80000005 : "BUFFER_OVERFLOW",
+            0x80000006 : "NO_MORE_FILES",
             0xc0000001 : "UNSUCCESSFUL",
             0xc0000002 : "NOT_IMPLEMENTED",
             0xc0000004 : "INFO_LENGTH_MISMATCH",
