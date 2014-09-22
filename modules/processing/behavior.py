@@ -364,6 +364,8 @@ class Summary:
             for argument in call["arguments"]:
                 if argument["name"] == "FilePath":
                     filename = argument["value"]
+                    if len(filename) < 2 or filename[1] != ':':
+                        filename = None
             if filename and filename not in self.files:
                 self.files.append(filename)
         elif call["category"] == "filesystem":
