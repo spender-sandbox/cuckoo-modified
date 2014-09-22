@@ -93,6 +93,35 @@ def convert_to_printable(s):
         return s
     return "".join(convert_char(c) for c in s)
 
+def pretty_print_retval(category, api_name, retval):
+    """Creates pretty-printed versions of an API return value
+    @return: pretty-printed version of the call's return value, or None if no conversion exists
+    """
+    val = None
+    try:
+        val = int(retval, 16)
+    except ValueError:
+        return None
+    return {
+            0xc0000001 : "UNSUCCESSFUL",
+            0xc0000002 : "NOT_IMPLEMENTED",
+            0xc0000004 : "INFO_LENGTH_MISMATCH",
+            0xc0000005 : "ACCESS_VIOLATION",
+            0xc0000008 : "INVALID_HANDLE",
+            0xc000000b : "INVALID_CID",
+            0xc000000d : "INVALID_PARAMETER",
+            0xc000000f : "NO_SUCH_FILE",
+            0xc0000018 : "CONFLICTING_ADDRESSES",
+            0xc0000023 : "BUFFER_TOO_SMALL",
+            0xc0000024 : "OBJECT_TYPE_MISMATCH",
+            0xc0000033 : "OBJECT_NAME_INVALID",
+            0xc0000034 : "OBJECT_NAME_NOT_FOUND",
+            0xc0000039 : "OBJECT_PATH_INVALID",
+            0xc000003c : "DATA_OVERRUN",
+            0xc00000ba : "FILE_IS_A_DIRECTORY",
+            0xc0000135 : "DLL_NOT_FOUND"
+    }.get(val, None)
+
 def pretty_print_arg(category, api_name, arg_name, arg_val):
     """Creates pretty-printed versions of API arguments that convert raw values in common APIs to their named-enumeration forms
     @return: pretty-printed version of the argument value provided, or None if no conversion exists

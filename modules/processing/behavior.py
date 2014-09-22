@@ -9,7 +9,7 @@ import datetime
 from lib.cuckoo.common.abstracts import Processing
 from lib.cuckoo.common.config import Config
 from lib.cuckoo.common.netlog import NetlogParser, BsonParser
-from lib.cuckoo.common.utils import convert_to_printable, pretty_print_arg, logtime
+from lib.cuckoo.common.utils import convert_to_printable, pretty_print_arg, pretty_print_retval, logtime
 
 log = logging.getLogger(__name__)
 
@@ -215,6 +215,10 @@ class ParseProcessLog(list):
             call["return"] = "0x%.08x" % return_value
         else:
             call["return"] = convert_to_printable(str(return_value))
+
+        prettyret = pretty_print_retval(category, api_name, call["return"])
+        if prettyret:
+            call["pretty_return"] = prettyret
 
         call["arguments"] = arguments
         call["repeated"] = 0

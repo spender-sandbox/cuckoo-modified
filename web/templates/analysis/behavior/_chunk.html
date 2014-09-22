@@ -4,9 +4,9 @@
             <th width="10%">Time</th>
             <th width="8%">Caller</th>
             <th width="15%">API</th>
-            <th width="43%">Arguments</th>
-            <th width="10%">Status</th>
-            <th width="8%">Return</th>
+            <th width="45%">Arguments</th>
+            <th width="5%">Status</th>
+            <th width="11%">Return</th>
             <th width="6%">Repeated</th>
         </tr>
     </thead>
@@ -35,7 +35,11 @@
                     failed
                 {% endif %}
             </td>
-            <td><span class="mono">{{call.return}}</span></td>
+            {% if call.pretty_return %}
+                <td style="word-wrap: break-word"><span class="mono">{{call.pretty_return}}</span></td>
+            {% else %}
+                <td><span class="mono">{{call.return}}</span></td>
+            {% endif %}
             <td>
                 {% if call.repeated > 0 %}
                     {{call.repeated}}

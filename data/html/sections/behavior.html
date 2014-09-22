@@ -149,7 +149,11 @@
                         {% endfor %}
                         </td>
                         <td>{% if call.status %}SUCCESS{% else %}FAILURE{% endif %}</td>
-                        <td>{{call.return}}</td>
+                        {% if call.pretty_return %}
+                            <td style="word-wrap: break-word">{{call.pretty_return}}</td>
+                        {% else %}
+                            <td>{{call.return}}</td>
+                        {% endif %}
                         <td>
                         {% if call.repeated and call.repeated > 0 %}
                             {{call.repeated}}
