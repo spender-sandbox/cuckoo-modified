@@ -216,7 +216,7 @@ class ParseProcessLog(list):
         else:
             call["return"] = convert_to_printable(str(return_value))
 
-        prettyret = pretty_print_retval(category, api_name, call["return"])
+        prettyret = pretty_print_retval(category, api_name, call["status"], call["return"])
         if prettyret:
             call["pretty_return"] = prettyret
 

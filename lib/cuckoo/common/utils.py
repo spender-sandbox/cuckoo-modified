@@ -93,16 +93,19 @@ def convert_to_printable(s):
         return s
     return "".join(convert_char(c) for c in s)
 
-def pretty_print_retval(category, api_name, retval):
+def pretty_print_retval(category, api_name, status, retval):
     """Creates pretty-printed versions of an API return value
     @return: pretty-printed version of the call's return value, or None if no conversion exists
     """
+    if status:
+        return None
     val = None
     try:
         val = int(retval, 16)
     except ValueError:
         return None
     return {
+            0x00000103 : "NO_MORE_ITEMS",
             0x80000005 : "BUFFER_OVERFLOW",
             0x80000006 : "NO_MORE_FILES",
             0xc0000001 : "UNSUCCESSFUL",
