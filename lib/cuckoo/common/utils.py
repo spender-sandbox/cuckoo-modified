@@ -309,6 +309,21 @@ def pretty_print_arg(category, api_name, arg_name, arg_val):
         if val:
             res.append("0x{0:08x}".format(val))
         return "|".join(res)
+    elif api_name == "MoveFileWithProgressW" and arg_name == "Flags":
+        val = int(arg_val, 16)
+        res = []
+        if val & 0x00000001:
+            res.append("MOVEFILE_REPLACE_EXISTING")
+            val &= ~0x00000001
+        if val & 0x00000002:
+            res.append("MOVEFILE_COPY_ALLOWED")
+            val &= ~0x00000002
+        if val & 0x00000004:
+            res.append("MOVEFILE_DELAY_UNTIL_REBOOT")
+            val &= ~0x00000004
+        if val:
+            res.append("0x{0:08x}".format(val))
+        return "|".join(res)
     elif arg_name == "FileAttributes":
         val = int(arg_val, 16)
         res = []
