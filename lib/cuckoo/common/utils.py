@@ -404,6 +404,12 @@ def pretty_print_arg(category, api_name, arg_name, arg_val):
             res.append("FILE_GENERIC_EXECUTE")
             remove |= 0x1200a0
         val &= ~remove
+        if val & 0x00000001:
+            res.append("FILE_READ_ACCESS")
+            remove |= 0x00000001
+        if val & 0x00000002:
+            res.append("FILE_WRITE_ACCESS")
+            remove |= 0x00000002
         if val & 0x00000020:
             res.append("FILE_EXECUTE")
             remove |= 0x00000020
