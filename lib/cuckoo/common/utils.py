@@ -242,6 +242,7 @@ def pretty_print_arg(category, api_name, arg_name, arg_val):
                 0x390022 : "IOCTL_KSEC_DECRYPT_SAME_LOGON",
                 0x390038 : "IOCTL_KSEC_REGISTER_EXTENSION",
                 0x4d0008 : "IOCTL_MOUNTDEV_QUERY_DEVICE_NAME",
+                0x560000 : "IOCTL_VOLUME_GET_VOLUME_DISK_EXTENTS",
                 0x6d0008 : "IOCTL_MOUNTMGR_QUERY_POINTS",
                 0x6d0030 : "IOCTL_MOUNTMGR_QUERY_DOS_VOLUME_PATH",
                 0x6d0034 : "IOCTL_MOUNTMGR_QUERY_DOS_VOLUME_PATHS",
