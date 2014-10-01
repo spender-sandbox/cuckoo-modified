@@ -135,15 +135,30 @@ def del_file(fname):
 def move_file(old_fname, new_fname):
     # Filenames are case-insensitive in windows.
     fnames = [x.lower() for x in FILES_LIST]
+    lower_old_fname = old_fname.lower()
+    # Check whether the old filename is in the FILES_LIST or if we moved a directory containing an existing dropped file
+    for idx in range(len(fnames)):
+        fname = fnames[idx]
+        matchpath = None
+        if fname == lower_old_fname:
+            matchpath = lower_old_fname
+            replacepath = new_fname
+        elif lower_old_fname[-1] == '\\' and fname.startswith(lower_old_fname):
+           matchpath = lower_old_fname
+           if new_fname[-1] == '\\':
+               replacepath = new_fname
+           else:
+               replacepath = new_fname + "\\"
+        elif fname.startswith(lower_old_fname + "\\"):
+           matchpath = lower_old_fname + "\\"
+           if new_fname[-1] == '\\':
+               replacepath = new_fname
+           else:
+               replacepath = new_fname + "\\"
 
-    # Check whether the old filename is in the FILES_LIST.
-    if old_fname.lower() in fnames:
-
-        # Get the index of the old filename.
-        idx = fnames.index(old_fname.lower())
-
-        # Replace the old filename by the new filename.
-        FILES_LIST[idx] = new_fname
+        if matchpath:
+            # Replace the old filename by the new filename, or replace the subdirectory if moved
+            FILES_LIST[idx] = fname.replace(matchpath, replacepath, 1)
 
 def dump_files():
     """Dump all the dropped files."""
