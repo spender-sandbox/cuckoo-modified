@@ -134,7 +134,13 @@ def pretty_print_arg(category, api_name, arg_name, arg_val):
     """Creates pretty-printed versions of API arguments that convert raw values in common APIs to their named-enumeration forms
     @return: pretty-printed version of the argument value provided, or None if no conversion exists
     """
-    if arg_name == "CreateDisposition":
+    if arg_name == "Disposition":
+        val = int(arg_val, 10)
+        return {
+                1 : "REG_CREATED_NEW_KEY",
+                2 : "REG_OPENED_EXISTING_KEY"
+        }.get(val, None)
+    elif arg_name == "CreateDisposition":
         val = int(arg_val, 16)
         return {
                 0 : "FILE_SUPERSEDE",
@@ -175,7 +181,7 @@ def pretty_print_arg(category, api_name, arg_name, arg_val):
                 10 : "REG_RESOURCE_REQUIREMENTS_LIST",
                 11 : "REG_QWORD"
         }.get(val, None)
-    elif category == "registry" and arg_name == "Access":
+    elif category == "registry" and (arg_name == "Access" or arg_name == "DesiredAccess"):
         val = int(arg_val, 16)
         res = []
         if val == 0xf003f:
