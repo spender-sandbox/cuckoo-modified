@@ -108,11 +108,12 @@ def chunk(request, task_id, pid, pagenum):
         
         
 @require_safe
-def filtered_chunk(request, task_id, pid, category):
+def filtered_chunk(request, task_id, pid, category, apilist):
     """Filters calls for call category.
     @param task_id: cuckoo task id
     @param pid: pid you want calls
     @param category: call category type
+    @param apilist: comma-separated list of APIs to include, if preceded by ! specifies to exclude the list
     """
     if request.is_ajax():
         # Search calls related to your PID.
@@ -136,12 +137,32 @@ def filtered_chunk(request, task_id, pid, category):
         # Create empty process dict for AJAX view.
         filtered_process = {"process_id": pid, "calls": []}
 
-        # Populate dict, fetching data from all calls and selecting only appropriate category.
+        exclude = False
+        apilist = apilist.strip()
+        if len(apilist) and apilist[0] == '!':
+            exclude = True
+        apilist = apilist.lstrip('!')
+        apis = apilist.split(',')
+        apis[:] = [s.strip().lower() for s in apis if len(s.strip())]
+
+        # Populate dict, fetching data from all calls and selecting only appropriate category/APIs.
         for call in process["calls"]:
             chunk = results_db.calls.find_one({"_id": call})
             for call in chunk["calls"]:
-                if call["category"] == category:
-                    filtered_process["calls"].append(call)
+                if category == "all" or call["category"] == category:
+                    if len(apis) > 0:
+                        add_call = -1
+                        for api in apis:
+                            if call["api"].lower() == api:
+                                if exclude == True:
+                                    add_call = 0
+                                else:
+                                    add_call = 1
+                                break
+                        if (exclude == True and add_call != 0) or (exclude == False and add_call == 1):
+                            filtered_process["calls"].append(call)
+                    else:
+                        filtered_process["calls"].append(call)
 
         return render_to_response("analysis/behavior/_chunk.html",
                                   {"chunk": filtered_process},

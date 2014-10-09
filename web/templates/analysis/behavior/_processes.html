@@ -37,7 +37,9 @@ function load_chunk(pid, pagenum) {
     });
 }
 function load_filtered_chunk(pid, category) {
-    $("#process_"+pid+" div.calltable").load("/analysis/filtered/{{analysis.info.id}}/"+pid+"/"+category+"/", function(data, status, xhr){
+    var apilist = document.getElementById("apifilter");
+    var encodedlist = encodeURI(apilist.value);
+    $("#process_"+pid+" div.calltable").load("/analysis/filtered/{{analysis.info.id}}/"+pid+"/"+category+"/"+encodedlist+"/", function(data, status, xhr){
         if (status == "error") {
             $("#process_"+pid+" div.calltable").html("Error loading data. Please reload the page and if the error persists contact us.");
         }
@@ -63,18 +65,25 @@ function load_filtered_chunk(pid, category) {
         <div class="tab-pane{% if forloop.counter == 1%} active{% endif %}" id="process_{{process.process_id}}" data-pid="{{process.process_id}}" data-length="{{process.calls|length}}">
             <div class="alert alert-info" style="text-align: center;"><b>{{process.process_name}}</b>, PID: <b>{{process.process_id}}</b>, Parent PID: {{process.parent_id}}</div>
 
-            <p style="text-align: center;">
-                <a id="badge_default_{{process.process_id}}" class="badge default" style="color:black;">default</a>
-                <a id="badge_network_{{process.process_id}}" class="badge network" style="color:black;">network</a>
-                <a id="badge_filesystem_{{process.process_id}}" class="badge filesystem" style="color:black;">filesystem</a>
-                <a id="badge_registry_{{process.process_id}}" class="badge registry" style="color:black;">registry</a>
-                <a id="badge_process_{{process.process_id}}" class="badge process" style="color:black;">process</a>
-                <a id="badge_threading_{{process.process_id}}" class="badge threading" style="color:black;">threading</a>
-                <a id="badge_services_{{process.process_id}}" class="badge services" style="color:black;">services</a>
-                <a id="badge_device_{{process.process_id}}" class="badge device" style="color:black;">device</a>
-                <a id="badge_sync_{{process.process_id}}" class="badge synchronization" style="color:black;">synchronization</a>
-                <a id="badge_crypto_{{process.process_id}}" class="badge crypto" style="color:black;">crypto</a>
-            </p>
+            <div>
+                <div style="text-align: center; position:relative;">
+                    <a id="badge_default_{{process.process_id}}" class="badge default" style="color:black;">default</a>
+                    <a id="badge_network_{{process.process_id}}" class="badge network" style="color:black;">network</a>
+                    <a id="badge_filesystem_{{process.process_id}}" class="badge filesystem" style="color:black;">filesystem</a>
+                    <a id="badge_registry_{{process.process_id}}" class="badge registry" style="color:black;">registry</a>
+                    <a id="badge_process_{{process.process_id}}" class="badge process" style="color:black;">process</a>
+                    <a id="badge_threading_{{process.process_id}}" class="badge threading" style="color:black;">threading</a>
+                    <a id="badge_services_{{process.process_id}}" class="badge services" style="color:black;">services</a>
+                    <a id="badge_device_{{process.process_id}}" class="badge device" style="color:black;">device</a>
+                    <a id="badge_sync_{{process.process_id}}" class="badge synchronization" style="color:black;">synchronization</a>
+                    <a id="badge_crypto_{{process.process_id}}" class="badge crypto" style="color:black;">crypto</a>
+                    <a id="badge_all_{{process.process_id}}" class="badge all" style="color:black;">all</a>
+                    <div class="form-group" style="position:absolute;right:0;top:0;">
+                        <label class="sr-only" for="form_search">API Filter</label>
+                        <input type="text" class="form-control" id="apifilter" name="apifilter" size=25 placeholder="Comma-separated API filter" />
+                    </div>
+                </div>
+            </div>
 
             <script type="text/javascript">
             $(document).ready(function()
@@ -89,6 +98,7 @@ function load_filtered_chunk(pid, category) {
                 $("#badge_device_{{process.process_id}}").click(function() { load_filtered_chunk({{process.process_id}}, "device"); });
                 $("#badge_sync_{{process.process_id}}").click(function() { load_filtered_chunk({{process.process_id}}, "synchronization"); });
                 $("#badge_crypto_{{process.process_id}}").click(function() { load_filtered_chunk({{process.process_id}}, "crypto"); });
+                $("#badge_all_{{process.process_id}}").click(function() { load_filtered_chunk({{process.process_id}}, "all"); });
             });
             </script>
 
