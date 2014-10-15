@@ -256,7 +256,7 @@ def pretty_print_arg(category, api_name, arg_name, arg_val):
                 0x90018 : "FSCTL_LOCK_VOLUME",
                 0x9001c : "FSCTL_UNLOCK_VOLUME"
         }.get(val, None)
-    elif arg_name == "Protection":
+    elif arg_name == "Protection" or arg_name == "Win32Protect":
         val = int(arg_val, 16)
         res = []
         if val & 0x00000001:
