@@ -25,7 +25,17 @@ class Sniffer(Auxiliary):
             interface = self.machine.interface
         else:
             interface = self.options.get("interface")
+        # Selects per-machine resultserver IP if available.
+        if self.machine.resultserver_ip:
+            resultserver_ip = str(self.machine.resultserver_ip)
+        else:
+            resultserver_ip = str(Config().resultserver.ip)
 
+        if self.machine.resultserver_port:
+            resultserver_port = str(self.machine.resultserver_port)
+        else:
+            resultserver_port = str(Config().resultserver.port)
+            
         if not os.path.exists(tcpdump):
             log.error("Tcpdump does not exist at path \"%s\", network "
                       "capture aborted", tcpdump)
@@ -61,10 +71,10 @@ class Sniffer(Auxiliary):
         # Do not capture ResultServer traffic.
         # TODO: Now that the ResultServer port can change dynamically,
         # we need to instruct sniffer.py of the change.
-        pargs.extend(["and", "not", "(", "dst", "host", str(self.machine.resultserver_ip),
-                      "and", "dst", "port", str(self.machine.resultserver_port), ")", "and",
-                      "not", "(", "src", "host", str(self.machine.resultserver_ip), "and",
-                      "src", "port", str(self.machine.resultserver_port), ")"])
+        pargs.extend(["and", "not", "(", "dst", "host", resultserver_ip,
+                      "and", "dst", "port", resultserver_port, ")", "and",
+                      "not", "(", "src", "host", resultserver_ip, "and",
+                      "src", "port", resultserver_port, ")"])
 
         if bpf:
             pargs.extend(["and", bpf])
