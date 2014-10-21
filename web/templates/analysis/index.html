@@ -17,10 +17,10 @@
             <table class="table table-striped" style="table-layout: fixed;">
                 <thead>
                 <tr>
-                    <th>Timestamp</th>
-                    <th>Filename</th>
-                    <th>MD5</th>
-                    <th>Status</th>
+                    <th width="15%">Timestamp</th>
+                    <th width="50%">Filename</th>
+                    <th width="30%">MD5</th>
+                    <th width="5%" style="text-align: right;">Status</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -43,7 +43,7 @@
                                 <span class="mono">{{analysis.sample.md5}}</span>
                             {% endif %}
                         </td>
-                        <td>
+                        <td style="text-align: right;">
                             {% if analysis.status == "pending" %}
                                 <span class="text-muted">pending</span>
                             {% elif analysis.status == "running" %}
