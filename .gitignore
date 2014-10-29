@@ -31,3 +31,4 @@ cuckoo.v12.suo
 
 # Ignore yara rules
 data/yara/index_*.yar
+UpgradeLog.htm

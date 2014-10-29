@@ -184,6 +184,8 @@ def pretty_print_arg(category, api_name, arg_name, arg_val):
     elif category == "registry" and (arg_name == "Access" or arg_name == "DesiredAccess"):
         val = int(arg_val, 16)
         res = []
+        if val == 0x02000000:
+            return "MAXIMUM_ALLOWED";
         if val == 0xf003f:
             return "KEY_ALL_ACCESS";
         elif val == 0x20019:
@@ -397,6 +399,9 @@ def pretty_print_arg(category, api_name, arg_name, arg_val):
         if val & 0x10000000:
             res.append("GENERIC_ALL")
             remove |= 0x10000000
+        if val & 0x02000000:
+            res.append("MAXIMUM_ALLOWED")
+            remove |= 0x02000000
         if (val & 0x1f01ff) == 0x1f01ff:
             res.append("FILE_ALL_ACCESS")
             val &= ~0x1f01ff
