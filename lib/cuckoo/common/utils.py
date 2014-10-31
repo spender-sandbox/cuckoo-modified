@@ -181,6 +181,71 @@ def pretty_print_arg(category, api_name, arg_name, arg_val):
                 10 : "REG_RESOURCE_REQUIREMENTS_LIST",
                 11 : "REG_QWORD"
         }.get(val, None)
+    elif api_name == "OpenSCManagerW" or api_name == "OpenSCManagerW" and arg_name == "DesiredAccess":
+        val = int(arg_val, 16)
+        res = []
+        if val == 0x02000000:
+            return "MAXIMUM_ALLOWED";
+        if val == 0xf003f:
+            return "SC_MANAGER_ALL_ACCESS";
+        if val & 0x0001:
+            res.append("SC_MANAGER_CONNECT")
+            val &= ~0x0001
+        if val & 0x0002:
+            res.append("SC_MANAGER_CREATE_SERVICE")
+            val &= ~0x0002
+        if val & 0x0004:
+            res.append("SC_MANAGER_ENUMERATE_SERVICE")
+            val &= ~0x0004
+        if val & 0x0008:
+            res.append("SC_MANAGER_LOCK")
+            val &= ~0x0008
+        if val & 0x0010:
+            res.append("SC_MANAGER_QUERY_LOCK_STATUS")
+            val &= ~0x0010
+        if val & 0x0020:
+            res.append("SC_MANAGER_MODIFY_BOOT_CONFIG")
+            val &= ~0x0020
+        if val:
+            res.append("0x{0:08x}".format(val))
+        return "|".join(res)
+    elif category == "services" and arg_name == "DesiredAccess":
+        val = int(arg_val, 16)
+        res = []
+        if val == 0x02000000:
+            return "MAXIMUM_ALLOWED";
+        if val == 0xf01ff:
+            return "SERVICE_ALL_ACCESS";
+        if val & 0x0001:
+            res.append("SERVICE_QUERY_CONFIG")
+            val &= ~0x0001
+        if val & 0x0002:
+            res.append("SERVICE_CHANGE_CONFIG")
+            val &= ~0x0002
+        if val & 0x0004:
+            res.append("SERVICE_QUERY_STATUS")
+            val &= ~0x0004
+        if val & 0x0008:
+            res.append("SERVICE_ENUMERATE_DEPENDENTS")
+            val &= ~0x0008
+        if val & 0x0010:
+            res.append("SERVICE_START")
+            val &= ~0x0010
+        if val & 0x0020:
+            res.append("SERVICE_STOP")
+            val &= ~0x0020
+        if val & 0x0040:
+            res.append("SERVICE_PAUSE_CONTINUE")
+            val &= ~0x0040
+        if val & 0x0080:
+            res.append("SERVICE_INTERROGATE")
+            val &= ~0x0080
+        if val & 0x0100:
+            res.append("SERVICE_USER_DEFINED_CONTROL")
+            val &= ~0x0100
+        if val:
+            res.append("0x{0:08x}".format(val))
+        return "|".join(res)
     elif category == "registry" and (arg_name == "Access" or arg_name == "DesiredAccess"):
         val = int(arg_val, 16)
         res = []
