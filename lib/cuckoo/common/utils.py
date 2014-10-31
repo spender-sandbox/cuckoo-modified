@@ -209,6 +209,23 @@ def pretty_print_arg(category, api_name, arg_name, arg_val):
         if val:
             res.append("0x{0:08x}".format(val))
         return "|".join(res)
+    elif category == "services" and arg_name == "ErrorControl":
+        val = int(arg_val, 10)
+        return {
+            0 : "SERVICE_ERROR_IGNORE",
+            1 : "SERVICE_ERROR_NORMAL",
+            2 : "SERVICE_ERROR_SEVERE",
+            3 : "SERVICE_ERROR_CRITICAL"
+        }.get(val, None)
+    elif category == "services" and arg_name == "StartType":
+        val = int(arg_val, 10)
+        return {
+            0 : "SERVICE_BOOT_START",
+            1 : "SERVICE_SYSTEM_START",
+            2 : "SERVICE_AUTO_START",
+            3 : "SERVICE_DEMAND_START",
+            4 : "SERVICE_DISABLED"
+        }.get(val, None)
     elif category == "services" and arg_name == "ServiceType":
         val = int(arg_val, 10)
         retstr = {
