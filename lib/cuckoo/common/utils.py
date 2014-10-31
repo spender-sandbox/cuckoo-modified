@@ -209,6 +209,19 @@ def pretty_print_arg(category, api_name, arg_name, arg_val):
         if val:
             res.append("0x{0:08x}".format(val))
         return "|".join(res)
+    elif category == "services" and arg_name == "ServiceType":
+        val = int(arg_val, 10)
+        retstr = {
+            1 : "SERVICE_KERNEL_DRIVER",
+            2 : "SERVICE_FILE_SYSTEM_DRIVER",
+            4 : "SERVICE_ADAPTER",
+            8 : "SERVICE_RECOGNIZED_DRIVER",
+            16 : "SERVICE_WIN32_OWN_PROCESS",
+            32 : "SERVICE_WIN32_SHARE_PROCESS"
+        }.get(val, None)
+        if val & 0x130:
+            retstr += "|SERVICE_INTERACTIVE_PROCESS"
+        return retstr
     elif category == "services" and arg_name == "DesiredAccess":
         val = int(arg_val, 16)
         res = []
