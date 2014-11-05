@@ -134,7 +134,25 @@ def pretty_print_arg(category, api_name, arg_name, arg_val):
     """Creates pretty-printed versions of API arguments that convert raw values in common APIs to their named-enumeration forms
     @return: pretty-printed version of the argument value provided, or None if no conversion exists
     """
-    if arg_name == "Disposition":
+    if arg_name == "HookIdentifier":
+        val = int(arg_val, 10)
+        return {
+                # cuckoo chooses not to represent this value properly as a -1
+                4294967295 : "WH_MSGFILTER",
+                0 : "WH_JOURNALRECORD",
+                1 : "WH_JOURNALPLAYBACK",
+                2 : "WH_KEYBOARD",
+                4 : "WH_CALLWNDPROC",
+                5 : "WH_CBT",
+                6 : "WH_SYSMSGFILTER",
+                7 : "WH_MOUSE",
+                9 : "WH_DEBUG",
+                10 : "WH_SHELL",
+                11 : "WH_FOREGROUNDIDLE",
+                13 : "WH_KEYBOARD_LL",
+                14 : "WH_MOUSE_LL"
+        }.get(val, None)                
+    elif arg_name == "Disposition":
         val = int(arg_val, 10)
         return {
                 1 : "REG_CREATED_NEW_KEY",
@@ -510,12 +528,24 @@ def pretty_print_arg(category, api_name, arg_name, arg_val):
             res.append("FILE_GENERIC_EXECUTE")
             remove |= 0x1200a0
         val &= ~remove
+        # for values 1 -> 0x20, these can have different meanings depending on whether
+        # it's a file or a directory operated on -- choose file by default since
+        # we don't have enough information to make an accurate determination
         if val & 0x00000001:
             res.append("FILE_READ_ACCESS")
             remove |= 0x00000001
         if val & 0x00000002:
             res.append("FILE_WRITE_ACCESS")
             remove |= 0x00000002
+        if val & 0x00000004:
+            res.append("FILE_APPEND_DATA")
+            remove |= 0x00000004
+        if val & 0x00000008:
+            res.append("FILE_READ_EA")
+            remove |= 0x00000008
+        if val & 0x00000010:
+            res.append("FILE_WRITE_EA")
+            remove |= 0x00000010
         if val & 0x00000020:
             res.append("FILE_EXECUTE")
             remove |= 0x00000020
@@ -531,9 +561,21 @@ def pretty_print_arg(category, api_name, arg_name, arg_val):
         if val & 0x00010000:
             res.append("DELETE")
             remove |= 0x00010000
+        if val & 0x00020000:
+            res.append("READ_CONTROL")
+            remove |= 0x00020000
+        if val & 0x00040000:
+            res.append("WRITE_DAC")
+            remove |= 0x00040000
+        if val & 0x00080000:
+            res.append("WRITE_OWNER")
+            remove |= 0x00080000
         if val & 0x00100000:
             res.append("SYNCHRONIZE")
             remove |= 0x00100000
+        if val & 0x01000000:
+            res.append("ACCESS_SYSTEM_SECURITY")
+            remove |= 0x01000000
         val &= ~remove
         if val:
             res.append("0x{0:08x}".format(val))
