@@ -142,13 +142,16 @@ def pretty_print_arg(category, api_name, arg_name, arg_val):
                 0 : "WH_JOURNALRECORD",
                 1 : "WH_JOURNALPLAYBACK",
                 2 : "WH_KEYBOARD",
+                3 : "WH_GETMESSAGE",
                 4 : "WH_CALLWNDPROC",
                 5 : "WH_CBT",
                 6 : "WH_SYSMSGFILTER",
                 7 : "WH_MOUSE",
+                8 : "WH_HARDWARE",
                 9 : "WH_DEBUG",
                 10 : "WH_SHELL",
                 11 : "WH_FOREGROUNDIDLE",
+                12 : "WH_CALLWNDPROCRET",
                 13 : "WH_KEYBOARD_LL",
                 14 : "WH_MOUSE_LL"
         }.get(val, None)                
@@ -576,6 +579,142 @@ def pretty_print_arg(category, api_name, arg_name, arg_val):
         if val & 0x01000000:
             res.append("ACCESS_SYSTEM_SECURITY")
             remove |= 0x01000000
+        val &= ~remove
+        if val:
+            res.append("0x{0:08x}".format(val))
+        return "|".join(res)
+    elif api_name == "NtOpenProcess" and arg_name == "DesiredAccess":
+        val = int(arg_val, 16)
+        remove = 0
+        res = []
+        if val & 0x80000000:
+            res.append("GENERIC_READ")
+            remove |= 0x80000000
+        if val & 0x40000000:
+            res.append("GENERIC_WRITE")
+            remove |= 0x40000000
+        if val & 0x20000000:
+            res.append("GENERIC_EXECUTE")
+            remove |= 0x20000000
+        if val & 0x10000000:
+            res.append("GENERIC_ALL")
+            remove |= 0x10000000
+        if val & 0x02000000:
+            res.append("MAXIMUM_ALLOWED")
+            remove |= 0x02000000
+        # for >= vista
+        if (val & 0x1fffff) == 0x1fffff:
+            res.append("PROCESS_ALL_ACCESS")
+            val &= ~0x1fffff
+        # for < vista
+        if (val & 0x1f03ff) == 0x1f0fff:
+            res.append("PROCESS_ALL_ACCESS")
+            val &= ~0x1f03ff
+        val &= ~remove
+        if val & 0x0001:
+            res.append("PROCESS_TERMINATE")
+            remove |= 0x0001
+        if val & 0x0002:
+            res.append("PROCESS_CREATE_THREAD")
+            remove |= 0x0002
+        if val & 0x0004:
+            res.append("PROCESS_SET_SESSIONID")
+            remove |= 0x0004
+        if val & 0x0008:
+            res.append("PROCESS_VM_OPERATION")
+            remove |= 0x0008
+        if val & 0x0010:
+            res.append("PROCESS_VM_READ")
+            remove |= 0x0010
+        if val & 0x0020:
+            res.append("PROCESS_VM_WRITE")
+            remove |= 0x0020
+        if val & 0x0040:
+            res.append("PROCESS_DUP_HANDLE")
+            remove |= 0x0040
+        if val & 0x0080:
+            res.append("PROCESS_CREATE_PROCESS")
+            remove |= 0x0080
+        if val & 0x0100:
+            res.append("PROCESS_SET_QUOTA")
+            remove |= 0x0100
+        if val & 0x0200:
+            res.append("PROCESS_SET_INFORMATION")
+            remove |= 0x0200
+        if val & 0x0400:
+            res.append("PROCESS_QUERY_INFORMATION")
+            remove |= 0x0400
+        if val & 0x0800:
+            res.append("PROCESS_SUSPEND_RESUME")
+            remove |= 0x0800
+        if val & 0x1000:
+            res.append("PROCESS_QUERY_LIMITED_INFORMATION")
+            remove |= 0x1000
+        val &= ~remove
+        if val:
+            res.append("0x{0:08x}".format(val))
+        return "|".join(res)
+    elif api_name == "NtOpenThread" and arg_name == "DesiredAccess":
+        val = int(arg_val, 16)
+        remove = 0
+        res = []
+        if val & 0x80000000:
+            res.append("GENERIC_READ")
+            remove |= 0x80000000
+        if val & 0x40000000:
+            res.append("GENERIC_WRITE")
+            remove |= 0x40000000
+        if val & 0x20000000:
+            res.append("GENERIC_EXECUTE")
+            remove |= 0x20000000
+        if val & 0x10000000:
+            res.append("GENERIC_ALL")
+            remove |= 0x10000000
+        if val & 0x02000000:
+            res.append("MAXIMUM_ALLOWED")
+            remove |= 0x02000000
+        # for >= vista
+        if (val & 0x1fffff) == 0x1fffff:
+            res.append("THREAD_ALL_ACCESS")
+            val &= ~0x1fffff
+        # for < vista
+        if (val & 0x1f03ff) == 0x1f03ff:
+            res.append("THREAD_ALL_ACCESS")
+            val &= ~0x1f03ff
+        val &= ~remove
+        if val & 0x0001:
+            res.append("THREAD_TERMINATE")
+            remove |= 0x0001
+        if val & 0x0002:
+            res.append("THREAD_SUSPEND_RESUME")
+            remove |= 0x0002
+        if val & 0x0008:
+            res.append("THREAD_GET_CONTEXT")
+            remove |= 0x0008
+        if val & 0x0010:
+            res.append("THREAD_SET_CONTEXT")
+            remove |= 0x0010
+        if val & 0x0020:
+            res.append("THREAD_SET_INFORMATION")
+            remove |= 0x0020
+        if val & 0x0040:
+            res.append("THREAD_QUERY_INFORMATION")
+            remove |= 0x0040
+        if val & 0x0080:
+            res.append("THREAD_SET_THREAD_TOKEN")
+            remove |= 0x0080
+        if val & 0x0100:
+            res.append("THREAD_IMPERSONATE")
+            remove |= 0x0100
+        if val & 0x0200:
+            res.append("THREAD_DIRECT_IMPERSONATION")
+            remove |= 0x0200
+        if val & 0x0400:
+            res.append("THREAD_SET_LIMITED_INFORMATION")
+            remove |= 0x0400
+        if val & 0x0800:
+            res.append("THREAD_QUERY_LIMITED_INFORMATION")
+            remove |= 0x0800
         val &= ~remove
         if val:
             res.append("0x{0:08x}".format(val))
