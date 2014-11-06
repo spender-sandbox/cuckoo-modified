@@ -134,7 +134,36 @@ def pretty_print_arg(category, api_name, arg_name, arg_val):
     """Creates pretty-printed versions of API arguments that convert raw values in common APIs to their named-enumeration forms
     @return: pretty-printed version of the argument value provided, or None if no conversion exists
     """
-    if api_name == "CreateToolhelp32Snapshot" and arg_name == "Flags":
+    if api_name == "NtCreateSection" and arg_name == "DesiredAccess":
+        val = int(arg_val, 16)
+        res = []
+        if val == 0xf001f:
+            return "SECTION_ALL_ACCESS"
+        if val & 0xf0000:
+            res.append("STANDARD_RIGHTS_REQUIRED")
+            val &= ~0xf0000
+        if val & 1:
+            res.append("SECTION_QUERY")
+            val &= ~1
+        if val & 4:
+            res.append("SECTION_MAP_READ")
+            val &= ~4
+        if val & 2:
+            res.append("SECTION_MAP_WRITE")
+            val &= ~2
+        if val & 8:
+            res.append("SECTION_MAP_EXECUTE")
+            val &= ~8
+        if val & 0x10:
+            res.append("SECTION_EXTEND_SIZE")
+            val &= ~0x10
+        if val & 0x20:
+            res.append("SECTION_MAP_EXECUTE_EXPLICIT")
+            val &= ~0x20
+        if val:
+            res.append("0x{0:08x}".format(val))
+        return "|".join(res)
+    elif api_name == "CreateToolhelp32Snapshot" and arg_name == "Flags":
         val = int(arg_val, 16)
         res = []
         if val == 0xf:
