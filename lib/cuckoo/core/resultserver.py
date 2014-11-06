@@ -351,7 +351,7 @@ class FileUpload(object):
             infofd.write(guest_path + "\n")
             infofd.close()
 
-        if not duplicate:
+        if not self.duplicate:
             self.fd = open(file_path, "wb")
             chunk = self.handler.read_any()
             while chunk:
