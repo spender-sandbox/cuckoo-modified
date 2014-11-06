@@ -188,10 +188,10 @@ class ResultHandler(SocketServer.BaseRequestHandler):
             self.protocol = BsonParser(self)
         elif "FILE" in buf:
             self.protocol = FileUpload(self, is_binary=False, duplicate=False)
-        elif "BINARY" in buf:
-            self.protocol = FileUpload(self, is_binary=True, duplicate=False)
         elif "DUPLICATEBINARY" in buf:
             self.protocol = FileUpload(self, is_binary=True, duplicate=True)
+        elif "BINARY" in buf:
+            self.protocol = FileUpload(self, is_binary=True, duplicate=False)
         elif "LOG" in buf:
             self.protocol = LogHandler(self)
         else:
