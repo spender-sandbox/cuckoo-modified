@@ -134,7 +134,33 @@ def pretty_print_arg(category, api_name, arg_name, arg_val):
     """Creates pretty-printed versions of API arguments that convert raw values in common APIs to their named-enumeration forms
     @return: pretty-printed version of the argument value provided, or None if no conversion exists
     """
-    if arg_name == "HookIdentifier":
+    if api_name == "CreateToolhelp32Snapshot" and arg_name == "Flags":
+        val = int(arg_val, 16)
+        res = []
+        if val == 0xf:
+            return "TH32CS_SNAPALL"
+        if val & 1:
+            res.append("TH32CS_SNAPHEAPLIST")
+            val &= ~1
+        if val & 2:
+            res.append("TH32CS_SNAPPROCESS")
+            val &= ~2
+        if val & 4:
+            res.append("TH32CS_SNAPTHREAD")
+            val &= ~4
+        if val & 8:
+            res.append("TH32CS_SNAPMODULE")
+            val &= ~8
+        if val & 0x10:
+            res.append("TH32CS_SNAPMODULE32")
+            val &= ~0x10
+        if val & 0x80000000:
+            res.append("TH32CS_INHERIT")
+            val &= ~0x80000000
+        if val:
+            res.append("0x{0:08x}".format(val))
+        return "|".join(res)
+    elif arg_name == "HookIdentifier":
         val = int(arg_val, 10)
         return {
                 # cuckoo chooses not to represent this value properly as a -1

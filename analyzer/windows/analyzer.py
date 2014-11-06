@@ -282,7 +282,7 @@ class PipeHandler(Thread):
                 if process_id:
                     if process_id not in (PID, PPID):
                         # We inject the process only if it's not being
-                        # monitored already, otherwise we would generated
+                        # monitored already, otherwise we would generate
                         # polluted logs.
                         if process_id not in PROCESS_LIST:
                             # Open the process and inject the DLL.
