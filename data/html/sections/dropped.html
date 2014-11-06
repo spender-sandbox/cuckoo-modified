@@ -18,6 +18,16 @@
                             <td><span class="mono">{{dropped_file.name}}</span></td>
                         </tr>
                         <tr>
+                            <th>Associated Filenames</th>
+                            <td>
+                                <ul style="margin-top: 0;margin-bottom: 0;">
+                                    {% for path in dropped_file.guest_paths %}
+                                    <li>{{path}}</li>
+                                    {% endfor %}
+                                </ul>
+                            </td>
+                        </tr>
+                        <tr>
                             <th>File size</th>
                             <td><span class="mono">{{dropped_file.size}} bytes</span></td>
                         </tr>

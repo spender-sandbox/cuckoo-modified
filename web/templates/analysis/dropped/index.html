@@ -7,6 +7,16 @@
                     <td style="border-top: 0;"><b>{{file.name}}</b></td>
                 </tr>
                 <tr>
+                    <th>Associated filenames</th>
+                    <td>
+                        <ul style="margin-bottom: 0;">
+                        {% for path in file.guest_paths %}
+                            <li>{{path}}</li>
+                        {% endfor %}
+                        </ul>
+                    </td>
+                </tr>
+                <tr>
                     <th>File Size</th>
                     <td>{{file.size}} bytes</th>
                 </tr>

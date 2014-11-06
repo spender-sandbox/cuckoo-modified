@@ -39,6 +39,7 @@ log = logging.getLogger()
 BUFSIZE = 512
 FILES_LIST = []
 DUMPED_LIST = []
+UPLOADPATH_LIST = []
 PROCESS_LIST = []
 PROCESS_LOCK = Lock()
 DEFAULT_DLL = None
@@ -82,12 +83,13 @@ def add_file(file_path):
 
 def dump_file(file_path):
     """Create a copy of the given file path."""
+    duplicate = False
     try:
         if os.path.exists(file_path):
             sha256 = hash_file(hashlib.sha256, file_path)
             if sha256 in DUMPED_LIST:
-                # The file was already dumped, just skip.
-                return
+                # The file was already dumped, just upload the alternate name for it.
+                duplicate = True
         else:
             log.warning("File at path \"%s\" does not exist, skip.",
                         file_path)
@@ -110,12 +112,18 @@ def dump_file(file_path):
     else:
         return
 
-    upload_path = os.path.join("files",
+    if duplicate:
+        idx = DUMPED_LIST.index(sha256)
+        upload_path = UPLOADPATH_LIST[idx]
+    else:
+        upload_path = os.path.join("files",
                                str(random.randint(100000000, 9999999999)),
                                file_name)
     try:
-        upload_to_host(file_path, upload_path)
-        DUMPED_LIST.append(sha256)
+        upload_to_host(file_path, upload_path, duplicate)
+        if not duplicate:
+            DUMPED_LIST.append(sha256)
+            UPLOADPATH_LIST.append(upload_path)
     except (IOError, socket.error) as e:
         log.error("Unable to upload dropped file at path \"%s\": %s",
                   file_path, e)

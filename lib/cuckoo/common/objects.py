@@ -56,9 +56,10 @@ class File:
     notified_yara = False
     notified_pydeep = False
 
-    def __init__(self, file_path):
+    def __init__(self, file_path, guest_paths):
         """@param file_path: file path."""
         self.file_path = file_path
+        self.guest_paths = guest_paths
 
         # these will be populated when first accessed
         self._file_data = None

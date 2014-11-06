@@ -187,7 +187,11 @@ class ResultHandler(SocketServer.BaseRequestHandler):
         elif "BSON" in buf:
             self.protocol = BsonParser(self)
         elif "FILE" in buf:
-            self.protocol = FileUpload(self)
+            self.protocol = FileUpload(self, is_binary=False, duplicate=False)
+        elif "BINARY" in buf:
+            self.protocol = FileUpload(self, is_binary=True, duplicate=False)
+        elif "DUPLICATEBINARY" in buf:
+            self.protocol = FileUpload(self, is_binary=True, duplicate=True)
         elif "LOG" in buf:
             self.protocol = LogHandler(self)
         else:
@@ -302,11 +306,13 @@ class ResultHandler(SocketServer.BaseRequestHandler):
 class FileUpload(object):
     RESTRICTED_DIRECTORIES = "reports/",
 
-    def __init__(self, handler):
+    def __init__(self, handler, is_binary, duplicate):
         self.handler = handler
         self.upload_max_size = \
             self.handler.server.cfg.resultserver.upload_max_size
         self.storagepath = self.handler.storagepath
+        self.is_binary = is_binary
+        self.duplicate = duplicate
         self.fd = None
 
     def read_next_message(self):
@@ -314,6 +320,10 @@ class FileUpload(object):
         # shots/0001.jpg or files/9498687557/libcurl-4.dll.bin
 
         buf = self.handler.read_newline().strip().replace("\\", "/")
+        guest_path = ""
+        if self.is_binary:
+            guest_path = self.handler.read_newline().strip()[:32768]
+
         log.debug("File upload request for {0}".format(buf))
 
         dir_part, filename = os.path.split(buf)
@@ -336,19 +346,25 @@ class FileUpload(object):
         if not file_path.startswith(self.storagepath):
             raise CuckooOperationalError("FileUpload failure, path sanitization failed.")
 
-        self.fd = open(file_path, "wb")
-        chunk = self.handler.read_any()
-        while chunk:
-            self.fd.write(chunk)
+        if guest_path != "":
+            infofd = open(file_path + "_info.txt", "a")
+            infofd.write(guest_path + "\n")
+            infofd.close()
 
-            if self.fd.tell() >= self.upload_max_size:
-                self.fd.write("... (truncated)")
-                break
+        if not duplicate:
+            self.fd = open(file_path, "wb")
+            chunk = self.handler.read_any()
+            while chunk:
+                self.fd.write(chunk)
 
-            try:
-                chunk = self.handler.read_any()
-            except:
-                break
+                if self.fd.tell() >= self.upload_max_size:
+                    self.fd.write("... (truncated)")
+                    break
+
+                try:
+                    chunk = self.handler.read_any()
+                except:
+                    break
 
         log.debug("Uploaded file length: {0}".format(self.fd.tell()))
 
