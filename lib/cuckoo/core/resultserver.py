@@ -366,7 +366,7 @@ class FileUpload(object):
                 except:
                     break
 
-        log.debug("Uploaded file length: {0}".format(self.fd.tell()))
+            log.debug("Uploaded file length: {0}".format(self.fd.tell()))
 
     def close(self):
         if self.fd:
