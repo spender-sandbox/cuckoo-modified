@@ -56,7 +56,7 @@ class File:
     notified_yara = False
     notified_pydeep = False
 
-    def __init__(self, file_path, guest_paths):
+    def __init__(self, file_path, guest_paths=None):
         """@param file_path: file path."""
         self.file_path = file_path
         self.guest_paths = guest_paths
