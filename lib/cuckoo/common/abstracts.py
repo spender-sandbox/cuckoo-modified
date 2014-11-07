@@ -423,6 +423,10 @@ class LibVirtMachinery(Machinery):
 
         conn = self._connect()
         try:
+            # create the memory dump file ourselves first so it doesn't end up root/root 0600
+            # it'll still be owned by root, so we can't delete it, but at least we can read it
+            fd = open(path, "w")
+            fd.close()
             self.vms[label].coreDump(path, flags=libvirt.VIR_DUMP_MEMORY_ONLY)
         except libvirt.libvirtError as e:
             raise CuckooMachineError("Error dumping memory virtual machine "
