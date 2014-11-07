@@ -17,6 +17,13 @@ from lib.cuckoo.common.objects import File
 from lib.cuckoo.common.utils import convert_to_printable
 
 try:
+    import GeoIP
+    IS_GEOIP = True
+    gi = GeoIP.new(GeoIP.GEOIP_MEMORY_CACHE)
+except ImportError:
+    IS_GEOIP = False
+
+try:
     import dpkt
     IS_DPKT = True
 except ImportError:
@@ -108,6 +115,18 @@ class Pcap:
 
         return False
 
+    def _get_cn(self, ip):
+        cn = "unknown"
+        log = logging.getLogger("Processing.Pcap")
+        if IS_GEOIP:
+            try:
+                temp_cn = gi.country_name_by_addr(ip)
+                if temp_cn:
+                    cn = temp_cn
+            except:
+                log.error("Unable to GEOIP resolve %s" % ip)
+        return cn
+            
     def _add_hosts(self, connection):
         """Add IPs to unique list.
         @param connection: connection data
@@ -119,9 +138,10 @@ class Pcap:
                     return
                 else:
                     self.hosts.append(ip)
-
-                if not self._is_private_ip(ip):
-                    self.unique_hosts.append(ip)
+                
+                if not self._is_private_ip(ip):                      
+                    self.unique_hosts.append({"ip": ip,
+                                                            "country_name": self._get_cn(ip)})
 
             if connection["dst"] not in self.hosts:
                 ip = convert_to_printable(connection["dst"])
@@ -131,7 +151,9 @@ class Pcap:
                     self.hosts.append(ip)
 
                 if not self._is_private_ip(ip):
-                    self.unique_hosts.append(ip)
+                    self.unique_hosts.append({"ip": ip,
+                                                            "country_name": self._get_cn(ip)})
+
         except:
             pass
 
