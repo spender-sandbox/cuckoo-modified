@@ -476,20 +476,9 @@ class Enhanced(object):
         """
         @param details: Also add some (not so relevant) Details to the log
         """
-        self.currentdir = "C: "
         self.eid = 0
         self.details = details
-        self.filehandles = {}
         self.servicehandles = {}
-        self.keyhandles = {
-            "0x80000000": "HKEY_CLASSES_ROOT\\",
-            "0x80000001": "HKEY_CURRENT_USER\\",
-            "0x80000002": "HKEY_LOCAL_MACHINE\\",
-            "0x80000003": "HKEY_USERS\\",
-            "0x80000004": "HKEY_PERFORMANCE_DATA\\",
-            "0x80000005": "HKEY_CURRENT_CONFIG\\",
-            "0x80000006": "HKEY_DYN_DATA\\"
-        }
         self.modules = {}
         self.procedures = {}
         self.events = []
@@ -511,39 +500,6 @@ class Enhanced(object):
         Get the name of a loaded module from the internal db
         """
         return self.modules.get(base, "")
-
-    # Registry
-    def _add_keyhandle(self, registry, subkey, handle):
-        """
-        @registry: returned, new handle
-        @handle: handle to base key
-        @subkey: subkey to add
-        """
-        if handle != "" and handle in self.keyhandles:
-            return self.keyhandles[handle]
-
-        name = ""
-        if registry != "" and registry != "0x00000000" and \
-                registry in self.keyhandles:
-            name = self.keyhandles[registry]
-
-        nkey = name + subkey
-        nkey = fix_key(nkey)
-
-        self.keyhandles[handle] = nkey
-
-        return nkey
-
-    def _remove_keyhandle(self, handle):
-        key = self._get_keyhandle(handle)
-
-        if handle in self.keyhandles:
-            self.keyhandles.pop(handle)
-
-        return key
-
-    def _get_keyhandle(self, handle):
-        return self.keyhandles.get(handle, "")
 
     def _process_call(self, call):
         """ Gets files calls
@@ -674,6 +630,7 @@ class Enhanced(object):
                 "event": "write",
                 "object": "file",
                 "apis": [
+                    "NtWriteFile",
                     "URLDownloadToFileW",
                     "URLDownloadToFileA"
                 ],
@@ -744,25 +701,11 @@ class Enhanced(object):
                 "event": "read",
                 "object": "file",
                 "apis": [
-                    "NtReadFile",
-                    "ReadFile"
+                    "NtReadFile"
                 ],
-                "args": []
-            },
-            {
-                "event": "write",
-                "object": "file",
-                "apis": ["NtWriteFile"],
-                "args": []
-            },
-            {
-                "event": "delete",
-                "object": "registry",
-                "apis": [
-                    "RegDeleteKeyA",
-                    "RegDeleteKeyW"
-                ],
-                "args": []
+                "args": [
+                    ("file", "FileName")
+                ]
             },
             {
                 "event": "write",
@@ -772,8 +715,19 @@ class Enhanced(object):
                     "RegSetValueExW"
                 ],
                 "args": [
-                    ("content", "Buffer"),
-                    ("object", "object")
+                    ("regkey", "FullName"),
+                    ("content", "Buffer")
+                ]
+            },
+            {
+                "event": "write",
+                "object": "registry",
+                "apis": [
+                    "RegCreateKeyExA",
+                    "RegCreateKeyExW"
+                ],
+                "args": [
+                    ("regkey", "FullName")
                 ]
             },
             {
@@ -782,19 +736,36 @@ class Enhanced(object):
                 "apis": [
                     "RegQueryValueExA",
                     "RegQueryValueExW",
+                ],
+                "args": [
+                    ("regkey", "FullName"),
+                    ("content", "Data")
+                ]
+            },
+            {
+                "event": "read",
+                "object": "registry",
+                "apis": [
                     "NtQueryValueKey"
                 ],
-                "args": []
+                "args": [
+                    ("regkey", "FullName"),
+                    ("content", "Information")
+                ]
             },
             {
                 "event": "delete",
                 "object": "registry",
                 "apis": [
+                    "RegDeleteKeyA",
+                    "RegDeleteKeyW",
                     "RegDeleteValueA",
                     "RegDeleteValueW",
                     "NtDeleteValueKey"
                 ],
-                "args": []
+                "args": [
+                    ("regkey", "FullName")
+                ]
             },
             {
                 "event": "create",
@@ -833,13 +804,7 @@ class Enhanced(object):
         args = _load_args(call)
 
         if event:
-            if call["api"] in ["NtReadFile", "ReadFile", "NtWriteFile"]:
-                event["data"]["file"] = _get_handle(self.filehandles, args["FileHandle"])
-
-            elif call["api"] in ["RegDeleteKeyA", "RegDeleteKeyW", "RegSetValueExA", "RegSetValueExW", "RegQueryValueExA", "RegQueryValueExW", "RegDeleteValueA", "RegDeleteValueW", "NtQueryValueKey", "NtDeleteValueKey"]:
-                event["data"]["regkey"] = "{0}".format(args.get("FullName", ""))
-
-            elif call["api"] in ["LoadLibraryA", "LoadLibraryW", "LoadLibraryExA", "LoadLibraryExW", "LdrGetDllHandle"] and call["status"]:
+            if call["api"] in ["LoadLibraryA", "LoadLibraryW", "LoadLibraryExA", "LoadLibraryExW", "LdrGetDllHandle"] and call["status"]:
                 self._add_loaded_module(args.get("FileName", ""), args.get("ModuleHandle", ""))
 
             elif call["api"] in ["LdrLoadDll"] and call["status"]:
@@ -860,39 +825,9 @@ class Enhanced(object):
 
             return event
 
-        elif call["api"] in ["SetCurrentDirectoryA", "SetCurrentDirectoryW"]:
-            self.currentdir = args["Path"]
-
-        # Files
-        elif call["api"] in ["NtCreateFile", "NtOpenFile"]:
-            _add_handle(self.filehandles, args["FileHandle"], args["FileName"])
-
-        elif call["api"] in ["CreateFileW"]:
-            _add_handle(self.filehandles, call["return"], args["FileName"])
-
-        elif call["api"] in ["CloseHandle"]:
-            # this could technically be used to close a registry key as well
-            _remove_handle(self.filehandles, args["Handle"])
-
-        elif call["api"] in ["NtClose"]:
-            # A handle can be either file or registry-related, we don't need to know exactly which
-            _remove_handle(self.filehandles, args["Handle"])
-            self._remove_keyhandle(args.get("Handle", ""))
-
         # Services
         elif call["api"] in ["OpenServiceW"]:
             _add_handle(self.servicehandles, call["return"], args["ServiceName"])
-
-        # Registry
-        elif call["api"] in ["RegOpenKeyExA", "RegOpenKeyExW", "RegCreateKeyExA", "RegCreateKeyExW"]:
-            self._add_keyhandle(args.get("Registry", ""), args.get("SubKey", ""), args.get("Handle", ""))
-
-        elif call["api"] in ["NtOpenKey","NtOpenKeyEx","NtCreateKey"]:
-            self._add_keyhandle("", args.get("ObjectAttributes", ""), args.get("KeyHandle", ""))
-
-        elif call["api"] in ["RegCloseKey"]:
-            # this could technically be used to close a file handle as well
-            self._remove_keyhandle(args.get("Handle", ""))
 
         return event
 
