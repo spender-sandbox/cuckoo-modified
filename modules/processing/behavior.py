@@ -630,11 +630,26 @@ class Enhanced(object):
                 "event": "write",
                 "object": "file",
                 "apis": [
-                    "NtWriteFile",
                     "URLDownloadToFileW",
                     "URLDownloadToFileA"
                 ],
                 "args": [("file", "FileName")]
+            },
+            {
+                "event": "read",
+                "object": "file",
+                "apis": [
+                    "NtReadFile",
+                ],
+                "args": [("file", "HandleName")]
+            },
+            {
+                "event": "write",
+                "object": "file",
+                "apis": [
+                    "NtWriteFile",
+                ],
+                "args": [("file", "HandleName")]
             },
             {
                 "event": "execute",
@@ -695,16 +710,6 @@ class Enhanced(object):
                 "args": [
                     ("classname", "ClassName"),
                     ("windowname", "WindowName")
-                ]
-            },
-            {
-                "event": "read",
-                "object": "file",
-                "apis": [
-                    "NtReadFile"
-                ],
-                "args": [
-                    ("file", "FileName")
                 ]
             },
             {
