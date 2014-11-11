@@ -218,11 +218,13 @@ class PipeHandler(Thread):
         if data:
             command = data.strip()
 
-            # Debug, Regular, or Critical information from CuckooMon.
+            # Debug, Regular, Warning, or Critical information from CuckooMon.
             if command.startswith("DEBUG:"):
                 log.debug(command[6:])
             elif command.startswith("INFO:"):
                 log.info(command[5:])
+            elif command.startswith("WARNING:"):
+                log.warning(command[8:])
             elif command.startswith("CRITICAL:"):
                 log.critical(command[9:])
 
@@ -349,6 +351,8 @@ class PipeHandler(Thread):
                     old_fname, new_fname = command[10:].split("::", 1)
                     move_file(old_fname.decode("utf-8"),
                               new_fname.decode("utf-8"))
+            else:
+                log.warning("Received unknown command from cuckoomon: %s", command)
 
         KERNEL32.WriteFile(self.h_pipe,
                            create_string_buffer(response),
