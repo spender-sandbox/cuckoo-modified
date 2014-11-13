@@ -306,10 +306,6 @@ class PipeHandler(Thread):
                             log.info("Announced process name: %s", filename)
 
                             if not protected_filename(filename):
-                                # Add the new process ID to the list of
-                                # monitored processes.
-                                add_pids(process_id)
-
                                 # If we have both pid and tid, then we can use
                                 # apc to inject.
                                 if process_id and thread_id:
@@ -359,7 +355,11 @@ class PipeHandler(Thread):
 
         # We wait until cuckoomon reports back.
         if wait:
-            proc.wait()
+            res = proc.wait()
+            if res:
+                # Add the new process ID to the list of
+                # monitored processes.
+                add_pids(process_id)
 
         if proc:
             proc.close()
