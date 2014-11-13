@@ -191,7 +191,6 @@ class PipeHandler(Thread):
         """
         data = ""
         response = "OK"
-        wait = False
         proc = None
 
         # Read the data submitted to the Pipe Server.
@@ -313,7 +312,13 @@ class PipeHandler(Thread):
                                 else:
                                     # We inject using CreateRemoteThread
                                     proc.inject(dll)
-                                wait = True
+
+                                # We wait until cuckoomon reports back.
+                                res = proc.wait()
+                                if res:
+                                    # Add the new process ID to the list of
+                                    # monitored processes.
+                                    add_pids(process_id)
                     else:
                         log.warning("Received request to inject Cuckoo "
                                     "process with pid %d, skip", process_id)
@@ -352,14 +357,6 @@ class PipeHandler(Thread):
                            None)
 
         KERNEL32.CloseHandle(self.h_pipe)
-
-        # We wait until cuckoomon reports back.
-        if wait:
-            res = proc.wait()
-            if res:
-                # Add the new process ID to the list of
-                # monitored processes.
-                add_pids(process_id)
 
         if proc:
             proc.close()
