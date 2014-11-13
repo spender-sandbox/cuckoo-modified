@@ -191,6 +191,7 @@ class PipeHandler(Thread):
         """
         data = ""
         response = "OK"
+        wait = False
         proc = None
 
         # Read the data submitted to the Pipe Server.
@@ -312,20 +313,15 @@ class PipeHandler(Thread):
                                 else:
                                     # We inject using CreateRemoteThread
                                     proc.inject(dll)
-
-                                # We wait until cuckoomon reports back.
-                                res = proc.wait()
-                                if res:
-                                    # Add the new process ID to the list of
-                                    # monitored processes.
-                                    add_pids(process_id)
+                                wait = True
                     else:
                         log.warning("Received request to inject Cuckoo "
                                     "process with pid %d, skip", process_id)
 
                 # Once we're done operating on the processes list, we release
                 # the lock.
-                PROCESS_LOCK.release()
+                if wait == False:
+                    PROCESS_LOCK.release()
             # In case of FILE_NEW, the client is trying to notify the creation
             # of a new file.
             elif command.startswith("FILE_NEW:"):
@@ -357,6 +353,18 @@ class PipeHandler(Thread):
                            None)
 
         KERNEL32.CloseHandle(self.h_pipe)
+
+        # We wait until cuckoomon reports back.
+        # waiting needs to be performed here as we need to return execution back to cuckoomon
+        # in the case where it suspended a child process itself, so that it can unsuspend it
+        # while we await completion of cuckoomon loading in the new process
+        if wait:
+            res = proc.wait()
+            if res:
+                # Add the new process ID to the list of
+                # monitored processes.
+                add_pids(process_id)
+            PROCESS_LOCK.release()
 
         if proc:
             proc.close()
