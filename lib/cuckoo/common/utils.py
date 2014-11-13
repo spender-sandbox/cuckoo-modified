@@ -496,6 +496,15 @@ def pretty_print_arg(category, api_name, arg_name, arg_val):
         if val & 0x00000008:
             res.append("DETACHED_PROCESS")
             val &= ~0x00000008
+        if val & 0x00000020:
+            res.append("NORMAL_PRIORITY_CLASS")
+            val &= ~0x00000020
+        if val & 0x00000040:
+            res.append("IDLE_PRIORITY_CLASS")
+            val &= ~0x00000040
+        if val & 0x00000080:
+            res.append("HIGH_PRIORITY_CLASS")
+            val &= ~0x00000080
         if val & 0x00040000:
             res.append("CREATE_PROTECTED_PROCESS")
             val &= ~0x00040000
