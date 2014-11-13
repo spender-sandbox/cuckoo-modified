@@ -431,8 +431,10 @@ class Summary:
                 elif argument["name"] == "DesiredAccess":
                     access = int(argument["value"], 16)
             if filename:
-                if access and access & 0x80000000 and filename not in self.read_files:
+                if access and (access & 0x80000000 or access & 0x10000000 or access & 0x1) and filename not in self.read_files:
                     self.read_files.append(filename)
+                if access and (access & 0x40000000 or access & 0x10000000 or access & 0x6) and filename not in self.write_files:
+                    self.write_files.append(filename)
                 if access and access & 0x40000000 and filename not in self.write_files:
                     self.write_files.append(filename)
                 if call["api"].find("Delete") != -1 and filename not in self.write_files:
