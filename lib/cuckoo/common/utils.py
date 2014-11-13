@@ -285,6 +285,19 @@ def pretty_print_arg(category, api_name, arg_name, arg_val):
         if val:
             res.append("0x{0:08x}".format(val))
         return "|".join(res)
+    elif category == "services" and arg_name == "ControlCode":
+        val = int(arg_val, 10)
+        return {
+            1 : "SERVICE_CONTROL_STOP",
+            2 : "SERVICE_CONTROL_PAUSE",
+            3 : "SERVICE_CONTROL_CONTINUE",
+            4 : "SERVICE_CONTROL_INTERROGATE",
+            6 : "SERVICE_CONTROL_PARAMCHANGE",
+            7 : "SERVICE_CONTROL_NETBINDADD",
+            8 : "SERVICE_CONTROL_NETBINDREMOVE",
+            9 : "SERVICE_CONTROL_NETBINDENABLE",
+            10 : "SERVICE_CONTROL_NETBINDDISABLE"
+        }.get(val, None)
     elif category == "services" and arg_name == "ErrorControl":
         val = int(arg_val, 10)
         return {
