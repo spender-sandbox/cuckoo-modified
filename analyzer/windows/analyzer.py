@@ -315,11 +315,9 @@ class PipeHandler(Thread):
                                 if process_id and thread_id:
                                     proc.inject(dll, apc=True)
                                 else:
-                                    # We inject using CreateRemoteThread, this
-                                    # needs the waiting in order to make sure
-                                    # no race conditions occur.
+                                    # We inject using CreateRemoteThread
                                     proc.inject(dll)
-                                    wait = True
+                                wait = True
                     else:
                         log.warning("Received request to inject Cuckoo "
                                     "process with pid %d, skip", process_id)

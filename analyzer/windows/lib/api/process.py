@@ -348,7 +348,6 @@ class Process:
                           "pid %d (Error: %s)",
                           self.pid, get_error_string(KERNEL32.GetLastError()))
                 return False
-            log.info("Successfully injected process with pid %d." % self.pid)
         else:
             event_name = "CuckooEvent%d" % self.pid
             self.event_handle = KERNEL32.CreateEventA(None,
