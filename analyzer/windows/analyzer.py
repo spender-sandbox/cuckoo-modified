@@ -309,11 +309,12 @@ class PipeHandler(Thread):
                                 # If we have both pid and tid, then we can use
                                 # apc to inject.
                                 if process_id and thread_id:
-                                    proc.inject(dll, apc=True)
+                                    res = proc.inject(dll, apc=True)
                                 else:
                                     # We inject using CreateRemoteThread
-                                    proc.inject(dll)
-                                wait = True
+                                    res = proc.inject(dll)
+                                if res:
+                                    wait = True
                     else:
                         log.warning("Received request to inject Cuckoo "
                                     "process with pid %d, skip", process_id)
