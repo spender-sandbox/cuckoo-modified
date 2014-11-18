@@ -425,6 +425,7 @@ def pretty_print_arg(category, api_name, arg_name, arg_val):
                 0x7405c : "IOCTL_DISK_GET_LENGTH_INFO",
                 0x90018 : "FSCTL_LOCK_VOLUME",
                 0x9001c : "FSCTL_UNLOCK_VOLUME",
+                0x900a8 : "FSCTL_GET_REPARSE_POINT",
                 0x2d0c10 : "IOCTL_STORAGE_GET_MEDIA_SERIAL_NUMBER",
                 0x2d1080 : "IOCTL_STORAGE_GET_DEVICE_NUMBER",
                 0x2d1400 : "IOCTL_STORAGE_QUERY_PROPERTY",
