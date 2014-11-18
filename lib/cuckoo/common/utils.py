@@ -419,7 +419,12 @@ def pretty_print_arg(category, api_name, arg_name, arg_val):
                 0x1201f : "IOCTL_AFD_SEND",
                 0x12087 : "IOCTL_AFD_EVENT_SELECT",
                 0x1208b : "IOCTL_AFD_ENUM_NETWORK_EVENTS",
+                0x4d008 : "IOCTL_SCSI_MINIPORT",
                 0x4d014 : "IOCTL_SCSI_PASS_THROUGH_DIRECT",
+                0x70000 : "IOCTL_DISK_GET_DRIVE_GEOMETRY",
+                0x7405c : "IOCTL_DISK_GET_LENGTH_INFO",
+                0x90018 : "FSCTL_LOCK_VOLUME",
+                0x9001c : "FSCTL_UNLOCK_VOLUME",
                 0x2d0c10 : "IOCTL_STORAGE_GET_MEDIA_SERIAL_NUMBER",
                 0x2d1080 : "IOCTL_STORAGE_GET_DEVICE_NUMBER",
                 0x2d1400 : "IOCTL_STORAGE_QUERY_PROPERTY",
@@ -437,10 +442,7 @@ def pretty_print_arg(category, api_name, arg_name, arg_val):
                 0x560000 : "IOCTL_VOLUME_GET_VOLUME_DISK_EXTENTS",
                 0x6d0008 : "IOCTL_MOUNTMGR_QUERY_POINTS",
                 0x6d0030 : "IOCTL_MOUNTMGR_QUERY_DOS_VOLUME_PATH",
-                0x6d0034 : "IOCTL_MOUNTMGR_QUERY_DOS_VOLUME_PATHS",
-                0x70000 : "IOCTL_DISK_GET_DRIVE_GEOMETRY",
-                0x90018 : "FSCTL_LOCK_VOLUME",
-                0x9001c : "FSCTL_UNLOCK_VOLUME"
+                0x6d0034 : "IOCTL_MOUNTMGR_QUERY_DOS_VOLUME_PATHS"
         }.get(val, None)
     elif arg_name == "Protection" or arg_name == "Win32Protect":
         val = int(arg_val, 16)
