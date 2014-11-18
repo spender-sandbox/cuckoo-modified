@@ -665,7 +665,7 @@ class Signature(object):
         self._current_call_raw_cache = None
         self._current_call_raw_dict = None
 
-    def _check_value(self, pattern, subject, regex=False, all=False):
+    def _check_value(self, pattern, subject, regex=False, all=False, ignorecase=True):
         """Checks a pattern against a given subject.
         @param pattern: string or expression to check for.
         @param subject: target of the check.
@@ -673,6 +673,8 @@ class Signature(object):
                       expression or not and therefore should be compiled.
         @param all: boolean representing if all results should be returned
                       in a set or not
+        @param ignorecase: in non-regex instances, should we ignore case for matches?
+                            defaults to true
         @return: depending on the value of param 'all', either a set of
                       matched items or the first matched item
         """
@@ -695,6 +697,15 @@ class Signature(object):
                         return subject
             if all and len(retset) > 0:
                 return retset
+        elif ignorecase:
+            lowerpattern = pattern.lower()
+            if isinstance(subject, list):
+                for item in subject:
+                    if item.lower() == lowerpattern:
+                        return item
+            else:
+                if subject.lower() == lowerpattern:
+                    return subject
         else:
             if isinstance(subject, list):
                 for item in subject:
@@ -817,7 +828,8 @@ class Signature(object):
         return self._check_value(pattern=pattern,
                                  subject=subject,
                                  regex=regex,
-                                 all=all)
+                                 all=all,
+                                 ignorecase=False)
 
     def check_api(self, pattern, process=None, regex=False, all=False):
         """Checks for an API being called.
@@ -845,7 +857,8 @@ class Signature(object):
                 ret = self._check_value(pattern=pattern,
                                      subject=call["api"],
                                      regex=regex,
-                                     all=all)
+                                     all=all,
+                                     ignorecase=False)
                 if ret:
                     if all:
                         retset.union(ret)
@@ -902,7 +915,8 @@ class Signature(object):
             ret = self._check_value(pattern=pattern,
                                  subject=argument["value"],
                                  regex=regex,
-                                 all=all)
+                                 all=all,
+                                 ignorecase=False)
             if ret:
                 if all:
                     retset.union(ret)
@@ -978,7 +992,8 @@ class Signature(object):
         return self._check_value(pattern=pattern,
                                  subject=hosts,
                                  regex=regex,
-                                 all=all)
+                                 all=all,
+                                 ignorecase=False)
 
     def check_domain(self, pattern, regex=False, all=False):
         """Checks for a domain being contacted.
@@ -1035,7 +1050,8 @@ class Signature(object):
             ret = self._check_value(pattern=pattern,
                                  subject=item["uri"],
                                  regex=regex,
-                                 all=all)
+                                 all=all,
+                                 ignorecase=False)
             if ret:
                 if all:
                     retset.union(ret)
