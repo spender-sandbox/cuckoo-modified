@@ -970,8 +970,13 @@ class Signature(object):
         @return: depending on the value of param 'all', either a set of
                       matched items or the first matched item
         """
+
+        hosts = self.results["network"].get("hosts")
+        if not hosts:
+            return None
+
         return self._check_value(pattern=pattern,
-                                 subject=self.results["network"]["hosts"],
+                                 subject=hosts,
                                  regex=regex,
                                  all=all)
 
@@ -989,7 +994,11 @@ class Signature(object):
         if all:
             retset = set()
 
-        for item in self.results["network"]["domains"]:
+        domains = self.results["network"].get("domains")
+        if not domains:
+            return None
+
+        for item in domains:
             ret = self._check_value(pattern=pattern,
                                  subject=item["domain"],
                                  regex=regex,
@@ -1019,7 +1028,10 @@ class Signature(object):
         if all:
             retset = set()
 
-        for item in self.results["network"]["http"]:
+        httpitems = self.results["network"].get("http")
+        if not httpitems:
+            return None
+        for item in httpitems:
             ret = self._check_value(pattern=pattern,
                                  subject=item["uri"],
                                  regex=regex,
