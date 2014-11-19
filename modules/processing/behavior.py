@@ -925,6 +925,7 @@ class ProcessTree:
             name=process["process_name"],
             pid=process["process_id"],
             parent_id=process["parent_id"],
+            module_path=process["module_path"],
             children=[]
         ))
 
