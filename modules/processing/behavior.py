@@ -182,7 +182,7 @@ class ParseProcessLog(list):
                              msg=msg)
 
     def log_call(self, context, apiname, category, arguments):
-	""" log an api call from data file
+        """ log an api call from data file
         @param context: containing additional api info
         @param apiname: name of the api
         @param category: win32 function category
