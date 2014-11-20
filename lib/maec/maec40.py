@@ -898,7 +898,7 @@ api_call_mappings = {
                                                                                                     "association_type" : "input",
                                                                                                     "forced" : {"associated_object_element" : "Type", 
                                                                                                                 "value" : "Console"}}}},
-"ZwMapViewOfSection" : {"action_name" : "map view of section",
+"NtMapViewOfSection" : {"action_name" : "map view of section",
                         "parameter_associated_objects" : {"SectionHandle" : {"associated_object_type" : "WindowsHandleObjectType",
                                                                              "associated_object_element" : "ID",
                                                                              "association_type" : "input",
