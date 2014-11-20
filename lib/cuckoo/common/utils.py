@@ -189,6 +189,105 @@ def pretty_print_arg(category, api_name, arg_name, arg_val):
         if val:
             res.append("0x{0:08x}".format(val))
         return "|".join(res)
+    elif arg_name == "Algid":
+        val = int(arg_val, 16)
+        return {
+                0x8001 : "MD2",
+                0x8002 : "MD4",
+                0x8003 : "MD5",
+                0x8004 : "SHA1",
+                0x8005 : "MAC",
+                0x8009 : "HMAC",
+                0x2400 : "RSA Public Key Signature",
+                0x2200 : "DSA Public Key Signature",
+                0xa400 : "RSA Public Key Exchange",
+                0x6602 : "RC2",
+                0x6801 : "RC4",
+                0x6601 : "DES",
+                0x6603 : "3DES",
+                0x6609 : "Two-key 3DES"
+        }.get(val, None);
+    elif api_name == "SHGetFolderPathW" and arg_name == "Folder":
+        val = int(arg_val, 16)
+        res = []
+        if val & 0x800:
+            res.append("CSIDL_FLAG_PER_USER_INIT")
+            val &= ~0x800
+        if val & 0x1000:
+            res.append("CSIDL_FLAG_NO_ALIAS")
+            val &= ~0x1000
+        if val & 0x2000:
+            res.append("CSIDL_FLAG_DONT_UNEXPAND")
+            val &= ~0x2000
+        if val & 0x4000:
+            res.append("CSIDL_FLAG_DONT_VERIFY")
+            val &= ~0x4000
+        if val & 0x8000:
+            res.append("CSIDL_FLAG_CREATE")
+            val &= ~0x8000
+        folder = {
+                0 : "CSIDL_DESKTOP",
+                1 : "CSIDL_INTERNET",
+                2 : "CSIDL_PROGRAMS",
+                3 : "CSIDL_CONTROLS",
+                4 : "CSIDL_PRINTERS",
+                5 : "CSIDL_MYDOCUMENTS",
+                6 : "CSIDL_FAVORITES",
+                7 : "CSIDL_STARTUP",
+                8 : "CSIDL_RECENT",
+                9 : "CSIDL_SENDTO",
+                10 : "CSIDL_BITBUCKET",
+                11 : "CSIDL_STARTMENU",
+                13 : "CSIDL_MYMUSIC",
+                14 : "CSIDL_MYVIDEO",
+                16 : "CSIDL_DESKTOPDIRECTORY",
+                17 : "CSIDL_DRIVES",
+                18 : "CSIDL_NETWORK",
+                19 : "CSIDL_NETHOOD",
+                20 : "CSIDL_FONTS",
+                21 : "CSIDL_TEMPLATES",
+                22 : "CSIDL_COMMON_STARTMENU",
+                23 : "CSIDL_COMMON_PROGRAMS",
+                24 : "CSIDL_COMMON_STARTUP",
+                25 : "CSIDL_COMMON_DESKTOPDIRECTORY",
+                26 : "CSIDL_APPDATA",
+                27 : "CSIDL_PRINTHOOD",
+                28 : "CSIDL_LOCAL_APPDATA",
+                29 : "CSIDL_ALTSTARTUP",
+                30 : "CSIDL_COMMON_ALTSTARTUP",
+                31 : "CSIDL_COMMON_FAVORITES",
+                32 : "CSIDL_INTERNET_CACHE",
+                33 : "CSIDL_COOKIES",
+                34 : "CSIDL_HISTORY",
+                35 : "CSIDL_COMMON_APPDATA",
+                36 : "CSIDL_WINDOWS",
+                37 : "CSIDL_SYSTEM",
+                38 : "CSIDL_PROGRAM_FILES",
+                39 : "CSIDL_MYPICTURES",
+                40 : "CSIDL_PROFILE",
+                41 : "CSIDL_SYSTEMX86",
+                42 : "CSIDL_PROGRAM_FILESX86",
+                43 : "CSIDL_PROGRAM_FILES_COMMON",
+                44 : "CSIDL_PROGRAM_FILES_COMMONX86",
+                45 : "CSIDL_COMMON_TEMPLATES",
+                46 : "CSIDL_COMMON_DOCUMENTS",
+                47 : "CSIDL_COMMON_ADMINTOOLS",
+                48 : "CSIDL_ADMINTOOLS",
+                49 : "CSIDL_CONNECTIONS",
+                53 : "CSIDL_COMMON_MUSIC",
+                54 : "CSIDL_COMMON_PICTURES",
+                55 : "CSIDL_COMMON_VIDEO",
+                56 : "CSIDL_RESOURCES",
+                57 : "CSIDL_RESOURCES_LOCALIZED",
+                58 : "CSIDL_COMMON_OEM_LINKS",
+                59 : "CSIDL_CDBURN_AREA",
+                61 : "CSIDL_COMPUTERSNEARME"
+            }.get(val, None)
+        if folder:
+            res.append(folder)
+        else:
+            res.append("0x{0:08x}".format(val))
+        return "|".join(res)
     elif arg_name == "HookIdentifier":
         val = int(arg_val, 10)
         return {
