@@ -347,9 +347,13 @@ class FileUpload(object):
             raise CuckooOperationalError("FileUpload failure, path sanitization failed.")
 
         if guest_path != "":
-            infofd = open(file_path + "_info.txt", "a")
-            infofd.write(guest_path + "\n")
-            infofd.close()
+            guest_paths = []
+            if os.path.exists(file_path + "_info.txt"):
+                guest_paths = [line.strip() for line in open(file_path + "_info.txt")]
+            if guest_path not in guest_paths:
+                infofd = open(file_path + "_info.txt", "a")
+                infofd.write(guest_path + "\n")
+                infofd.close()
 
         if not self.duplicate:
             self.fd = open(file_path, "wb")
