@@ -607,6 +607,9 @@ def pretty_print_arg(category, api_name, arg_name, arg_val):
         if val & 0x00000080:
             res.append("HIGH_PRIORITY_CLASS")
             val &= ~0x00000080
+        if val & 0x00000400:
+            res.append("CREATE_UNICODE_ENVIRONMENT")
+            val &= ~0x00000400
         if val & 0x00040000:
             res.append("CREATE_PROTECTED_PROCESS")
             val &= ~0x00040000
