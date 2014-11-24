@@ -496,6 +496,12 @@ def pretty_print_arg(category, api_name, arg_name, arg_val):
         if val & 0x0020:
             res.append("KEY_CREATE_LINK")
             val &= ~0x0020
+        if val & 0x0100:
+            res.append("KEY_WOW64_64KEY")
+            val &= ~0x0100
+        if val & 0x0f0000:
+            res.append("STANDARD_RIGHTS_REQUIRED")
+            val &= ~0x0f0000
         if val:
             res.append("0x{0:08x}".format(val))
         return "|".join(res)
