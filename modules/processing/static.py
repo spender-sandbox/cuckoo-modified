@@ -315,7 +315,8 @@ class Static(Processing):
 
         if HAVE_PEFILE:
             if self.task["category"] == "file":
-                if "PE32" in File(self.file_path).get_type():
+                thetype = File(self.file_path).get_type()
+                if "PE32" in thetype or thetype == "MS-DOS executable":
                     static = PortableExecutable(self.file_path).run()
 
         return static
