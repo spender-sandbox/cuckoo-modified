@@ -92,33 +92,23 @@ def dump_file(file_path):
                 duplicate = True
         else:
             log.warning("File at path \"%s\" does not exist, skip.",
-                        file_path)
+                        file_path.encode("utf-8", "replace"))
             return
     except IOError as e:
-        log.warning("Unable to access file at path \"%s\": %s", file_path, e)
+        log.warning("Unable to access file at path \"%s\": %s", file_path.encode("utf-8", "replace"), e)
         return
 
-    # 32k is the maximum length for a filename
-    path = create_unicode_buffer(32 * 1024)
-    name = c_wchar_p()
-    KERNEL32.GetFullPathNameW(unicode(file_path), 32 * 1024, path, byref(name))
-    file_path = path.value
-
-    # Check if the path has a valid file name, otherwise it's a directory
-    # and we should abort the dump.
-    if name.value:
-        # Should be able to extract Alternate Data Streams names too.
-        file_name = name.value[name.value.find(":")+1:]
-    else:
+    if os.path.isdir(file_path):
         return
-
+    name = os.path.basename(file_path)
+    file_name = name[name.find(u":")+1:]
     if duplicate:
         idx = DUMPED_LIST.index(sha256)
         upload_path = UPLOADPATH_LIST[idx]
     else:
         upload_path = os.path.join("files",
                                str(random.randint(100000000, 9999999999)),
-                               file_name)
+                               file_name.encode("utf-8", "replace"))
     try:
         upload_to_host(file_path, upload_path, duplicate)
         if not duplicate:
@@ -126,7 +116,7 @@ def dump_file(file_path):
             UPLOADPATH_LIST.append(upload_path)
     except (IOError, socket.error) as e:
         log.error("Unable to upload dropped file at path \"%s\": %s",
-                  file_path, e)
+                  file_path.encode("utf-8", "replace"), e)
 
 
 def del_file(fname):
@@ -151,18 +141,18 @@ def move_file(old_fname, new_fname):
         if fname == lower_old_fname:
             matchpath = lower_old_fname
             replacepath = new_fname
-        elif lower_old_fname[-1] == '\\' and fname.startswith(lower_old_fname):
+        elif lower_old_fname[-1] == u'\\' and fname.startswith(lower_old_fname):
            matchpath = lower_old_fname
-           if new_fname[-1] == '\\':
+           if new_fname[-1] == u'\\':
                replacepath = new_fname
            else:
-               replacepath = new_fname + "\\"
-        elif fname.startswith(lower_old_fname + "\\"):
-           matchpath = lower_old_fname + "\\"
-           if new_fname[-1] == '\\':
+               replacepath = new_fname + u"\\"
+        elif fname.startswith(lower_old_fname + u"\\"):
+           matchpath = lower_old_fname + u"\\"
+           if new_fname[-1] == u'\\':
                replacepath = new_fname
            else:
-               replacepath = new_fname + "\\"
+               replacepath = new_fname + u"\\"
 
         if matchpath:
             # Replace the old filename by the new filename, or replace the subdirectory if moved
@@ -327,7 +317,7 @@ class PipeHandler(Thread):
             # of a new file.
             elif command.startswith("FILE_NEW:"):
                 # We extract the file path.
-                file_path = command[9:].decode("utf-8")
+                file_path = unicode(command[9:].decode("utf-8"))
                 # We add the file to the list.
                 add_file(file_path)
             # In case of FILE_DEL, the client is trying to notify an ongoing
@@ -335,15 +325,15 @@ class PipeHandler(Thread):
             # straight away.
             elif command.startswith("FILE_DEL:"):
                 # Extract the file path.
-                file_path = command[9:].decode("utf-8")
+                file_path = unicode(command[9:].decode("utf-8"))
                 # Dump the file straight away.
                 del_file(file_path)
             elif command.startswith("FILE_MOVE:"):
                 # Syntax = "FILE_MOVE:old_file_path::new_file_path".
                 if "::" in command[10:]:
                     old_fname, new_fname = command[10:].split("::", 1)
-                    move_file(old_fname.decode("utf-8"),
-                              new_fname.decode("utf-8"))
+                    move_file(unicode(old_fname.decode("utf-8")),
+                              unicode(new_fname.decode("utf-8")))
             else:
                 log.warning("Received unknown command from cuckoomon: %s", command)
 
