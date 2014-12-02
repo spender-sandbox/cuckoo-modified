@@ -423,12 +423,9 @@ def pretty_print_arg(category, api_name, arg_name, arg_val):
             8 : "SERVICE_RECOGNIZED_DRIVER",
             16 : "SERVICE_WIN32_OWN_PROCESS",
             32 : "SERVICE_WIN32_SHARE_PROCESS"
-        }.get(val, None)
+        }.get(val & 0x3f, None)
         if val & 0x130:
-            if retstr:
-                retstr += "|SERVICE_INTERACTIVE_PROCESS"
-            else:
-                retstr = "SERVICE_INTERACTIVE_PROCESS"
+            retstr += "|SERVICE_INTERACTIVE_PROCESS"
         return retstr
     elif category == "services" and arg_name == "DesiredAccess":
         val = int(arg_val, 16)
