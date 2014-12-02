@@ -1,7 +1,8 @@
 <table class="table table-bordered" style="table-layout: fixed;">
     <thead>
         <tr>
-            <th width="10%">Time</th>
+            <th width="5%">Time</th>
+            <th width="5%">Thread ID</th>
             <th width="8%">Caller</th>
             <th width="15%">API</th>
             <th width="45%">Arguments</th>
@@ -14,7 +15,8 @@
     {% for call in chunk.calls %}
         <tr class="{{call.category}}">
             <td>{{call.timestamp}}</td>
-            <td>{{call.caller}}</td>
+            <td>{{call.thread_id}}</td>
+            <td>{{call.caller}}<br />{{call.parentcaller}}</td>
             <td><strong>{{call.api}}</strong></td>
             <td style="word-wrap: break-word;">
                 {% for argument in call.arguments %}

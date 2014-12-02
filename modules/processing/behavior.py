@@ -18,17 +18,8 @@ def fix_key(key):
     @param key: raw key
     @returns: normalized key
     """
-    res = key
-    if key.lower().startswith("registry\\machine\\"):
-        res = "HKEY_LOCAL_MACHINE\\" + key[17:]
-    elif key.lower().startswith("registry\\user\\"):
-        res = "HKEY_USERS\\" + key[14:]
-    elif key.lower().startswith("\\registry\\machine\\"):
-        res = "HKEY_LOCAL_MACHINE\\" + key[18:]
-    elif key.lower().startswith("\\registry\\user\\"):
-        res = "HKEY_USERS\\" + key[15:]
-
-    return res
+    # all normalization is done on the cuckoomon end, so this is now a no-op
+    return key
 
 class ParseProcessLog(list):
     """Parses process log file."""
@@ -43,6 +34,7 @@ class ParseProcessLog(list):
         self.process_name = None
         self.parent_id = None
         self.module_path = None
+        self.threads = set()
         self.first_seen = None
         self.calls = self
         self.lastcall = None
@@ -219,17 +211,18 @@ class ParseProcessLog(list):
             timestamp = row[0]    # Timestamp of current API call invocation.
             thread_id = row[1]    # Thread ID.
             caller = row[2]       # non-system DLL return address
-            category = row[3]     # Win32 function category.
-            api_name = row[4]     # Name of the Windows API.
-            status_value = row[5] # Success or Failure?
-            return_value = row[6] # Value returned by the function.
+            parentcaller = row[3]       # non-system DLL parent of non-system-DLL return address
+            category = row[4]     # Win32 function category.
+            api_name = row[5]     # Name of the Windows API.
+            status_value = row[6] # Success or Failure?
+            return_value = row[7] # Value returned by the function.
         except IndexError as e:
             log.debug("Unable to parse process log row: %s", e)
             return None
 
         # Now walk through the remaining columns, which will contain API
         # arguments.
-        for index in range(7, len(row)):
+        for index in range(8, len(row)):
             argument = {}
 
             # Split the argument name with its value based on the separator.
@@ -251,6 +244,7 @@ class ParseProcessLog(list):
         call["timestamp"] = timestamp
         call["thread_id"] = str(thread_id)
         call["caller"] = "0x%.08x" % caller
+        call["parentcaller"] = "0x%.08x" % parentcaller
         call["category"] = category
         call["api"] = api_name
         call["status"] = bool(int(status_value))
@@ -266,6 +260,9 @@ class ParseProcessLog(list):
 
         call["arguments"] = arguments
         call["repeated"] = 0
+
+        # add the thread id to our thread set
+        self.threads.add(call["thread_id"])
 
         return call
 
@@ -316,6 +313,7 @@ class Processes:
                 "module_path": current_log.module_path,
                 "first_seen": logtime(current_log.first_seen),
                 "calls": current_log.calls,
+                "threads" : current_log.threads
             })
 
         # Sort the items in the results list chronologically. In this way we
@@ -926,7 +924,8 @@ class ProcessTree:
             pid=process["process_id"],
             parent_id=process["parent_id"],
             module_path=process["module_path"],
-            children=[]
+            children=[],
+            threads=process["threads"]
         ))
 
     def run(self):
