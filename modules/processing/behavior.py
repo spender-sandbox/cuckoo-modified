@@ -180,7 +180,7 @@ class ParseProcessLog(list):
         @param category: win32 function category
         @param arguments: arguments to the api call
         """
-        apiindex, status, returnval, tid, timediff, caller = context
+        apiindex, status, returnval, tid, timediff, caller, parentcaller = context
 
 
         current_time = self.first_seen + datetime.timedelta(0, 0, timediff*1000)
@@ -189,6 +189,7 @@ class ParseProcessLog(list):
         self.lastcall = self._parse([timestring,
                                      tid,
                                      caller,
+                                     parentcaller,
                                      category,
                                      apiname,
                                      status,
