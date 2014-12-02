@@ -13,6 +13,5 @@ Now it's time to create such machines and to configure them properly.
     creation
     requirements
     network
-    agent
+    ../guest/agent
     saving
-

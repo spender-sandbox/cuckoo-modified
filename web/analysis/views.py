@@ -20,6 +20,7 @@ from gridfs import GridFS
 sys.path.append(settings.CUCKOO_PATH)
 
 from lib.cuckoo.core.database import Database, TASK_PENDING
+from lib.cuckoo.common.constants import CUCKOO_ROOT
 
 results_db = pymongo.connection.Connection(settings.MONGO_HOST, settings.MONGO_PORT).cuckoo
 fs = GridFS(results_db)
@@ -202,6 +203,8 @@ def file(request, category, object_id):
             content_type = "application/vnd.tcpdump.pcap"
         elif category == "screenshot":
             file_name += ".jpg"
+        elif category == 'memdump':
+            file_name += ".dmp"
         else:
             file_name += ".bin"
 
@@ -213,6 +216,22 @@ def file(request, category, object_id):
         return render_to_response("error.html",
                                   {"error": "File not found"},
                                   context_instance=RequestContext(request))
+
+
+@require_safe
+def full_memory_dump_file(request, analysis_number):
+    file_path = os.path.join(CUCKOO_ROOT, 'storage', 'analyses', str(analysis_number), 'memory.dmp')
+    if os.path.exists(file_path):
+        content_type = "application/octet-stream"
+        response = HttpResponse(open(file_path, 'rb').read(), content_type=content_type)
+        response["Content-Disposition"] = "attachment; filename=memory.dmp"
+
+        return response
+    else:
+        return render_to_response("error.html",
+                                  {"error": "File not found"},
+                                  context_instance=RequestContext(request))
+
 
 def search(request):
     if "search" in request.POST:
