@@ -425,7 +425,10 @@ def pretty_print_arg(category, api_name, arg_name, arg_val):
             32 : "SERVICE_WIN32_SHARE_PROCESS"
         }.get(val, None)
         if val & 0x130:
-            retstr += "|SERVICE_INTERACTIVE_PROCESS"
+            if retstr:
+                retstr += "|SERVICE_INTERACTIVE_PROCESS"
+            else:
+                retstr = "SERVICE_INTERACTIVE_PROCESS"
         return retstr
     elif category == "services" and arg_name == "DesiredAccess":
         val = int(arg_val, 16)
