@@ -34,7 +34,7 @@ class ParseProcessLog(list):
         self.process_name = None
         self.parent_id = None
         self.module_path = None
-        self.threads = set()
+        self.threads = []
         self.first_seen = None
         self.calls = self
         self.lastcall = None
@@ -263,7 +263,8 @@ class ParseProcessLog(list):
         call["repeated"] = 0
 
         # add the thread id to our thread set
-        self.threads.add(call["thread_id"])
+        if call["thread_id"] not in self.threads:
+            self.threads.append(call["thread_id"])
 
         return call
 
