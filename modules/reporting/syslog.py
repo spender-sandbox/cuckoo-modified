@@ -69,20 +69,20 @@ class Syslog(Report):
             syslog += 'File_Name="' + str(results["target"]["file"]["name"]) + '" '
             syslog += 'File_Size="' + str(results["target"]["file"]["size"]) + '" '
             syslog += 'File_Type="' + str(results["target"]["file"]["type"]) + '" '
-            if "PDF" in str(results["target"]["file"]["type"]:
+            if "PDF" in str(results["target"]["file"]["type"]):
                 syslog += 'Object_Count="' + str(len(results["static"]["Objects"])) + '" '
                 syslog += 'Total_Streams="' + str(sum(results["static"]["Streams"].values())) + '" '
         elif results["target"]["category"] == "url":
             syslog += 'URL="' + results["target"]["url"] + '" '
         # Here you can process the custom field if need be. My example stores
-		# usernames and ticket numbers in the Custom field. I parse and output
-		# it for syslog translation. Fields in custom are seperated by ";" and
-		# key/value pairs are seperated by ":".
+        # usernames and ticket numbers in the Custom field. I parse and output
+        # it for syslog translation. Fields in custom are seperated by ";" and
+        # key/value pairs are seperated by ":".
         #custom = results["info"]["custom"]
-		# Set default value of "-"
+        # Set default value of "-"
         #ticket = 'ticket="-" '
         #uname = 'User="-" '
-		# Parse custom, check for a new value.
+        # Parse custom, check for a new value.
         #for option in custom.split(';'):
         #    if "user:" in option:
         #        uname = 'User="' + str(option.split(':')[-1]) + '" '
@@ -91,7 +91,7 @@ class Syslog(Report):
         #syslog += uname
         #syslog += ticket
         goodips = []
-		# Walks the IP exception list, appends to a multi-value ";" delimited field.
+        # Walks the IP exception list, appends to a multi-value ";" delimited field.
         for ip in results["network"]["hosts"]:
             if ip not in ipwhitelist:
                 goodips.append(ip)
@@ -102,7 +102,7 @@ class Syslog(Report):
         resultsdms = []
         baddms = []
         gooddms = []
-		# Walks the domain exception list, appends to a multi-value ";" delimited field.
+        # Walks the domain exception list, appends to a multi-value ";" delimited field.
         for domain in results["network"]["domains"]:
             if domain["domain"] not in dnwhitelist:
                 resultsdms.append(domain["domain"])
@@ -116,12 +116,12 @@ class Syslog(Report):
             syslog += 'Related_Domains="-" '
         else:
             syslog += 'Related_Domains="' + ';'.join(f for f in gooddms) + '" '
-		# VT stats if available
+        # VT stats if available
         if 'positives' in results["virustotal"]:
             VT_bad = str(results["virustotal"]["positives"])
             VT_total = str(results["virustotal"]["total"])
             syslog += 'Virustotal="' + VT_bad + '/' + VT_total + '" '
-			# Vendor specific detections here. Included two examples.
+            # Vendor specific detections here. Included two examples.
             #if submittype == "file":
             #    if results["virustotal"]["scans"]["Symantec"]["detected"] == True:
             #        svirus = results["virustotal"]["scans"]["Symantec"]["result"]
@@ -135,7 +135,7 @@ class Syslog(Report):
             #        syslog += 'McAfee="No Detection" '
         else:
             syslog += 'Virustotal="Not Found" '
-			# Vendor specific case when there is no detection
+            # Vendor specific case when there is no detection
             #if submittype == "file":
             #    syslog += 'Symantec="N/A" '
             #    syslog += 'McAfee="N/A" '
@@ -145,17 +145,17 @@ class Syslog(Report):
         if sigs == []:
             syslog += 'Cuckoo_Sigs="-" '
         else:
-		    # Ignore all sigs EXCEPT Virustotal for URL analysis 
-			# (FP's is signatures for IE mechanics)
+            # Ignore all sigs EXCEPT Virustotal for URL analysis 
+            # (FP's is signatures for IE mechanics)
             if submittype == "url" and "antivirus_virustotal" in sigs:
                 syslog += 'Cuckoo_Sigs="antivirus_virustotal" '
-			# Otherwise generate the multi-value field.
+            # Otherwise generate the multi-value field.
             elif submittype == "file":
                 syslog += 'Cuckoo_Sigs="' + ';'.join(s for s in sigs) + '" '
             else:
                 syslog += 'Cuckoo_Sigs="-" '
-		# Creates a multi-value ";" delimited field for yara signatures
-		# (File analysis)
+        # Creates a multi-value ";" delimited field for yara signatures
+        # (File analysis)
         if submittype == "file":
             yara = []
             for rule in results["target"]["file"]["yara"]:
@@ -164,7 +164,7 @@ class Syslog(Report):
                 syslog += 'Yara="-" '
             else:
                 syslog += 'Yara="' + ';'.join(r for r in yara) + '" '
-		# Some network stats...
+        # Some network stats...
         syslog += 'Total_TCP="' + str(len(results["network"]["tcp"])) + '" '
         syslog += 'Total_UDP="' + str(len(results["network"]["udp"])) + '"'
         return syslog
@@ -178,7 +178,7 @@ class Syslog(Report):
         server = self.options.get("host", None)
         port = self.options.get("port", None)
         proto = self.options.get("protocol", None).lower()
-		# A few validations...
+        # A few validations...
         if not server:
                 raise CuckooReportError("Syslog Server IP not defined")
         if not port:
@@ -188,7 +188,7 @@ class Syslog(Report):
         if proto != "tcp" and proto != "udp":
                 raise CuckooReportError("Syslog Protocol configuration error, "
                                            "protocol must be TCP or UDP.")
-		# Generate the syslog string
+        # Generate the syslog string
         try:
             result = self.createLog(results)
         except:
@@ -213,7 +213,7 @@ class Syslog(Report):
                 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             server_address = (server, port)
             sock.connect(server_address)
-			# Attempt to send the syslog string to the syslog server
+            # Attempt to send the syslog string to the syslog server
             try:
                 sock.sendall(result)
             except:
