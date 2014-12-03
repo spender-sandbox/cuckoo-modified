@@ -18,6 +18,16 @@
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'" />
   <PropertyGroup Condition="'$(Configuration)' == 'Release'" />
   <ItemGroup>
+    <Content Include="conf\auxiliary.conf" />
+    <Content Include="conf\cuckoo.conf" />
+    <Content Include="conf\esx.conf" />
+    <Content Include="conf\kvm.conf" />
+    <Content Include="conf\memory.conf" />
+    <Content Include="conf\physical.conf" />
+    <Content Include="conf\processing.conf" />
+    <Content Include="conf\reporting.conf" />
+    <Content Include="conf\virtualbox.conf" />
+    <Content Include="conf\vmware.conf" />
     <Content Include="lib\cuckoo\common\peepdf\AUTHORS" />
     <Content Include="lib\cuckoo\common\peepdf\CHANGELOG" />
     <Content Include="lib\cuckoo\common\peepdf\colorama\PKG-INFO" />
@@ -309,6 +319,7 @@
     <Folder Include="analyzer\windows\modules" />
     <Folder Include="analyzer\windows\modules\auxiliary" />
     <Folder Include="analyzer\windows\modules\packages" />
+    <Folder Include="conf\" />
     <Folder Include="data\" />
     <Folder Include="data\html" />
     <Folder Include="data\html\css" />
