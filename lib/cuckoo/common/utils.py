@@ -619,6 +619,9 @@ def pretty_print_arg(category, api_name, arg_name, arg_val):
         if val & 0x00040000:
             res.append("CREATE_PROTECTED_PROCESS")
             val &= ~0x00040000
+        if val & 0x01000000:
+            res.append("CREATE_BREAKAWAY_FROM_JOB")
+            val &= ~0x01000000
         if val & 0x02000000:
             res.append("CREATE_PRESERVE_CODE_AUTHZ_LEVEL")
             val &= ~0x02000000
