@@ -32,7 +32,7 @@ from lib.cuckoo.common.objects import File
 from lib.cuckoo.common.utils import convert_to_printable
 from lib.cuckoo.common.pdftools.pdfid import PDFiD, PDFiD2JSON
 from lib.cuckoo.common.peepdf.PDFCore import PDFParser
-from lib.cuckoo.common.peepdf.JSAnalysis import JSanalyse
+from lib.cuckoo.common.peepdf.JSAnalysis import analyseJS
 
 log = logging.getLogger(__name__)
 
