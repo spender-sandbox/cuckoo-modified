@@ -20,4 +20,4 @@ class Jar(Package):
         else:
             args = "-jar \"%s\"" % path
 
-        return self.execute(java, args)
+        return self.execute(java, args, path)

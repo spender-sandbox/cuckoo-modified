@@ -64,10 +64,11 @@ class Package(object):
         raise CuckooPackageError("Unable to find any %s executable." %
                                  application)
 
-    def execute(self, path, args):
+    def execute(self, path, args, interest):
         """Starts an executable for analysis.
         @param path: executable path
         @param args: executable arguments
+        @param interest: file of interest, passed to the cuckoomon config
         @return: process pid
         """
         dll = self.options.get("dll")
@@ -82,7 +83,7 @@ class Package(object):
                                      "analysis aborted.")
 
         if not free and suspended:
-            p.inject(dll)
+            p.inject(dll, interest)
             p.resume()
             p.wait()
             p.close()

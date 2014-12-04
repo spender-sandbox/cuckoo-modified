@@ -39,4 +39,4 @@ class Zip(Package):
                 raise CuckooPackageError("Empty ZIP archive")
 
         file_path = os.path.join(root, file_name)
-        return self.execute(file_path, self.options.get("arguments"))
+        return self.execute(file_path, self.options.get("arguments"), file_path)

@@ -299,10 +299,10 @@ class PipeHandler(Thread):
                                 # If we have both pid and tid, then we can use
                                 # apc to inject.
                                 if process_id and thread_id:
-                                    res = proc.inject(dll, apc=True)
+                                    res = proc.inject(dll, filepath, apc=True)
                                 else:
                                     # We inject using CreateRemoteThread
-                                    res = proc.inject(dll)
+                                    res = proc.inject(dll, filepath)
                                 if res:
                                     wait = True
                     else:

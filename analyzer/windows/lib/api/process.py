@@ -262,9 +262,10 @@ class Process:
             log.error("Failed to terminate process with pid %d.", self.pid)
             return False
 
-    def inject(self, dll=None, apc=False):
+    def inject(self, dll=None, interest=None, apc=False):
         """Cuckoo DLL injection.
         @param dll: Cuckoo DLL path.
+        @param interest: path to file of interest, handed to cuckoomon config
         @param apc: APC use.
         """
         if not self.pid:
@@ -331,6 +332,7 @@ class Process:
             config.write("analyzer={0}\n".format(os.getcwd()))
             config.write("first-process={0}\n".format("1" if Process.first_process else "0"))
             config.write("startup-time={0}\n".format(Process.startup_time))
+            config.write("file-of-interest={0}\n".format(interest))
             config.write("shutdown-mutex={0}\n".format(SHUTDOWN_MUTEX))
             if "force-sleepskip" in cfgoptions:
                 config.write("force-sleepskip={0}\n".format(cfgoptions["force-sleepskip"]))

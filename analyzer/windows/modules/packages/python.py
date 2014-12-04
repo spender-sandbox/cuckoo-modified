@@ -13,4 +13,4 @@ class Python(Package):
     def start(self, path):
         python = self.get_path("Python")
         arguments = self.options.get("arguments", "")
-        return self.execute(python, "%s %s" % (path, arguments))
+        return self.execute(python, "%s %s" % (path, arguments), path)

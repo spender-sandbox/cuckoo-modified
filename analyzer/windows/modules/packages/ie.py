@@ -12,4 +12,5 @@ class IE(Package):
 
     def start(self, url):
         iexplore = self.get_path("Internet Explorer")
-        return self.execute(iexplore, "\"%s\"" % url)
+        # pass the URL instead of a filename in this case
+        return self.execute(iexplore, "\"%s\"" % url, url)

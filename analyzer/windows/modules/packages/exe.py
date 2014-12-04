@@ -23,4 +23,4 @@ class Exe(Package):
         if runasx86:
             # ignore the return value, user must have CorFlags.exe installed in the guest VM
             call(["CorFlags.exe", path, "/32bit+"])
-        return self.execute(path, args)
+        return self.execute(path, args, path)

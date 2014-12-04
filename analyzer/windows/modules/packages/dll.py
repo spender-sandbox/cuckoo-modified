@@ -38,4 +38,4 @@ class Dll(Package):
             shutil.copy(rundll32, newname)
             rundll32 = newname
 
-        return self.execute(rundll32, args)
+        return self.execute(rundll32, args, path)

@@ -12,7 +12,7 @@ class Shellcode(Package):
         p = Process()
         dll = self.options.get("dll")
         p.execute(path="bin/execsc.exe", args=path, suspended=True)
-        p.inject(dll)
+        p.inject(dll, path)
         p.resume()
         p.wait()
         return p.pid
