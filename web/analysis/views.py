@@ -111,8 +111,8 @@ def chunk(request, task_id, pid, pagenum):
                                   context_instance=RequestContext(request))
     else:
         raise PermissionDenied
-        
-        
+
+
 @require_safe
 def filtered_chunk(request, task_id, pid, category, apilist):
     """Filters calls for call category.
