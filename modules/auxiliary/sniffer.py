@@ -7,6 +7,7 @@ import stat
 import getpass
 import logging
 import subprocess
+import ctypes
 
 from lib.cuckoo.common.abstracts import Auxiliary
 from lib.cuckoo.common.config import Config
@@ -46,9 +47,20 @@ class Sniffer(Auxiliary):
 
         mode = os.stat(tcpdump)[stat.ST_MODE]
         if (mode & stat.S_ISUID) == 0:
-            log.error("Tcpdump is not accessible from this user, "
-                      "network capture aborted")
-            return
+            # now do a weak file capability check
+            has_caps = False
+            try:
+                caplib = ctypes.cdll.LoadLibrary("libcap.so.2")
+                if caplib:
+                    caplist = caplib.cap_get_file(tcpdump)
+                    if caplist:
+                        has_caps = True
+            except:
+                pass
+            if not has_caps:
+                log.error("Tcpdump is not accessible from this user, "
+                          "network capture aborted")
+                return
 
         if not interface:
             log.error("Network interface not defined, network capture aborted")

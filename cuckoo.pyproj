@@ -242,6 +242,8 @@
     <Content Include="web\templates\error.html" />
     <Content Include="web\templates\footer.html" />
     <Content Include="web\templates\header.html" />
+    <Content Include="web\templates\submission\complete.html" />
+    <Content Include="web\templates\submission\status.html" />
     <Content Include="web\templates\success.html" />
     <Compile Include="web\web\headers.py" />
     <Compile Include="web\web\local_settings.py" />
