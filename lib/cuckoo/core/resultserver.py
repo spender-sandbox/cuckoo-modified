@@ -225,7 +225,8 @@ class ResultHandler(SocketServer.BaseRequestHandler):
             log.exception("FIXME - exception in resultserver connection %s",
                           str(self.client_address))
 
-        self.protocol.close()
+        if self.protocol:
+            self.protocol.close()
 
         if self.logfd:
             self.logfd.close()
