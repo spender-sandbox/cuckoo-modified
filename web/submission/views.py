@@ -32,12 +32,18 @@ def index(request):
         custom = request.POST.get("custom", "")
         memory = bool(request.POST.get("memory", False))
         enforce_timeout = bool(request.POST.get("enforce_timeout", False))
+
         tags = request.POST.get("tags", None)
 
         if request.POST.get("free"):
             if options:
                 options += ","
             options += "free=yes"
+
+        if request.POST.get("nohuman"):
+            if options:
+                options += ","
+            options += "nohuman=yes"
 
         if request.POST.get("process_memory"):
             if options:
