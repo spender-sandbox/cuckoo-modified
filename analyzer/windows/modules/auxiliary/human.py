@@ -102,6 +102,10 @@ class Human(Auxiliary, Thread):
         self.do_run = False
 
     def run(self):
+        nohuman = self.options.get("nohuman")
+        if nohuman:
+            return True
+
         while self.do_run:
             click_mouse()
             move_mouse()
