@@ -104,4 +104,6 @@ class Package(object):
 
 
 class Auxiliary(object):
-    pass
+    def __init__(self, options={}):
+        """@param options: options dict."""
+        self.options = options
