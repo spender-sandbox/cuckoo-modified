@@ -190,6 +190,8 @@ class Process:
 
         startup_info = STARTUPINFO()
         startup_info.cb = sizeof(startup_info)
+        # SW_SHOWNORMAL
+        startup_info.wShowWindow = 1
         process_info = PROCESS_INFORMATION()
 
         if args:
