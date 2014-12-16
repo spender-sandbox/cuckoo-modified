@@ -391,6 +391,8 @@ class Pcap:
             if "user-agent" in http.headers:
                 entry["user-agent"] = \
                     convert_to_printable(http.headers["user-agent"])
+            else:
+                entry["user-agent"] = ""
 
             entry["version"] = convert_to_printable(http.version)
             entry["method"] = convert_to_printable(http.method)
