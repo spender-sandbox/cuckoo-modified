@@ -550,7 +550,7 @@ def pretty_print_arg(category, api_name, arg_name, arg_val):
                 0x6d0030 : "IOCTL_MOUNTMGR_QUERY_DOS_VOLUME_PATH",
                 0x6d0034 : "IOCTL_MOUNTMGR_QUERY_DOS_VOLUME_PATHS"
         }.get(val, None)
-    elif arg_name == "Protection" or arg_name == "Win32Protect":
+    elif arg_name == "Protection" or arg_name == "Win32Protect" or arg_name == "NewAccessProtection" or arg_name == "OldAccessProtection":
         val = int(arg_val, 16)
         res = []
         if val & 0x00000001:
