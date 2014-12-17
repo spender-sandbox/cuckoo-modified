@@ -489,8 +489,11 @@ class Pcap:
 
         for ts, buf in pcap:
             try:
-                eth = dpkt.ethernet.Ethernet(buf)
-                ip = eth.data
+                if pcap.dloff:
+                    eth = dpkt.ethernet.Ethernet(buf)
+                    ip = eth.data
+                else:
+                    ip = dpkt.ip.IP(buf)
 
                 connection = {}
                 if isinstance(ip, dpkt.ip.IP):

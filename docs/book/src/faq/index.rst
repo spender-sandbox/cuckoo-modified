@@ -5,6 +5,7 @@ FAQ
 Frequently Asked Questions:
 
     * :ref:`analyze_urls`
+    * :ref:`tor_proxy`
     * :ref:`general_volatility`
     * :ref:`troubles_upgrade`
     * :ref:`troubles_problem`
@@ -19,6 +20,56 @@ Can I analyze URLs with Cuckoo?
 -------------------------------
 
 Yes you can. Since version 0.5 URLs are natively supported by Cuckoo.
+
+.. _tor_proxy:
+
+How can I make Cuckoo's packet captures compatible with Tor transparent proxying?
+---------------------------------
+
+Cuckoo attempts to start sniffing on an interface before its associated VM has
+been started.  Additionally, Tor's transparent proxying requires PREROUTING chain
+rules in the iptables nat table to redirect traffic to Tor's local transparent
+proxy port.  The former makes it infeasible to use Cuckoo to monitor the proper
+auto-generated libvirt vnet* interface, while the latter destroys Cuckoo's ability
+to obtain valid pcap results as all the destination IPs and ports have been rewritten
+prior to tcpdump's ability to see the packets.
+
+To solve this, create the following script and run it at system startup, modifying any
+fields in <> as appropriate::
+
+    #!/bin/sh
+    modprobe xt_TEE
+    ip tunnel add tun10 mode ipip ttl 64 remote 192.168.<X>.100 local 192.168.<X>.1
+    ip link set dev tun10 up
+
+    iptables -t mangle -I PREROUTING -i <bridge interface> -s <VM static IP 1> -j TEE --oif tun10 --gateway 192.168.<X>.1
+    iptables -t mangle -I PREROUTING -i <bridge interface> -s <VM static IP 2> -j TEE --oif tun10 --gateway 192.168.<X>.1
+    iptables -t mangle -I POSTROUTING -d <VM static IP 1> -j TEE --oif tun10 --gateway 192.168.<X>.1
+    iptables -t mangle -I POSTROUTING -d <VM static IP 2> -j TEE --oif tun10 --gateway 192.168.<X>.1
+
+Once this is done, make sure to modify conf/auxiliary.py and set interface to tun10.
+You may also need to install the xtables-addons-common and xtables-addons-dkms packages for
+this script to work on your system.
+
+Finally, you may need to fix a bug in the python dpkt pcap reader that causes an error
+on parsing pcaps obtained from Raw IP links.
+
+Find the affected python script (generally /usr/lib/pymodules/python2.7/dpkt/pcap.py)
+and look for the following code inside::
+
+    self.dloff = dltoff[self.__fh.linktype]
+
+If it doesn't look like the below snippet, then replace the single line with the below
+snippet, taking care to preserve proper indentation::
+
+        if self.__fh.linktype in dltoff:
+            self.dloff = dltoff[self.__fh.linktype]
+        else:
+            self.dloff = 0
+
+Your Cuckoo instance with Tor transparent proxying should now produce proper network analysis
+information.
+
 
 .. _general_volatility:
 
