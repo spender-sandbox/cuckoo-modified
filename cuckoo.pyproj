@@ -131,6 +131,7 @@
     <Compile Include="lib\cuckoo\common\peepdf\PDFUtils.py" />
     <Compile Include="lib\cuckoo\common\peepdf\__init__.py" />
     <Compile Include="lib\__init__.py" />
+    <Compile Include="modules\auxiliary\tor.py" />
     <Compile Include="modules\reporting\syslog.py" />
     <Compile Include="modules\__init__.py" />
     <Compile Include="tests\abstracts_tests.py" />
