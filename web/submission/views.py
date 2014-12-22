@@ -45,6 +45,11 @@ def index(request):
                 options += ","
             options += "nohuman=yes"
 
+        if request.POST.get("tor"):
+            if options:
+                options += ","
+            options += "tor=yes"
+
         if request.POST.get("process_memory"):
             if options:
                 options += ","

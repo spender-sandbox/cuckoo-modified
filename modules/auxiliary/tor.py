@@ -14,6 +14,9 @@ log = logging.getLogger(__name__)
 
 class Tor(Auxiliary):
     def start(self):
+        if "tor" not in self.task.options:
+            return
+
         torstart = self.options.get("torstart", "/usr/sbin/torstart")
         host = self.machine.ip
             
@@ -33,6 +36,9 @@ class Tor(Auxiliary):
         log.info("Started Tor transparent proxy for %s", host)
 
     def stop(self):
+        if "tor" not in self.task.options:
+            return
+
         torstop = self.options.get("torstop", "/usr/sbin/torstop")
         host = self.machine.ip
             
