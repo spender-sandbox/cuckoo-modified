@@ -30,9 +30,16 @@
             {% endif %}
             {{signature.description}}</div></a>
             <div id="signature_{{signature.name}}" class="collapse">
+            {% if signature.data %}
+                {% for sign in signature.data %}
+                    {% for key, value in sign.items %}
+                        <div><b>{{key}}</b>: {{value}}</div>
+                    {% endfor %}
+                {% endfor %}
+            {% else %}
                 <table class="table table-bordered" style="table-layout: fixed;">
                     <tbody>
-                        {% for match in signature.data %}
+                        {% for match in signature.new_data %}
                             {% if match.process.process_name %}
                                 <tr><td colspan="9" class="signature-process">Process: {{match.process.process_name}} ({{match.process.process_id}})</td></tr>
                             {% endif %}
@@ -63,6 +70,7 @@
                         {% endfor %}
                     </tbody>
                 </table>
+            {% endif %}
             </div>
         {% endfor %}
     {% else %}

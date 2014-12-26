@@ -659,6 +659,7 @@ class Signature(object):
 
     def __init__(self, results=None):
         self.data = []
+        self.new_data = []
         self.results = results
         self._current_call_cache = None
         self._current_call_dict = None
@@ -1125,13 +1126,13 @@ class Signature(object):
             process_summary['process_name'] = process['process_name']
             process_summary['process_id'] = process['process_id']
 
-        self.data.append({ 'process': process_summary, 'signs': signs })
+        self.new_data.append({ 'process': process_summary, 'signs': signs })
 
     def has_matches(self):
         """Returns true if there is matches (data is not empty)
         @return: boolean indicating if there is any match registered
         """
-        return len(self.data) > 0
+        return len(self.new_data) > 0 or len(self.data) > 0
 
     def on_call(self, call, process):
         """Notify signature about API call. Return value determines
@@ -1166,6 +1167,7 @@ class Signature(object):
             severity=self.severity,
             references=self.references,
             data=self.data,
+            new_data=self.new_data,
             alert=self.alert,
             families=self.families
         )
