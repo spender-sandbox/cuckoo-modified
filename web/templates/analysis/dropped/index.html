@@ -3,17 +3,15 @@
         <div class="panel panel-default">
             <table class="table table-striped">
                 <tr>
-                    <th style="border-top: 0;">File name</th>
+                    <th style="border-top: 0;" width="15%">File name</th>
                     <td style="border-top: 0;"><b>{{file.name}}</b></td>
                 </tr>
                 <tr>
-                    <th>Associated filenames</th>
+                    <th>Associated Filenames</th>
                     <td>
-                        <ul style="margin-bottom: 0;">
                         {% for path in file.guest_paths %}
-                            <li>{{path}}</li>
+                            <div>{{path}}</div>
                         {% endfor %}
-                        </ul>
                     </td>
                 </tr>
                 <tr>

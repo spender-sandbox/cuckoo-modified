@@ -295,6 +295,7 @@
     <Content Include="web\templates\analysis\behavior\_search_results.html" />
     <Content Include="web\templates\analysis\network\_udp.html" />
     <Content Include="web\templates\analysis\network\_tcp.html" />
+    <Content Include="web\templates\analysis\procmemory\index.html" />
     <Content Include="web\templates\analysis\static\_pdf.html" />
     <Content Include="web\templates\base.html" />
     <Content Include="web\templates\error.html" />
@@ -448,6 +449,7 @@
     <Folder Include="web\templates\analysis\memory" />
     <Folder Include="web\templates\analysis\network" />
     <Folder Include="web\templates\analysis\overview" />
+    <Folder Include="web\templates\analysis\procmemory\" />
     <Folder Include="web\templates\analysis\static" />
     <Folder Include="web\templates\dashboard" />
     <Folder Include="web\templates\submission" />

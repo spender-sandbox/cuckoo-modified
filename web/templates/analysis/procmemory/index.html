@@ -1,18 +1,32 @@
 {% if analysis.procmemory %}
-    <ul>
     {% for proc in analysis.procmemory %}
-        <li><b>{{proc.pid}}</b> ({{proc.file}})
-        {% if proc.procmem_id %}
-                <a class="btn btn-primary btn-small" href="{% url "analysis.views.file" "memdump" proc.procmem_id %}">Download</a>
-        {% endif %}
-        {% for match in proc.yara %}
-            <p>Match: {{match.name}}
-            <ul>
-            {% for string in match.strings %}
-                <li>{{string}}</li>
-            {% endfor %}
-            </ul></p>
-        {% endfor %}
-        </li>
+        <div class="panel panel-default">
+            <table class="table table-striped">
+                <tr>
+                    <th style="border-top: 0;" width="15%">Process ID</th>
+                    <td style="border-top: 0;"><b>{{proc.pid}}</b></td>
+                </tr>
+                <tr>
+                    <th>Dump Path</th>
+                    <td>{{proc.file}}</td>
+                </tr>
+                <tr>
+                    <th>Yara</th>
+                    <td>
+                    {% if proc.yara %}
+                        {% for match in proc.yara %}
+                            <p>Match: {{match.name}} - {{match.meta.description}}
+                            {% for string in match.strings %}
+                                <div>{{string}}</div>
+                            {% endfor %}
+                            </p>
+                        {% endfor %}
+                    {% else %}
+                        None matched
+                    {% endif %}
+                    </td>
+                </tr>
+            </table>
+        </div>
     {% endfor %}
 {% endif %}
