@@ -290,6 +290,9 @@
     <Compile Include="web\submission\urls.py" />
     <Compile Include="web\submission\views.py" />
     <Compile Include="web\submission\__init__.py" />
+    <Content Include="web\templates\analysis\behavior\_api_call.html" />
+    <Content Include="web\templates\analysis\behavior\_search.html" />
+    <Content Include="web\templates\analysis\behavior\_search_results.html" />
     <Content Include="web\templates\analysis\network\_udp.html" />
     <Content Include="web\templates\analysis\network\_tcp.html" />
     <Content Include="web\templates\analysis\static\_pdf.html" />

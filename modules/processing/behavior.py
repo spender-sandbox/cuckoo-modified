@@ -39,6 +39,7 @@ class ParseProcessLog(list):
         self.calls = self
         self.lastcall = None
         self.api_count = 0
+        self.call_id = 0
         self.cfg = Config()
         self.api_limit = self.cfg.processing.analysis_call_limit  # Limit of API calls per process
 
@@ -95,6 +96,7 @@ class ParseProcessLog(list):
         self.fd.seek(0)
         self.api_count = 0
         self.lastcall = None
+        self.call_id = 0
 
     def compare_calls(self, a, b):
         """Compare two calls for equality. Same implementation as before netlog.
@@ -141,6 +143,9 @@ class ParseProcessLog(list):
             nextcall["repeated"] += 1
             self.lastcall = None
             self.wait_for_lastcall()
+
+        nextcall["id"] = self.call_id
+        self.call_id += 1
 
         return nextcall
 

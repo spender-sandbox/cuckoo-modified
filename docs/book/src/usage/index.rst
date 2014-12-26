@@ -14,4 +14,5 @@ This chapter explains how to use Cuckoo.
     dist
     packages
     results
+    clean
     utilities
