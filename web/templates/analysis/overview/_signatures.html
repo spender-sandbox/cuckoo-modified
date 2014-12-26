@@ -34,7 +34,7 @@
                     <tbody>
                         {% for match in signature.data %}
                             {% if match.process.process_name %}
-                                <tr><td colspan="7" class="signature-process">Process: {{match.process.process_name}} ({{match.process.process_id}})</td></tr>
+                                <tr><td colspan="9" class="signature-process">Process: {{match.process.process_name}} ({{match.process.process_id}})</td></tr>
                             {% endif %}
                             {% for sign in match.signs %}
                                 <tr>
@@ -47,7 +47,7 @@
                                         </td>
                                     {% else %}
                                         <td colspan="2">{{sign.type}}</td>
-                                        <td colspan="5">
+                                        <td colspan="7">
                                             {% if sign.value|is_dict %}
                                                 {% for key, value in  sign.value.items %}
                                                     <span class='sign-key'>{{key}}:</span>
