@@ -35,7 +35,7 @@
             </thead>
             <tbody>
                 {% for match in results %}
-                    <tr><td colspan="10" class="search-process">Process: {{match.process.process_name}} ({{match.process.process_id}})</td></tr>
+                    <tr><td colspan="9" class="search-process">Process: {{match.process.process_name}} ({{match.process.process_id}})</td></tr>
                     {% for sign in match.signs %}
                         <tr class="{{sign.category}}" id="call_{{sign.id}}">
                             {% include "analysis/behavior/_api_call.html" with call=sign %}
