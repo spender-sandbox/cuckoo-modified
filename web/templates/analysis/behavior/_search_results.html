@@ -20,9 +20,21 @@
     </p>
     {% if results %}
         <table class="table table-bordered" style="table-layout: fixed;">
+            <thead>
+                <tr>
+                    <th width="10%">Time</th>
+                    <th width="3%">TID</th>
+                    <th width="8%">Caller</th>
+                    <th width="15%">API</th>
+                    <th width="42%">Arguments</th>
+                    <th width="5%">Status</th>
+                    <th width="11%">Return</th>
+                    <th width="6%">Repeated</th>
+                </tr>
+            </thead>
             <tbody>
                 {% for match in results %}
-                    <tr><td colspan="7" class="search-process">Process: {{match.process.process_name}} ({{match.process.process_id}})</td></tr>
+                    <tr><td colspan="9" class="search-process">Process: {{match.process.process_name}} ({{match.process.process_id}})</td></tr>
                     {% for sign in match.signs %}
                         <tr class="{{sign.category}}" id="call_{{sign.id}}">
                             {% include "analysis/behavior/_api_call.html" with call=sign %}
