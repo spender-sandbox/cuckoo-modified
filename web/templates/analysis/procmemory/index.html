@@ -26,6 +26,12 @@
                     {% endif %}
                     </td>
                 </tr>
+                {% if proc.procmem_id %}
+                    <tr>
+                        <th></th>
+                        <td><a class="btn btn-primary btn-small" href="{% url "analysis.views.file" "memdump" proc.procmem_id %}">Download</a></td>
+                    </tr>
+                {% endif %}
             </table>
         </div>
     {% endfor %}
