@@ -471,6 +471,15 @@ class Analyzer:
         else:
             self.target = self.config.target
 
+        # Inject into services.exe so we can monitor service creation
+        s = os.popen("tasklist /V /FI \"IMAGENAME eq services.exe\"").read()
+        servidx = s.index("services.exe")
+        servstr = s[servidx + 12:].strip()
+        pid = int(servstr[:servstr.index(' ')], 10)
+        servproc = Process(pid=pid)
+        filepath = servproc.get_filepath()
+        servproc.inject(DEFAULT_DLL, filepath)
+
     def complete(self):
         """End analysis."""
         # Stop the Pipe Servers.
