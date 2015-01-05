@@ -196,10 +196,9 @@ class Process:
         startup_info.wShowWindow = 1
         process_info = PROCESS_INFORMATION()
 
+        arguments = "\"" + path + "\" "
         if args:
-            arguments = "\"" + path + "\" " + args
-        else:
-            arguments = "\"" + path + "\" "
+            arguments += args
 
         creation_flags = CREATE_NEW_CONSOLE
         if suspended:
