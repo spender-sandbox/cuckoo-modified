@@ -199,7 +199,7 @@ class Process:
         if args:
             arguments = "\"" + path + "\" " + args
         else:
-            arguments = None
+            arguments = "\"" + path + "\" "
 
         creation_flags = CREATE_NEW_CONSOLE
         if suspended:
