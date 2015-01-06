@@ -312,6 +312,7 @@ class Process:
             if not self.h_thread:
                 log.info("No valid thread handle specified for injecting "
                          "process with pid %d, injection aborted.", self.pid)
+                KERNEL32.CloseHandle(self.event_handle)
                 self.event_handle = None
                 return False
 
@@ -319,6 +320,7 @@ class Process:
                 log.error("QueueUserAPC failed when injecting process with "
                           "pid %d (Error: %s)",
                           self.pid, get_error_string(KERNEL32.GetLastError()))
+                KERNEL32.CloseHandle(self.event_handle)
                 self.event_handle = None
                 return False
         else:
@@ -409,17 +411,23 @@ class Process:
                 ret = subprocess.call(["bin/loader_x64.exe", "inject", str(self.pid), str(self.thread_id), dll, injecttype])
                 if ret != 0:
                     log.error("Unable to inject into 64-bit process with pid %d", self.pid)
+                    KERNEL32.CloseHandle(self.event_handle)
+                    self.event_handle = None
                     return False
                 else:
                     return True
             else:
                 log.error("Please place the loader_x64.exe binary from cuckoomon into analyzer/windows/bin in order to analyze x64 binaries.")
+                KERNEL32.CloseHandle(self.event_handle)
+                self.event_handle = None
                 return False
         else:
             if os.path.exists("bin/loader.exe"):
                 ret = subprocess.call(["bin/loader.exe", "inject", str(self.pid), str(self.thread_id), dll, injecttype])
                 if ret != 0:
                     log.error("Unable to inject into 32-bit process with pid %d", self.pid)
+                    KERNEL32.CloseHandle(self.event_handle)
+                    self.event_handle = None
                     return False
                 else:
                     return True
