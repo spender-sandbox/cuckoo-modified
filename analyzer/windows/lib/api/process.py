@@ -406,7 +406,7 @@ class Process:
 
         if self.is_64bit():
             if os.path.exists("bin/loader_x64.exe"):
-                ret = subprocess.call(["bin/loader_x64.exe", "inject", str(self.pid), str(self.thread_id), injecttype])
+                ret = subprocess.call(["bin/loader_x64.exe", "inject", str(self.pid), str(self.thread_id), dll, injecttype])
                 if ret != 0:
                     log.error("Unable to inject into 64-bit process with pid %d", self.pid)
                     return False
@@ -417,7 +417,7 @@ class Process:
                 return False
         else:
             if os.path.exists("bin/loader.exe"):
-                ret = subprocess.call(["bin/loader.exe", "inject", str(self.pid), str(self.thread_id), injecttype])
+                ret = subprocess.call(["bin/loader.exe", "inject", str(self.pid), str(self.thread_id), dll, injecttype])
                 if ret != 0:
                     log.error("Unable to inject into 32-bit process with pid %d", self.pid)
                     return False
