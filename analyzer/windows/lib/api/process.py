@@ -273,7 +273,7 @@ class Process:
         try:
             val = ctypes.c_int(0)
             ret = KERNEL32.IsWow64Process(self.h_process, ctypes.byref(val))
-            if ret and val.value:
+            if ret and not val.value:
                 return True
         except:
             pass
