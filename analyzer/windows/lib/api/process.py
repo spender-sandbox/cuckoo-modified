@@ -5,6 +5,7 @@
 import os
 import logging
 import random
+import subprocess
 from time import time
 from ctypes import byref, c_ulong, create_string_buffer, c_int, sizeof
 from shutil import copy
@@ -265,31 +266,21 @@ class Process:
             log.error("Failed to terminate process with pid %d.", self.pid)
             return False
 
-    def inject(self, dll=None, interest=None, apc=False):
-        """Cuckoo DLL injection.
-        @param dll: Cuckoo DLL path.
-        @param interest: path to file of interest, handed to cuckoomon config
-        @param apc: APC use.
+    def is_64bit(self):
+        """Determines if a process is 64bit.
+        @return: True if 64bit, False if not
         """
-        if not self.pid:
-            log.warning("No valid pid specified, injection aborted")
-            return False
+        try:
+            val = ctypes.c_int(0)
+            ret = KERNEL32.IsWow64Process(self.h_process, ctypes.byref(val))
+            if ret and val.value:
+                return True
+        except:
+            pass
 
-        if not self.is_alive():
-            log.warning("The process with pid %s is not alive, "
-                        "injection aborted", self.pid)
-            return False
+        return False
 
-        if not dll:
-            dll = "cuckoomon.dll"
-
-        dll = randomize_dll(os.path.join("dll", dll))
-
-        if not dll or not os.path.exists(dll):
-            log.warning("No valid DLL specified to be injected in process "
-                        "with pid %d, injection aborted.", self.pid)
-            return False
-
+    def old_inject(self, dll, apc):
         arg = KERNEL32.VirtualAllocEx(self.h_process,
                                       None,
                                       len(dll) + 1,
@@ -315,38 +306,6 @@ class Process:
 
         kernel32_handle = KERNEL32.GetModuleHandleA("kernel32.dll")
         load_library = KERNEL32.GetProcAddress(kernel32_handle, "LoadLibraryA")
-
-        config_path = "C:\\%s.ini" % self.pid
-        with open(config_path, "w") as config:
-            cfg = Config("analysis.conf")
-            cfgoptions = cfg.get_options()
-
-            # The first time we come up with a random startup-time.
-            if Process.first_process:
-                # This adds 1 up to 30 times of 20 minutes to the startup
-                # time of the process, therefore bypassing anti-vm checks
-                # which check whether the VM has only been up for <10 minutes.
-                Process.startup_time = random.randint(1, 30) * 20 * 60 * 1000
-
-            config.write("host-ip={0}\n".format(cfg.ip))
-            config.write("host-port={0}\n".format(cfg.port))
-            config.write("pipe={0}\n".format(PIPE))
-            config.write("results={0}\n".format(PATHS["root"]))
-            config.write("analyzer={0}\n".format(os.getcwd()))
-            config.write("first-process={0}\n".format("1" if Process.first_process else "0"))
-            config.write("startup-time={0}\n".format(Process.startup_time))
-            config.write("file-of-interest={0}\n".format(interest))
-            config.write("shutdown-mutex={0}\n".format(SHUTDOWN_MUTEX))
-            if "force-sleepskip" in cfgoptions:
-                config.write("force-sleepskip={0}\n".format(cfgoptions["force-sleepskip"]))
-
-            Process.first_process = False
-
-        event_name = "CuckooEvent%d" % self.pid
-        self.event_handle = KERNEL32.CreateEventA(None, False, False, event_name)
-        if not self.event_handle:
-            log.warning("Unable to create notify event..")
-            return False
 
         if apc or self.suspended:
             log.debug("Using QueueUserAPC injection.")
@@ -383,6 +342,90 @@ class Process:
                 KERNEL32.CloseHandle(thread_handle)
 
         return True
+
+    def inject(self, dll=None, interest=None, apc=False):
+        """Cuckoo DLL injection.
+        @param dll: Cuckoo DLL path.
+        @param interest: path to file of interest, handed to cuckoomon config
+        @param apc: APC use.
+        """
+        if not self.pid:
+            log.warning("No valid pid specified, injection aborted")
+            return False
+
+        if not self.is_alive():
+            log.warning("The process with pid %s is not alive, "
+                        "injection aborted", self.pid)
+            return False
+
+        if not dll:
+            dll = "cuckoomon.dll"
+
+        dll = randomize_dll(os.path.join("dll", dll))
+
+        if not dll or not os.path.exists(dll):
+            log.warning("No valid DLL specified to be injected in process "
+                        "with pid %d, injection aborted.", self.pid)
+            return False
+
+        config_path = "C:\\%s.ini" % self.pid
+        with open(config_path, "w") as config:
+            cfg = Config("analysis.conf")
+            cfgoptions = cfg.get_options()
+
+            # The first time we come up with a random startup-time.
+            if Process.first_process:
+                # This adds 1 up to 30 times of 20 minutes to the startup
+                # time of the process, therefore bypassing anti-vm checks
+                # which check whether the VM has only been up for <10 minutes.
+                Process.startup_time = random.randint(1, 30) * 20 * 60 * 1000
+
+            config.write("host-ip={0}\n".format(cfg.ip))
+            config.write("host-port={0}\n".format(cfg.port))
+            config.write("pipe={0}\n".format(PIPE))
+            config.write("results={0}\n".format(PATHS["root"]))
+            config.write("analyzer={0}\n".format(os.getcwd()))
+            config.write("first-process={0}\n".format("1" if Process.first_process else "0"))
+            config.write("startup-time={0}\n".format(Process.startup_time))
+            config.write("file-of-interest={0}\n".format(interest))
+            config.write("shutdown-mutex={0}\n".format(SHUTDOWN_MUTEX))
+            if "force-sleepskip" in cfgoptions:
+                config.write("force-sleepskip={0}\n".format(cfgoptions["force-sleepskip"]))
+
+            Process.first_process = False
+
+        event_name = "CuckooEvent%d" % self.pid
+        self.event_handle = KERNEL32.CreateEventA(None, False, False, event_name)
+        if not self.event_handle:
+            log.warning("Unable to create notify event..")
+            return False
+
+        injecttype = "createremotethread"
+        if apc or self.suspended:
+            injecttype = "queueuserapc"
+
+        if self.is_64bit():
+            if os.path.exists("bin/loader_x64.exe"):
+                ret = subprocess.call(["bin/loader_x64.exe", "inject", str(self.pid), str(self.thread_id), injecttype])
+                if ret != 0:
+                    log.error("Unable to inject into 64-bit process with pid %d", self.pid)
+                    return False
+                else:
+                    return True
+            else:
+                log.error("Please place the loader_x64.exe binary from cuckoomon into analyzer/windows/bin in order to analyze x64 binaries.")
+                return False
+        else:
+            if os.path.exists("bin/loader.exe"):
+                ret = subprocess.call(["bin/loader.exe", "inject", str(self.pid), str(self.thread_id), injecttype])
+                if ret != 0:
+                    log.error("Unable to inject into 32-bit process with pid %d", self.pid)
+                    return False
+                else:
+                    return True
+            else:
+                return self.old_inject(dll, apc)
+
 
     def wait(self):
         ret = True
