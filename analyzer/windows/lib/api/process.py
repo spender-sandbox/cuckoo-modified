@@ -360,8 +360,12 @@ class Process:
                         "injection aborted", self.pid)
             return False
 
+        is_64bit = self.is_64bit()
         if not dll:
-            dll = "cuckoomon.dll"
+            if is_64bit:
+                dll = "cuckoomon_x64.dll"
+            else:
+                dll = "cuckoomon.dll"
 
         dll = randomize_dll(os.path.join("dll", dll))
 
@@ -406,7 +410,7 @@ class Process:
         if apc or self.suspended:
             injecttype = "queueuserapc"
 
-        if self.is_64bit():
+        if is_64bit:
             if os.path.exists("bin/loader_x64.exe"):
                 ret = subprocess.call(["bin/loader_x64.exe", "inject", str(self.pid), str(self.thread_id), dll, injecttype])
                 if ret != 0:
