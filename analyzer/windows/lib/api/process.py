@@ -270,6 +270,9 @@ class Process:
         """Determines if a process is 64bit.
         @return: True if 64bit, False if not
         """
+        if self.h_process == 0:
+            self.open()
+
         try:
             val = ctypes.c_int(0)
             ret = KERNEL32.IsWow64Process(self.h_process, ctypes.byref(val))
