@@ -274,8 +274,8 @@ class Process:
             self.open()
 
         try:
-            val = ctypes.c_int(0)
-            ret = KERNEL32.IsWow64Process(self.h_process, ctypes.byref(val))
+            val = c_int(0)
+            ret = KERNEL32.IsWow64Process(self.h_process, byref(val))
             if ret and not val.value:
                 return True
         except:
