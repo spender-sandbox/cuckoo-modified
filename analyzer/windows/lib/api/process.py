@@ -312,7 +312,6 @@ class Process:
         load_library = KERNEL32.GetProcAddress(kernel32_handle, "LoadLibraryA")
 
         if apc or self.suspended:
-            log.debug("Using QueueUserAPC injection.")
             if not self.h_thread:
                 log.info("No valid thread handle specified for injecting "
                          "process with pid %d, injection aborted.", self.pid)
@@ -328,7 +327,6 @@ class Process:
                 self.event_handle = None
                 return False
         else:
-            log.debug("Using CreateRemoteThread injection.")
             new_thread_id = c_ulong(0)
             thread_handle = KERNEL32.CreateRemoteThread(self.h_process,
                                                         None,
@@ -410,9 +408,12 @@ class Process:
             log.warning("Unable to create notify event..")
             return False
 
-        injecttype = "createremotethread"
         if apc or self.suspended:
             injecttype = "queueuserapc"
+            log.debug("Using QueueUserAPC injection.")
+        else:
+            injecttype = "createremotethread"
+            log.debug("Using CreateRemoteThread injection.")
 
         if is_64bit:
             if os.path.exists("bin/loader_x64.exe"):
