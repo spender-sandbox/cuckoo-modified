@@ -6,6 +6,7 @@ import os
 import logging
 import random
 import subprocess
+import platform
 from time import time
 from ctypes import byref, c_ulong, create_string_buffer, c_int, sizeof
 from shutil import copy
@@ -276,7 +277,7 @@ class Process:
         try:
             val = c_int(0)
             ret = KERNEL32.IsWow64Process(self.h_process, byref(val))
-            if ret and not val.value:
+            if ret and not val.value and platform.machine().endswith('64'):
                 return True
         except:
             pass
