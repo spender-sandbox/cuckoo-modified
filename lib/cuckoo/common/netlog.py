@@ -224,7 +224,7 @@ class NetlogParser(object):
 
 TYPECONVERTERS = {
     "h": lambda v: "0x%08x" % default_converter(v),
-    "p": lambda v: "0x%016x" % default_converter(v)
+    "p": lambda v: "0x%.08x" % default_converter(v)
 }
 
 # 20 Mb max message length.

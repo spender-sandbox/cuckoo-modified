@@ -255,7 +255,7 @@ class ParseProcessLog(list):
         call["api"] = api_name
         call["status"] = bool(int(status_value))
 
-        if isinstance(return_value, int):
+        if isinstance(return_value, int) or isinstance(return_value, long):
             call["return"] = "0x%.08x" % return_value
         else:
             call["return"] = convert_to_printable(str(return_value))
