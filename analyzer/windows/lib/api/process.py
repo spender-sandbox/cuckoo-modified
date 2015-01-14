@@ -347,7 +347,7 @@ class Process:
 
         return True
 
-    def inject(self, dll=None, interest=None, apc=False):
+    def inject(self, dll=None, interest=None, apc=False, notfirst=False):
         """Cuckoo DLL injection.
         @param dll: Cuckoo DLL path.
         @param interest: path to file of interest, handed to cuckoomon config
@@ -381,8 +381,9 @@ class Process:
             cfg = Config("analysis.conf")
             cfgoptions = cfg.get_options()
 
+            firstproc = Process.firstprocess and not notfirst
             # The first time we come up with a random startup-time.
-            if Process.first_process:
+            if firstproc:
                 # This adds 1 up to 30 times of 20 minutes to the startup
                 # time of the process, therefore bypassing anti-vm checks
                 # which check whether the VM has only been up for <10 minutes.
@@ -393,14 +394,15 @@ class Process:
             config.write("pipe={0}\n".format(PIPE))
             config.write("results={0}\n".format(PATHS["root"]))
             config.write("analyzer={0}\n".format(os.getcwd()))
-            config.write("first-process={0}\n".format("1" if Process.first_process else "0"))
+            config.write("first-process={0}\n".format("1" if firstproc else "0"))
             config.write("startup-time={0}\n".format(Process.startup_time))
             config.write("file-of-interest={0}\n".format(interest))
             config.write("shutdown-mutex={0}\n".format(SHUTDOWN_MUTEX))
             if "force-sleepskip" in cfgoptions:
                 config.write("force-sleepskip={0}\n".format(cfgoptions["force-sleepskip"]))
 
-            Process.first_process = False
+            if firstproc:
+                Process.first_process = False
 
         event_name = "CuckooEvent%d" % self.pid
         self.event_handle = KERNEL32.CreateEventA(None, False, False, event_name)
