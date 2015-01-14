@@ -43,7 +43,10 @@ def randomize_dll(dll_path):
 class Process:
     """Windows process."""
     first_process = True
-    startup_time = 0
+    # This adds 1 up to 30 times of 20 minutes to the startup
+    # time of the process, therefore bypassing anti-vm checks
+    # which check whether the VM has only been up for <10 minutes.
+    startup_time = random.randint(1, 30) * 20 * 60 * 1000
 
     def __init__(self, pid=0, h_process=0, thread_id=0, h_thread=0):
         """@param pid: PID.
@@ -383,12 +386,6 @@ class Process:
             cfgoptions = cfg.get_options()
 
             firstproc = Process.first_process and not notfirst
-            # The first time we come up with a random startup-time.
-            if firstproc:
-                # This adds 1 up to 30 times of 20 minutes to the startup
-                # time of the process, therefore bypassing anti-vm checks
-                # which check whether the VM has only been up for <10 minutes.
-                Process.startup_time = random.randint(1, 30) * 20 * 60 * 1000
 
             config.write("host-ip={0}\n".format(cfg.ip))
             config.write("host-port={0}\n".format(cfg.port))
