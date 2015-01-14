@@ -381,7 +381,7 @@ class Process:
             cfg = Config("analysis.conf")
             cfgoptions = cfg.get_options()
 
-            firstproc = Process.firstprocess and not notfirst
+            firstproc = Process.first_process and not notfirst
             # The first time we come up with a random startup-time.
             if firstproc:
                 # This adds 1 up to 30 times of 20 minutes to the startup
