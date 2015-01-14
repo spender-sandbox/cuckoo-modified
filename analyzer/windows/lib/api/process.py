@@ -43,6 +43,7 @@ def randomize_dll(dll_path):
 class Process:
     """Windows process."""
     first_process = True
+    startup_time = 0
 
     def __init__(self, pid=0, h_process=0, thread_id=0, h_thread=0):
         """@param pid: PID.
