@@ -478,7 +478,7 @@ class Analyzer:
         pid = int(servstr[:servstr.index(' ')], 10)
         servproc = Process(pid=pid)
         filepath = servproc.get_filepath()
-        servproc.inject(dll=DEFAULT_DLL, interest=filepath, notfirst=True)
+        servproc.inject(dll=DEFAULT_DLL, interest=filepath, notfirst=True, nosleepskip=True)
 
     def complete(self):
         """End analysis."""

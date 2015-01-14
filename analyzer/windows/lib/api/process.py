@@ -351,7 +351,7 @@ class Process:
 
         return True
 
-    def inject(self, dll=None, interest=None, apc=False, notfirst=False):
+    def inject(self, dll=None, interest=None, apc=False, notfirst=False, nosleepskip=False):
         """Cuckoo DLL injection.
         @param dll: Cuckoo DLL path.
         @param interest: path to file of interest, handed to cuckoomon config
@@ -396,7 +396,9 @@ class Process:
             config.write("startup-time={0}\n".format(Process.startup_time))
             config.write("file-of-interest={0}\n".format(interest))
             config.write("shutdown-mutex={0}\n".format(SHUTDOWN_MUTEX))
-            if "force-sleepskip" in cfgoptions:
+            if nosleepskip:
+                config.write("force-sleepskip=0\n")
+            elif "force-sleepskip" in cfgoptions:
                 config.write("force-sleepskip={0}\n".format(cfgoptions["force-sleepskip"]))
 
             if firstproc:
