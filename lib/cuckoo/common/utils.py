@@ -127,7 +127,8 @@ def pretty_print_retval(category, api_name, status, retval):
             0xc000003c : "DATA_OVERRUN",
             0xc00000ba : "FILE_IS_A_DIRECTORY",
             0xc0000135 : "DLL_NOT_FOUND",
-            0xc0000139 : "ENTRYPOINT_NOT_FOUND"
+            0xc0000139 : "ENTRYPOINT_NOT_FOUND",
+            0xc0000225 : "NOT_FOUND"
     }.get(val, None)
 
 def pretty_print_arg(category, api_name, arg_name, arg_val):
