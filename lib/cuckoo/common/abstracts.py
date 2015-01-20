@@ -862,7 +862,7 @@ class Signature(object):
                                      ignorecase=False)
                 if ret:
                     if all:
-                        retset.union(ret)
+                        retset.update(ret)
                     else:
                         return call["api"]
 
@@ -920,7 +920,7 @@ class Signature(object):
                                  ignorecase=False)
             if ret:
                 if all:
-                    retset.union(ret)
+                    retset.update(ret)
                 else:
                     return argument["value"]
 
@@ -966,7 +966,7 @@ class Signature(object):
                                              api, category, regex, all)
                 if r:
                     if all:
-                        retset.union(r)
+                        retset.update(r)
                     else:
                         return r
 
@@ -1021,7 +1021,7 @@ class Signature(object):
                                  all=all)
             if ret:
                 if all:
-                    retset.union(ret)
+                    retset.update(ret)
                 else:
                     return item
 
@@ -1055,7 +1055,7 @@ class Signature(object):
                                  ignorecase=False)
             if ret:
                 if all:
-                    retset.union(ret)
+                    retset.update(ret)
                 else:
                     return item
 
