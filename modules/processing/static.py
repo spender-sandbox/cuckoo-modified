@@ -170,7 +170,7 @@ class PortableExecutable:
                 section["virtual_address"] = "0x{0:08x}".format(entry.VirtualAddress)
                 section["virtual_size"] = "0x{0:08x}".format(entry.Misc_VirtualSize)
                 section["size_of_data"] = "0x{0:08x}".format(entry.SizeOfRawData)
-                section["entropy"] = entry.get_entropy()
+                section["entropy"] = "{0:.02f}".format(float(entry.get_entropy()))
                 sections.append(section)
             except:
                 continue
