@@ -67,6 +67,8 @@ class Process:
             KERNEL32.CloseHandle(self.h_process)
         if self.h_thread:
             KERNEL32.CloseHandle(self.h_thread)
+        if self.event_handle:
+            KERKENL32.CloseHandle(self.event_handle)
 
     def get_system_info(self):
         """Get system information."""
@@ -425,8 +427,8 @@ class Process:
                         log.info("Injected into suspended 64-bit process with pid %d", self.pid)
                     else:
                         log.error("Unable to inject into 64-bit process with pid %d", self.pid)
-                    KERNEL32.CloseHandle(self.event_handle)
-                    self.event_handle = None
+                        KERNEL32.CloseHandle(self.event_handle)
+                        self.event_handle = None
                     return False
                 else:
                     return True
@@ -443,8 +445,8 @@ class Process:
                         log.info("Injected into suspended 32-bit process with pid %d", self.pid)
                     else:
                         log.error("Unable to inject into 32-bit process with pid %d", self.pid)
-                    KERNEL32.CloseHandle(self.event_handle)
-                    self.event_handle = None
+                        KERNEL32.CloseHandle(self.event_handle)
+                        self.event_handle = None
                     return False
                 else:
                     return True
