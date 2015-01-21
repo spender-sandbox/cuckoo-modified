@@ -126,6 +126,7 @@ def pretty_print_retval(category, api_name, status, retval):
             0xc000003a : "OBJECT_PATH_NOT_FOUND",
             0xc000003c : "DATA_OVERRUN",
             0xc00000ba : "FILE_IS_A_DIRECTORY",
+            0xc000010a : "PROCESS_IS_TERMINATING",
             0xc0000135 : "DLL_NOT_FOUND",
             0xc0000139 : "ENTRYPOINT_NOT_FOUND",
             0xc0000225 : "NOT_FOUND"
@@ -605,6 +606,9 @@ def pretty_print_arg(category, api_name, arg_name, arg_val):
         if val & 0x00000008:
             res.append("DETACHED_PROCESS")
             val &= ~0x00000008
+        if val & 0x00000010:
+            res.append("CREATE_NEW_CONSOLE")
+            val &= ~0x00000010
         if val & 0x00000020:
             res.append("NORMAL_PRIORITY_CLASS")
             val &= ~0x00000020
@@ -629,6 +633,9 @@ def pretty_print_arg(category, api_name, arg_name, arg_val):
         if val & 0x02000000:
             res.append("CREATE_PRESERVE_CODE_AUTHZ_LEVEL")
             val &= ~0x02000000
+        if val & 0x04000000:
+            res.append("CREATE_DEFAULT_ERROR_MODE")
+            val &= ~0x04000000
         if val & 0x08000000:
             res.append("CREATE_NO_WINDOW")
             val &= ~0x08000000

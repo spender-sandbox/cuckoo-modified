@@ -19,7 +19,7 @@ from datetime import datetime
 
 from lib.api.process import Process
 from lib.common.abstracts import Package, Auxiliary
-from lib.common.constants import PATHS, PIPE, SHUTDOWN_MUTEX
+from lib.common.constants import PATHS, PIPE, SHUTDOWN_MUTEX, TERMINATE_EVENT
 from lib.common.defines import KERNEL32
 from lib.common.defines import ERROR_MORE_DATA, ERROR_PIPE_CONNECTED
 from lib.common.defines import PIPE_ACCESS_DUPLEX, PIPE_TYPE_MESSAGE
@@ -246,6 +246,22 @@ class PipeHandler(Thread):
                 else:
                     response = hookdll_encode(url_dlls)
 
+            # Handle case of malware terminating a process -- notify the target
+            # ahead of time so that it can flush its log buffer
+            elif command.startswith("KILL:"):
+                PROCESS_LOCK.acquire()
+
+                process_id = int(command[5:])
+                if process_id not in (PID, PPID) and process_id in PROCESS_LIST:
+                    # only notify processes we've hooked
+                    event_name = TERMINATE_EVENT + str(self.pid)
+                    event_handle = KERNEL32.OpenEventA(None, False, False, event_name)
+                    if not event_handle:
+                        log.warning("Unable to open termination event for pid %u.", self.pid)
+                    else:
+                        # make sure process is aware of the termination
+                        KERNEL32.SetEvent(event_handle)
+
             # In case of PID, the client is trying to notify the creation of
             # a new process to be injected and monitored.
             elif command.startswith("PROCESS:"):
@@ -257,9 +273,14 @@ class PipeHandler(Thread):
                 # Set the current DLL to the default one provided
                 # at submission.
                 dll = DEFAULT_DLL
-
+                suspended = False
                 # We parse the process ID.
                 data = command[8:]
+                if len(data) > 2 and data[1] == ':':
+                    if data[0] == '1':
+                        suspended = True
+                    data = command[10:]
+
                 process_id = thread_id = None
                 if "," not in data:
                     if data.isdigit():
@@ -288,7 +309,8 @@ class PipeHandler(Thread):
                             # Open the process and inject the DLL.
                             # Hope it enjoys it.
                             proc = Process(pid=process_id,
-                                           thread_id=thread_id)
+                                           thread_id=thread_id,
+                                           suspended=suspended)
 
                             filepath = proc.get_filepath()
                             filename = os.path.basename(filepath)
@@ -296,13 +318,7 @@ class PipeHandler(Thread):
                             log.info("Announced process name: %s pid: %d", filename, process_id)
 
                             if not protected_filename(filename):
-                                # If we have both pid and tid, then we can use
-                                # apc to inject.
-                                if process_id and thread_id:
-                                    res = proc.inject(dll, filepath, apc=True)
-                                else:
-                                    # We inject using CreateRemoteThread
-                                    res = proc.inject(dll, filepath)
+                                res = proc.inject(dll, filepath)
                                 if res:
                                     wait = True
                     else:
@@ -476,7 +492,7 @@ class Analyzer:
         servidx = s.index("services.exe")
         servstr = s[servidx + 12:].strip()
         pid = int(servstr[:servstr.index(' ')], 10)
-        servproc = Process(pid=pid)
+        servproc = Process(pid=pid,suspended=False)
         filepath = servproc.get_filepath()
         servproc.inject(dll=DEFAULT_DLL, interest=filepath, notfirst=True, nosleepskip=True)
 
@@ -680,6 +696,10 @@ class Analyzer:
 
         # Create the shutdown mutex.
         KERNEL32.CreateMutexA(None, False, SHUTDOWN_MUTEX)
+
+        # since the various processes poll for the existence of the mutex, sleep
+        # for a second to ensure they see it before they're terminated
+        KERNEL32.Sleep(1000)
 
         try:
             # Before shutting down the analysis, the package can perform some

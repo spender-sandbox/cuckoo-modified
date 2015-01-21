@@ -11,7 +11,7 @@ from time import time
 from ctypes import byref, c_ulong, create_string_buffer, c_int, sizeof
 from shutil import copy
 
-from lib.common.constants import PIPE, PATHS, SHUTDOWN_MUTEX
+from lib.common.constants import PIPE, PATHS, SHUTDOWN_MUTEX, TERMINATE_EVENT
 from lib.common.defines import KERNEL32, NTDLL, SYSTEM_INFO, STILL_ACTIVE
 from lib.common.defines import THREAD_ALL_ACCESS, PROCESS_ALL_ACCESS
 from lib.common.defines import STARTUPINFO, PROCESS_INFORMATION
@@ -48,7 +48,7 @@ class Process:
     # which check whether the VM has only been up for <10 minutes.
     startup_time = random.randint(1, 30) * 20 * 60 * 1000
 
-    def __init__(self, pid=0, h_process=0, thread_id=0, h_thread=0):
+    def __init__(self, pid=0, h_process=0, thread_id=0, h_thread=0, suspended=False):
         """@param pid: PID.
         @param h_process: process handle.
         @param thread_id: thread id.
@@ -58,7 +58,7 @@ class Process:
         self.h_process = h_process
         self.thread_id = thread_id
         self.h_thread = h_thread
-        self.suspended = False
+        self.suspended = suspended
         self.event_handle = None
 
     def __del__(self):
@@ -251,6 +251,7 @@ class Process:
         KERNEL32.Sleep(2000)
 
         if KERNEL32.ResumeThread(self.h_thread) != -1:
+            self.suspended = False
             log.info("Successfully resumed process with pid %d", self.pid)
             return True
         else:
@@ -351,7 +352,7 @@ class Process:
 
         return True
 
-    def inject(self, dll=None, interest=None, apc=False, notfirst=False, nosleepskip=False):
+    def inject(self, dll=None, interest=None, notfirst=False, nosleepskip=False):
         """Cuckoo DLL injection.
         @param dll: Cuckoo DLL path.
         @param interest: path to file of interest, handed to cuckoomon config
@@ -396,6 +397,7 @@ class Process:
             config.write("startup-time={0}\n".format(Process.startup_time))
             config.write("file-of-interest={0}\n".format(interest))
             config.write("shutdown-mutex={0}\n".format(SHUTDOWN_MUTEX))
+            config.write("terminate-event={0}{1}\n".format(TERMINATE_EVENT, self.pid))
             if nosleepskip:
                 config.write("force-sleepskip=0\n")
             elif "force-sleepskip" in cfgoptions:
@@ -410,16 +412,14 @@ class Process:
             log.warning("Unable to create notify event..")
             return False
 
-        if apc or self.suspended:
-            injecttype = "queueuserapc"
+        if self.thread_id or self.suspended:
             log.debug("Using QueueUserAPC injection.")
         else:
-            injecttype = "createremotethread"
             log.debug("Using CreateRemoteThread injection.")
 
         if is_64bit:
             if os.path.exists("bin/loader_x64.exe"):
-                ret = subprocess.call(["bin/loader_x64.exe", "inject", str(self.pid), str(self.thread_id), dll, injecttype])
+                ret = subprocess.call(["bin/loader_x64.exe", "inject", str(self.pid), str(self.thread_id), dll])
                 if ret != 0:
                     log.error("Unable to inject into 64-bit process with pid %d", self.pid)
                     KERNEL32.CloseHandle(self.event_handle)
@@ -434,7 +434,7 @@ class Process:
                 return False
         else:
             if os.path.exists("bin/loader.exe"):
-                ret = subprocess.call(["bin/loader.exe", "inject", str(self.pid), str(self.thread_id), dll, injecttype])
+                ret = subprocess.call(["bin/loader.exe", "inject", str(self.pid), str(self.thread_id), dll])
                 if ret != 0:
                     log.error("Unable to inject into 32-bit process with pid %d", self.pid)
                     KERNEL32.CloseHandle(self.event_handle)
@@ -443,7 +443,7 @@ class Process:
                 else:
                     return True
             else:
-                return self.old_inject(dll, apc)
+                return self.old_inject(dll, self.thread_id or self.suspended)
 
 
     def wait(self):
