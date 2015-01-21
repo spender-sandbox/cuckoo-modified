@@ -421,7 +421,10 @@ class Process:
             if os.path.exists("bin/loader_x64.exe"):
                 ret = subprocess.call(["bin/loader_x64.exe", "inject", str(self.pid), str(self.thread_id), dll])
                 if ret != 0:
-                    log.error("Unable to inject into 64-bit process with pid %d", self.pid)
+                    if ret == 2:
+                        log.info("Injected into suspended 64-bit process with pid %d", self.pid)
+                    else:
+                        log.error("Unable to inject into 64-bit process with pid %d", self.pid)
                     KERNEL32.CloseHandle(self.event_handle)
                     self.event_handle = None
                     return False
@@ -436,7 +439,10 @@ class Process:
             if os.path.exists("bin/loader.exe"):
                 ret = subprocess.call(["bin/loader.exe", "inject", str(self.pid), str(self.thread_id), dll])
                 if ret != 0:
-                    log.error("Unable to inject into 32-bit process with pid %d", self.pid)
+                    if ret == 2:
+                        log.info("Injected into suspended 32-bit process with pid %d", self.pid)
+                    else:
+                        log.error("Unable to inject into 32-bit process with pid %d", self.pid)
                     KERNEL32.CloseHandle(self.event_handle)
                     self.event_handle = None
                     return False
