@@ -118,6 +118,7 @@ def pretty_print_retval(category, api_name, status, retval):
             0xc000000f : "NO_SUCH_FILE",
             0xc0000011 : "END_OF_FILE",
             0xc0000018 : "CONFLICTING_ADDRESSES",
+            0xc0000022 : "ACCESS_DENIED",
             0xc0000023 : "BUFFER_TOO_SMALL",
             0xc0000024 : "OBJECT_TYPE_MISMATCH",
             0xc0000033 : "OBJECT_NAME_INVALID",
