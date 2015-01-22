@@ -426,7 +426,7 @@ class Process:
                     if ret == 2:
                         log.info("Injected into suspended 64-bit process with pid %d", self.pid)
                     else:
-                        log.error("Unable to inject into 64-bit process with pid %d", self.pid)
+                        log.error("Unable to inject into 64-bit process with pid %d, error: %d", self.pid, ret)
                         KERNEL32.CloseHandle(self.event_handle)
                         self.event_handle = None
                     return False
@@ -444,7 +444,7 @@ class Process:
                     if ret == 2:
                         log.info("Injected into suspended 32-bit process with pid %d", self.pid)
                     else:
-                        log.error("Unable to inject into 32-bit process with pid %d", self.pid)
+                        log.error("Unable to inject into 32-bit process with pid %d, error: %d", self.pid, ret)
                         KERNEL32.CloseHandle(self.event_handle)
                         self.event_handle = None
                     return False
