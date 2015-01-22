@@ -71,7 +71,7 @@ function go_to_api_call(pid, call_id) {
     });
 }
 function load_filtered_chunk(pid, category) {
-    var apilist = document.getElementById("apifilter");
+    var apilist = document.getElementById("apifilter_"+pid);
     var encodedlist = encodeURI(apilist.value);
     $("#process_"+pid+" div.calltable").load("/analysis/filtered/{{analysis.info.id}}/"+pid+"/"+category+"/"+encodedlist+"/", function(data, status, xhr){
         if (status == "error") {
@@ -116,7 +116,7 @@ function load_filtered_chunk(pid, category) {
                     <a id="badge_all_{{process.process_id}}" class="badge all" style="color:black;">all</a>
                     <div class="form-group" style="position:absolute;right:0;top:0;">
                         <label class="sr-only" for="form_search">API Filter</label>
-                        <input type="text" class="form-control" id="apifilter" name="apifilter" size=25 placeholder="Comma-separated API filter" />
+                        <input type="text" class="form-control" id="apifilter_{{process.process_id}}" name="apifilter" size=25 placeholder="Comma-separated API filter" />
                     </div>
                 </div>
             </div>
