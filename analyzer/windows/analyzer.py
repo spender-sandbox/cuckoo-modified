@@ -25,6 +25,7 @@ from lib.common.defines import ERROR_MORE_DATA, ERROR_PIPE_CONNECTED
 from lib.common.defines import PIPE_ACCESS_DUPLEX, PIPE_TYPE_MESSAGE
 from lib.common.defines import PIPE_READMODE_MESSAGE, PIPE_WAIT
 from lib.common.defines import PIPE_UNLIMITED_INSTANCES, INVALID_HANDLE_VALUE
+from lib.common.defines import EVENT_MODIFY_STATE
 from lib.common.exceptions import CuckooError, CuckooPackageError
 from lib.common.hashing import hash_file
 from lib.common.results import upload_to_host
@@ -255,7 +256,7 @@ class PipeHandler(Thread):
                 if process_id not in (PID, PPID) and process_id in PROCESS_LIST:
                     # only notify processes we've hooked
                     event_name = TERMINATE_EVENT + str(self.pid)
-                    event_handle = KERNEL32.OpenEventA(None, False, False, event_name)
+                    event_handle = KERNEL32.OpenEventA(EVENT_MODIFY_STATE, False, event_name)
                     if not event_handle:
                         log.warning("Unable to open termination event for pid %u.", self.pid)
                     else:
