@@ -262,6 +262,7 @@ class PipeHandler(Thread):
                         # make sure process is aware of the termination
                         KERNEL32.SetEvent(event_handle)
 
+                PROCESS_LOCK.release()
             # In case of PID, the client is trying to notify the creation of
             # a new process to be injected and monitored.
             elif command.startswith("PROCESS:"):
