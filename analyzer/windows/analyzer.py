@@ -182,8 +182,6 @@ class PipeHandler(Thread):
         """
         data = ""
         response = "OK"
-        wait = False
-        proc = None
 
         # Read the data submitted to the Pipe Server.
         while True:
@@ -265,6 +263,14 @@ class PipeHandler(Thread):
                         KERNEL32.CloseHandle(event_handle)
 
                 PROCESS_LOCK.release()
+            # Handle notification of cuckoomon loading in a process
+            elif command.startswith("LOADED:"):
+                PROCESS_LOCK.acquire()
+                process_id = int(command[7:])
+                add_pids(process_id)
+                PROCESS_LOCK.release()
+                log.info("Cuckoomon successfully loaded in process with pid %u.", process_id)
+
             # In case of PID, the client is trying to notify the creation of
             # a new process to be injected and monitored.
             elif command.startswith("PROCESS:"):
@@ -298,10 +304,6 @@ class PipeHandler(Thread):
 
                     if param.isdigit():
                         thread_id = int(param)
-                    else:
-                        # XXX: Expect a new DLL as a message parameter?
-                        if isinstance(param, str):
-                            dll = param
 
                 if process_id:
                     if process_id not in (PID, PPID):
@@ -322,16 +324,14 @@ class PipeHandler(Thread):
 
                             if not protected_filename(filename):
                                 res = proc.inject(dll, filepath)
-                                if res:
-                                    wait = True
+                            proc.close()
                     else:
                         log.warning("Received request to inject Cuckoo "
                                     "process with pid %d, skip", process_id)
 
                 # Once we're done operating on the processes list, we release
                 # the lock.
-                if wait == False:
-                    PROCESS_LOCK.release()
+                PROCESS_LOCK.release()
             # In case of FILE_NEW, the client is trying to notify the creation
             # of a new file.
             elif command.startswith("FILE_NEW:"):
@@ -363,21 +363,6 @@ class PipeHandler(Thread):
                            None)
 
         KERNEL32.CloseHandle(self.h_pipe)
-
-        # We wait until cuckoomon reports back.
-        # waiting needs to be performed here as we need to return execution back to cuckoomon
-        # in the case where it suspended a child process itself, so that it can unsuspend it
-        # while we await completion of cuckoomon loading in the new process
-        if wait:
-            res = proc.wait()
-            if res:
-                # Add the new process ID to the list of
-                # monitored processes.
-                add_pids(process_id)
-            PROCESS_LOCK.release()
-
-        if proc:
-            proc.close()
 
         return True
 

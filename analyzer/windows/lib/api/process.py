@@ -59,7 +59,6 @@ class Process:
         self.thread_id = thread_id
         self.h_thread = h_thread
         self.suspended = suspended
-        self.event_handle = None
 
     def __del__(self):
         """Close open handles."""
@@ -67,8 +66,6 @@ class Process:
             KERNEL32.CloseHandle(self.h_process)
         if self.h_thread:
             KERNEL32.CloseHandle(self.h_thread)
-        if self.event_handle:
-            KERKENL32.CloseHandle(self.event_handle)
 
     def get_system_info(self):
         """Get system information."""
@@ -105,9 +102,11 @@ class Process:
 
         if self.h_process:
             ret = NT_SUCCESS(KERNEL32.CloseHandle(self.h_process))
+            self.h_process = None
 
         if self.h_thread:
             ret = NT_SUCCESS(KERNEL32.CloseHandle(self.h_thread))
+            self.h_thread = None
 
         return ret
 
@@ -322,16 +321,12 @@ class Process:
             if not self.h_thread:
                 log.info("No valid thread handle specified for injecting "
                          "process with pid %d, injection aborted.", self.pid)
-                KERNEL32.CloseHandle(self.event_handle)
-                self.event_handle = None
                 return False
 
             if not KERNEL32.QueueUserAPC(load_library, self.h_thread, arg):
                 log.error("QueueUserAPC failed when injecting process with "
                           "pid %d (Error: %s)",
                           self.pid, get_error_string(KERNEL32.GetLastError()))
-                KERNEL32.CloseHandle(self.event_handle)
-                self.event_handle = None
                 return False
         else:
             new_thread_id = c_ulong(0)
@@ -346,8 +341,6 @@ class Process:
                 log.error("CreateRemoteThread failed when injecting process "
                           "with pid %d (Error: %s)",
                           self.pid, get_error_string(KERNEL32.GetLastError()))
-                KERNEL32.CloseHandle(self.event_handle)
-                self.event_handle = None
                 return False
             else:
                 KERNEL32.CloseHandle(thread_handle)
@@ -408,12 +401,6 @@ class Process:
             if firstproc:
                 Process.first_process = False
 
-        event_name = "CuckooEvent%d" % self.pid
-        self.event_handle = KERNEL32.CreateEventA(None, False, False, event_name)
-        if not self.event_handle:
-            log.warning("Unable to create notify event..")
-            return False
-
         if self.thread_id or self.suspended:
             log.debug("Using QueueUserAPC injection.")
         else:
@@ -427,15 +414,11 @@ class Process:
                         log.info("Injected into suspended 64-bit process with pid %d", self.pid)
                     else:
                         log.error("Unable to inject into 64-bit process with pid %d, error: %d", self.pid, ret)
-                        KERNEL32.CloseHandle(self.event_handle)
-                        self.event_handle = None
                     return False
                 else:
                     return True
             else:
                 log.error("Please place the loader_x64.exe binary from cuckoomon into analyzer/windows/bin in order to analyze x64 binaries.")
-                KERNEL32.CloseHandle(self.event_handle)
-                self.event_handle = None
                 return False
         else:
             if os.path.exists("bin/loader.exe"):
@@ -445,28 +428,11 @@ class Process:
                         log.info("Injected into suspended 32-bit process with pid %d", self.pid)
                     else:
                         log.error("Unable to inject into 32-bit process with pid %d, error: %d", self.pid, ret)
-                        KERNEL32.CloseHandle(self.event_handle)
-                        self.event_handle = None
                     return False
                 else:
                     return True
             else:
                 return self.old_inject(dll, self.thread_id or self.suspended)
-
-
-    def wait(self):
-        ret = True
-        if self.event_handle:
-            retval = KERNEL32.WaitForSingleObject(self.event_handle, 10000)
-            if retval == WAIT_TIMEOUT:
-                log.error("Timeout waiting for cuckoomon to initialize in pid %d", self.pid)
-                ret = False
-            else:
-                log.info("Successfully injected process with pid %d", self.pid)
-
-            KERNEL32.CloseHandle(self.event_handle)
-            self.event_handle = None
-        return ret
 
     def dump_memory(self):
         """Dump process memory.
