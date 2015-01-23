@@ -255,7 +255,7 @@ class PipeHandler(Thread):
                 process_id = int(command[5:])
                 if process_id not in (PID, PPID) and process_id in PROCESS_LIST:
                     # only notify processes we've hooked
-                    event_name = TERMINATE_EVENT + str(self.pid)
+                    event_name = TERMINATE_EVENT + str(process_id)
                     event_handle = KERNEL32.OpenEventA(EVENT_MODIFY_STATE, False, event_name)
                     if not event_handle:
                         log.warning("Unable to open termination event for pid %u.", self.pid)
