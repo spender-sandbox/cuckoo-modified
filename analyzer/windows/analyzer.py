@@ -258,7 +258,7 @@ class PipeHandler(Thread):
                     event_name = TERMINATE_EVENT + str(process_id)
                     event_handle = KERNEL32.OpenEventA(EVENT_MODIFY_STATE, False, event_name)
                     if not event_handle:
-                        log.warning("Unable to open termination event for pid %u.", self.pid)
+                        log.warning("Unable to open termination event for pid %u.", process_id)
                     else:
                         # make sure process is aware of the termination
                         KERNEL32.SetEvent(event_handle)
