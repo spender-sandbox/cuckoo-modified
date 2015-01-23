@@ -261,6 +261,7 @@ class PipeHandler(Thread):
                     else:
                         # make sure process is aware of the termination
                         KERNEL32.SetEvent(event_handle)
+                        KERNEL32.CloseHandle(event_handle)
 
                 PROCESS_LOCK.release()
             # In case of PID, the client is trying to notify the creation of
