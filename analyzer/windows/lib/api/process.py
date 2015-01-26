@@ -266,7 +266,7 @@ class Process:
         if self.h_process == 0:
             self.open()
 
-        event_name = TERMINATE_EVENT + str(process_id)
+        event_name = TERMINATE_EVENT + str(self.pid)
         event_handle = KERNEL32.OpenEventA(EVENT_MODIFY_STATE, False, event_name)
         if event_handle:
             # make sure process is aware of the termination
