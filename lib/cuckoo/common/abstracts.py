@@ -766,6 +766,22 @@ class Signature(object):
                                  regex=regex,
                                  all=all)
 
+    def check_delete_file(self, pattern, regex=False, all=False):
+        """Checks for a file being deleted.
+        @param pattern: string or expression to check for.
+        @param regex: boolean representing if the pattern is a regular
+                      expression or not and therefore should be compiled.
+        @param all: boolean representing if all results should be returned
+                      in a set or not
+        @return: depending on the value of param 'all', either a set of
+                      matched items or the first matched item
+        """
+        subject = self.results["behavior"]["summary"]["delete_files"]
+        return self._check_value(pattern=pattern,
+                                 subject=subject,
+                                 regex=regex,
+                                 all=all)
+
     def check_key(self, pattern, regex=False, all=False):
         """Checks for a registry key being opened.
         @param pattern: string or expression to check for.
@@ -799,7 +815,7 @@ class Signature(object):
                                  all=all)
 
     def check_write_key(self, pattern, regex=False, all=False):
-        """Checks for a registry key/value being modified or deleted
+        """Checks for a registry key/value being modified
         @param pattern: string or expression to check for.
         @param regex: boolean representing if the pattern is a regular
                       expression or not and therefore should be compiled.
@@ -814,6 +830,21 @@ class Signature(object):
                                  regex=regex,
                                  all=all)
 
+    def check_delete_key(self, pattern, regex=False, all=False):
+        """Checks for a registry key/value being modified or deleted
+        @param pattern: string or expression to check for.
+        @param regex: boolean representing if the pattern is a regular
+                      expression or not and therefore should be compiled.
+        @param all: boolean representing if all results should be returned
+                      in a set or not
+        @return: depending on the value of param 'all', either a set of
+                      matched items or the first matched item
+        """
+        subject = self.results["behavior"]["summary"]["delete_keys"]
+        return self._check_value(pattern=pattern,
+                                 subject=subject,
+                                 regex=regex,
+                                 all=all)
 
     def check_mutex(self, pattern, regex=False, all=False):
         """Checks for a mutex being opened.

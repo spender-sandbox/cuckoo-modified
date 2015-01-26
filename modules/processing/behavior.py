@@ -356,7 +356,7 @@ class Summary:
                     name = argument["value"]
             if name and name not in self.keys:
                 self.keys.append(name)
-        elif call["api"].startswith("RegSetValue") or call["api"].startswith("NtDeleteValueKey") or call["api"].startswith("RegDeleteValue"):
+        elif call["api"].startswith("RegSetValue") or call["api"] == "NtSetValueKey":
             name = None
             for argument in call["arguments"]:
                 if argument["name"] == "FullName":
@@ -366,6 +366,16 @@ class Summary:
                self.keys.append(name)
             if name and name not in self.write_keys:
                self.write_keys.append(name)
+        elif call["api"] == "NtDeleteValueKey" or call["api"] == "NtDeleteKey" or call["api"].startswith("RegDeleteValue"):
+            name = None
+            for argument in call["arguments"]:
+                if argument["name"] == "FullName":
+                    name = argument["value"]
+
+            if name and name not in self.keys:
+               self.keys.append(name)
+            if name and name not in self.delete_keys:
+               self.delete_keys.append(name)
         elif call["api"].startswith("RegCreateKeyEx"):
             name = None
             disposition = 0
@@ -402,7 +412,7 @@ class Summary:
             # if disposition == 1 then we created a new key
             if name and disposition == 1 and name not in self.write_keys:
                self.write_keys.append(name)
-        elif call["api"].startswith("RegQueryValue") or call["api"].startswith("NtQueryValueKey"):
+        elif call["api"].startswith("RegQueryValue") or call["api"] == "NtQueryValueKey" or call["api"] == "NtQueryMultipleValueKey":
             name = None
             for argument in call["arguments"]:
                 if argument["name"] == "FullName":
@@ -421,6 +431,53 @@ class Summary:
                         filename = None
             if filename and filename not in self.files:
                 self.files.append(filename)
+        elif call["api"] == "NtSetInformationFile":
+            filename = None
+            infoclass = None
+            fileinfo = None
+            for argument in call["arguments"]:
+                if argument["name"] == "HandleName":
+                    filename = argument["value"].strip()
+                elif argument["name"] == "FileInformationClass":
+                    infoclass = int(argument["value"], 10)
+                elif argument["name"] == "FileInformation":
+                    fileinfo = argument["raw_value"]
+            if filename and infoclass and infoclass == 13 and fileinfo and len(fileinfo) > 0:
+                disp = struct.unpack_from("B", fileinfo)[0]
+                if disp and filename not in self.delete_files:
+                    self.delete_files.append(filename)
+
+        elif call["api"].startswith("DeleteFile") or call["api"] == "NtDeleteFile" or call["api"].startswith("RemoveDirectory"):
+            filename = None
+            for argument in call["arguments"]:
+                if argument["name"] == "FileName":
+                    filename = argument["value"].strip()
+                elif argument["name"] == "DirectoryName":
+                    filename = argument["value"].strip()
+            if filename:
+                if filename not in self.files:
+                    self.files.append(filename)
+                if filename not in self.delete_files:
+                    self.delete_files.append(filename)
+        elif call["api"] == "MoveFileWithProgressW":
+            origname = None
+            newname = None
+            for argument in call["arguments"]:
+                if argument["name"] == "ExistingFileName":
+                    origname = argument["value"].strip()
+                elif argument["name"] == "NewFileName":
+                    newname = argument["value"].strip()
+            if origname:
+                if origname not in self.files:
+                    self.files.append(origname)
+                if origname not in self.delete_files:
+                    self.delete_files.append(origname)
+            if newname:
+                if newname not in self.files:
+                    self.files.append(newname)
+                if newname not in self.write_files:
+                    self.write_files.append(newname)
+
         elif call["category"] == "filesystem":
             filename = None
             srcfilename = None
@@ -428,6 +485,8 @@ class Summary:
             access = None
             for argument in call["arguments"]:
                 if argument["name"] == "FileName":
+                    filename = argument["value"].strip()
+                elif argument["name"] == "DirectoryName":
                     filename = argument["value"].strip()
                 elif argument["name"] == "ExistingFileName":
                     srcfilename = argument["value"].strip()
@@ -439,8 +498,6 @@ class Summary:
                 if access and (access & 0x80000000 or access & 0x10000000 or access & 0x02000000 or access & 0x1) and filename not in self.read_files:
                     self.read_files.append(filename)
                 if access and (access & 0x40000000 or access & 0x10000000 or access & 0x02000000 or access & 0x6) and filename not in self.write_files:
-                    self.write_files.append(filename)
-                if call["api"].find("Delete") != -1 and filename not in self.write_files:
                     self.write_files.append(filename)
                 if filename not in self.files:
                     self.files.append(filename)
@@ -470,7 +527,7 @@ class Summary:
         """Get registry keys, mutexes and files.
         @return: Summary of keys, read keys, written keys, mutexes and files.
         """
-        return {"files": self.files, "read_files" : self.read_files, "write_files" : self.write_files, "keys": self.keys, "read_keys": self.read_keys, "write_keys": self.write_keys, "mutexes": self.mutexes}
+        return {"files": self.files, "read_files" : self.read_files, "write_files" : self.write_files, "delete_files" : self.delete_files, "keys": self.keys, "read_keys": self.read_keys, "write_keys": self.write_keys, "delete_keys" : self.delete_keys, "mutexes": self.mutexes}
 
 class Enhanced(object):
     """Generates a more extensive high-level representation than Summary."""

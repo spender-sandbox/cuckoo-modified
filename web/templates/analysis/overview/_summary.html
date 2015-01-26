@@ -5,9 +5,11 @@
             <li class="active"><a href="#summary_files" data-toggle="tab">Accessed Files</a></li>
             <li><a href="#summary_read_files" data-toggle="tab">Read Files</a></li>
             <li><a href="#summary_write_files" data-toggle="tab">Modified Files</a></li>
+            <li><a href="#summary_delete_files" data-toggle="tab">Deleted Files</a></li>
             <li><a href="#summary_keys" data-toggle="tab">Registry Keys</a></li>
             <li><a href="#summary_read_keys" data-toggle="tab">Read Registry Keys</a></li>
             <li><a href="#summary_write_keys" data-toggle="tab">Modified Registry Keys</a></li>
+            <li><a href="#summary_delete_keys" data-toggle="tab">Deleted Registry Keys</a></li>
             <li><a href="#summary_mutexes" data-toggle="tab">Mutexes</a></li>
         </ul>
         <div class="tab-content">
@@ -38,6 +40,15 @@
                 {% endif %}
                 </div>
             </div>
+            <div class="tab-pane fade" id="summary_delete_files">
+                <div class="well mono">
+                {% if analysis.behavior.summary.delete_files %}
+                    {% for file in analysis.behavior.summary.delete_files %}
+                        {{file}}<br />
+                    {% endfor %}
+                {% endif %}
+                </div>
+            </div>
             <div class="tab-pane fade" id="summary_keys">
                 <div class="well mono">
                 {% if analysis.behavior.summary.keys %}
@@ -60,6 +71,15 @@
                 <div class="well mono">
                 {% if analysis.behavior.summary.write_keys %}
                     {% for key in analysis.behavior.summary.write_keys %}
+                        {{key}}<br />
+                    {% endfor %}
+                {% endif %}
+                </div>
+            </div>
+            <div class="tab-pane fade" id="summary_delete_keys">
+                <div class="well mono">
+                {% if analysis.behavior.summary.delete_keys %}
+                    {% for key in analysis.behavior.summary.delete_keys %}
                         {{key}}<br />
                     {% endfor %}
                 {% endif %}
