@@ -266,6 +266,14 @@ class Process:
         if self.h_process == 0:
             self.open()
 
+        event_name = TERMINATE_EVENT + str(process_id)
+        event_handle = KERNEL32.OpenEventA(EVENT_MODIFY_STATE, False, event_name)
+        if event_handle:
+            # make sure process is aware of the termination
+            KERNEL32.SetEvent(event_handle)
+            KERNEL32.CloseHandle(event_handle)
+            KERNEL32.Sleep(500)
+
         if KERNEL32.TerminateProcess(self.h_process, 1):
             log.info("Successfully terminated process with pid %d.", self.pid)
             return True
