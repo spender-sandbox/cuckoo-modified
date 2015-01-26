@@ -339,10 +339,12 @@ class Summary:
         self.keys = []
         self.read_keys = []
         self.write_keys = []
+        self.delete_keys = []
         self.mutexes = []
         self.files = []
         self.read_files = []
         self.write_files = []
+        self.delete_files = []
         self.handles = []
 
     def event_apicall(self, call, process):
