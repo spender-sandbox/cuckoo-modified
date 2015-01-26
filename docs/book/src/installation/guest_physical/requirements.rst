@@ -43,12 +43,13 @@ by reading the :doc:`../../introduction/sandboxing` chapter.
 
 
 Additional Host Requirements
-==============================
+============================
 The physical machine manager uses RPC requests to reboot physical machines.
   The `net` command is required for this to be accomplished, and is available
   from the samba-common-bin package.  
 
 On Debian/Ubuntu:
+
     $ sudo apt-get install samba-common-bin
 
 In order for the physical machine manager to work, you must have a way

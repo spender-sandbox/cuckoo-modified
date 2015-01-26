@@ -1,5 +1,5 @@
 # Copyright (c) 2013, The MITRE Corporation
-# Copyright (c) 2010-2014, Cuckoo Developers
+# Copyright (c) 2010-2015, Cuckoo Developers
 # All rights reserved.
 
 # This file is part of Cuckoo Sandbox - http://www.cuckoosandbox.org
@@ -65,7 +65,7 @@ class MAEC40Report(Report):
         # We put the raise here and not at the import because it would
         # otherwise trigger even if the module is not enabled in the config.
         if not HAVE_MAEC:
-            raise CuckooDependencyError("Unable to import cybox and maec (install with `pip install maec`)")
+            raise CuckooDependencyError("Unable to import cybox and maec (install with `pip install cybox==2.0.1.4` then `pip install maec==4.0.1.0`)")
 
         self._illegal_xml_chars_RE = re.compile(u"[\x00-\x08\x0b\x0c\x0e-\x1F\uD800-\uDFFF\uFFFE\uFFFF]")
         # Map of PIDs to the Actions that they spawned.
@@ -87,12 +87,12 @@ class MAEC40Report(Report):
 
     def setupMAEC(self):
         """Generates MAEC Package, Malware Subject, and Bundle structure"""
-        if self.results["target"]["category"] == "file":
+        if "target" in self.results and self.results["target"]["category"] == "file":
             self.id_generator = Generator(self.results["target"]["file"]["md5"])
-        elif self.results["target"]["category"] == "url":
+        elif "target" in self.results and self.results["target"]["category"] == "url":
             self.id_generator = Generator(hashlib.md5(self.results["target"]["url"]).hexdigest())
         else:
-            raise CuckooReportError("Unknown target type")
+            raise CuckooReportError("Unknown target type or targetinfo module disabled")
 
         # Generate Package.
         self.package = Package(self.id_generator.generate_package_id())

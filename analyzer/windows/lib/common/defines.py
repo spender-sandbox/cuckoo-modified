@@ -1,4 +1,4 @@
-# Copyright (C) 2010-2014 Cuckoo Foundation.
+# Copyright (C) 2010-2015 Cuckoo Foundation.
 # This file is part of Cuckoo Sandbox - http://www.cuckoosandbox.org
 # See the file 'docs/LICENSE' for copying permission.
 
@@ -72,9 +72,9 @@ ERROR_BROKEN_PIPE         = 0x0000006d
 ERROR_MORE_DATA           = 0x000000EA
 ERROR_PIPE_CONNECTED      = 0x00000217
 
-EVENT_MODIFY_STATE        = 0x00000002
-
 WAIT_TIMEOUT              = 0x00000102
+
+EVENT_MODIFY_STATE        = 0x00000002
 
 FILE_ATTRIBUTE_HIDDEN     = 0x00000002
 

@@ -1,4 +1,4 @@
-# Copyright (C) 2010-2014 Cuckoo Foundation.
+# Copyright (C) 2010-2015 Cuckoo Foundation.
 # This file is part of Cuckoo Sandbox - http://www.cuckoosandbox.org
 # See the file 'docs/LICENSE' for copying permission.
 
@@ -133,6 +133,10 @@ INSTALLED_APPS = (
 )
 
 LOGIN_REDIRECT_URL = "/"
+
+# Fix to avoid migration warning in django 1.7 about test runner (1_6.W001).
+# In future it could be removed: https://code.djangoproject.com/ticket/23469
+TEST_RUNNER = 'django.test.runner.DiscoverRunner'
 
 # A sample logging configuration. The only tangible logging
 # performed by this configuration is to send an email to

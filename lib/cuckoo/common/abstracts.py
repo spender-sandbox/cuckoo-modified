@@ -1,4 +1,4 @@
-# Copyright (C) 2010-2014 Cuckoo Foundation.
+# Copyright (C) 2010-2015 Cuckoo Foundation, Accuvant, Inc. (bspengler@accuvant.com).
 # This file is part of Cuckoo Sandbox - http://www.cuckoosandbox.org
 # See the file 'docs/LICENSE' for copying permission.
 
@@ -1068,7 +1068,7 @@ class Signature(object):
         """Retrieves the value of a specific argument from an API call.
         @param call: API call object.
         @param name: name of the argument to retrieve.
-        @return: value of the requried argument.
+        @return: value of the required argument.
         """
         # Check if the call passed to it was cached already.
         # If not, we can start caching it and store a copy converted to a dict.

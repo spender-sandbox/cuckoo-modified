@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# Copyright (C) 2010-2014 Cuckoo Foundation.
+# Copyright (C) 2010-2015 Cuckoo Foundation.
 # This file is part of Cuckoo Sandbox - http://www.cuckoosandbox.org
 # See the file 'docs/LICENSE' for copying permission.
 
@@ -15,6 +15,7 @@ from zipfile import ZipFile, ZIP_STORED
 
 try:
     from bottle import route, run, request, hook, response, HTTPError
+    from bottle import default_app
 except ImportError:
     sys.exit("ERROR: Bottle.py library is missing")
 
@@ -22,7 +23,7 @@ sys.path.append(os.path.join(os.path.abspath(os.path.dirname(__file__)), ".."))
 
 from lib.cuckoo.common.constants import CUCKOO_VERSION, CUCKOO_ROOT
 from lib.cuckoo.common.utils import store_temp_file, delete_folder
-from lib.cuckoo.core.database import Database
+from lib.cuckoo.core.database import Database, TASK_RUNNING
 
 # Global DB pointer.
 db = Database()
@@ -215,7 +216,7 @@ def tasks_delete(task_id):
 
     task = db.view_task(task_id)
     if task:
-        if task.status == "processing":
+        if task.status == TASK_RUNNING:
             return HTTPError(500, "The task is currently being "
                                   "processed, cannot delete")
 
@@ -408,6 +409,8 @@ def task_screenshots(task=0, screenshot=None):
             return zip_data.getvalue()
     else:
         return HTTPError(404, folder_path)
+
+application = default_app()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

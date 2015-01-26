@@ -1,4 +1,4 @@
-# Copyright (C) 2010-2014 Cuckoo Foundation.
+# Copyright (C) 2010-2015 Cuckoo Foundation.
 # This file is part of Cuckoo Sandbox - http://www.cuckoosandbox.org
 # See the file 'docs/LICENSE' for copying permission.
 
@@ -460,12 +460,12 @@ class Scheduler:
             log.info("Loaded %s machine/s", len(machinery.machines()))
 
         if len(machinery.machines()) > 1 and self.db.engine.name == "sqlite":
-            log.warning("The SQLite database is not compatible with "
-                        "multi-threaded use-cases such as running multiple "
-                        "virtual machine in parallel. Please upgrade to "
-                        "PostgreSQL or MySQL when running multiple VMs.")
+            log.warning("As you've configured Cuckoo to execute parallel "
+                        "analyses, we recommend you to switch to a MySQL " 
+                        "a PostgreSQL database as SQLite might cause some "
+                        "issues.")
 
-        if len(machinery.machines()) > 3 and self.cfg.cuckoo.process_results:
+        if len(machinery.machines()) > 4 and self.cfg.cuckoo.process_results:
             log.warning("When running many virtual machines it is recommended "
                         "to process the results in a separate process.py to "
                         "increase throughput and stability. Please read the "

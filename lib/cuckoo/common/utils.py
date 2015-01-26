@@ -1,4 +1,4 @@
-# Copyright (C) 2010-2014 Cuckoo Foundation, Accuvant, Inc. (bspengler@accuvant.com)
+# Copyright (C) 2010-2015 Cuckoo Foundation, Accuvant, Inc. (bspengler@accuvant.com)
 # This file is part of Cuckoo Sandbox - http://www.cuckoosandbox.org
 # See the file 'docs/LICENSE' for copying permission.
 
@@ -13,7 +13,6 @@ from datetime import datetime
 
 from lib.cuckoo.common.exceptions import CuckooOperationalError
 from lib.cuckoo.common.config import Config
-from lib.cuckoo.common.constants import CUCKOO_ROOT
 
 try:
     import chardet
@@ -44,7 +43,6 @@ def create_folder(root=".", folder=None):
             raise CuckooOperationalError("Unable to create folder: %s" %
                                          folder_path)
 
-
 def delete_folder(folder):
     """Delete a folder and all its subdirectories.
     @param folder: path to delete.
@@ -57,14 +55,12 @@ def delete_folder(folder):
             raise CuckooOperationalError("Unable to delete folder: "
                                          "{0}".format(folder))
 
-
 # Don't allow all characters in "string.printable", as newlines, carriage
 # returns, tabs, \x0b, and \x0c may mess up reports.
 # The above is true, but apparently we only care about \x0b and \x0c given
 # the code below
 PRINTABLE_CHARACTERS = \
     string.letters + string.digits + string.punctuation + " \t\r\n"
-
 
 def convert_char(c):
     """Escapes characters.
@@ -75,7 +71,6 @@ def convert_char(c):
         return c
     else:
         return "\\x%02x" % ord(c)
-
 
 def is_printable(s):
     """ Test if a string is printable."""
@@ -1182,3 +1177,12 @@ def sanitize_filename(x):
             out += "_"
 
     return out
+
+def classlock(f):
+    """Classlock decorator (created for database.Database).
+    Used to put a lock to avoid sqlite errors.
+    """
+    def inner(self, *args, **kwargs):
+        with self._lock:
+            return f(self, *args, **kwargs)
+    return inner

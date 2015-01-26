@@ -1,4 +1,4 @@
-# Copyright (C) 2010-2014 Cuckoo Foundation.
+# Copyright (C) 2010-2015 Cuckoo Foundation.
 # This file is part of Cuckoo Sandbox - http://www.cuckoosandbox.org
 # See the file 'docs/LICENSE' for copying permission.
 
@@ -15,5 +15,5 @@ class PPT(Package):
     ]
 
     def start(self, path):
-        poiwerpoint = self.get_path("Microsoft Office PowerPoint")
-        return self.execute(poiwerpoint, "\"%s\"" % path)
+        powerpoint = self.get_path("Microsoft Office PowerPoint")
+        return self.execute(powerpoint, "\"%s\"" % path)
