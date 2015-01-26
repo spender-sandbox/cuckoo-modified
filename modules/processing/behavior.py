@@ -5,6 +5,7 @@
 import os
 import logging
 import datetime
+import struct
 
 from lib.cuckoo.common.abstracts import Processing
 from lib.cuckoo.common.config import Config
