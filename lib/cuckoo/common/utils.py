@@ -9,6 +9,7 @@ import ntpath
 import string
 import tempfile
 import xmlrpclib
+import errno
 from datetime import datetime
 
 from lib.cuckoo.common.exceptions import CuckooOperationalError
@@ -39,9 +40,10 @@ def create_folder(root=".", folder=None):
     if folder and not os.path.isdir(folder_path):
         try:
             os.makedirs(folder_path)
-        except OSError:
-            raise CuckooOperationalError("Unable to create folder: %s" %
-                                         folder_path)
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                raise CuckooOperationalError("Unable to create folder: %s" %
+                                            folder_path)
 
 def delete_folder(folder):
     """Delete a folder and all its subdirectories.
