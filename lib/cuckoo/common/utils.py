@@ -356,7 +356,7 @@ def pretty_print_arg(category, api_name, arg_name, arg_val):
                 10 : "REG_RESOURCE_REQUIREMENTS_LIST",
                 11 : "REG_QWORD"
         }.get(val, None)
-    elif (api_name == "OpenSCManagerW" or api_name == "OpenSCManagerW") and arg_name == "DesiredAccess":
+    elif (api_name == "OpenSCManagerA" or api_name == "OpenSCManagerW") and arg_name == "DesiredAccess":
         val = int(arg_val, 16)
         res = []
         if val == 0x02000000:
