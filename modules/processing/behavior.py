@@ -543,7 +543,6 @@ class Enhanced(object):
         """
         self.eid = 0
         self.details = details
-        self.servicehandles = {}
         self.modules = {}
         self.procedures = {}
         self.events = []
@@ -611,17 +610,6 @@ class Enhanced(object):
                     return event
 
             return None
-
-        # Generic handles
-        def _add_handle(handles, handle, filename):
-            handles[handle] = filename
-
-        def _remove_handle(handles, handle):
-            if handle in handles:
-                handles.pop(handle)
-
-        def _get_handle(handles, handle):
-            return handles.get(handle)
 
         def _get_service_action(control_code):
             """@see: http://msdn.microsoft.com/en-us/library/windows/desktop/ms682108%28v=vs.85%29.aspx"""
@@ -848,16 +836,28 @@ class Enhanced(object):
                 ]
             },
             {
+                "event": "start",
+                "object": "service",
+                "apis": [
+                    "StartServiceA",
+                    "StartServiceW"
+                ],
+                "args": [("service", "ServiceName")]
+            },
+            {
                 "event": "modify",
                 "object": "service",
                 "apis": ["ControlService"],
-                "args": [("controlcode", "ControlCode")]
+                "args": [
+                    ("service", "ServiceName"),
+                    ("controlcode", "ControlCode")
+                    ]
             },
             {
                 "event": "delete",
                 "object": "service",
                 "apis": ["DeleteService"],
-                "args": [],
+                "args": [("service", "ServiceName")]
             },
         ]
 
@@ -887,17 +887,10 @@ class Enhanced(object):
             elif call["api"] in ["SetWindowsHookExA"]:
                 event["data"]["module"] = self._get_loaded_module(args.get("ModuleAddress", ""))
 
-            if call["api"] in ["ControlService", "DeleteService"]:
-                event["data"]["service"] = _get_handle(self.servicehandles, args["ServiceHandle"])
-
             if call["api"] in ["ControlService"]:
                 event["data"]["action"] = _get_service_action(args["ControlCode"])
 
             return event
-
-        # Services
-        elif call["api"] in ["OpenServiceW"]:
-            _add_handle(self.servicehandles, call["return"], args["ServiceName"])
 
         return event
 
