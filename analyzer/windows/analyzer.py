@@ -245,6 +245,14 @@ class PipeHandler(Thread):
                 else:
                     response = hookdll_encode(url_dlls)
 
+            # Handle case of a service being started by a monitored process
+            # Switch the service type to own process behind its back so we
+            # can monitor the service more easily with less noise
+            elif command.startswith("SERVICE:"):
+                servname = command[8:]
+                os.system("sc config " + servname + " type= own")
+                log.info("Announced starting service \"%s\"", servname)
+
             # Handle case of malware terminating a process -- notify the target
             # ahead of time so that it can flush its log buffer
             elif command.startswith("KILL:"):
