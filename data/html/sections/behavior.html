@@ -127,6 +127,30 @@
                 Nothing to display.
             {% endif %}
         </div>
+        <div class="well well-small">
+            <b>Created Services</b>
+            {% if results.behavior.summary["created_services"] %}
+                <ul>
+                    {% for service in results.behavior.summary["created_services"] %}
+                    <li><span class="mono">{{service}}</span></li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                Nothing to display.
+            {% endif %}
+        </div>
+        <div class="well well-small">
+            <b>Started Services</b>
+            {% if results.behavior.summary["started_services"] %}
+                <ul>
+                    {% for service in results.behavior.summary["started_services"] %}
+                    <li><span class="mono">{{service}}</span></li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                Nothing to display.
+            {% endif %}
+        </div>
     {% endif %}
 
     <div class="section-title">

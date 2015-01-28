@@ -11,6 +11,8 @@
             <li><a href="#summary_write_keys" data-toggle="tab">Modified Registry Keys</a></li>
             <li><a href="#summary_delete_keys" data-toggle="tab">Deleted Registry Keys</a></li>
             <li><a href="#summary_mutexes" data-toggle="tab">Mutexes</a></li>
+            <li><a href="#summary_created_services" data-toggle="tab">Created Services</a></li>
+            <li><a href="#summary_started_services" data-toggle="tab">Started Services</a></li>
         </ul>
         <div class="tab-content">
             <div class="tab-pane fade in active" id="summary_files">
@@ -90,6 +92,24 @@
                 {% if analysis.behavior.summary.mutexes %}
                     {% for mutex in analysis.behavior.summary.mutexes %}
                         {{mutex}}<br />
+                    {% endfor %}
+                {% endif %}
+                </div>
+            </div>
+            <div class="tab-pane fade" id="summary_created_services">
+                <div class="well mono">
+                {% if analysis.behavior.summary.created_services %}
+                    {% for service in analysis.behavior.summary.created_services %}
+                        {{service}}<br />
+                    {% endfor %}
+                {% endif %}
+                </div>
+            </div>
+            <div class="tab-pane fade" id="summary_started_services">
+                <div class="well mono">
+                {% if analysis.behavior.summary.started_services %}
+                    {% for service in analysis.behavior.summary.started_services %}
+                        {{service}}<br />
                     {% endfor %}
                 {% endif %}
                 </div>

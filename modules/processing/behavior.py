@@ -1,4 +1,4 @@
-# Copyright (C) 2010-2015 Cuckoo Foundation.
+# Copyright (C) 2010-2015 Cuckoo Foundation, Accuvant, Inc. (bspengler@accuvant.com)
 # This file is part of Cuckoo Sandbox - http://www.cuckoosandbox.org
 # See the file 'docs/LICENSE' for copying permission.
 
@@ -345,7 +345,8 @@ class Summary:
         self.read_files = []
         self.write_files = []
         self.delete_files = []
-        self.handles = []
+        self.started_services = []
+        self.created_services = []
 
     def event_apicall(self, call, process):
         """Generate processes list from streamed calls/processes.
@@ -462,6 +463,22 @@ class Summary:
                     self.files.append(filename)
                 if filename not in self.delete_files:
                     self.delete_files.append(filename)
+        elif call["api"].startswith("StartService"):
+            servicename = None
+            for argument in call["arguments"]:
+                if argument["name"] == "ServiceName":
+                    servicename = argument["value"].strip()
+            if servicename and servicename not in self.started_services:
+                self.started_services.append(servicename)
+
+        elif call["api"].startswith("CreateService"):
+            servicename = None
+            for argument in call["arguments"]:
+                if argument["name"] == "ServiceName":
+                    servicename = argument["value"].strip()
+            if servicename and servicename not in self.created_services:
+                self.created_services.append(servicename)
+
         elif call["api"] == "MoveFileWithProgressW":
             origname = None
             newname = None
@@ -530,7 +547,7 @@ class Summary:
         """Get registry keys, mutexes and files.
         @return: Summary of keys, read keys, written keys, mutexes and files.
         """
-        return {"files": self.files, "read_files" : self.read_files, "write_files" : self.write_files, "delete_files" : self.delete_files, "keys": self.keys, "read_keys": self.read_keys, "write_keys": self.write_keys, "delete_keys" : self.delete_keys, "mutexes": self.mutexes}
+        return {"files": self.files, "read_files" : self.read_files, "write_files" : self.write_files, "delete_files" : self.delete_files, "keys": self.keys, "read_keys": self.read_keys, "write_keys": self.write_keys, "delete_keys" : self.delete_keys, "mutexes": self.mutexes, "created_services" : self.created_services, "started_services" : self.started_services }
 
 class Enhanced(object):
     """Generates a more extensive high-level representation than Summary."""
