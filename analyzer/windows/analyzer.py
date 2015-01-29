@@ -267,6 +267,12 @@ class PipeHandler(Thread):
                     KERNEL32.Sleep(1000)
                     MONITORED_SERVICES = True
 
+            # For now all we care about is bumping up our LASTINJECT_TIME to account for long delays between
+            # injection and actual resume time where the DLL would have a chance to load in the new process
+            # and report back to have its pid added to the list of monitored processes
+            elif command.startswith("RESUME:"):
+                LASTINJECT_TIME = datetime.now()
+
             # Handle case of malware terminating a process -- notify the target
             # ahead of time so that it can flush its log buffer
             elif command.startswith("KILL:"):
