@@ -15,7 +15,7 @@ import traceback
 from ctypes import create_unicode_buffer, create_string_buffer
 from ctypes import c_wchar_p, byref, c_int, sizeof
 from threading import Lock, Thread
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from lib.api.process import Process
 from lib.common.abstracts import Package, Auxiliary
@@ -44,6 +44,10 @@ UPLOADPATH_LIST = []
 PROCESS_LIST = []
 PROCESS_LOCK = Lock()
 DEFAULT_DLL = None
+
+SERVICES_PID = None
+MONITORED_SERVICES = False
+LASTINJECT_TIME = None
 
 PID = os.getpid()
 PPID = Process(pid=PID).get_parent_pid()
@@ -253,6 +257,16 @@ class PipeHandler(Thread):
                 os.system("sc config " + servname + " type= own")
                 log.info("Announced starting service \"%s\"", servname)
 
+                if not MONITORED_SERVICES:
+                    # Inject into services.exe so we can monitor service creation
+                    servproc = Process(pid=SERVICES_PID,suspended=False)
+                    filepath = servproc.get_filepath()
+                    servproc.inject(dll=DEFAULT_DLL, interest=filepath, notfirst=True, nosleepskip=True)
+                    LASTINJECT_TIME = datetime.now()
+                    servproc.close()
+                    KERNEL32.Sleep(1000)
+                    MONITORED_SERVICES = True
+
             # Handle case of malware terminating a process -- notify the target
             # ahead of time so that it can flush its log buffer
             elif command.startswith("KILL:"):
@@ -332,6 +346,7 @@ class PipeHandler(Thread):
 
                             if not protected_filename(filename):
                                 res = proc.inject(dll, filepath)
+                                LASTINJECT_TIME = datetime.now()
                             proc.close()
                     else:
                         log.warning("Received request to inject Cuckoo "
@@ -467,6 +482,10 @@ class Analyzer:
         # Set the default DLL to be used by the PipeHandler.
         DEFAULT_DLL = self.config.get_options().get("dll")
 
+        s = os.popen("tasklist /V /FI \"IMAGENAME eq services.exe\"").read()
+        servidx = s.index("services.exe")
+        servstr = s[servidx + 12:].strip()
+        SERVICES_PID = int(servstr[:servstr.index(' ')], 10)
         # Initialize and start the Pipe Servers. This is going to be used for
         # communicating with the injected and monitored processes.
         for x in xrange(self.PIPE_SERVER_COUNT):
@@ -482,15 +501,6 @@ class Analyzer:
         # If it's a URL, well.. we store the URL.
         else:
             self.target = self.config.target
-
-        # Inject into services.exe so we can monitor service creation
-        s = os.popen("tasklist /V /FI \"IMAGENAME eq services.exe\"").read()
-        servidx = s.index("services.exe")
-        servstr = s[servidx + 12:].strip()
-        pid = int(servstr[:servstr.index(' ')], 10)
-        servproc = Process(pid=pid,suspended=False)
-        filepath = servproc.get_filepath()
-        servproc.inject(dll=DEFAULT_DLL, interest=filepath, notfirst=True, nosleepskip=True)
 
     def complete(self):
         """End analysis."""
@@ -660,7 +670,7 @@ class Analyzer:
 
                     # If none of the monitored processes are still alive, we
                     # can terminate the analysis.
-                    if not PROCESS_LIST:
+                    if not PROCESS_LIST and (not LASTINJECT_TIME or (datetime.now() < (LASTINJECT_TIME + timedelta(seconds=15)))):
                         log.info("Process list is empty, "
                                  "terminating analysis.")
                         break
