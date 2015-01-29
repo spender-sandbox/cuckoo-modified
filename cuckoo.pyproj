@@ -290,6 +290,10 @@
     <Compile Include="web\submission\urls.py" />
     <Compile Include="web\submission\views.py" />
     <Compile Include="web\submission\__init__.py" />
+    <Content Include="web\static\fonts\glyphicons-halflings-regular.eot" />
+    <Content Include="web\static\fonts\glyphicons-halflings-regular.ttf" />
+    <Content Include="web\static\fonts\glyphicons-halflings-regular.woff" />
+    <Content Include="web\static\fonts\glyphicons-halflings-regular.woff2" />
     <Content Include="web\templates\analysis\behavior\_api_call.html" />
     <Content Include="web\templates\analysis\behavior\_search.html" />
     <Content Include="web\templates\analysis\behavior\_search_results.html" />
