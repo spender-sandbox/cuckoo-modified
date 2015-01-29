@@ -184,6 +184,8 @@ class PipeHandler(Thread):
         """Run handler.
         @return: operation status.
         """
+        global MONITORED_SERVICES
+        global LASTINJECT_TIME
         data = ""
         response = "OK"
 
@@ -459,6 +461,7 @@ class Analyzer:
     def prepare(self):
         """Prepare env for analysis."""
         global DEFAULT_DLL
+        global SERVICES_PID
 
         # Get SeDebugPrivilege for the Python process. It will be needed in
         # order to perform the injections.
