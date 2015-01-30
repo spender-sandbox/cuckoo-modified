@@ -10,8 +10,11 @@ class Shellcode(Package):
 
     def start(self, path):
         p = Process()
+        free = self.options.get("free")
         dll = self.options.get("dll")
         p.execute(path="bin/execsc.exe", args=path, suspended=True)
         p.inject(dll, path)
         p.resume()
+        if free:
+            return None
         return p.pid

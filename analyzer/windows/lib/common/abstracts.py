@@ -81,10 +81,12 @@ class Package(object):
             raise CuckooPackageError("Unable to execute the initial process, "
                                      "analysis aborted.")
 
-        if not free and suspended:
-            p.inject(dll, interest)
-            p.resume()
-            p.close()
+        if free:
+            return None
+
+        p.inject(dll, interest)
+        p.resume()
+        p.close()
         
         return p.pid
 

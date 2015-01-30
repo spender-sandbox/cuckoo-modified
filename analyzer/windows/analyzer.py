@@ -492,10 +492,12 @@ class Analyzer:
         # Set the default DLL to be used by the PipeHandler.
         DEFAULT_DLL = self.config.get_options().get("dll")
 
+        # get PID for services.exe for monitoring services
         s = os.popen("tasklist /V /FI \"IMAGENAME eq services.exe\"").read()
         servidx = s.index("services.exe")
         servstr = s[servidx + 12:].strip()
         SERVICES_PID = int(servstr[:servstr.index(' ')], 10)
+
         # Initialize and start the Pipe Servers. This is going to be used for
         # communicating with the injected and monitored processes.
         for x in xrange(self.PIPE_SERVER_COUNT):
