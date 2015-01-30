@@ -297,7 +297,8 @@ class PipeHandler(Thread):
             elif command.startswith("LOADED:"):
                 PROCESS_LOCK.acquire()
                 process_id = int(command[7:])
-                add_pids(process_id)
+                if process_id not in PROCESS_LIST:
+                    add_pids(process_id)
                 PROCESS_LOCK.release()
                 log.info("Cuckoomon successfully loaded in process with pid %u.", process_id)
 
