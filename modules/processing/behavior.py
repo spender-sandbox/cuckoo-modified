@@ -141,7 +141,7 @@ class ParseProcessLog(list):
 
         self.wait_for_lastcall()
         while self.lastcall and self.compare_calls(nextcall, self.lastcall):
-            nextcall["repeated"] += 1
+            nextcall["repeated"] += self.lastcall["repeated"] + 1
             self.lastcall = None
             self.wait_for_lastcall()
 
@@ -186,7 +186,7 @@ class ParseProcessLog(list):
         @param category: win32 function category
         @param arguments: arguments to the api call
         """
-        apiindex, status, returnval, tid, timediff, caller, parentcaller = context
+        apiindex, repeated, status, returnval, tid, timediff, caller, parentcaller = context
 
 
         current_time = self.first_seen + datetime.timedelta(0, 0, timediff*1000)
@@ -198,6 +198,7 @@ class ParseProcessLog(list):
                                      parentcaller,
                                      category,
                                      apiname,
+                                     repeated,
                                      status,
                                      returnval] + arguments)
 
@@ -221,8 +222,9 @@ class ParseProcessLog(list):
             parentcaller = row[3]       # non-system DLL parent of non-system-DLL return address
             category = row[4]     # Win32 function category.
             api_name = row[5]     # Name of the Windows API.
-            status_value = row[6] # Success or Failure?
-            return_value = row[7] # Value returned by the function.
+            repeated = row[6]     # Times log repeated
+            status_value = row[7] # Success or Failure?
+            return_value = row[8] # Value returned by the function.
         except IndexError as e:
             log.debug("Unable to parse process log row: %s", e)
             return None
@@ -266,7 +268,7 @@ class ParseProcessLog(list):
             call["pretty_return"] = prettyret
 
         call["arguments"] = arguments
-        call["repeated"] = 0
+        call["repeated"] = repeated
 
         # add the thread id to our thread set
         if call["thread_id"] not in self.threads:

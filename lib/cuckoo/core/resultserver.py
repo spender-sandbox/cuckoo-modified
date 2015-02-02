@@ -272,7 +272,7 @@ class ResultHandler(SocketServer.BaseRequestHandler):
             raise CuckooOperationalError("Netlog failure, call "
                                          "before process.")
 
-        apiindex, status, returnval, tid, timediff, caller, parentcaller = context
+        apiindex, repeated, status, returnval, tid, timediff, caller, parentcaller = context
 
         # log.debug("log_call> tid:{0} apiname:{1}".format(tid, apiname))
 
@@ -286,7 +286,7 @@ class ResultHandler(SocketServer.BaseRequestHandler):
         if self.logfd:
             print >>self.logfd, ",".join("\"{0}\"".format(i) for i in [
                 timestring, self.pid, self.procname, tid, self.ppid, caller,
-                parentcaller, modulename, apiname, status, returnval] + argumentstrings)
+                parentcaller, modulename, apiname, repeated, status, returnval] + argumentstrings)
 
     def log_error(self, emsg):
         log.warning("ResultServer error condition on connection %s "

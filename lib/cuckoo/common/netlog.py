@@ -288,8 +288,9 @@ class BsonParser(object):
         time = dec.get("t", 0)
         caller = dec.get("R", 0)
         parentcaller = dec.get("P", 0)
+        repeated = dec.get("r", 0)
 
-        context = [index, 1, 0, tid, time, caller, parentcaller]
+        context = [index, repeated, 1, 0, tid, time, caller, parentcaller]
 
         if mtype == "info":
             # API call index info message, explaining the argument names, etc.
@@ -373,8 +374,8 @@ class BsonParser(object):
                 # self.handler.log_anomaly(subcategory, tid, msg)
                 # return True
 
-            context[1] = argdict.pop("is_success", 1)
-            context[2] = argdict.pop("retval", 0)
+            context[2] = argdict.pop("is_success", 1)
+            context[3] = argdict.pop("retval", 0)
             arguments = argdict.items()
             arguments += dec.get("aux", {}).items()
 
