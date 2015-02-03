@@ -1,17 +1,24 @@
-![Cuckoo](http://cuckoosandbox.org/graphic/cuckoo.png)
+This is a heavily modified version of Cuckoo Sandbox provided under the GPL by Accuvant, Inc.
 
-In three words, [Cuckoo Sandbox](http://www.cuckoosandbox.org) is a malware analysis system.
+It offers a number of advantages over the upstream Cuckoo:
++ Fully-normalized file and registry names
++ 64-bit analysis
++ Handling of WoW64 filesystem redirection
++ Many additional API hooks
++ Service monitoring
++ Correlates API calls to malware call chains
++ Ability to follow APC injection and stealth explorer injection
++ Pretty-printed API flags
++ Per-analysis Tor support
++ ~40 new signature modules
++ Anti-anti-sandbox and anti-anti-VM techniques built-in
++ More stable hooking
++ Ability to restore removed hooks
++ Greatly improved behavioral analysis and signature module API
++ Hundreds of other bugfixes
 
-What does that mean? It simply means that you can throw any suspicious file at it and in a matter of seconds Cuckoo will provide you back some detailed results outlining what such file did when executed inside an isolated environment.
+For more information on the initial set of changes, see:
+http://www.accuvant.com/blog/improving-reliability-of-sandbox-results
+An updated blog post covering more recent changes is forthcoming.
 
-If you want to contribute to development, please read [this](http://www.cuckoosandbox.org/development.html) and [this](http://www.cuckoofoundation.org/contribute) first. Make sure you check our Issues and Pull Requests and that you join our IRC channel.
-
-<hr />
-
-This is a development version, we do not recommend its use in production.
-
-You can find a full documentation of the latest stable release [here](http://docs.cuckoosandbox.org).
-
-<hr />
-
-[![Build Status](https://travis-ci.org/cuckoobox/cuckoo.png?branch=master)](https://travis-ci.org/cuckoobox/cuckoo)
+If you want to contribute to development, submit pull requests or email bspengler@accuvant.com.

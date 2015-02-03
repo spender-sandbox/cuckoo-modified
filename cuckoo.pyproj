@@ -90,6 +90,7 @@
     <Content Include="lib\cuckoo\common\peepdf\peepdf.dtd" />
     <Content Include="lib\cuckoo\common\peepdf\README" />
     <Content Include="lib\cuckoo\common\peepdf\TODO" />
+    <Content Include="README.md" />
     <Content Include="requirements.txt" />
     <Compile Include="analyzer\windows\modules\packages\chrome.py" />
     <Compile Include="analyzer\windows\modules\packages\firefox.py" />
