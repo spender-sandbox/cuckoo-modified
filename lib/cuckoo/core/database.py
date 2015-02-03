@@ -1263,7 +1263,7 @@ class Database(object):
 
         except SQLAlchemyError as e:
             log.debug("Database error counting tasks: {0}".format(e))
-            return 0
+            return []
         finally:
             session.close()
         return res
