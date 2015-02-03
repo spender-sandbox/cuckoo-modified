@@ -111,6 +111,8 @@ def cuckoo_clean():
             except (IOError, OSError) as e:
                 log.warning("Error removing file %s: %s", path, e)
 
+    print "Remember to restart mongodb or the django interface will display incorrect data."
+
 def cuckoo_main(max_analysis_count=0):
     cur_path = os.getcwd()
     os.chdir(CUCKOO_ROOT)
