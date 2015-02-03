@@ -80,6 +80,7 @@ def cuckoo_clean():
     db = Database()
 
     # Drop all tables.
+    db.clean_machines()
     db.drop()
 
     # Paths to clean
