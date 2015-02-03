@@ -146,6 +146,7 @@
     <Compile Include="tests\utils_tests.py" />
     <Compile Include="utils\api.py" />
     <Compile Include="utils\community.py" />
+    <Compile Include="utils\health_statistics.py" />
     <Compile Include="utils\process.py" />
     <Compile Include="utils\stats.py" />
     <Compile Include="utils\submit.py" />

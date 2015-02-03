@@ -324,8 +324,7 @@ class Task(Base):
 
     sample_id = Column(Integer, ForeignKey("samples.id"), nullable=True)
     sample = relationship("Sample", backref="tasks")
-    machine_id = Column(Integer, ForeignKey("machines.id"), nullable=True)
-    sample = relationship("Machine", backref="tasks")
+    machine_id = Column(Integer, nullable=True)
     guest = relationship("Guest", uselist=False, backref="tasks", cascade="save-update, delete")
     errors = relationship("Error", backref="tasks", cascade="save-update, delete")
 
