@@ -231,7 +231,7 @@ class ParseProcessLog(list):
 
         # Now walk through the remaining columns, which will contain API
         # arguments.
-        for index in range(8, len(row)):
+        for index in range(9, len(row)):
             argument = {}
 
             # Split the argument name with its value based on the separator.
