@@ -150,6 +150,9 @@
     <Compile Include="utils\stats.py" />
     <Compile Include="utils\submit.py" />
     <Compile Include="utils\web.py" />
+    <Compile Include="utils\__init__.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="web\manage.py" />
     <Compile Include="analyzer\windows\analyzer.py" />
     <Compile Include="analyzer\windows\lib\__init__.py" />
