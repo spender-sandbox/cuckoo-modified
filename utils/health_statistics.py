@@ -112,7 +112,7 @@ class HealthStatistics():
         """
         name = "analysis_issues_pie.svg"
         filename = os.path.join(self.datadir, name)
-        status_list = [("Short API call list", TASK_ISSUE_SHORT_API_CALL_LIST),
+        status_list = [("Few API calls", TASK_ISSUE_SHORT_API_CALL_LIST),
                        ("Crash", TASK_ISSUE_CRASH),
                        ("Anti*", TASK_ISSUE_ANTI),
                        ("Timeout", TASK_TIMEOUT),
@@ -136,7 +136,7 @@ class HealthStatistics():
         name = "analysis_issues_by_machine_bar.svg"
         filename = os.path.join(self.datadir, name)
         machines = self.db.list_machines()
-        status_list = [("Short API call list", TASK_ISSUE_SHORT_API_CALL_LIST),
+        status_list = [("Few API calls", TASK_ISSUE_SHORT_API_CALL_LIST),
                        ("Crash", TASK_ISSUE_CRASH),
                        ("Anti*", TASK_ISSUE_ANTI),
                        ("Timeout", TASK_TIMEOUT),
@@ -163,7 +163,7 @@ class HealthStatistics():
             lperfect.append(self.db.task_analysis_issues(TASK_ISSUE_PERFECT, mid=m.id))
 
         analysis_bar.x_labels = label_list
-        analysis_bar.add("Short API call list", lshort)
+        analysis_bar.add("Few API calls", lshort)
         analysis_bar.add("Crash", lcrash)
         analysis_bar.add("Anti*", lanti)
         analysis_bar.add("Timeout", ltimeout)
@@ -250,7 +250,7 @@ class HealthStatistics():
             ltimeout.append(self.db.task_analysis_issues(TASK_TIMEOUT, ftype=ftype))
 
         bar_chart.x_labels = label_list
-        bar_chart.add("Short API call list", lshort)
+        bar_chart.add("Few API calls", lshort)
         bar_chart.add("Crash", lcrash)
         bar_chart.add("Anti*", lanti)
         bar_chart.add("Timeout", ltimeout)
