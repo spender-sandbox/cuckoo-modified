@@ -174,6 +174,7 @@ class ParseProcessLog(list):
         if self.cfg.processing.ram_boost:
             res = self.api_call_cache[self.api_pointer]
             if res is None:
+                self.reset()
                 raise StopIteration()
             self.api_pointer += 1
             return res
