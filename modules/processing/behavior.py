@@ -250,9 +250,9 @@ class ParseProcessLog(list):
                 # remove the values we don't want to encode in reports
                 for arg in ent["arguments"]:
                     del arg["raw_value"]
-                    if arg["pretty_value"]:
+                    if "pretty_value" in arg:
                         del arg["pretty_value"]
-                if ent["pretty_return"]:
+                if "pretty_return" in ent:
                     del ent["pretty_return"]
                 idx += 1
 
