@@ -263,7 +263,7 @@ class PipeHandler(Thread):
                     # Inject into services.exe so we can monitor service creation
                     servproc = Process(pid=SERVICES_PID,suspended=False)
                     filepath = servproc.get_filepath()
-                    servproc.inject(dll=DEFAULT_DLL, interest=filepath, notfirst=True, nosleepskip=True)
+                    servproc.inject(dll=DEFAULT_DLL, interest=filepath, nosleepskip=True)
                     LASTINJECT_TIME = datetime.now()
                     servproc.close()
                     KERNEL32.Sleep(1000)

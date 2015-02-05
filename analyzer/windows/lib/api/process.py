@@ -355,7 +355,7 @@ class Process:
 
         return True
 
-    def inject(self, dll=None, interest=None, notfirst=False, nosleepskip=False):
+    def inject(self, dll=None, interest=None, nosleepskip=False):
         """Cuckoo DLL injection.
         @param dll: Cuckoo DLL path.
         @param interest: path to file of interest, handed to cuckoomon config
@@ -389,7 +389,7 @@ class Process:
             cfg = Config("analysis.conf")
             cfgoptions = cfg.get_options()
 
-            firstproc = Process.first_process and not notfirst
+            firstproc = Process.first_process
 
             config.write("host-ip={0}\n".format(cfg.ip))
             config.write("host-port={0}\n".format(cfg.port))
