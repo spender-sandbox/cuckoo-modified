@@ -250,10 +250,6 @@ class ParseProcessLog(list):
                 # remove the values we don't want to encode in reports
                 for arg in ent["arguments"]:
                     del arg["raw_value"]
-                    if "pretty_value" in arg:
-                        del arg["pretty_value"]
-                if "pretty_return" in ent:
-                    del ent["pretty_return"]
                 idx += 1
 
     def _parse(self, row):
@@ -295,9 +291,9 @@ class ParseProcessLog(list):
             argument["value"] = convert_to_printable(str(arg_value), self.conversion_cache)
             if not self.reporting_mode:
                 argument["raw_value"] = arg_value
-                pretty = pretty_print_arg(category, api_name, arg_name, argument["value"])
-                if pretty:
-                    argument["pretty_value"] = pretty
+            pretty = pretty_print_arg(category, api_name, arg_name, argument["value"])
+            if pretty:
+                argument["pretty_value"] = pretty
             arguments.append(argument)
 
         call["timestamp"] = timestamp
@@ -313,10 +309,9 @@ class ParseProcessLog(list):
         else:
             call["return"] = convert_to_printable(str(return_value), self.conversion_cache)
 
-        if not self.reporting_mode:
-            prettyret = pretty_print_retval(category, api_name, call["status"], call["return"])
-            if prettyret:
-                call["pretty_return"] = prettyret
+        prettyret = pretty_print_retval(category, api_name, call["status"], call["return"])
+        if prettyret:
+            call["pretty_return"] = prettyret
 
         call["arguments"] = arguments
         call["repeated"] = repeated
