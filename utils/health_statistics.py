@@ -19,7 +19,7 @@ from lib.cuckoo.core.database import TASK_COMPLETED, TASK_PENDING, TASK_RECOVERE
 from lib.cuckoo.common.constants import CUCKOO_ROOT
 
 from lib.cuckoo.core.database import TASK_ISSUE_NONE, TASK_ISSUE_SHORT_API_CALL_LIST, TASK_ISSUE_CRASH, TASK_ISSUE_ANTI
-from lib.cuckoo.core.database import TASK_ISSUE_PERFECT, TASK_TIMEOUT
+from lib.cuckoo.core.database import TASK_ISSUE_PERFECT, TASK_TIMEDOUT
 
 class HealthStatistics():
 
@@ -115,7 +115,7 @@ class HealthStatistics():
         status_list = [("Few API calls", TASK_ISSUE_SHORT_API_CALL_LIST),
                        ("Crash", TASK_ISSUE_CRASH),
                        ("Anti*", TASK_ISSUE_ANTI),
-                       ("Timeout", TASK_TIMEOUT),
+                       ("Timed out", TASK_TIMEDOUT),
                        ("Ok", TASK_ISSUE_NONE),
                        ("Perfect", TASK_ISSUE_PERFECT)]
         status_pie = pygal.Pie(fill=self.style["fill"],
@@ -139,7 +139,7 @@ class HealthStatistics():
         status_list = [("Few API calls", TASK_ISSUE_SHORT_API_CALL_LIST),
                        ("Crash", TASK_ISSUE_CRASH),
                        ("Anti*", TASK_ISSUE_ANTI),
-                       ("Timeout", TASK_TIMEOUT),
+                       ("Timed out", TASK_TIMEDOUT),
                        ("Ok", TASK_ISSUE_NONE),
                        ("Perfect", TASK_ISSUE_PERFECT)]
         analysis_bar = pygal.StackedBar(fill=self.style["fill"],
@@ -151,14 +151,14 @@ class HealthStatistics():
         lanti = []
         lok = []
         lperfect = []
-        ltimeout = []
+        ltimedout = []
         label_list = []
         for m in machines:
             label_list.append(m.name)
             lshort.append(self.db.task_analysis_issues(TASK_ISSUE_SHORT_API_CALL_LIST, mid=m.id))
             lcrash.append(self.db.task_analysis_issues(TASK_ISSUE_CRASH, mid=m.id))
             lanti.append(self.db.task_analysis_issues(TASK_ISSUE_ANTI, mid=m.id))
-            ltimeout.append(self.db.task_analysis_issues(TASK_TIMEOUT, mid=m.id))
+            ltimedout.append(self.db.task_analysis_issues(TASK_TIMEDOUT, mid=m.id))
             lok.append(self.db.task_analysis_issues(TASK_ISSUE_NONE, mid=m.id))
             lperfect.append(self.db.task_analysis_issues(TASK_ISSUE_PERFECT, mid=m.id))
 
@@ -166,7 +166,7 @@ class HealthStatistics():
         analysis_bar.add("Few API calls", lshort)
         analysis_bar.add("Crash", lcrash)
         analysis_bar.add("Anti*", lanti)
-        analysis_bar.add("Timeout", ltimeout)
+        analysis_bar.add("Timed out", ltimedout)
         analysis_bar.add("Ok", lok)
         analysis_bar.add("Perfect", lperfect)
         analysis_bar.render_to_file(filename)
@@ -235,7 +235,7 @@ class HealthStatistics():
         lshort = []
         lcrash = []
         lanti = []
-        ltimeout = []
+        ltimedout = []
         lok = []
         lperfect = []
         label_list = []
@@ -247,13 +247,13 @@ class HealthStatistics():
             lanti.append(self.db.task_analysis_issues(TASK_ISSUE_ANTI, ftype=ftype))
             lok.append(self.db.task_analysis_issues(TASK_ISSUE_NONE, ftype=ftype))
             lperfect.append(self.db.task_analysis_issues(TASK_ISSUE_PERFECT, ftype=ftype))
-            ltimeout.append(self.db.task_analysis_issues(TASK_TIMEOUT, ftype=ftype))
+            ltimedout.append(self.db.task_analysis_issues(TASK_TIMEDOUT, ftype=ftype))
 
         bar_chart.x_labels = label_list
         bar_chart.add("Few API calls", lshort)
         bar_chart.add("Crash", lcrash)
         bar_chart.add("Anti*", lanti)
-        bar_chart.add("Timeout", ltimeout)
+        bar_chart.add("Timed out", ltimedout)
         bar_chart.add("Ok", lok)
         bar_chart.add("Perfect", lperfect)
         bar_chart.render_to_file(filename)

@@ -24,7 +24,7 @@ from lib.cuckoo.core.database import PROCESSING_STARTED, PROCESSING_FINISHED, SI
 from lib.cuckoo.core.database import REPORTING_STARTED, REPORTING_FINISHED
 from lib.cuckoo.core.database import DROPPED_FILES, RUNNING_PROCESSES, API_CALLS, ACCESSED_DOMAINS, SIGNATURES_TOTAL
 from lib.cuckoo.core.database import SIGNATURES_ALERT, FILES_WRITTEN, REGISTRY_KEYS_MODIFIED
-from lib.cuckoo.core.database import TASK_ISSUE_CRASH, TASK_ISSUE_ANTI, TASK_TIMEOUT
+from lib.cuckoo.core.database import TASK_ISSUE_CRASH, TASK_ISSUE_ANTI, TASK_TIMEDOUT
 
 log = logging.getLogger(__name__)
 
@@ -507,7 +507,7 @@ class RunSignatures(object):
         Database().set_statistics_counter(self.task_id, TASK_ISSUE_CRASH, crash)
         Database().set_statistics_counter(self.task_id, TASK_ISSUE_ANTI, anti)
         if "info" in self.results and "timeout" in self.results["info"]:
-            Database().set_statistics_counter(self.task_id, TASK_TIMEOUT, self.results["info"]["timeout"])
+            Database().set_statistics_counter(self.task_id, TASK_TIMEDOUT, self.results["info"]["timeout"])
         Database().set_statistics_time(self.task_id, SIGNATURES_FINISHED)
 
 class RunReporting:

@@ -62,7 +62,7 @@ TASK_ISSUE_SHORT_API_CALL_LIST = "short_api_call_list"
 TASK_ISSUE_CRASH = "crash_issue"
 TASK_ISSUE_ANTI = "anti_issue"
 TASK_ISSUE_PERFECT = "no_issue_perfect_results"
-TASK_TIMEOUT = "task_analysis_timeout"
+TASK_TIMEDOUT = "task_analysis_timedout"
 
 # Secondary table used in association Machine - Tag.
 machines_tags = Table(
@@ -320,7 +320,7 @@ class Task(Base):
     signatures_finished_on = Column(DateTime(timezone=False), nullable=True)
     reporting_started_on = Column(DateTime(timezone=False), nullable=True)
     reporting_finished_on = Column(DateTime(timezone=False), nullable=True)
-    timeout = Column(Boolean, nullable=False, default=False)
+    timedout = Column(Boolean, nullable=False, default=False)
 
     sample_id = Column(Integer, ForeignKey("samples.id"), nullable=True)
     sample = relationship("Sample", backref="tasks")
@@ -646,8 +646,8 @@ class Database(object):
                 row.anti_issues = value
             elif event == REGISTRY_KEYS_MODIFIED:
                 row.registry_keys_modified = value
-            elif event == TASK_TIMEOUT:
-                row.timeout = value
+            elif event == TASK_TIMEDOUT:
+                row.timedout = value
 
             session.commit()
         except SQLAlchemyError as e:
@@ -1293,8 +1293,8 @@ class Database(object):
             if issue != TASK_ISSUE_NONE and issue != TASK_ISSUE_PERFECT:
                 unfiltered = unfiltered.filter(Task.signatures_alert == 0)
 
-            if issue == TASK_TIMEOUT:
-                unfiltered = unfiltered.filter(Task.timeout == True)
+            if issue == TASK_TIMEDOUT:
+                unfiltered = unfiltered.filter(Task.timedout == True)
 
             elif issue == TASK_ISSUE_SHORT_API_CALL_LIST:
                 unfiltered = unfiltered.filter(Task.api_calls <= api_call_limit)
