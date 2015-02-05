@@ -31,6 +31,7 @@ class ParseProcessLog(list):
         self.fd = None
         self.parser = None
 
+        self.reporting_mode = False
         self.process_id = None
         self.process_name = None
         self.parent_id = None
@@ -238,6 +239,23 @@ class ParseProcessLog(list):
         """
         log.warning("ParseProcessLog error condition on log %s: %s", str(self._log_path), emsg)
 
+    def begin_reporting(self):
+        self.reporting_mode = True
+        if self.cfg.processing.ram_boost:
+            idx = 0
+            while True:
+                ent = self.api_call_cache[idx]
+                if not ent:
+                    break
+                # remove the values we don't want to encode in reports
+                for arg in ent["arguments"]:
+                    del arg["raw_value"]
+                    if arg["pretty_value"]:
+                        del arg["pretty_value"]
+                if ent["pretty_return"]:
+                    del ent["pretty_return"]
+                idx += 1
+
     def _parse(self, row):
         """Parse log row.
         @param row: row data.
@@ -275,10 +293,11 @@ class ParseProcessLog(list):
             argument["name"] = arg_name
 
             argument["value"] = convert_to_printable(str(arg_value), self.conversion_cache)
-            argument["raw_value"] = arg_value
-            pretty = pretty_print_arg(category, api_name, arg_name, argument["value"])
-            if pretty:
-                argument["pretty_value"] = pretty
+            if not self.reporting_mode:
+                argument["raw_value"] = arg_value
+                pretty = pretty_print_arg(category, api_name, arg_name, argument["value"])
+                if pretty:
+                    argument["pretty_value"] = pretty
             arguments.append(argument)
 
         call["timestamp"] = timestamp
@@ -294,9 +313,10 @@ class ParseProcessLog(list):
         else:
             call["return"] = convert_to_printable(str(return_value), self.conversion_cache)
 
-        prettyret = pretty_print_retval(category, api_name, call["status"], call["return"])
-        if prettyret:
-            call["pretty_return"] = prettyret
+        if not self.reporting_mode:
+            prettyret = pretty_print_retval(category, api_name, call["status"], call["return"])
+            if prettyret:
+                call["pretty_return"] = prettyret
 
         call["arguments"] = arguments
         call["repeated"] = repeated
