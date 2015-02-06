@@ -176,7 +176,7 @@ def statistics_page():
                    "/statistics_image/" + hs.processing_stages_pie()),
                   ("Processing time",
                    "Number of samples vs processing time",
-                   "/statistics_image/" + hs.processing_time_line()),
+                   "/statistics_image/" + hs.processing_time_bar()),
                   ("Task status",
                    "Percent of samples in specific states",
                    "/statistics_image/" + hs.task_status_pie()),

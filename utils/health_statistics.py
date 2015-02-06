@@ -35,33 +35,42 @@ class HealthStatistics():
         """ Generating all charts
         """
         self.processing_stages_pie()
-        self.processing_time_line()
+        self.processing_time_bar()
         self.task_status_pie()
         self.task_success_by_machine_bar()
 
-    def processing_time_line(self):
-        """ Processing time line graph for the tasks
+    def processing_time_bar(self):
+        """ Processing time histogram for the tasks
         """
         name = "processing_time.svg"
         filename = os.path.join(self.datadir, name)
-        td = self.db.task_duration()
-        items = []
-        total = 0
-        if td:
-            for i in range(max(td), min(td), -1):
-                total += td.count(i)
-                items.append(total)
-        items.reverse()
-        line_chart = pygal.Line(fill=self.style["fill"],
-                                interpolate=self.style["interpolate"],
-                                style=self.style["style"],
-                                x_title="Time in minutes",
-                                y_title="Number of samples")
-        line_chart.title = 'Full processing time, histogram'
-        if len(td):
-            line_chart.x_labels = map(str, range(min(td), max(td)))
-            line_chart.add('Full', items)
-        line_chart.render_to_file(filename)
+        bar_chart = pygal.Bar(fill=self.style["fill"],
+                                 style=self.style["style"],
+                                 show_minor_y_labels=False,
+                                 x_title="Time in minutes",
+                                 y_title="Number of samples")
+        bar_chart.title = 'Processing time, histogram'
+        stages = ["full", "analysis", "processing", "signatures", "reporting"]
+        totalmax = 0
+        for stage in stages:
+            td = self.db.task_duration(stage=stage)
+            items = []
+            if td:
+                maxm = max(td) / 30
+                if maxm > totalmax:
+                    totalmax = maxm
+                minm = min(td) / 30
+                for i in range(maxm, -1, -1):
+                    total = 0
+                    for res in td:
+                        if res / 30 == i:
+                            total = total + 1
+                    items.append(total)
+            items.reverse()
+            if len(td):
+                bar_chart.add(stage, items)
+        bar_chart.x_labels = map(str, [x * 0.5 for x in range(0, totalmax + 1)])
+        bar_chart.render_to_file(filename)
         if self.simple:
             return name
         else:
