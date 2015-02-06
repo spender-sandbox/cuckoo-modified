@@ -91,7 +91,7 @@ class Suricata(Processing):
             args["filename"] = self.pcap_path 
             args["output-dir"] = self.logs_path 
 
-            suris = SuricataSC(SURICATA_SOCKET_PATH, False)
+            suris = SuricataSC(SURICATA_SOCKET_PATH)
             try:
                 suris.connect()
                 suris.send_command("pcap-file " + self.pcap_path + " " + self.logs_path)
