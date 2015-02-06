@@ -92,6 +92,7 @@
     <Content Include="lib\cuckoo\common\peepdf\TODO" />
     <Content Include="README.md" />
     <Content Include="requirements.txt" />
+    <Compile Include="analyzer\windows\modules\auxiliary\browser.py" />
     <Compile Include="analyzer\windows\modules\packages\chrome.py" />
     <Compile Include="analyzer\windows\modules\packages\firefox.py" />
     <Compile Include="analyzer\windows\modules\packages\msi.py" />
