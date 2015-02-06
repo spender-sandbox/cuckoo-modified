@@ -68,9 +68,6 @@ class VirusTotal(Processing):
             # Not supported type, exit.
             return virustotal
 
-        else:
-            return virustotal
-
         data = urllib.urlencode({"resource": resource, "apikey": key})
 
         try:
