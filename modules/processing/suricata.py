@@ -94,7 +94,7 @@ class Suricata(Processing):
             suris = SuricataSC(SURICATA_SOCKET_PATH)
             try:
                 suris.connect()
-                suris.send_command("pcap-file " + self.pcap_path + " " + self.logs_path)
+                suris.send_command("pcap-file",args)
             except Exception as e:
                 log.warning("Failed to connect to socket and send command %s: %s" % (SURICATA_SOCKET_PATH, e))
                 return suricata["alerts"] 
