@@ -320,7 +320,7 @@ class VolatilityAPI(object):
                     "table": hex(int(table)),
                     "entry": "{0:#06x}".format(idx * 0x1000 + i),
                     "syscall_name": syscall_name,
-                    "syscall_addr": syscall_addr,
+                    "syscall_addr": hex(int(syscall_addr)),
                     "syscall_modname": syscall_modname,
                 }
 
