@@ -365,6 +365,10 @@ class Process:
             log.warning("No valid pid specified, injection aborted")
             return False
 
+        thread_id = 0
+        if self.thread_id:
+            thread_id = self.thread_id
+
         if not self.is_alive():
             log.warning("The process with pid %s is not alive, "
                         "injection aborted", self.pid)
@@ -409,14 +413,14 @@ class Process:
             if firstproc:
                 Process.first_process = False
 
-        if self.thread_id or self.suspended:
+        if thread_id or self.suspended:
             log.debug("Using QueueUserAPC injection.")
         else:
             log.debug("Using CreateRemoteThread injection.")
 
         if is_64bit:
             if os.path.exists("bin/loader_x64.exe"):
-                ret = subprocess.call(["bin/loader_x64.exe", "inject", str(self.pid), str(self.thread_id), dll])
+                ret = subprocess.call(["bin/loader_x64.exe", "inject", str(self.pid), str(thread_id), dll])
                 if ret != 0:
                     if ret == 1:
                         log.info("Injected into suspended 64-bit process with pid %d", self.pid)
@@ -430,7 +434,7 @@ class Process:
                 return False
         else:
             if os.path.exists("bin/loader.exe"):
-                ret = subprocess.call(["bin/loader.exe", "inject", str(self.pid), str(self.thread_id), dll])
+                ret = subprocess.call(["bin/loader.exe", "inject", str(self.pid), str(thread_id), dll])
                 if ret != 0:
                     if ret == 1:
                         log.info("Injected into suspended 32-bit process with pid %d", self.pid)
