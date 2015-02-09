@@ -11,6 +11,7 @@ import sys
 
 try:
     from lib.cuckoo.common.logo import logo
+    from lib.cuckoo.common.config import Config
     from lib.cuckoo.common.constants import CUCKOO_VERSION, CUCKOO_ROOT
     from lib.cuckoo.common.exceptions import CuckooCriticalError
     from lib.cuckoo.common.exceptions import CuckooDependencyError
@@ -82,6 +83,20 @@ def cuckoo_clean():
     # Drop all tables.
     db.clean_machines()
     db.drop()
+
+    # Check if MongoDB reporting is enabled and drop that if it is.
+    cfg = Config("reporting")
+    if cfg.mongodb and cfg.mongodb.enabled:
+        from pymongo import MongoClient
+        host = cfg.mongodb.get("host", "127.0.0.1")
+        port = cfg.mongodb.get("port", 27017)
+        mdb = cfg.mongodb.get("db", "cuckoo")
+        try:
+            conn = MongoClient(host, port)
+            conn.drop_database(mdb)
+            conn.disconnect()
+        except:
+            log.warning("Unable to drop MongoDB database: %s", mdb)
 
     # Paths to clean
     paths = [
