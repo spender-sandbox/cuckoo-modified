@@ -306,6 +306,10 @@
     <Content Include="web\templates\analysis\behavior\_api_call.html" />
     <Content Include="web\templates\analysis\behavior\_search.html" />
     <Content Include="web\templates\analysis\behavior\_search_results.html" />
+    <Content Include="web\templates\analysis\network\_suricata_alerts.html" />
+    <Content Include="web\templates\analysis\network\_suricata_files.html" />
+    <Content Include="web\templates\analysis\network\_suricata_http.html" />
+    <Content Include="web\templates\analysis\network\_suricata_tls.html" />
     <Content Include="web\templates\analysis\network\_udp.html" />
     <Content Include="web\templates\analysis\network\_tcp.html" />
     <Content Include="web\templates\analysis\procmemory\index.html" />
