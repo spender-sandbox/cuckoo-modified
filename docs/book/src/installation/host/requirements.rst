@@ -45,7 +45,8 @@ The following libraries are not strictly required, but their installation is rec
     * `Volatility`_ (Optional): used for forensic analysis on memory (release >=2.4)
     * `MAEC Python bindings`_ (Optional): used for MAEC reporting (use a release >=4.0, but <4.1).
     * `Chardet`_ (Optional): used for detecting string encoding.
-    * `pygal_ (Optional): for using statistics in ``web.py``
+    * `pygal`_ (Optional): for using statistics in ``web.py``
+	* `clamd`_ (Optional): for scanning artifacts with ClamAV (release >= 0.3.3)
 
 Some of them are already packaged in Debian/Ubuntu and can be installed with the following command::
 
@@ -53,7 +54,7 @@ Some of them are already packaged in Debian/Ubuntu and can be installed with the
 
 Except for *python-magic*, *python-dpkt* and *python-libvirt*, the others can be installed through ``pip`` too::
 
-    $ sudo pip install jinja2 pymongo bottle pefile django chardet pygal
+    $ sudo pip install jinja2 pymongo bottle pefile django chardet pygal clamd
 
 To have MAEC support, you need to first install the Cybox and then the MAEC libraries::
 
