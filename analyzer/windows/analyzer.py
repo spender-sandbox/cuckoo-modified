@@ -746,7 +746,8 @@ class Analyzer:
                 proc = Process(pid=pid)
                 if proc.is_alive():
                     try:
-                        proc.terminate()
+                        if not proc.is_critical():
+                            proc.terminate()
                     except:
                         continue
 

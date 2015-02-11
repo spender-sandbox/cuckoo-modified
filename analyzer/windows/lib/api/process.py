@@ -159,6 +159,19 @@ class Process:
         """
         return self.exit_code() == STILL_ACTIVE
 
+    def is_critical(self):
+        """Determines if process is 'critical' or not, so we can prevent
+           terminating it
+        """
+        if not self.h_process:
+            self.open()
+        val = c_ulong(0)
+        retlen = c_ulong(0)
+        ret = NTDLL.NtQueryInformationProcess(self.h_process, 29, byref(val), sizeof(val), byref(retlen))
+        if NT_SUCCESS(ret) and val.value:
+            return True
+        return False
+
     def get_parent_pid(self):
         """Get the Parent Process ID."""
         if not self.h_process:
