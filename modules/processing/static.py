@@ -28,6 +28,12 @@ try:
 except ImportError:
     HAVE_PYV8 = False
 
+try:
+    from M2Crypto import m2, BIO, X509, SMIME
+    HAVE_CRYPTO = True
+except ImportError:
+    HAVE_CRYPTO = False
+
 from lib.cuckoo.common.abstracts import Processing
 from lib.cuckoo.common.constants import CUCKOO_ROOT
 from lib.cuckoo.common.objects import File
@@ -324,6 +330,31 @@ class PortableExecutable:
         results["pe_imphash"] = self._get_imphash()
         results["pe_timestamp"] = self._get_timestamp()
         results["imported_dll_count"] = len([x for x in results["pe_imports"] if x.get("dll")])
+
+        if HAVE_CRYPTO:
+            address = self.pe.OPTIONAL_HEADER.DATA_DIRECTORY[pefile.DIRECTORY_ENTRY['IMAGE_DIRECTORY_ENTRY_SECURITY']].VirtualAddress
+
+            #check if file is digitally signed
+            if address == 0:
+                return results
+
+            signature = self.pe.write()[address+8:]
+            bio = BIO.MemoryBuffer(signature)
+
+            if bio:
+                swig_pkcs7 = m2.pkcs7_read_bio_der(bio.bio_ptr())
+
+                if swig_pkcs7:
+                    p7 = SMIME.PKCS7(swig_pkcs7)
+                    xst = p7.get0_signers(X509.X509_Stack())
+                    results["digital_signer"] = {}
+                    if xst:
+                        for cert in xst:
+                            sn = cert.get_serial_number()
+                            subject_str = str(cert.get_subject())
+                            cn = subject_str[subject_str.index("/CN=")+len("/CN="):]
+                            results["digital_signer"] = [{"sn":str(sn), "cn":cn}]
+
         return results
 
 class PDF:

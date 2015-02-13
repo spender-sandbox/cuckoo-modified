@@ -46,7 +46,8 @@ The following libraries are not strictly required, but their installation is rec
     * `MAEC Python bindings`_ (Optional): used for MAEC reporting (use a release >=4.0, but <4.1).
     * `Chardet`_ (Optional): used for detecting string encoding.
     * `pygal`_ (Optional): for using statistics in ``web.py``
-	* `clamd`_ (Optional): for scanning artifacts with ClamAV (release >= 0.3.3)
+    * `clamd`_ (Optional): for scanning artifacts with ClamAV (release >= 0.3.3)
+    * `m2crypto`_ (Optional): for extracting PE digital certificate information
 
 Some of them are already packaged in Debian/Ubuntu and can be installed with the following command::
 

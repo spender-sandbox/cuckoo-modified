@@ -46,6 +46,26 @@
             </div>
         <hr />
         {% endif %}
+        {% if analysis.static.digital_signer %}
+        <div>
+            <h4>Digital Signers</h4>
+            <div id="digital_signer">
+                <table class="table table-striped table-bordered">
+                    <tr>
+                        <th>Certificate Common Name</th>
+                        <th>Serial Number</th>
+                    </tr>
+                    {% for info in analysis.static.digital_signer %}
+                        <tr>
+                            <td>{{info.cn}}</td>
+                            <td>{{info.sn}}</td>
+                        </tr>
+                    {% endfor %}
+                </table>
+            </div>
+        </div>
+        <hr />
+        {% endif %}
         {% if analysis.static.pe_sections %}
         <div>
             <h4>Sections</h4>
