@@ -60,8 +60,9 @@ class Suricata(Processing):
         suricata["http"]=[]      
         suricata["file_info"]=[]
 
-        SURICATA_FILE_LOG_FULL_PATH = "%s/%s" % (self.logs_path,SURICATA_FILE_LOG)
-        SURICATA_FILES_DIR_FULL_PATH = "%s/%s" % (self.logs_path,SURICATA_FILES_DIR)
+        SURICATA_EVE_LOG_FULL_PATH = "%s/%s" % (self.logs_path, SURICATA_EVE_LOG)
+        SURICATA_FILE_LOG_FULL_PATH = "%s/%s" % (self.logs_path, SURICATA_FILE_LOG)
+        SURICATA_FILES_DIR_FULL_PATH = "%s/%s" % (self.logs_path, SURICATA_FILES_DIR)
 
         if not os.path.exists(SURICATA_CONF):
             log.warning("Unable to Run Suricata: Conf File %s Does Not Exist" % (SURICATA_CONF))
