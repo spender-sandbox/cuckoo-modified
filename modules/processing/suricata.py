@@ -129,7 +129,7 @@ class Suricata(Processing):
             log.warning("Unknown Suricata Runmode")
             return suricata["alerts"]
 
-         if os.path.exists(SURICATA_EVE_LOG_FULL_PATH):
+        if os.path.exists(SURICATA_EVE_LOG_FULL_PATH):
             with open(SURICATA_EVE_LOG_FULL_PATH, "r") as log:
                 data = log.read()
 
