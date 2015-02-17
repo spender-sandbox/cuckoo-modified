@@ -36,6 +36,8 @@ TASK_RUNNING = "running"
 TASK_COMPLETED = "completed"
 TASK_RECOVERED = "recovered"
 TASK_REPORTED = "reported"
+TASK_FAILED_ANALYSIS = "failed_analysis"
+TASK_FAILED_PROCESSING = "failed_processing"
 
 ANALYSIS_STARTED = "analysis_started"
 ANALYSIS_FINISHED = "analysis_finished"
