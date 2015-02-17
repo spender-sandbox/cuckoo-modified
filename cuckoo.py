@@ -69,7 +69,6 @@ def cuckoo_init(quiet=False, debug=False, artwork=False, test=False):
 
     os.chdir(cur_path)
 
-    db.clean_machines()
 def cuckoo_main(max_analysis_count=0):
     cur_path = os.getcwd()
     os.chdir(CUCKOO_ROOT)
