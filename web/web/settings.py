@@ -20,7 +20,7 @@ if not cfg.get("enabled"):
 # Get connection options from reporting.conf.
 MONGO_HOST = cfg.get("host", "127.0.0.1")
 MONGO_PORT = cfg.get("port", 27017)
-MONGO_DBNAME = cfg.get("db", "cuckoo")
+MONGO_DB = cfg.get("db", "cuckoo")
 
 moloch_cfg = Config("reporting").moloch
 
@@ -136,6 +136,7 @@ INSTALLED_APPS = (
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
     'analysis',
+    'compare',
 )
 
 LOGIN_REDIRECT_URL = "/"
