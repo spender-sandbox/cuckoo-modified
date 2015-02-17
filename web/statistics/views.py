@@ -20,7 +20,7 @@ def index(request):
                    "generated/" + hs.processing_stages_pie()),
                   ("Processing time",
                    "Number of samples vs processing time",
-                   "generated/" + hs.processing_time_line()),
+                   "generated/" + hs.processing_time_bar()),
                   ("Task status",
                    "Percent of samples in specific states",
                    "generated/" + hs.task_status_pie()),

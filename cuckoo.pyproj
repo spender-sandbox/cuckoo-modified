@@ -296,6 +296,9 @@
     <Compile Include="web\dashboard\urls.py" />
     <Compile Include="web\dashboard\views.py" />
     <Compile Include="web\dashboard\__init__.py" />
+    <Compile Include="web\statistics\urls.py" />
+    <Compile Include="web\statistics\views.py" />
+    <Compile Include="web\statistics\__init__.py" />
     <Compile Include="web\submission\urls.py" />
     <Compile Include="web\submission\views.py" />
     <Compile Include="web\submission\__init__.py" />
@@ -457,6 +460,7 @@
     <Folder Include="web\static\graphic" />
     <Folder Include="web\static\img" />
     <Folder Include="web\static\js" />
+    <Folder Include="web\statistics\" />
     <Folder Include="web\submission" />
     <Folder Include="web\templates" />
     <Folder Include="web\templates\analysis" />
