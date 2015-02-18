@@ -523,11 +523,7 @@ class Pcap:
             if not first_ts: first_ts = ts
 
             try:
-                if pcap.dloff:
-                    eth = dpkt.ethernet.Ethernet(buf)
-                    ip = eth.data
-                else:
-                    ip = dpkt.ip.IP(buf)
+                ip = dpkt.ip.IP(buf)
 
                 connection = {}
                 if isinstance(ip, dpkt.ip.IP):
