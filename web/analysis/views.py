@@ -283,8 +283,7 @@ def file(request, category, object_id):
     file_item = fs.get(ObjectId(object_id))
 
     if file_item:
-        # Composing file name in format sha256_originalfilename.
-        file_name = file_item.sha256 + "_" + file_item.filename
+        file_name = file_item.sha256
 
         # Managing gridfs error if field contentType is missing.
         try:
