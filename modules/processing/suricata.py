@@ -175,7 +175,10 @@ class Suricata(Processing):
                        hlog["contenttype"] = parsed["http"]["http_content_type"]
                     except:
                         hlog["contenttype"] = "None"
-                    hlog["ua"] = parsed["http"]["http_user_agent"]
+                    try:
+                        hlog["ua"] = parsed["http"]["http_user_agent"]
+                    except:
+                        hlog["ua"] = "None"
                     suricata["http"].append(hlog)
 
                 elif parsed["event_type"] == "tls":
