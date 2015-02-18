@@ -12,6 +12,7 @@ import logging
 import hashlib
 import xmlrpclib
 import traceback
+import subprocess
 from ctypes import create_unicode_buffer, create_string_buffer
 from ctypes import c_wchar_p, byref, c_int, sizeof
 from threading import Lock, Thread
@@ -256,7 +257,10 @@ class PipeHandler(Thread):
             # can monitor the service more easily with less noise
             elif command.startswith("SERVICE:"):
                 servname = command[8:]
-                os.system("sc config " + servname + " type= own")
+                si = subprocess.STARTUPINFO()
+                si.dwFlags = subprocess.STARTF_USESHOWWINDOW
+                si.wShowWindow = subprocess.SW_HIDE
+                subprocess.call("sc config " + servname + " type= own", startupinfo=si)
                 log.info("Announced starting service \"%s\"", servname)
 
                 if not MONITORED_SERVICES:
