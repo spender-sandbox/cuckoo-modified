@@ -8,11 +8,15 @@
                 <th>Post-Analysis Lookup</th>
             </tr>
             {% for p in analysis.network.dns %}
-            <tr>
+                <tr>
                 <td><a href="https://www.virustotal.com/en/domain/{{p.request}}/information/">{{p.request}}</a></td>
-                <td>{% for a in p.answers %}{{a.type}} <a href="https://www.virustotal.com/en/ip-address/{{a.data}}/information/">{{a.data}}</a><br />{% endfor %}</td>
-                <td>{{ domainlookups|get_item:p.request }}</td>
-            </tr>
+                    <td>
+                        {% for a in p.answers %}
+                            {{a.type}} <a href="https://www.virustotal.com/en/ip-address/{{a.data|linebreaksbr}}/information/">{{a.data|linebreaksbr}}</a>{% if not forloop.last %}<br/>{% endif %}
+                        {% endfor %}
+                    </td>
+                    <td><a href="https://www.virustotal.com/en/ip-address/{{ domainlookups|get_item:p.request }}/information/">{{ domainlookups|get_item:p.request }}</a></td>
+                </tr>
             {% endfor %}
         </table>
     {% else %}

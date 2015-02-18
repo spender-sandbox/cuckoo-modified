@@ -14,7 +14,7 @@ sys.path.append(settings.CUCKOO_PATH)
 
 import lib.cuckoo.common.compare as compare
 
-results_db = pymongo.MongoClient(settings.MONGO_HOST, settings.MONGO_PORT).cuckoo
+results_db = pymongo.MongoClient(settings.MONGO_HOST, settings.MONGO_PORT)[settings.MONGO_DB]
 
 @require_safe
 def left(request, left_id):
@@ -75,8 +75,3 @@ def both(request, left_id, right_id):
                               {"left": left, "right": right, "left_counts": counts[left_id],
                                "right_counts": counts[right_id]},
                                context_instance=RequestContext(request))
-
-@require_safe
-def index(request):
-    return render_to_response("compare/index.html",
-                              context_instance=RequestContext(request))
