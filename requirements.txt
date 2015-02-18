@@ -7,4 +7,5 @@ pefile
 django
 chardet
 nose
-jsbeautify
+jsbeautifier
+pygal
