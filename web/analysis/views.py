@@ -284,6 +284,14 @@ def file(request, category, object_id):
 
     if file_item:
         file_name = file_item.sha256
+        if category == "pcap":
+            file_name += ".pcap"
+        elif category == "screenshot":
+            file_name += ".jpg"
+        elif category == 'memdump':
+            file_name += ".dmp"
+        else:
+            file_name += ".bin"
 
         # Managing gridfs error if field contentType is missing.
         try:
