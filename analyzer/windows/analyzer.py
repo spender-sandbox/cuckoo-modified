@@ -43,6 +43,7 @@ FILES_LIST = []
 DUMPED_LIST = []
 UPLOADPATH_LIST = []
 PROCESS_LIST = []
+PROTECTED_PATH_LIST = []
 PROCESS_LOCK = Lock()
 DEFAULT_DLL = None
 
@@ -53,18 +54,27 @@ LASTINJECT_TIME = None
 PID = os.getpid()
 PPID = Process(pid=PID).get_parent_pid()
 
-# This is still in preparation status - needs finalizing.
-def protected_filename(fname):
+def in_protected_path(fname):
     """Checks file name against some protected names."""
     if not fname:
         return False
 
-    protected_names = []
-    for name in protected_names:
-        if name in fname:
+    fnamelower = fname.lower()
+
+    for name in PROTECTED_PATH_LIST:
+        if name[-1] == "\\" and fnamelower.startswith(name):
+            return True
+        elif fnamelower == name:
             return True
 
     return False
+
+def add_protected_path(name):
+    """Adds a pathname to the protected list"""
+    if os.path.isdir(name) and name[-1] != "\\":
+        PROTECTED_PATH_LIST.append(name.lower() + "\\")
+    else:
+        PROTECTED_PATH_LIST.append(name.lower())
 
 def add_pid(pid):
     """Add a process to process list."""
@@ -358,7 +368,7 @@ class PipeHandler(Thread):
 
                             log.info("Announced %s process name: %s pid: %d", "64-bit" if is_64bit else "32-bit", filename, process_id)
 
-                            if not protected_filename(filename):
+                            if not in_protected_path(filename):
                                 res = proc.inject(dll, filepath)
                                 LASTINJECT_TIME = datetime.now()
                             proc.close()
@@ -475,6 +485,9 @@ class Analyzer:
 
         # Create the folders used for storing the results.
         create_folders()
+
+        add_protected_dir(os.getcwd())
+        add_protected_dir(PATHS["root"])
 
         # Initialize logging.
         init_logging()
