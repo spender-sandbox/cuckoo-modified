@@ -486,8 +486,8 @@ class Analyzer:
         # Create the folders used for storing the results.
         create_folders()
 
-        add_protected_dir(os.getcwd())
-        add_protected_dir(PATHS["root"])
+        add_protected_path(os.getcwd())
+        add_protected_path(PATHS["root"])
 
         # Initialize logging.
         init_logging()
