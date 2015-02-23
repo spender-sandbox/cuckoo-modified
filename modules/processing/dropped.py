@@ -27,11 +27,11 @@ class Dropped(Processing):
                 file_info = File(file_path=file_path,guest_paths=guest_paths).get_all()
                 if "ASCII" in file_info["type"]:
                     with open(file_info["path"], "r") as drop_open:
-                        filedata = drop_open.read()
+                        filedata = drop_open.read(2049)
                     if len(filedata) > 2048:
-                        file_info["data"] = filedata[:2048] + " <truncated>"
+                        file_info["data"] = convert_to_printable(filedata[:2048] + " <truncated>")
                     else:
-                        file_info["data"] = filedata
+                        file_info["data"] = convert_to_printable(filedata)
 
                 dropped_files.append(file_info)
 
