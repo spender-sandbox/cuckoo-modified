@@ -192,6 +192,7 @@ class Pcap:
         @param conn: connection.
         @param data: payload data.
         """
+        # Select DNS and MDNS traffic.
         if conn["dport"] == 53 or conn["sport"] == 53 or conn["dport"] == 5353 or conn["sport"] == 5353:
             if self._check_dns(data):
                 self._add_dns(data)
@@ -625,6 +626,10 @@ class NetworkAnalysis(Processing):
         return results
 
 def iplayer_from_raw(raw, linktype=1):
+    """Converts a raw packet to a dpkt packet regarding of link type.
+    @param raw: raw packet
+    @param linktype: integer describing link type as expected by dpkt
+    """
     if linktype == 1: # ethernet
         pkt = dpkt.ethernet.Ethernet(raw)
         ip = pkt.data
@@ -636,7 +641,7 @@ def iplayer_from_raw(raw, linktype=1):
 
 def conn_from_flowtuple(ft):
     sip, sport, dip, dport, offset, relts = ft
-    return { "src": sip, "sport": sport, "dst": dip, "dport": dport, "offset": offset, "time": relts }
+    return {"src": sip, "sport": sport, "dst": dip, "dport": dport, "offset": offset, "time": relts}
 
 # input_iterator should be a class that als supports writing so we can use it for the temp files
 def batch_sort(input_iterator, output_path, buffer_size=32000, output_class=None):
@@ -650,7 +655,7 @@ def batch_sort(input_iterator, output_path, buffer_size=32000, output_class=None
             if not current_chunk:
                 break
             current_chunk.sort()
-            output_chunk = output_class(os.path.join(TMPD,'%06i'%len(chunks)))
+            output_chunk = output_class(os.path.join(TMPD, "%06i" % len(chunks)))
             chunks.append(output_chunk)
 
             for elem in current_chunk:
