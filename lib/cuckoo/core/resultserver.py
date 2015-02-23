@@ -366,7 +366,7 @@ class FileUpload(object):
                 self.fd.write(chunk)
 
                 if self.fd.tell() >= self.upload_max_size:
-                log.warning("Uploaded file length larger than upload_max_size, stopping upload.")
+                    log.warning("Uploaded file length larger than upload_max_size, stopping upload.")
                     self.fd.write("... (truncated)")
                     break
 
