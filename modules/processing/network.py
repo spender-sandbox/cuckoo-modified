@@ -168,7 +168,12 @@ class Pcap:
                     # we see them and if they're the destination of the
                     # first packet they appear in.
                     if not self._is_private_ip(ip):
-                        self.unique_hosts.append({"ip": ip, "country_name": self._get_cn(ip)})
+                        hostname = ""
+                        for request in self.dns_requests.values():
+                            for answer in request['answers']:
+                                if answer["data"] == ip:
+                                    hostname = request["request"]
+                        self.unique_hosts.append({"ip": ip, "country_name": self._get_cn(ip), "hostname": hostname})
 
         except:
             pass
@@ -615,7 +620,7 @@ class NetworkAnalysis(Processing):
             sort_pcap(self.pcap_path, sorted_path)
             results = Pcap(sorted_path).run()
         else:
-            results = Pcap(pcap_path).run()
+            results = Pcap(self.pcap_path).run()
 
         # Save PCAP file hash.
         if os.path.exists(self.pcap_path):
