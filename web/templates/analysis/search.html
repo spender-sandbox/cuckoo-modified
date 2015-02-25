@@ -146,6 +146,9 @@
                             <span class="muted">{{analysis.added_on}} (added on)</span>
                         {% endif %}
                         </td>
+                        <td>
+                        {{analysis.filename}}
+                        </td>
                         <td style="word-wrap: break-word;">
                             {% if analysis.status == "reported" %}
                                 <a href="{% url "analysis.views.report" analysis.id %}">
