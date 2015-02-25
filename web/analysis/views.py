@@ -141,7 +141,10 @@ def chunk(request, task_id, pid, pagenum):
         if not process:
             raise PermissionDenied
 
-        objectid = process["calls"][pagenum]
+        try:
+            objectid = process["calls"][pagenum]
+        except:
+            raise PermissionDenied
         chunk = results_db.calls.find_one({"_id": ObjectId(objectid)})
 
         return render_to_response("analysis/behavior/_chunk.html",
