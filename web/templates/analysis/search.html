@@ -123,7 +123,7 @@
                     <th width="3%">ID</th>
                     <th width="12%">Timestamp</th>
                     <th width="33%">Filename</th>
-                    <th width="15%">MD5</th>
+                    <th width="15%">Target/MD5</th>
                     <th width="5%">VT</th>
                     <th width="5%">SuriAlert</th>
                     <th width="5%">SuriHTTP</th>
@@ -207,7 +207,7 @@
                                   <span class="mono">None</span>
                             {% endif %}
                         </td>
-                        <td>
+                        <td style="text-align: right;">
                             {% if analysis.status == "pending" %}
                                 <span class="text-muted">pending</span>
                             {% elif analysis.status == "running" %}
