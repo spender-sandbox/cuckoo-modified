@@ -680,11 +680,11 @@ class OleMetadata:
         ret["SummaryInformation"] = dict()
         for prop in self.SUMMARY_ATTRIBS:
             value = getattr(self, prop)
-            ret["SummaryInformation"][prop] = convert_to_printable(value)
+            ret["SummaryInformation"][prop] = convert_to_printable(str(value))
         ret["DocumentSummaryInformation"] = dict()
         for prop in self.DOCSUM_ATTRIBS:
             value = getattr(self, prop)
-            ret["DocumentSummaryInformation"][prop] = convert_to_printable(value)
+            ret["DocumentSummaryInformation"][prop] = convert_to_printable(str(value))
         return ret
 
 #--- _OleStream ---------------------------------------------------------------
