@@ -98,6 +98,12 @@
     <Compile Include="analyzer\windows\modules\packages\msi.py" />
     <Compile Include="cuckoo.py" />
     <Compile Include="agent\agent.py" />
+    <Compile Include="lib\cuckoo\common\office\DridexURLDecoder.py" />
+    <Compile Include="lib\cuckoo\common\office\olefile.py" />
+    <Compile Include="lib\cuckoo\common\office\oleid.py" />
+    <Compile Include="lib\cuckoo\common\office\olevba.py" />
+    <Compile Include="lib\cuckoo\common\office\vbadeobf.py" />
+    <Compile Include="lib\cuckoo\common\office\__init__.py" />
     <Compile Include="lib\cuckoo\common\pdftools\pdf-parser.py" />
     <Compile Include="lib\cuckoo\common\pdftools\pdfid.py" />
     <Compile Include="lib\cuckoo\common\pdftools\__init__.py" />
@@ -432,6 +438,7 @@
     <Folder Include="lib" />
     <Folder Include="lib\cuckoo" />
     <Folder Include="lib\cuckoo\common" />
+    <Folder Include="lib\cuckoo\common\office\" />
     <Folder Include="lib\cuckoo\common\pdftools\" />
     <Folder Include="lib\cuckoo\common\peepdf\" />
     <Folder Include="lib\cuckoo\common\peepdf\aespython\" />

@@ -72,7 +72,7 @@ def decode_reverse(m):
 @quote
 def concatenate(m):
     line = m.group(0)
-    return "".join(re.findall(r'"""(.+?)"""', m.group(0)))
+    return "".join(re.findall(r'"""(.*?)"""', m.group(0)))
 
 @decrypt("xor")
 @quote
@@ -117,7 +117,10 @@ def handle_techniques(line, **opts):
     line = re.sub(r'(?i)StrReverse\(.+?"""(.+?)"""\)', decode_reverse, line)
     line = re.sub(r'""".+?"""\s+&+\s+""".+?""".+', concatenate, line)
     while "Chr(Asc(" in line:
+        lastline = line
         line = re.sub(r'(?i)Chr\(Asc\((.+?)\)\)', r"\1",line)
+        if line == lastline:
+            break
     # Remove quotes before regexing against them.
     line = line.replace('""" + """','')
     line = line.replace('"""','')
@@ -134,7 +137,10 @@ def extract_iocs(s):
             # Hacked-up buxfix for multilayer Chr(Asc(Chr(Asc( which can
             # sometimes mess up our quoted string extraction / parsing.
             while "Chr(Asc(" in s:
+                lastline = s
                 s = re.sub(r'(?i)Chr\(Asc\((.+?)\)\)', r"\1", s)
+                if s == lastline:
+                    break
             # Return the line matched and not m because I prefer to have
             # context and not simply the IOC. This helps with the executable
             # file IOC, sometimes it's a save location!
