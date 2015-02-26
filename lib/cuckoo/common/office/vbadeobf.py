@@ -50,7 +50,11 @@ def decode_base64(m):
     if (len(s) % 4 != 0 and not s.endswith("=")) or ("=" in s.rstrip("=")):
         return s
 
-    decoded = s.decode("base64")
+    try:
+        decoded = s.decode("base64")
+    except:
+        return s
+
     if not is_printable(decoded):
         return s
     return decoded
