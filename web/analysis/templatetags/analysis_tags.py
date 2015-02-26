@@ -1,3 +1,4 @@
+import re
 from django.template.defaultfilters import register
 
 @register.filter("mongo_id")
@@ -20,3 +21,7 @@ def is_dict(value):
 @register.filter
 def get_item(dictionary, key):
     return dictionary.get(key, "")
+
+@register.filter(name="dehex")
+def dehex(value):
+    return re.sub(r"\\x[0-9a-f]{2}", "", value)

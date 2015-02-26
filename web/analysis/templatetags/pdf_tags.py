@@ -1,10 +1,6 @@
 from django import template
 register = template.Library()
 
-@register.filter(name="getkey")
-def getkey(mapping, value):
-    return mapping.get(value, '')
-
 @register.filter(name="datefmt")
 def datefmt(value):
     formatted = value[2:6] + "/" + value[6:8] + "/" + value[8:10] + " " + \

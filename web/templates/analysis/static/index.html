@@ -10,6 +10,32 @@
                 {% include "analysis/static/_pe32.html" %}
             {% elif "PDF" in analysis.target.file.type %}
                 {% include "analysis/static/_pdf.html" %}
+            {% elif "Composite Document File V2 Document" in analysis.target.file.type %}
+                {% include "analysis/static/_office.html" %}
+            {% elif "Excel 2007+" in analysis.target.file.type %}
+                {% include "analysis/static/_office.html" %}
+            {% elif "PowerPoint 2007+" in analysis.target.file.type %}
+                {% include "analysis/static/_office.html" %}
+            {% elif "Word 2007+" in analysis.target.file.type %}
+                {% include "analysis/static/_office.html" %}
+            {% elif "Zip archive data" in analysis.target.file.type %}
+                {% if ".docx" in analysis.target.file.name %}
+                    {% include "analysis/static/_office.html" %}
+                {% elif ".docm" in analysis.target.file.name %}
+                    {% include "analysis/static/_office.html" %}
+                {% elif ".doc" in analysis.target.file.name %}
+                    {% include "analysis/static/_office.html" %}
+                {% elif ".xls" in analysis.target.file.name %}
+                    {% include "analysis/static/_office.html" %}
+                {% elif ".xlsx" in analysis.target.file.name %}
+                    {% include "analysis/static/_office.html" %}
+                {% elif ".ppt" in analysis.target.file.name %}
+                    {% include "analysis/static/_office.html" %}
+                {% elif ".pptx" in analysis.target.file.name %}
+                    {% include "analysis/static/_office.html" %}
+                {% else %}
+                    No static analysis available. Testing
+                {% endif %}
             {% else %}
                 No static analysis available.
             {% endif %}

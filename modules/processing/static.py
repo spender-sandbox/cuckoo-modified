@@ -3,9 +3,11 @@
 # See the file 'docs/LICENSE' for copying permission.
 
 import json
+import lib.cuckoo.common.office.olefile as olefile
+import lib.cuckoo.common.office.vbadeobf as vbadeobf
 import logging
 import os
-from datetime import datetime
+from datetime import datetime, date, time
 
 try:
     import magic
@@ -29,6 +31,13 @@ except ImportError:
 from lib.cuckoo.common.abstracts import Processing
 from lib.cuckoo.common.constants import CUCKOO_ROOT
 from lib.cuckoo.common.objects import File
+from lib.cuckoo.common.office.oleid import OleID
+from lib.cuckoo.common.office.olevba import detect_autoexec
+from lib.cuckoo.common.office.olevba import detect_hex_strings
+from lib.cuckoo.common.office.olevba import detect_patterns
+from lib.cuckoo.common.office.olevba import detect_suspicious
+from lib.cuckoo.common.office.olevba import filter_vba
+from lib.cuckoo.common.office.olevba import VBA_Parser
 from lib.cuckoo.common.utils import convert_to_printable
 from lib.cuckoo.common.pdftools.pdfid import PDFiD, PDFiD2JSON
 from lib.cuckoo.common.peepdf.PDFCore import PDFParser
@@ -115,16 +124,16 @@ class PortableExecutable:
                     continue
 
         return imports
-    
+
     def _get_exported_symbols(self):
         """Gets exported symbols.
         @return: exported symbols dict or None.
         """
         if not self.pe:
             return None
-        
+
         exports = []
-        
+
         if hasattr(self.pe, "DIRECTORY_ENTRY_EXPORT"):
             for exported_symbol in self.pe.DIRECTORY_ENTRY_EXPORT.symbols:
                 symbol = {}
@@ -425,10 +434,147 @@ class PDF:
         results = self._parse(self.file_path)
         return results
 
+class Office():
+    """Office Document Static Analysis"""
+    def __init__(self, file_path):
+        self.file_path = file_path
+        self.office = None
+
+    # Parse a string-casted datetime object that olefile returns. This will parse
+    # multiple types of timestamps including when a date is provide without a
+    # time.
+    def convert_dt_string(self, string):
+        ctime = string.replace("datetime.datetime", "")
+        ctime = ctime.replace("(","")
+        ctime = ctime.replace(")","")
+        ctime = "".join(ctime).split(", ")
+        # Parse date, set to None if we don't have any/not enough data
+        if len(ctime) >= 3:
+            docdate = date(int(ctime[0]), int(ctime[1]), int(ctime[2])).strftime("%B %d, %Y")
+        else:
+            docdate = None
+        # Parse if we are missing minutes and seconds field
+        if len(ctime) == 4:
+            doctime = time(int(ctime[3])).strftime("%H")
+        # Parse if we are missing seconds field
+        elif len(ctime) == 5:
+            doctime = time(int(ctime[3]), int(ctime[4])).strftime("%H:%M")
+        # Parse a full datetime string
+        elif len(ctime) == 6:
+            doctime = time(int(ctime[3]), int(ctime[4]), int(ctime[5])).strftime("%H:%M:%S")
+        else:
+            doctime = None
+
+        if docdate and doctime:
+            return docdate + " " + doctime
+        elif docdate:
+            return docdate
+        else:
+            return "None"
+
+    def _parse(self, filepath):
+        """Parses an office document for static information.
+        Currently (as per olefile) the following formats are supported:
+        - Word 97-2003 (.doc, .dot), Word 2007+ (.docm, .dotm)
+        - Excel 97-2003 (.xls), Excel 2007+ (.xlsm, .xlsb)
+        - PowerPoint 2007+ (.pptm, .ppsm)
+
+        @param filepath: Path to the file to be analyzed.
+        @return: results dict or None
+        """
+
+        results = dict()
+        vba = VBA_Parser(filepath)
+        results["Metadata"] = dict()
+        # The bulk of the metadata checks are in the OLE Structures
+        # So don't check if we're dealing with XML.
+        if olefile.isOleFile(filepath):
+            ole = olefile.OleFileIO(filepath)
+            meta = ole.get_metadata()
+            results["Metadata"] = meta.get_meta()
+            # Fix up some output formatting
+            buf = self.convert_dt_string(results["Metadata"]["SummaryInformation"]["create_time"])
+            results["Metadata"]["SummaryInformation"]["create_time"] = buf
+            buf = self.convert_dt_string(results["Metadata"]["SummaryInformation"]["last_saved_time"])
+            results["Metadata"]["SummaryInformation"]["last_saved_time"] = buf
+            ole.close()
+        if vba.detect_vba_macros():
+            results["Metadata"]["HasMacros"] = "Yes"
+            results["Macro"] = dict()
+            results["Macro"]["Code"] = dict()
+            ctr = 0
+            # Create IOC and category vars. We do this before processing the
+            # macro(s) to avoid overwriting data when there are multiple
+            # macros in a single file.
+            results["Macro"]["Analysis"] = dict()
+            results["Macro"]["Analysis"]["AutoExec"] = list()
+            results["Macro"]["Analysis"]["Suspicious"] = list()
+            results["Macro"]["Analysis"]["IOCs"] = list()
+            results["Macro"]["Analysis"]["HexStrings"] = list()
+            for (subfilename, stream_path, vba_filename, vba_code) in vba.extract_macros():
+                vba_code = filter_vba(vba_code)
+                if vba_code.strip() != '':
+                    # Handle all macros
+                    ctr += 1
+                    outputname = "Macro" + str(ctr)
+                    results["Macro"]["Code"][outputname] = list()
+                    results["Macro"]["Code"][outputname].append((convert_to_printable(vba_filename),convert_to_printable(vba_code)))
+                    autoexec = detect_autoexec(vba_code)
+                    suspicious = detect_suspicious(vba_code)
+                    iocs = vbadeobf.parse_macro(vba_code)
+                    hex_strs = detect_hex_strings(vba_code)
+                    if autoexec:
+                        for keyword, description in autoexec:
+                            results["Macro"]["Analysis"]["AutoExec"].append((keyword, description))
+                    if suspicious:
+                        for keyword, description in suspicious:
+                            results["Macro"]["Analysis"]["Suspicious"].append((keyword, description))
+                    if iocs:
+                        for pattern, match in iocs:
+                            results["Macro"]["Analysis"]["IOCs"].append((pattern, match))
+                    if hex_strs:
+                        for encoded, decoded in hex_strs:
+                            results["Macro"]["Analysis"]["HexStrings"].append((encoded, decoded))
+            # Delete and keys which had no results. Otherwise we pollute the
+            # Django interface with null data.
+            if results["Macro"]["Analysis"]["AutoExec"] == []:
+                del results["Macro"]["Analysis"]["AutoExec"]
+            if results["Macro"]["Analysis"]["Suspicious"] == []:
+                del results["Macro"]["Analysis"]["Suspicious"]
+            if results["Macro"]["Analysis"]["IOCs"] == []:
+                del results["Macro"]["Analysis"]["IOCs"]
+            if results["Macro"]["Analysis"]["HexStrings"] == []:
+                del results["Macro"]["Analysis"]["HexStrings"]
+
+        else:
+            results["Metadata"]["HasMacros"] = "No"
+
+        oleid = OleID(filepath)
+        indicators = oleid.check()
+        for indicator in indicators:
+            if indicator.name == "Word Document" and indicator.value == True:
+                results["Metadata"]["DocumentType"] = indicator.name
+            if indicator.name == "Excel Workbook" and indicator.value == True:
+                results["Metadata"]["DocumentType"] = indicator.name
+            if indicator.name == "PowerPoint Presentation" and indicator.value == True:
+                results["Metadata"]["DocumentType"] = indicator.name
+
+        print results["Macro"]["Analysis"]
+        return results
+
+    def run(self):
+        """Run analysis.
+        @return: analysis results dict or None.
+        """
+        if not os.path.exists(self.file_path):
+            return None
+        results = self._parse(self.file_path)
+        return results
+
 
 class Static(Processing):
     """Static analysis."""
-    
+
     def run(self):
         """Run analysis.
         @return: results dict.
@@ -442,5 +588,15 @@ class Static(Processing):
                 static = PortableExecutable(self.file_path).run()
             elif "PDF" in thetype:
                 static = PDF(self.file_path).run()
+            elif "Word 2007" in thetype or "Excel 2007" in thetype or "PowerPoint 2007" in thetype:
+                static = Office(self.file_path).run()
+            elif "Composite Document File" in thetype:
+                static = Office(self.file_path).run()
+            # It's possible to fool libmagic into thinking our 2007+ file is a
+            # zip. So until we have static analysis for zip files, we can use
+            # oleid to fail us out silently, yeilding no static analysis
+            # results for actual zip files.
+            elif "Zip archive data, at least v2.0" in thetype:
+                static = Office(self.file_path).run()
 
         return static
