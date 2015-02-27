@@ -10,6 +10,7 @@ import string
 import tempfile
 import xmlrpclib
 import errno
+import inspect
 from datetime import datetime
 
 from lib.cuckoo.common.exceptions import CuckooOperationalError
@@ -1194,6 +1195,13 @@ def classlock(f):
     Used to put a lock to avoid sqlite errors.
     """
     def inner(self, *args, **kwargs):
+        curframe = inspect.currentframe()
+        calframe = inspect.getouterframes(curframe, 2)
+
+        if calframe[1][1].endswith("database.py"):
+            return f(self, *args, **kwargs)
+
         with self._lock:
             return f(self, *args, **kwargs)
+
     return inner
