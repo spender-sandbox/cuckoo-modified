@@ -96,6 +96,7 @@
     <Compile Include="analyzer\windows\modules\packages\chrome.py" />
     <Compile Include="analyzer\windows\modules\packages\firefox.py" />
     <Compile Include="analyzer\windows\modules\packages\msi.py" />
+    <Compile Include="analyzer\windows\modules\packages\ppt.py" />
     <Compile Include="cuckoo.py" />
     <Compile Include="agent\agent.py" />
     <Compile Include="lib\cuckoo\common\office\DridexURLDecoder.py" />
