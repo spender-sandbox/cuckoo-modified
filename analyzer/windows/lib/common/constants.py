@@ -17,4 +17,4 @@ PATHS = {"root"   : ROOT,
 
 PIPE = "\\\\.\\PIPE\\" + random_string(6, 10)
 SHUTDOWN_MUTEX = "Global\\" + random_string(6, 10)
-TERMINATE_EVENT = random_string(6, 10)
+TERMINATE_EVENT = "Global\\" + random_string(6, 10)
