@@ -19,6 +19,7 @@ sys.path.append(os.path.join(os.path.abspath(os.path.dirname(__file__)), ".."))
 from lib.cuckoo.common.config import Config
 from lib.cuckoo.common.constants import CUCKOO_ROOT
 from lib.cuckoo.core.database import Database, TASK_REPORTED, TASK_COMPLETED
+from lib.cuckoo.core.database import TASK_FAILED_PROCESSING
 from lib.cuckoo.core.plugins import RunProcessing, RunSignatures, RunReporting
 from lib.cuckoo.core.startup import init_modules
 
@@ -63,7 +64,7 @@ def autoprocess(parallel=1):
                             ar.get()
                         except:
                             log.exception("Exception when processing task ID %u.", tid)
-                            # TODO: kick off failed tasks.
+                            db.set_status(tid, TASK_FAILED_PROCESSING)
 
                     pending_results.remove((ar, tid, target, copy_path))
 
@@ -77,7 +78,8 @@ def autoprocess(parallel=1):
             tasks = db.list_tasks(status=TASK_COMPLETED, limit=parallel,
                                   order_by="completed_on asc")
 
-            # For loop to add only one, nice.
+            added = False
+            # For loop to add only one, nice. (reason is that we shouldn't overshoot maxcount)
             for task in tasks:
                 # Not-so-efficient lock.
                 if task.id in [tid for ar, tid, target, copy_path
@@ -101,13 +103,21 @@ def autoprocess(parallel=1):
                 pending_results.append((result, task.id, task.target, copy_path))
 
                 count += 1
+                added = True
                 break
 
-            # don't hog cpu
-            time.sleep(5)
+            if not added:
+                # don't hog cpu
+                time.sleep(5)
+
     except KeyboardInterrupt:
         pool.terminate()
         raise
+    except:
+        import traceback
+        traceback.print_exc()
+    finally:
+        pool.join()
 
 def main():
     parser = argparse.ArgumentParser()

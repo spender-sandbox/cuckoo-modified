@@ -5,7 +5,6 @@
 import os
 import json
 import logging
-import threading
 from datetime import datetime
 
 from lib.cuckoo.common.config import Config
@@ -14,7 +13,7 @@ from lib.cuckoo.common.exceptions import CuckooDatabaseError
 from lib.cuckoo.common.exceptions import CuckooOperationalError
 from lib.cuckoo.common.exceptions import CuckooDependencyError
 from lib.cuckoo.common.objects import File, URL
-from lib.cuckoo.common.utils import create_folder, Singleton, classlock
+from lib.cuckoo.common.utils import create_folder, Singleton, classlock, SuperLock
 
 try:
     from sqlalchemy import create_engine, Column
@@ -38,6 +37,7 @@ TASK_RECOVERED = "recovered"
 TASK_REPORTED = "reported"
 TASK_FAILED_ANALYSIS = "failed_analysis"
 TASK_FAILED_PROCESSING = "failed_processing"
+TASK_FAILED_REPORTING = "failed_reporting"
 
 ANALYSIS_STARTED = "analysis_started"
 ANALYSIS_FINISHED = "analysis_finished"
@@ -296,7 +296,8 @@ class Task(Base):
     started_on = Column(DateTime(timezone=False), nullable=True)
     completed_on = Column(DateTime(timezone=False), nullable=True)
     status = Column(Enum(TASK_PENDING, TASK_RUNNING, TASK_COMPLETED,
-                         TASK_REPORTED, TASK_RECOVERED, name="status_type"),
+                         TASK_REPORTED, TASK_RECOVERED,
+                         TASK_FAILED_PROCESSING, TASK_FAILED_REPORTING, name="status_type"),
                     server_default=TASK_PENDING,
                     nullable=False)
 
@@ -374,7 +375,7 @@ class Database(object):
         """@param dsn: database connection string.
         @param schema_check: disable or enable the db schema version check
         """
-        self._lock = threading.Lock()
+        self._lock = SuperLock()
         cfg = Config()
 
         if dsn:
@@ -446,6 +447,10 @@ class Database(object):
             if connection_string.startswith("sqlite"):
                 # Using "check_same_thread" to disable sqlite safety check on multiple threads.
                 self.engine = create_engine(connection_string, connect_args={"check_same_thread": False})
+            elif connection_string.startswith("postgres"):
+                # Disabling SSL mode to avoid some errors using sqlalchemy and multiprocesing.
+                # See: http://www.postgresql.org/docs/9.0/static/libpq-ssl.html#LIBPQ-SSL-SSLMODE-STATEMENTS
+                self.engine = create_engine(connection_string, connect_args={"sslmode": "disable"})
             else:
                 self.engine = create_engine(connection_string)
         except ImportError as e:
@@ -527,7 +532,7 @@ class Database(object):
             log.debug("Database error adding machine: {0}".format(e))
             session.rollback()
         finally:
-            session.close()        
+            session.close()
 
     @classlock
     def set_status(self, task_id, status):
@@ -647,13 +652,13 @@ class Database(object):
             if lock:
                 self.set_status(task_id=row.id, status=TASK_RUNNING)
                 session.refresh(row)
+
+            return row
         except SQLAlchemyError as e:
             log.debug("Database error fetching task: {0}".format(e))
             session.rollback()
         finally:
             session.close()
-
-        return row
 
     @classlock
     def guest_start(self, task_id, name, label, manager):
@@ -670,13 +675,13 @@ class Database(object):
             session.query(Task).get(task_id).guest = guest
             session.commit()
             session.refresh(guest)
+            return guest.id
         except SQLAlchemyError as e:
             log.debug("Database error logging guest start: {0}".format(e))
             session.rollback()
             return None
         finally:
             session.close()
-        return guest.id
 
     @classlock
     def guest_remove(self, guest_id):
@@ -722,12 +727,12 @@ class Database(object):
                 machines = session.query(Machine).options(joinedload("tags")).filter_by(locked=True).all()
             else:
                 machines = session.query(Machine).options(joinedload("tags")).all()
+            return machines
         except SQLAlchemyError as e:
             log.debug("Database error listing machines: {0}".format(e))
             return []
         finally:
             session.close()
-        return machines
 
     @classlock
     def lock_machine(self, name=None, platform=None, tags=None):
@@ -851,12 +856,12 @@ class Database(object):
         session = self.Session()
         try:
             machines_count = session.query(Machine).filter_by(locked=False).count()
+            return machines_count
         except SQLAlchemyError as e:
             log.debug("Database error counting machines: {0}".format(e))
             return 0
         finally:
             session.close()
-        return machines_count
 
     @classlock
     def get_available_machines(self):
@@ -866,12 +871,12 @@ class Database(object):
         session = self.Session()
         try:
             machines = session.query(Machine).filter_by(locked=False).all()
+            return machines
         except SQLAlchemyError as e:
             log.debug("Database error getting available machines: {0}".format(e))
             return 0
         finally:
             session.close()
-        return machines
 
     @classlock
     def set_machine_status(self, label, status):
@@ -1150,12 +1155,12 @@ class Database(object):
 
             search = search.order_by(order_by or "added_on desc")
             tasks = search.limit(limit).offset(offset).all()
+            return tasks
         except SQLAlchemyError as e:
             log.debug("Database error listing tasks: {0}".format(e))
             return []
         finally:
             session.close()
-        return tasks
 
     @classlock
     def get_file_types(self):
@@ -1192,12 +1197,12 @@ class Database(object):
             if status:
                 unfiltered = unfiltered.filter_by(status=status)
             tasks_count = unfiltered.count()
+            return tasks_count
         except SQLAlchemyError as e:
             log.debug("Database error counting tasks: {0}".format(e))
             return 0
         finally:
             session.close()
-        return tasks_count
 
     @classlock
     def task_duration(self, stage="full", year=None, month=None, day=None):
@@ -1310,9 +1315,9 @@ class Database(object):
         else:
             if task:
                 session.expunge(task)
+            return task
         finally:
             session.close()
-        return task
 
     @classlock
     def delete_task(self, task_id):

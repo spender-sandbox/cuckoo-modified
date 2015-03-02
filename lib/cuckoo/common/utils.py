@@ -11,6 +11,8 @@ import tempfile
 import xmlrpclib
 import errno
 import inspect
+import threading
+import multiprocessing
 from datetime import datetime
 
 from lib.cuckoo.common.exceptions import CuckooOperationalError
@@ -1205,3 +1207,15 @@ def classlock(f):
             return f(self, *args, **kwargs)
 
     return inner
+
+class SuperLock(object):
+    def __init__(self):
+        self.tlock = threading.Lock()
+        self.mlock = multiprocessing.Lock()
+
+    def __enter__(self):
+        self.tlock.acquire()
+        self.mlock.acquire()
+    def __exit__(self, type, value, traceback):
+        self.mlock.release()
+        self.tlock.release()
