@@ -275,9 +275,8 @@ class Process:
             log.error("Failed to resume process with pid %d", self.pid)
             return False
 
-    def terminate(self):
-        """Terminate process.
-        @return: operation status.
+    def set_terminate_event(self):
+        """Sets the termination event for the process.
         """
         if self.h_process == 0:
             self.open()
@@ -289,6 +288,15 @@ class Process:
             KERNEL32.SetEvent(event_handle)
             KERNEL32.CloseHandle(event_handle)
             KERNEL32.Sleep(500)
+
+    def terminate(self):
+        """Terminate process.
+        @return: operation status.
+        """
+        if self.h_process == 0:
+            self.open()
+
+        self.set_terminate_event()
 
         if KERNEL32.TerminateProcess(self.h_process, 1):
             log.info("Successfully terminated process with pid %d.", self.pid)

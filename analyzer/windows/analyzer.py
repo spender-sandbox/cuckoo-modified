@@ -766,6 +766,9 @@ class Analyzer:
                     try:
                         if not proc.is_critical():
                             proc.terminate()
+                        else:
+                            proc.set_terminate_event()
+                            log.info("Not terminating critical process with pid %d.", proc.pid)
                     except:
                         continue
 
