@@ -165,6 +165,9 @@ class Process:
         """
         if not self.h_process:
             self.open()
+
+        NT_SUCCESS = lambda val: val >= 0
+
         val = c_ulong(0)
         retlen = c_ulong(0)
         ret = NTDLL.NtQueryInformationProcess(self.h_process, 29, byref(val), sizeof(val), byref(retlen))
