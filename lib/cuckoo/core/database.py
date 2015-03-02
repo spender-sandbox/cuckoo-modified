@@ -296,7 +296,7 @@ class Task(Base):
     started_on = Column(DateTime(timezone=False), nullable=True)
     completed_on = Column(DateTime(timezone=False), nullable=True)
     status = Column(Enum(TASK_PENDING, TASK_RUNNING, TASK_COMPLETED,
-                         TASK_REPORTED, TASK_RECOVERED,
+                         TASK_REPORTED, TASK_RECOVERED, TASK_FAILED_ANALYSIS,
                          TASK_FAILED_PROCESSING, TASK_FAILED_REPORTING, name="status_type"),
                     server_default=TASK_PENDING,
                     nullable=False)
