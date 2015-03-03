@@ -28,16 +28,7 @@ import modules.processing.network as network
 results_db = pymongo.MongoClient(settings.MONGO_HOST, settings.MONGO_PORT)[settings.MONGO_DB]
 fs = GridFS(results_db)
 
-#@require_safe
-#def index(request):
-#    db = Database()
-#    get_tasks = db.list_tasks(limit=100, not_status=TASK_PENDING)
-#
-#    analysis_tasks = []
-#
-#    if get_tasks:
-#        for task in get_tasks:
-#            new = task.t
+TASK_LIMIT = 25
 
 @require_safe
 def index(request, page=1):
@@ -45,21 +36,16 @@ def index(request, page=1):
     db = Database()
     if page == 0:
         page = 1
-    #if page == 1:
-    #    off = 0
-    #else:
-    #    off = (page - 1) * 25
-    off = (page - 1) * 25
-    tasks_files = db.list_tasks(limit=25, offset=off, category="file", not_status=TASK_PENDING)
-    tasks_urls = db.list_tasks(limit=25, offset=off, category="url", not_status=TASK_PENDING)
+    off = (page - 1) * TASK_LIMIT
+
+    tasks_files = db.list_tasks(limit=TASK_LIMIT, offset=off, category="file", not_status=TASK_PENDING)
+    tasks_urls = db.list_tasks(limit=TASK_LIMIT, offset=off, category="url", not_status=TASK_PENDING)
     analyses_files = []
     analyses_urls = []
 
     # Vars to define when to show Next/Previous buttons
     first_file = db.list_tasks(limit=1, category="file", not_status=TASK_PENDING, order_by="added_on asc")[0].to_dict()["id"]
-    last_file = db.list_tasks(limit=1, category="file", not_status=TASK_PENDING)[0].to_dict()["id"]
     first_url = db.list_tasks(limit=1, category="url", not_status=TASK_PENDING, order_by="added_on asc")[0].to_dict()["id"]
-    last_url = db.list_tasks(limit=1, category="url", not_status=TASK_PENDING)[0].to_dict()["id"]
     paging = dict()
     paging["show_file_next"] = "show"
     paging["show_file_prev"] = "show"
@@ -67,7 +53,6 @@ def index(request, page=1):
     paging["show_url_prev"] = "show"
     paging["next_page"] = str(page + 1)
     paging["prev_page"] = str(page - 1)
-
 
     if tasks_files:
         for task in tasks_files:
