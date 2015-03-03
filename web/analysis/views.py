@@ -28,18 +28,54 @@ import modules.processing.network as network
 results_db = pymongo.MongoClient(settings.MONGO_HOST, settings.MONGO_PORT)[settings.MONGO_DB]
 fs = GridFS(results_db)
 
-@require_safe
-def index(request):
-    db = Database()
-    tasks_files = db.list_tasks(limit=50, category="file", not_status=TASK_PENDING)
-    tasks_urls = db.list_tasks(limit=50, category="url", not_status=TASK_PENDING)
+#@require_safe
+#def index(request):
+#    db = Database()
+#    get_tasks = db.list_tasks(limit=100, not_status=TASK_PENDING)
+#
+#    analysis_tasks = []
+#
+#    if get_tasks:
+#        for task in get_tasks:
+#            new = task.t
 
+@require_safe
+def index(request, page=1):
+    page = int(page)
+    db = Database()
+    if page == 0:
+        page = 1
+    #if page == 1:
+    #    off = 0
+    #else:
+    #    off = (page - 1) * 25
+    off = (page - 1) * 25
+    tasks_files = db.list_tasks(limit=25, offset=off, category="file", not_status=TASK_PENDING)
+    tasks_urls = db.list_tasks(limit=25, offset=off, category="url", not_status=TASK_PENDING)
     analyses_files = []
     analyses_urls = []
+
+    # Vars to define when to show Next/Previous buttons
+    first_file = db.list_tasks(limit=1, category="file", not_status=TASK_PENDING, order_by="added_on asc")[0].to_dict()["id"]
+    last_file = db.list_tasks(limit=1, category="file", not_status=TASK_PENDING)[0].to_dict()["id"]
+    first_url = db.list_tasks(limit=1, category="url", not_status=TASK_PENDING, order_by="added_on asc")[0].to_dict()["id"]
+    last_url = db.list_tasks(limit=1, category="url", not_status=TASK_PENDING)[0].to_dict()["id"]
+    paging = dict()
+    paging["show_file_next"] = "show"
+    paging["show_file_prev"] = "show"
+    paging["show_url_next"] = "show"
+    paging["show_url_prev"] = "show"
+    paging["next_page"] = str(page + 1)
+    paging["prev_page"] = str(page - 1)
+
 
     if tasks_files:
         for task in tasks_files:
             new = task.to_dict()
+            if new["id"] == first_file:
+                paging["show_file_next"] = "hide"
+            if page <= 1:
+                paging["show_file_prev"] = "hide"
             new["sample"] = db.view_sample(new["sample_id"]).to_dict()
 
             filename = os.path.basename(new["target"])
@@ -51,7 +87,7 @@ def index(request):
             rtmp = results_db.analysis.find_one({"info.id": int(new["id"])},{"virustotal_summary": 1, "suri_tls_cnt": 1, "suri_alert_cnt": 1, "suri_http_cnt": 1, "suri_file_cnt": 1},sort=[("_id", pymongo.DESCENDING)])
             if rtmp:
                 if rtmp.has_key("virustotal_summary") and rtmp["virustotal_summary"]:
-                    new["virustotal_summary"] = rtmp["virustotal_summary"] 
+                    new["virustotal_summary"] = rtmp["virustotal_summary"]
                 if rtmp.has_key("suri_tls_cnt") and rtmp["suri_tls_cnt"]:
                     new["suri_tls_cnt"] = rtmp["suri_tls_cnt"]
                 if rtmp.has_key("suri_alert_cnt") and rtmp["suri_alert_cnt"]:
@@ -66,10 +102,16 @@ def index(request):
                     settings.MOLOCH_BASE = settings.MOLOCH_BASE + "/"
                 new["moloch_url"] = settings.MOLOCH_BASE + "?date=-1&expression=tags" + quote("\x3d\x3d\x22%s\x3a%s\x22" % (settings.MOLOCH_NODE,new["id"]),safe='')
             analyses_files.append(new)
+    else:
+        paging["show_file_next"] = "hide"
 
     if tasks_urls:
         for task in tasks_urls:
             new = task.to_dict()
+            if new["id"] == first_url:
+                paging["show_url_next"] = "hide"
+            if page <= 1:
+                paging["show_url_prev"] = "hide"
 
             if db.view_errors(task.id):
                 new["errors"] = True
@@ -93,10 +135,12 @@ def index(request):
                 new["moloch_url"] = settings.MOLOCH_BASE + "?date=-1&expression=tags" + quote("\x3d\x3d\x22%s\x3a%s\x22" % (settings.MOLOCH_NODE,new["id"]),safe='')
 
             analyses_urls.append(new)
+    else:
+        paging["show_url_next"] = "hide"
 
     return render_to_response("analysis/index.html",
-                              {"files": analyses_files, "urls": analyses_urls},
-                              context_instance=RequestContext(request))
+            {"files": analyses_files, "urls": analyses_urls,
+             "paging": paging}, context_instance=RequestContext(request))
 
 @require_safe
 def pending(request):
@@ -513,9 +557,6 @@ def remove(request, task_id):
 
 @require_safe
 def pcapstream(request, task_id, conntuple):
-    """Get packets from the task PCAP related to a certain connection.
-    This is possible because we sort the PCAP during processing and remember offsets for each stream.
-    """
     src, sport, dst, dport, proto = conntuple.split(",")
     sport, dport = int(sport), int(dport)
 

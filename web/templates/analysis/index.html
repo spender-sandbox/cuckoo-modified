@@ -9,6 +9,18 @@
 
 <div class="tab-content">
     <div class="tab-pane fade in active" id="files">
+    {% if paging.show_file_next == "show" or paging.show_file_prev == "show" %}
+        <nav>
+           <ul class="pager">
+           {% if paging.show_file_prev == "show" %}
+               <li><a href="{% url "analysis.views.index" %}page/{{paging.prev_page}}/">&larr; Newer</a></li>
+           {% endif %}
+           {% if paging.show_file_next == "show" %}
+               <li><a href="{% url "analysis.views.index" %}page/{{paging.next_page}}/">Older &rarr;</a></li>
+           {% endif %}
+           </ul>
+        </nav>
+    {% endif %}
         <div class="panel panel-primary">
             <div class="panel-heading">
                 <h3 class="panel-title">Recent Files</h3>
@@ -119,12 +131,24 @@
                 </tbody>
             </table>
             {% else %}
-            <div class="panel-body">No files analyzed yet.</div>
+            <div class="panel-body">No files to display on this page.</div>
             {% endif %}
         </div>
     </div>
 
     <div class="tab-pane fade" id="urls">
+    {% if paging.show_url_next == "show" or paging.show_url_prev == "show" %}
+        <nav>
+           <ul class="pager">
+           {% if paging.show_url_prev == "show" %}
+               <li><a href="{% url "analysis.views.index" %}page/{{paging.prev_page}}/">&larr; Newer</a></li>
+           {% endif %}
+           {% if paging.show_url_next == "show" %}
+               <li><a href="{% url "analysis.views.index" %}page/{{paging.next_page}}/">Older &rarr;</a></li>
+           {% endif %}
+           </ul>
+        </nav>
+    {% endif %}
         <div class="panel panel-primary">
             <div class="panel-heading">
                 <h3 class="panel-title">Recent URLs</h3>
@@ -216,9 +240,25 @@
                 </tbody>
             </table>
             {% else %}
-            <div class="panel-body">No URLS analyzed yet.</div>
+            <div class="panel-body">No URLS to display on this page.</div>
             {% endif %}
         </div>
     </div>
 </div>
+<script>
+$(function() {
+  //for bootstrap 3 use 'shown.bs.tab' instead of 'shown' in the next line
+  $('a[data-toggle="tab"]').on('click', function (e) {
+    //save the latest tab; use cookies if you like 'em better:
+    localStorage.setItem('lastTab', $(e.target).attr('href'));
+  });
+
+  //go to the latest tab, if it exists:
+  var lastTab = localStorage.getItem('lastTab');
+
+  if (lastTab) {
+      $('a[href="'+lastTab+'"]').click();
+  }
+});
+</script>
 {% endblock %}
