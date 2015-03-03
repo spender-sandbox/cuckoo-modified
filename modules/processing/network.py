@@ -184,7 +184,7 @@ class Pcap:
         @param data: payload data.
         """
         if self._check_http(data):
-            self._add_http(data, conn["dport"])
+            self._add_http(conn, data)
         # SMTP.
         if conn["dport"] == 25:
             self._reassemble_smtp(conn, data)
@@ -385,10 +385,10 @@ class Pcap:
 
         return True
 
-    def _add_http(self, tcpdata, dport):
+    def _add_http(self, conn, tcpdata):
         """Adds an HTTP flow.
+        @param conn: TCP connection info.
         @param tcpdata: TCP data flow.
-        @param dport: destination port.
         """
         if tcpdata in self.http_requests:
             self.http_requests[tcpdata]["count"] += 1
@@ -403,17 +403,17 @@ class Pcap:
         try:
             entry = {"count": 1}
 
-            if "host" in http.headers:
+            if "host" in http.headers and re.match(r'^([A-Z0-9]|[A-Z0-9][A-Z0-9\-]{0,61}[A-Z0-9])(\.([A-Z0-9]|[A-Z0-9][A-Z0-9\-]{0,61}[A-Z0-9]))+(:[0-9]{1,5})?$', http.headers["host"], re.IGNORECASE):
                 entry["host"] = convert_to_printable(http.headers["host"])
             else:
-                entry["host"] = ""
+                entry["host"] = conn["dst"]
 
-            entry["port"] = dport
+            entry["port"] = conn["dport"]
 
             # Manually deal with cases when destination port is not the default one,
             # and it is  not included in host header.
             netloc = entry["host"]
-            if dport != 80 and ":" not in netloc:
+            if entry["port"] != 80 and ":" not in netloc:
                 netloc += ":" + str(entry["port"])
 
             entry["data"] = convert_to_printable(tcpdata)
