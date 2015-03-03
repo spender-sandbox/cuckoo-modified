@@ -44,15 +44,25 @@ def index(request, page=1):
     analyses_urls = []
 
     # Vars to define when to show Next/Previous buttons
-    first_file = db.list_tasks(limit=1, category="file", not_status=TASK_PENDING, order_by="added_on asc")[0].to_dict()["id"]
-    first_url = db.list_tasks(limit=1, category="url", not_status=TASK_PENDING, order_by="added_on asc")[0].to_dict()["id"]
     paging = dict()
     paging["show_file_next"] = "show"
-    paging["show_file_prev"] = "show"
     paging["show_url_next"] = "show"
-    paging["show_url_prev"] = "show"
     paging["next_page"] = str(page + 1)
     paging["prev_page"] = str(page - 1)
+
+    # On a fresh install, we need handle where there are 0 tasks.
+    buf = db.list_tasks(limit=1, category="file", not_status=TASK_PENDING, order_by="added_on asc")
+    if len(buf) == 1:
+        first_file = db.list_tasks(limit=1, category="file", not_status=TASK_PENDING, order_by="added_on asc")[0].to_dict()["id"]
+        paging["show_file_prev"] = "show"
+    else:
+        paging["show_file_prev"] = "hide"
+    buf = db.list_tasks(limit=1, category="url", not_status=TASK_PENDING, order_by="added_on asc")
+    if len(buf) == 1:
+        first_url = db.list_tasks(limit=1, category="url", not_status=TASK_PENDING, order_by="added_on asc")[0].to_dict()["id"]
+        paging["show_url_prev"] = "show"
+    else:
+        paging["show_url_prev"] = "hide"
 
     if tasks_files:
         for task in tasks_files:
