@@ -531,6 +531,7 @@ def pretty_print_arg(category, api_name, arg_name, arg_val):
                 0x120bf : "IOCTL_AFD_DEFER_ACCEPT",
                 0x12017 : "IOCTL_AFD_RECV",
                 0x1201f : "IOCTL_AFD_SEND",
+                0x1202f : "IOCTL_AFD_GET_SOCK_NAME",
                 0x12087 : "IOCTL_AFD_EVENT_SELECT",
                 0x1208b : "IOCTL_AFD_ENUM_NETWORK_EVENTS",
                 0x4d008 : "IOCTL_SCSI_MINIPORT",
