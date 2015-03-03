@@ -918,7 +918,7 @@ class VolatilityManager(object):
 
         conf_path = os.path.join(CUCKOO_ROOT, "conf", "memory.conf")
         if not os.path.exists(conf_path):
-            log.error("Configuration file volatility.conf not found".format(conf_path))
+            log.error("Configuration file memory.conf not found")
             self.voptions = False
             return
 
@@ -939,14 +939,19 @@ class VolatilityManager(object):
         """Get the OS profile"""
         return VolatilityAPI(self.memfile).imageinfo()["data"][0]["osprofile"]
 
-    def run(self):
+    def run(self, manager=None, vm=None):
         results = {}
 
         # Exit if options were not loaded.
         if not self.voptions:
             return
 
-        vol = VolatilityAPI(self.memfile, self.osprofile)
+        # Check if theres a memory profile configured in the machinery config.
+        profile = Config(manager).get(vm).get("mem_profile")
+        if profile == None:
+            vol = VolatilityAPI(self.memfile, self.osprofile)
+        else:
+            vol = VolatilityAPI(self.memfile, profile)
 
         # TODO: improve the load of volatility functions.
         if self.voptions.pslist.enabled:
@@ -1039,12 +1044,15 @@ class Memory(Processing):
         """
         self.key = "memory"
 
+        task_machine = self.task["machine"]["name"]
+        machine_manager = self.task["machine"]["manager"].lower()
+
         results = {}
         if HAVE_VOLATILITY:
             if self.memory_path and os.path.exists(self.memory_path):
                 try:
                     vol = VolatilityManager(self.memory_path)
-                    results = vol.run()
+                    results = vol.run(manager=machine_manager, vm=task_machine)
                 except Exception:
                     log.exception("Generic error executing volatility")
             else:
