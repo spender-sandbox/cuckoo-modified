@@ -135,8 +135,8 @@ class Suricata(Processing):
             return suricata["alerts"]
 
         if os.path.exists(SURICATA_EVE_LOG_FULL_PATH):
-            with open(SURICATA_EVE_LOG_FULL_PATH, "r") as log:
-                data = log.read()
+            with open(SURICATA_EVE_LOG_FULL_PATH, "r") as eve_log:
+                data = eve_log.read()
 
             for line in data.splitlines():
                 parsed = json.loads(line)
