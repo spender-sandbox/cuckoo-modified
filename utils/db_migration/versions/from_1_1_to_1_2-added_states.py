@@ -4,6 +4,7 @@
 
 """Database migration from Cuckoo 1.1 to Cuckoo 1.2.
 Added failed statuses to tasks.
+Added statistics information
 
 Revision ID: 495d5a6edef3
 Revises: 18eee46c6f81
@@ -135,6 +136,27 @@ def _perform(upgrade):
                     sa.Column("completed_on", sa.DateTime(timezone=False), nullable=True),
                     sa.Column("status", sa.Enum("pending", "running", "completed", "reported", "recovered", "failed_analysis", "failed_processing", "failed_reporting", name="status_type"), server_default="pending", nullable=False),
                     sa.Column("sample_id", sa.Integer, sa.ForeignKey("samples.id"), nullable=True),
+
+                    sa.Column("dropped_files", sa.Integer(), nullable=True),
+                    sa.Column("running_processes", sa.Integer(), nullable=True),
+                    sa.Column("api_calls", sa.Integer(), nullable=True),
+                    sa.Column("domains", sa.Integer(), nullable=True),
+                    sa.Column("signatures_total", sa.Integer(), nullable=True),
+                    sa.Column("signatures_alert", sa.Integer(), nullable=True),
+                    sa.Column("files_written", sa.Integer(), nullable=True),
+                    sa.Column("registry_keys_modified", sa.Integer(), nullable=True),
+                    sa.Column("crash_issues", sa.Integer(), nullable=True),
+                    sa.Column("anti_issues", sa.Integer(), nullable=True),
+                    sa.Column("analysis_started_on", sa.DateTime(timezone=False), nullable=True),
+                    sa.Column("analysis_finished_on", sa.DateTime(timezone=False), nullable=True),
+                    sa.Column("processing_started_on", sa.DateTime(timezone=False), nullable=True),
+                    sa.Column("processing_finished_on", sa.DateTime(timezone=False), nullable=True),
+                    sa.Column("signatures_started_on", sa.DateTime(timezone=False), nullable=True),
+                    sa.Column("signatures_finished_on", sa.DateTime(timezone=False), nullable=True),
+                    sa.Column("reporting_started_on", sa.DateTime(timezone=False), nullable=True),
+                    sa.Column("reporting_finished_on", sa.DateTime(timezone=False), nullable=True),
+                    sa.Column("timedout", sa.Boolean(), nullable=False, default=False),
+
                     sa.PrimaryKeyConstraint("id")
                 )
             else:
@@ -192,6 +214,27 @@ def _perform(upgrade):
                     sa.Column("completed_on", sa.DateTime(timezone=False), nullable=True),
                     sa.Column("status", sa.Enum("pending", "running", "completed", "reported", "recovered", "failed_analysis", "failed_processing", "failed_reporting", name="status_type"), server_default="pending", nullable=False),
                     sa.Column("sample_id", sa.Integer, sa.ForeignKey("samples.id"), nullable=True),
+
+                    sa.Column("dropped_files", sa.Integer(), nullable=True),
+                    sa.Column("running_processes", sa.Integer(), nullable=True),
+                    sa.Column("api_calls", sa.Integer(), nullable=True),
+                    sa.Column("domains", sa.Integer(), nullable=True),
+                    sa.Column("signatures_total", sa.Integer(), nullable=True),
+                    sa.Column("signatures_alert", sa.Integer(), nullable=True),
+                    sa.Column("files_written", sa.Integer(), nullable=True),
+                    sa.Column("registry_keys_modified", sa.Integer(), nullable=True),
+                    sa.Column("crash_issues", sa.Integer(), nullable=True),
+                    sa.Column("anti_issues", sa.Integer(), nullable=True),
+                    sa.Column("analysis_started_on", sa.DateTime(timezone=False), nullable=True),
+                    sa.Column("analysis_finished_on", sa.DateTime(timezone=False), nullable=True),
+                    sa.Column("processing_started_on", sa.DateTime(timezone=False), nullable=True),
+                    sa.Column("processing_finished_on", sa.DateTime(timezone=False), nullable=True),
+                    sa.Column("signatures_started_on", sa.DateTime(timezone=False), nullable=True),
+                    sa.Column("signatures_finished_on", sa.DateTime(timezone=False), nullable=True),
+                    sa.Column("reporting_started_on", sa.DateTime(timezone=False), nullable=True),
+                    sa.Column("reporting_finished_on", sa.DateTime(timezone=False), nullable=True),
+                    sa.Column("timedout", sa.Boolean(), nullable=False, default=False),
+
                     sa.PrimaryKeyConstraint("id")
                 )
             else:
