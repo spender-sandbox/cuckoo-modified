@@ -57,7 +57,11 @@ def _perform(upgrade):
     else:
         # Read data.
         tasks_data = []
-        old_tasks = conn.execute("select id, target, category, timeout, priority, custom, machine, package, options, platform, memory, enforce_timeout, clock, added_on, started_on, completed_on, status, sample_id from tasks").fetchall()
+        old_tasks = conn.execute("select id, target, category, timeout, priority, custom, machine, package, options, platform, memory, enforce_timeout, clock, added_on, started_on, completed_on, status, sample_id, "
+                                 "dropped_files, running_processes, api_calls, domains, signatures_total, signatures_alert, files_written, registry_keys_modified, crash_issues, anti_issues, analysis_started_on, "
+                                 "analysis_finished_on, processing_started_on, processing_finished_on, signatures_started_on, signatures_finished_on, reporting_started_on, reporting_finished_on, timedout, "
+                                 "machine_id from tasks").fetchall()
+
         for item in old_tasks:
             d = {}
             d["id"] = item[0]
@@ -103,7 +107,76 @@ def _perform(upgrade):
 
             d["status"] = item[16]
             d["sample_id"] = item[17]
+            # Columns for statistics (via Thorsten's statistics page)
+            d["dropped_files"] = item[18]
+            d["running_processes"] = item[19]
+            d["api_calls"] = item[20]
+            d["domains"] = item[21]
+            d["signatures_total"] = item[22]
+            d["signatures_alert"] = item[23]
+            d["files_written"] = item[24]
+            d["registry_keys_modified"] = item[25]
+            d["crash_issues"] = item[26]
+            d["anti_issues"] = item[27]
 
+            if isinstance(item[28], datetime):
+                d["analysis_started_on"] = item[28]
+            elif item[28]:
+                d["analysis_started_on"] = parse(item[28])
+            else:
+                d["analysis_started_on"] = None
+
+            if isinstance(item[29], datetime):
+                d["analysis_finished_on"] = item[29]
+            elif item[29]:
+                d["analysis_finished_on"] = parse(item[29])
+            else:
+                d["analysis_finished_on"] = None
+
+            if isinstance(item[30], datetime):
+                d["processing_started_on"] = item[30]
+            elif item[30]:
+                d["processing_started_on"] = parse(item[30])
+            else:
+                d["processing_started_on"] = None
+
+            if isinstance(item[31], datetime):
+                d["processing_finished_on"] = item[31]
+            elif item[31]:
+                d["processing_finished_on"] = parse(item[31])
+            else:
+                d["processing_finished_on"] = None
+
+            if isinstance(item[32], datetime):
+                d["signatures_started_on"] = item[32]
+            elif item[32]:
+                d["signatures_started_on"] = parse(item[32])
+            else:
+                d["signatures_started_on"] = None
+
+            if isinstance(item[33], datetime):
+                d["signatures_finished_on"] = item[33]
+            elif item[33]:
+                d["signatures_finished_on"] = parse(item[33])
+            else:
+                d["signatures_finished_on"] = None
+
+            if isinstance(item[34], datetime):
+                d["reporting_started_on"] = item[34]
+            elif item[34]:
+                d["reporting_started_on"] = parse(item[34])
+            else:
+                d["reporting_started_on"] = None
+
+            if isinstance(item[35], datetime):
+                d["reporting_finished_on"] = item[35]
+            elif item[35]:
+                d["reporting_finished_on"] = parse(item[35])
+            else:
+                d["reporting_finished_on"] = None
+
+            d["timedout"] = item[36]
+            d["machine_id"] = item[37]
             tasks_data.append(d)
         if conn.engine.driver == "mysqldb":
             # Disable foreign key checking to migrate table avoiding checks.
@@ -156,6 +229,7 @@ def _perform(upgrade):
                     sa.Column("reporting_started_on", sa.DateTime(timezone=False), nullable=True),
                     sa.Column("reporting_finished_on", sa.DateTime(timezone=False), nullable=True),
                     sa.Column("timedout", sa.Boolean(), nullable=False, default=False),
+                    sa.Column("machine_id", sa.Integer(), nullable=True),
 
                     sa.PrimaryKeyConstraint("id")
                 )
@@ -234,6 +308,7 @@ def _perform(upgrade):
                     sa.Column("reporting_started_on", sa.DateTime(timezone=False), nullable=True),
                     sa.Column("reporting_finished_on", sa.DateTime(timezone=False), nullable=True),
                     sa.Column("timedout", sa.Boolean(), nullable=False, default=False),
+                    sa.Column("machine_id", sa.Integer(), nullable=True),
 
                     sa.PrimaryKeyConstraint("id")
                 )
