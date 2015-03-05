@@ -275,13 +275,18 @@ class PipeHandler(Thread):
 
                 if not MONITORED_SERVICES:
                     # Inject into services.exe so we can monitor service creation
-                    servproc = Process(pid=SERVICES_PID,suspended=False)
-                    filepath = servproc.get_filepath()
-                    servproc.inject(dll=DEFAULT_DLL, interest=filepath, nosleepskip=True)
-                    LASTINJECT_TIME = datetime.now()
-                    servproc.close()
-                    KERNEL32.Sleep(1000)
-                    MONITORED_SERVICES = True
+                    # if tasklist previously failed to get the services.exe PID we'll be
+                    # unable to inject
+                    if SERVICES_PID:
+                        servproc = Process(pid=SERVICES_PID,suspended=False)
+                        filepath = servproc.get_filepath()
+                        servproc.inject(dll=DEFAULT_DLL, interest=filepath, nosleepskip=True)
+                        LASTINJECT_TIME = datetime.now()
+                        servproc.close()
+                        KERNEL32.Sleep(1000)
+                        MONITORED_SERVICES = True
+                    else:
+                        log.error('Unable to monitor service %s' % (servname))
 
             # For now all we care about is bumping up our LASTINJECT_TIME to account for long delays between
             # injection and actual resume time where the DLL would have a chance to load in the new process
@@ -511,10 +516,29 @@ class Analyzer:
         DEFAULT_DLL = self.config.get_options().get("dll")
 
         # get PID for services.exe for monitoring services
-        s = os.popen("tasklist /V /FI \"IMAGENAME eq services.exe\"").read()
-        servidx = s.index("services.exe")
-        servstr = s[servidx + 12:].strip()
-        SERVICES_PID = int(servstr[:servstr.index(' ')], 10)
+        # tasklist sometimes fails under high-load (http://support.microsoft.com/kb/2732840)
+        # We can retry a few times to hopefully work around failures
+        retries = 4
+        while retries > 0: 
+            stdin, stdout, stderr = os.popen3("tasklist /V /FI \"IMAGENAME eq services.exe\"")
+            s = stdout.read()
+            err = stderr.read()
+            if s is None:
+                log.warning('tasklist failed with error "%s"' % (err))
+            else:
+                # it worked
+                break
+            retries -= 1
+
+
+        if s is None:
+            # All attempts failed
+            log.error('Unable to retreive services.exe PID')
+            SERVICES_PID = None
+        else:
+            servidx = s.index("services.exe")
+            servstr = s[servidx + 12:].strip()
+            SERVICES_PID = int(servstr[:servstr.index(' ')], 10)
 
         # Initialize and start the Pipe Servers. This is going to be used for
         # communicating with the injected and monitored processes.
