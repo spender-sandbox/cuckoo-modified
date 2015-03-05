@@ -523,7 +523,7 @@ class Analyzer:
             stdin, stdout, stderr = os.popen3("tasklist /V /FI \"IMAGENAME eq services.exe\"")
             s = stdout.read()
             err = stderr.read()
-            if s is None:
+            if 'services.exe' not in s:
                 log.warning('tasklist failed with error "%s"' % (err))
             else:
                 # it worked
@@ -531,7 +531,7 @@ class Analyzer:
             retries -= 1
 
 
-        if s is None:
+        if 'services.exe' not in s:
             # All attempts failed
             log.error('Unable to retreive services.exe PID')
             SERVICES_PID = None
@@ -539,6 +539,7 @@ class Analyzer:
             servidx = s.index("services.exe")
             servstr = s[servidx + 12:].strip()
             SERVICES_PID = int(servstr[:servstr.index(' ')], 10)
+            log.debug('services.exe PID is %s' % (SERVICES_PID))
 
         # Initialize and start the Pipe Servers. This is going to be used for
         # communicating with the injected and monitored processes.
