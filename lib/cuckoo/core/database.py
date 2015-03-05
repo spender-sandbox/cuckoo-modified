@@ -29,7 +29,7 @@ except ImportError:
 
 log = logging.getLogger(__name__)
 
-SCHEMA_VERSION = "495d5a6edef3"
+SCHEMA_VERSION = "4b09c454108c"
 TASK_PENDING = "pending"
 TASK_RUNNING = "running"
 TASK_COMPLETED = "completed"
