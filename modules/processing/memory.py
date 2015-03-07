@@ -968,7 +968,10 @@ class VolatilityManager(object):
         if self.voptions.ssdt.enabled:
             results["ssdt"] = vol.ssdt()
         if self.voptions.gdt.enabled:
-            results["gdt"] = vol.gdt()
+            try:
+                results["gdt"] = vol.gdt()
+            except:
+                pass
         if self.voptions.timers.enabled:
             results["timers"] = vol.timers()
         if self.voptions.messagehooks.enabled:
