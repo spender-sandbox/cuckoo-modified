@@ -961,7 +961,10 @@ class VolatilityManager(object):
         if self.voptions.callbacks.enabled:
             results["callbacks"] = vol.callbacks()
         if self.voptions.idt.enabled:
-            results["idt"] = vol.idt()
+            try:
+                results["idt"] = vol.idt()
+            except:
+                pass
         if self.voptions.ssdt.enabled:
             results["ssdt"] = vol.ssdt()
         if self.voptions.gdt.enabled:
