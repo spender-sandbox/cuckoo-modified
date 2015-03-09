@@ -82,6 +82,8 @@ WM_GETTEXT                = 0x0000000D
 WM_GETTEXTLENGTH          = 0x0000000E
 BM_CLICK                  = 0x000000F5
 
+TH32CS_SNAPPROCESS        = 0x02L
+
 class STARTUPINFO(Structure):
     _fields_ = [
         ("cb",            DWORD),
@@ -111,6 +113,20 @@ class PROCESS_INFORMATION(Structure):
         ("dwProcessId", DWORD),
         ("dwThreadId",  DWORD),
     ]
+
+class PROCESSENTRY32(Structure):
+    _fields_ = [
+        ("dwSize", DWORD),
+        ("cntUsage", DWORD),
+        ("th32ProcessID", DWORD),
+        ("th32DefaultHeapID", DWORD),
+        ("th32ModuleID", DWORD),
+        ("cntThreads", DWORD),
+        ("th32ParentProcessID", DWORD),
+        ("pcPriClassBase", DWORD),
+        ("dwFlags", DWORD),
+        ("sz_exeFile", c_char * 260)
+        ]
 
 class LUID(Structure):
     _fields_ = [

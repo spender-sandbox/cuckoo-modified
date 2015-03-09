@@ -55,6 +55,11 @@ def index(request):
                 options += ","
             options += "procmemdump=yes"
 
+        if request.POST.get("kernel_analysis"):
+            if options:
+                options += ","
+            options += "kernel_analysis=yes"   
+
         db = Database()
         task_ids = []
         task_machines = []
