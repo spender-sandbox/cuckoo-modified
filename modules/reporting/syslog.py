@@ -90,32 +90,36 @@ class Syslog(Report):
         #        ticket = 'ticket="' + str(option.split(':')[-1]) + '" '
         #syslog += uname
         #syslog += ticket
-        goodips = []
-        # Walks the IP exception list, appends to a multi-value ";" delimited field.
-        for ip in results["network"]["hosts"]:
-            if ip not in ipwhitelist:
-                goodips.append(ip)
-        if goodips == []:
-            syslog += 'Related_IPs="-" '
-        else:
-            syslog += 'Related_IPs="' + ';'.join(f for f in goodips) + '" '
-        resultsdms = []
-        baddms = []
-        gooddms = []
-        # Walks the domain exception list, appends to a multi-value ";" delimited field.
-        for domain in results["network"]["domains"]:
-            if domain["domain"] not in dnwhitelist:
-                resultsdms.append(domain["domain"])
-                for a in dnwhitelist:
-                    if domain["domain"].endswith(a):
-                        baddms.append(domain["domain"])
-        for domain in resultsdms:
-            if domain not in baddms:
-                gooddms.append(domain)
-        if gooddms == []:
-            syslog += 'Related_Domains="-" '
-        else:
-            syslog += 'Related_Domains="' + ';'.join(f for f in gooddms) + '" '
+        if "network" in results:
+            goodips = []
+            # Walks the IP exception list, appends to a multi-value ";" delimited field.
+            for ip in results["network"]["hosts"]:
+                if ip not in ipwhitelist:
+                    goodips.append(ip)
+            if goodips == []:
+                syslog += 'Related_IPs="-" '
+            else:
+                syslog += 'Related_IPs="' + ';'.join(f for f in goodips) + '" '
+            resultsdms = []
+            baddms = []
+            gooddms = []
+            # Walks the domain exception list, appends to a multi-value ";" delimited field.
+            for domain in results["network"]["domains"]:
+                if domain["domain"] not in dnwhitelist:
+                    resultsdms.append(domain["domain"])
+                    for a in dnwhitelist:
+                        if domain["domain"].endswith(a):
+                            baddms.append(domain["domain"])
+            for domain in resultsdms:
+                if domain not in baddms:
+                    gooddms.append(domain)
+            if gooddms == []:
+                syslog += 'Related_Domains="-" '
+            else:
+                syslog += 'Related_Domains="' + ';'.join(f for f in gooddms) + '" '
+            # Some network stats...
+            syslog += 'Total_TCP="' + str(len(results["network"]["tcp"])) + '" '
+            syslog += 'Total_UDP="' + str(len(results["network"]["udp"])) + '"'
         # VT stats if available
         if 'positives' in results["virustotal"]:
             VT_bad = str(results["virustotal"]["positives"])
@@ -164,9 +168,7 @@ class Syslog(Report):
                 syslog += 'Yara="-" '
             else:
                 syslog += 'Yara="' + ';'.join(r for r in yara) + '" '
-        # Some network stats...
-        syslog += 'Total_TCP="' + str(len(results["network"]["tcp"])) + '" '
-        syslog += 'Total_UDP="' + str(len(results["network"]["udp"])) + '"'
+
         return syslog
 
     def run(self, results):

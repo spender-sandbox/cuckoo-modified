@@ -1023,6 +1023,9 @@ class Signature(object):
                       matched items or the first matched item
         """
 
+        if not "network" in self.results:
+            return None
+
         hosts = self.results["network"].get("hosts")
         if not hosts:
             return None
@@ -1046,6 +1049,9 @@ class Signature(object):
 
         if all:
             retset = set()
+
+        if not "network" in self.results:
+            return None
 
         domains = self.results["network"].get("domains")
         if not domains:
@@ -1080,6 +1086,9 @@ class Signature(object):
 
         if all:
             retset = set()
+
+        if not "network" in self.results:
+            return None
 
         httpitems = self.results["network"].get("http")
         if not httpitems:

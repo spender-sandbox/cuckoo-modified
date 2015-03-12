@@ -17,6 +17,7 @@ from lib.cuckoo.common.exceptions import CuckooCriticalError
 from lib.cuckoo.common.objects import File
 from lib.cuckoo.common.utils import create_folder
 from lib.cuckoo.core.database import Database, TASK_COMPLETED, TASK_REPORTED
+from lib.cuckoo.core.database import TASK_FAILED_ANALYSIS
 from lib.cuckoo.core.database import ANALYSIS_STARTED, ANALYSIS_FINISHED
 from lib.cuckoo.core.guest import GuestManager
 from lib.cuckoo.core.plugins import list_plugins, RunAuxiliary, RunProcessing
@@ -376,8 +377,11 @@ class AnalysisManager(Thread):
                       self.task.id, success)
 
             if self.cfg.cuckoo.process_results:
-                self.process_results()
-                Database().set_status(self.task.id, TASK_REPORTED)
+                if success:
+                    self.process_results()
+                    Database().set_status(self.task.id, TASK_REPORTED)
+                else:
+                    Database().set_status(self.task.id, TASK_FAILED_ANALYSIS)
 
             # We make a symbolic link ("latest") which links to the latest
             # analysis - this is useful for debugging purposes. This is only

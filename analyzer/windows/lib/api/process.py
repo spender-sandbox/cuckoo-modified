@@ -250,7 +250,7 @@ class Process:
         os.system("net start "+service_name)
                 
         si = STARTUPINFO()
-        si.cb = sizeof(startup_info)
+        si.cb = sizeof(si)
         pi = PROCESS_INFORMATION()
         cr = CREATE_NEW_CONSOLE 
                 

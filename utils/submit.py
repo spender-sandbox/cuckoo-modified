@@ -72,6 +72,8 @@ def main():
 
     target = to_unicode(args.target)
 
+    sane_timeout = min(args.timeout, 60 * 60 * 24)
+
     if args.url:
         if args.remote:
             if not HAVE_REQUESTS:
@@ -86,7 +88,7 @@ def main():
             data = dict(
                 url=target,
                 package=args.package,
-                timeout=args.timeout,
+                timeout=sane_timeout,
                 options=args.options,
                 priority=args.priority,
                 machine=args.machine,
@@ -126,7 +128,7 @@ def main():
         else:
             task_id = db.add_url(target,
                                  package=args.package,
-                                 timeout=args.timeout,
+                                 timeout=sane_timeout,
                                  options=args.options,
                                  priority=args.priority,
                                  machine=args.machine,
@@ -200,7 +202,7 @@ def main():
 
                 data = dict(
                     package=args.package,
-                    timeout=args.timeout,
+                    timeout=sane_timeout,
                     options=args.options,
                     priority=args.priority,
                     machine=args.machine,
@@ -248,7 +250,7 @@ def main():
 
                 task_id = db.add_path(file_path=file_path,
                                       package=args.package,
-                                      timeout=args.timeout,
+                                      timeout=sane_timeout,
                                       options=args.options,
                                       priority=args.priority,
                                       machine=args.machine,
