@@ -377,11 +377,8 @@ class AnalysisManager(Thread):
                       self.task.id, success)
 
             if self.cfg.cuckoo.process_results:
-                if success:
-                    self.process_results()
-                    Database().set_status(self.task.id, TASK_REPORTED)
-                else:
-                    Database().set_status(self.task.id, TASK_FAILED_ANALYSIS)
+                self.process_results()
+                Database().set_status(self.task.id, TASK_REPORTED)
 
             # We make a symbolic link ("latest") which links to the latest
             # analysis - this is useful for debugging purposes. This is only
