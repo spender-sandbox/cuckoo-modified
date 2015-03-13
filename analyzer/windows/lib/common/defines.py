@@ -82,6 +82,11 @@ WM_GETTEXT                = 0x0000000D
 WM_GETTEXTLENGTH          = 0x0000000E
 BM_CLICK                  = 0x000000F5
 
+GENERIC_READ              = 0x80000000
+GENERIC_WRITE             = 0x40000000
+
+OPEN_EXISTING             = 0x00000003
+
 TH32CS_SNAPPROCESS        = 0x02L
 
 class STARTUPINFO(Structure):
