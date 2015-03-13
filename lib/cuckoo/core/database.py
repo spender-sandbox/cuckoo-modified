@@ -1153,7 +1153,11 @@ class Database(object):
             if completed_after:
                 search = search.filter(Task.completed_on > completed_after)
 
-            search = search.order_by(order_by or "added_on desc")
+            if order_by is not None:
+                search = search.order_by(order_by)
+            else:
+                search = search.order_by(Task.added_on.desc())
+
             tasks = search.limit(limit).offset(offset).all()
             return tasks
         except SQLAlchemyError as e:
