@@ -952,8 +952,13 @@ def detect_hex_strings(vba_code):
         value = match.group()
         if value not in found:
             decoded = binascii.unhexlify(value)
-            results.append((value, decoded))
-            found.add(value)
+            # Check if decoded string is actually ascii
+            try:
+                decoded.decode("ascii")
+                results.append((value, decoded))
+                found.add(value)
+            except:
+                pass
     return results
 
 
