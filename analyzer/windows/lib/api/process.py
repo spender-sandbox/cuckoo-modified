@@ -540,6 +540,8 @@ class Process:
                 config.write("force-sleepskip=0\n")
             elif "force-sleepskip" in cfgoptions:
                 config.write("force-sleepskip={0}\n".format(cfgoptions["force-sleepskip"]))
+            if "full-logs" in cfgoptions:
+                config.write("full-logs={0}\n".format(cfgoptions["full-logs"]))
 
             if firstproc:
                 Process.first_process = False
