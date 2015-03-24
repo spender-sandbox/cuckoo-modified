@@ -5,6 +5,7 @@
 import os
 import shutil
 import logging
+import re
 
 from zipfile import ZipFile, BadZipfile
 
@@ -78,7 +79,7 @@ class Zip(Package):
     def start(self, path):
         root = os.environ["TEMP"]
         password = self.options.get("password")
-
+        exe_regex = re.compile('(\.exe|\.scr|\.msi|\.bat|\.lnk)$',flags=re.IGNORECASE)
         zipinfos = self.get_infos(path)
         self.extract_zip(path, root, password)
 
@@ -87,8 +88,13 @@ class Zip(Package):
         if not file_name:
             # No name provided try to find a better name.
             if len(zipinfos):
-                # Take the first one.
-                file_name = zipinfos[0].filename
+                # Attempt to find a valid exe extension in the archive
+                for f in zipinfos:
+                    if re.search(f.filename):
+                        file_name = f.filename
+                        break
+                # Default to the first one if none found
+                file_name = file_name if file_name else zipinfos[0].filename
                 log.debug("Missing file option, auto executing: {0}".format(file_name))
             else:
                 raise CuckooPackageError("Empty ZIP archive")
