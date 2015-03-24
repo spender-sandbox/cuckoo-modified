@@ -90,7 +90,7 @@ class Zip(Package):
             if len(zipinfos):
                 # Attempt to find a valid exe extension in the archive
                 for f in zipinfos:
-                    if re.search(f.filename):
+                    if exe_regex.search(f.filename):
                         file_name = f.filename
                         break
                 # Default to the first one if none found
