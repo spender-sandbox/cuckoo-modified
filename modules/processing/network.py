@@ -190,7 +190,7 @@ class Pcap:
             self._reassemble_smtp(conn, data)
         # IRC.
         if conn["dport"] != 21 and self._check_irc(data):
-            self._add_irc(data)
+            self._add_irc(conn, data)
 
     def _udp_dissect(self, conn, data):
         """Runs all UDP dissectors.
@@ -468,20 +468,26 @@ class Pcap:
 
         return req.isthereIRC(tcpdata)
 
-    def _add_irc(self, tcpdata):
+    def _add_irc(self, conn, tcpdata):
         """
         Adds an IRC communication.
+	@param conn: TCP connection info.
         @param tcpdata: TCP data in flow
-        @param dport: destination port
         """
 
         try:
             reqc = ircMessage()
             reqs = ircMessage()
             filters_sc = ["266"]
+	    client = reqc.getClientMessages(tcpdata)
+	    for message in client:
+		message.update(conn)
+	    server = reqs.getServerMessagesFilter(tcpdata, filters_sc)
+	    for message in server:
+	        message.update(conn)
             self.irc_requests = self.irc_requests + \
-                reqc.getClientMessages(tcpdata) + \
-                reqs.getServerMessagesFilter(tcpdata, filters_sc)
+                client + \
+                server
         except Exception:
             return False
 
