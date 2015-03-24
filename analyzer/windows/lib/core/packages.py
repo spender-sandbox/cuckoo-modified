@@ -40,6 +40,8 @@ def choose_package(file_type, file_name):
         return "jar"
     elif "Zip" in file_type:
         return "zip"
+    elif "RAR archive" in file_type or file_name.endswith(".rar"):
+        return "rar"
     elif file_name.endswith((".py", ".pyc")) or "Python script" in file_type:
         return "python"
     elif file_name.endswith(".vbs"):
