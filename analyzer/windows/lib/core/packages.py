@@ -36,7 +36,7 @@ def choose_package(file_type, file_name):
         return "ppt"
     elif "HTML" in file_type or file_name.endswith((".htm", ".html")):
         return "html"
-    elif file_name.endswith(".jar"):
+    elif "Java Jar" in file_type or file_name.endswith(".jar"):
         return "jar"
     elif "Zip" in file_type:
         return "zip"
