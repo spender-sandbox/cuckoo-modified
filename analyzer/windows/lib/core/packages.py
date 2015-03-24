@@ -50,7 +50,5 @@ def choose_package(file_type, file_name):
         return "vbs"
     elif file_name.endswith(".msi"):
         return "msi"
-    elif "Macromedia Flash data" in file_type or file_name.endswith(".swf"):
-        return "ie"
     else:
         return "generic"
