@@ -671,7 +671,7 @@ class Analyzer:
                               "(package={0}): {1}".format(package_name, e))
 
         # Initialize the analysis package.
-        pack = package_class(self.config.get_options())
+        pack = package_class(self.config.get_options(), self.config)
 
         # Initialize Auxiliary modules
         Auxiliary()

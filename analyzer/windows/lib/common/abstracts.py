@@ -11,8 +11,9 @@ class Package(object):
     """Base abstract analysis package."""
     PATHS = []
 
-    def __init__(self, options={}):
+    def __init__(self, options={}, config=None):
         """@param options: options dict."""
+        self.config = config
         self.options = options
         self.pids = []
 
@@ -40,7 +41,7 @@ class Package(object):
             if len(path) > 1 and path[1].lower() == "system32":
                 sys32 = True
             if basedir == "SystemRoot":
-                if not sys32 or "PE32+" not in self.options["file_type"]:
+                if not sys32 or "PE32+" not in self.config.file_type:
                     yield os.path.join(os.getenv("SystemRoot"), *path[1:])
                 elif sys32:
                     yield os.path.join(os.getenv("SystemRoot"), "sysnative", *path[2:])
