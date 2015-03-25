@@ -36,8 +36,14 @@ class Package(object):
         """Enumerate available paths."""
         for path in self.PATHS:
             basedir = path[0]
+            sys32 = False
+            if len(path) > 1 and path[1].lower() == "system32":
+                sys32 = True
             if basedir == "SystemRoot":
-                yield os.path.join(os.getenv("SystemRoot"), *path[1:])
+                if not sys32 or "PE32+" not in self.options["file_type"]:
+                    yield os.path.join(os.getenv("SystemRoot"), *path[1:])
+                elif sys32:
+                    yield os.path.join(os.getenv("SystemRoot"), "sysnative", *path[2:])
             elif basedir == "ProgramFiles":
                 yield os.path.join(os.getenv("ProgramFiles"), *path[1:])
                 if os.getenv("ProgramFiles(x86)"):

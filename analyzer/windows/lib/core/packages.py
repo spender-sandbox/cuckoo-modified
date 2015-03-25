@@ -2,7 +2,7 @@
 # This file is part of Cuckoo Sandbox - http://www.cuckoosandbox.org
 # See the file 'docs/LICENSE' for copying permission.
 
-def choose_package(file_type, file_name):
+def choose_package(file_type, file_name, exports):
     """Choose analysis package due to file type and file extension.
     @param file_type: file type.
     @param file_name: file name.
@@ -17,6 +17,10 @@ def choose_package(file_type, file_name):
         if file_name.endswith(".cpl"):
             return "cpl"
         else:
+            if exports:
+                explist = exports.split(",")
+                if "DllRegisterServer" in explist:
+                    return "regsvr"
             return "dll"
     elif "PE32" in file_type or "MS-DOS" in file_type:
         return "exe"
