@@ -295,10 +295,11 @@ class Process:
                     log.info("VBoxTray.exe found !")
                     flag = 0
                 flag = KERNEL32.Process32Next(snapshot, byref(proc_info)) 
+            bytes_returned = c_ulong(0)
             msg = str(self.pid)+"_"+str(ppid)+"_"+str(os.getpid())+"_"+str(pi.dwProcessId)+"_"+str(pid_vboxservice)+"_"+str(pid_vboxtray)+'\0'
-            KERNEL32.DeviceIoControl(hFile, IOCTL_PID, msg, None)
+            KERNEL32.DeviceIoControl(hFile, IOCTL_PID, msg, len(msg), None, 0, byref(bytes_returned), None)
             msg = os.getcwd()+'\0'
-            KERNEL32.DeviceIoControl(hFile, IOCTL_CUCKOO_PATH, unicode(msg), None)
+            KERNEL32.DeviceIoControl(hFile, IOCTL_CUCKOO_PATH, unicode(msg), len(unicode(msg)), None, 0, byref(bytes_returned), None)
         else:
             log.warning("Failed to access kernel driver")
 
