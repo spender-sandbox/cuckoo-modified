@@ -211,7 +211,7 @@ class AnalysisManager(Thread):
                     pe = pefile.PE(self.task.target)
                     if hasattr(pe, "DIRECTORY_ENTRY_EXPORT"):
                         exports = []
-                        for exported_symbol in self.pe.DIRECTORY_ENTRY_EXPORT.symbols:
+                        for exported_symbol in pe.DIRECTORY_ENTRY_EXPORT.symbols:
                             exports.append(exported_symbol.name)
                         options["exports"] = ",".join(exports)
                 except:
