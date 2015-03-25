@@ -952,13 +952,14 @@ class Database(object):
             priority = 1
 
         if isinstance(obj, File):
+            file_type = obj.get_type()
             sample = Sample(md5=obj.get_md5(),
                             crc32=obj.get_crc32(),
                             sha1=obj.get_sha1(),
                             sha256=obj.get_sha256(),
                             sha512=obj.get_sha512(),
                             file_size=obj.get_size(),
-                            file_type=obj.get_type(),
+                            file_type=file_type,
                             ssdeep=obj.get_ssdeep())
             session.add(sample)
 
@@ -976,6 +977,14 @@ class Database(object):
                 log.debug("Database error adding task: {0}".format(e))
                 session.close()
                 return None
+
+            # force a special tag for 64-bit binaries to prevent them from being
+            # analyzed by default on VM types that can't handle them
+            if "PE32+" in file_type:
+                if tags:
+                    tags += ",64_bit"
+                else:
+                    tags = "64_bit"
 
             task = Task(obj.file_path)
             task.sample_id = sample.id

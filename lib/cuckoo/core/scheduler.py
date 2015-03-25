@@ -241,10 +241,6 @@ class AnalysisManager(Thread):
             if not self.store_file():
                 return False
 
-            if "PE32+" in File(self.task.target).get_type():
-                if "64_bit" not in self.task.tags:
-                    self.task.tags.append("64_bit")
-
         # Acquire analysis machine.
         try:
             self.acquire_machine()
