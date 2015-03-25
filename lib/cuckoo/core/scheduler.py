@@ -2,6 +2,7 @@
 # This file is part of Cuckoo Sandbox - http://www.cuckoosandbox.org
 # See the file 'docs/LICENSE' for copying permission.
 
+import re
 import os
 import time
 import shutil
@@ -212,7 +213,7 @@ class AnalysisManager(Thread):
                     if hasattr(pe, "DIRECTORY_ENTRY_EXPORT"):
                         exports = []
                         for exported_symbol in pe.DIRECTORY_ENTRY_EXPORT.symbols:
-                            exports.append(exported_symbol.name)
+                            exports.append(re.sub(r'[^A-Za-z0-9_?@-]', '', exported_symbol.name))
                         options["exports"] = ",".join(exports)
                 except:
                     pass
