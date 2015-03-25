@@ -27,7 +27,7 @@ class Regsvr(Package):
             os.rename(path, new_path)
             path = new_path
 
-        args = "{0},{1}".format(path, function)
+        args = path
         if arguments:
             args += " {0}".format(arguments)
 
