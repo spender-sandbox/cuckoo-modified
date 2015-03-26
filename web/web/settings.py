@@ -112,7 +112,8 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     # Cuckoo headers.
-    "web.headers.CuckooHeaders",
+    'web.headers.CuckooHeaders',
+    'ratelimit.middleware.RatelimitMiddleware',
 )
 
 ROOT_URLCONF = 'web.urls'
@@ -123,6 +124,8 @@ WSGI_APPLICATION = 'web.wsgi.application'
 TEMPLATE_DIRS = (
     "templates",
 )
+
+RATELIMIT_VIEW = 'api.views.limit_exceeded'
 
 INSTALLED_APPS = (
     'django.contrib.auth',
@@ -137,6 +140,8 @@ INSTALLED_APPS = (
     # 'django.contrib.admindocs',
     'analysis',
     'compare',
+    'api',
+    'ratelimit',
 )
 
 LOGIN_REDIRECT_URL = "/"
