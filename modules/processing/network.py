@@ -337,6 +337,12 @@ class Pcap:
                 # TODO: add srv handling
                 query["answers"].append(ans)
 
+            if dns.rcode == dpkt.dns.DNS_RCODE_NXDOMAIN:
+                ans = { }
+                ans["type"] = "NXDOMAIN"
+                ans["data"] = ""
+                query["answers"].append(ans)
+
             self._add_domain(query["request"])
 
             reqtuple = (query["type"], query["request"])
