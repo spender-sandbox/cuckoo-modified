@@ -594,10 +594,6 @@ def tasks_status(request, task_id):
                 "error_value": "Task status API is disabled"}
         return jsonize(resp, response=True)
 
-    check = validate_task(task_id)
-    if check["error"]:
-        return jsonize(check, response=True)
-
     status = db.view_task(task_id).to_dict()["status"]
     resp = {"error": False,
             "data": status}
