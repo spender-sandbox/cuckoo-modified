@@ -48,6 +48,7 @@ The following libraries are not strictly required, but their installation is rec
     * `pygal`_ (Optional): for using statistics in ``web.py``
     * `clamd`_ (Optional): for scanning artifacts with ClamAV (release >= 0.3.3)
     * `m2crypto`_ (Optional): for extracting PE digital certificate information
+	* `django-ratelimit` (Optional): required if using the Django web interface
 
 Some of them are already packaged in Debian/Ubuntu and can be installed with the following command::
 
@@ -55,7 +56,7 @@ Some of them are already packaged in Debian/Ubuntu and can be installed with the
 
 Except for *python-magic*, *python-dpkt* and *python-libvirt*, the others can be installed through ``pip`` too::
 
-    $ sudo pip install jinja2 pymongo bottle pefile django chardet pygal clamd
+    $ sudo pip install jinja2 pymongo bottle pefile django chardet pygal clamd django-ratelimit
 
 To have MAEC support, you need to first install the Cybox and then the MAEC libraries::
 
