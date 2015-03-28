@@ -721,7 +721,6 @@ def tasks_iocs(request, task_id, detail=None):
         resp = {"error": True,
                 "error_value": "Unable to retrieve report to parse for IOC's"}
         return jsonize(resp, response=True)
-    print "1"
     data = {}
     data["info"] = buf["info"]
     del data["info"]["custom"]
@@ -734,7 +733,6 @@ def tasks_iocs(request, task_id, detail=None):
         del sig["alert"]
         data["signatures"].append(sig)
     # Grab target file info
-    #print json.dumps(s["target"])
     if "target" in buf.keys():
         data["target"] = buf["target"]
         if data["target"]["category"] == "file":
@@ -746,7 +744,6 @@ def tasks_iocs(request, task_id, detail=None):
                 del data["target"]["file_id"]
             except:
                 pass
-    print "2"
     data["network"] = {}
     if "network" in buf.keys():
         data["network"]["traffic"] = {}
@@ -758,12 +755,10 @@ def tasks_iocs(request, task_id, detail=None):
         data["network"]["traffic"]["smtp"] = len(buf["network"]["smtp"])
         data["network"]["hosts"] = buf["network"]["hosts"]
     data["network"]["ids"] = {}
-    print "3"
     if "suricata" in buf.keys():
         data["network"]["ids"]["alerts"] = len(buf["suricata"]["alerts"])
         data["network"]["ids"]["files"] = len(buf["suricata"]["files"])
     data["static"] = {}
-    print "4"
     if "static" in buf.keys():
         pe = {}
         pdf = {}

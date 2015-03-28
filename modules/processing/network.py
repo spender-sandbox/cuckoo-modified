@@ -146,7 +146,7 @@ class Pcap:
             except:
                 log.error("Unable to GEOIP resolve %s" % ip)
         return cn
-            
+
     def _add_hosts(self, connection):
         """Add IPs to unique list.
         @param connection: connection data
