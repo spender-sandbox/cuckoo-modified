@@ -24,6 +24,8 @@ class Config:
         else:
             config.read(os.path.join(CUCKOO_ROOT, "conf", "%s.conf" % file_name))
 
+        self.fullconfig = config._sections
+
         for section in config.sections():
             setattr(self, section, Dictionary())
             for name, raw_value in config.items(section):
@@ -56,3 +58,5 @@ class Config:
             raise CuckooOperationalError("Option %s is not found in "
                                          "configuration, error: %s" %
                                          (section, e))
+    def get_config(self):
+        return self.fullconfig
