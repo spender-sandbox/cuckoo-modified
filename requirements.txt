@@ -9,3 +9,4 @@ chardet
 nose
 jsbeautifier
 pygal
+dnspython
