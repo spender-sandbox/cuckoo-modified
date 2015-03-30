@@ -92,8 +92,7 @@ Community Download Utility
 ==========================
 
 This utility downloads signatures from `Cuckoo Community Repository`_ and installs
-specific additional modules in your local setup and for example update id with
-all the latest available signatures.
+specific additional modules in your local setup.
 Following are the usage options::
 
     $ ./utils/community.py -h

@@ -168,7 +168,6 @@ class Pcap:
 
     def _enrich_hosts(self, unique_hosts):
         enriched_hosts=[]
-	print(unique_hosts.__repr__())
         while unique_hosts:
             ip = unique_hosts.pop()
             inaddrarpa = ""
