@@ -366,6 +366,9 @@ class BsonParser(object):
                 pid = argdict["ProcessIdentifier"]
                 self.handler.log_thread(context, pid)
                 return True
+            elif apiname == "__environ__":
+                self.handler.log_environ(context, argdict)
+                return True
 
             # elif apiname == "__anomaly__":
                 # tid = argdict["ThreadIdentifier"]

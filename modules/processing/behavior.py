@@ -40,6 +40,7 @@ class ParseProcessLog(list):
         self.first_seen = None
         self.calls = self
         self.lastcall = None
+        self.environdict = None
         self.api_count = 0
         self.call_id = 0
         self.conversion_cache = {}
@@ -198,6 +199,15 @@ class ParseProcessLog(list):
 
     def log_thread(self, context, pid):
         pass
+
+    def log_environ(self, context, environdict):
+        """ log user/process environment information for later use in behavioral signatures
+
+        @param context: ignored
+        @param environdict: dict of the various collected information, which will expand over time
+        """
+
+        self.environdict = environdict
 
     def log_anomaly(self, subcategory, tid, funcname, msg):
         """ log an anomaly parsed from data file
@@ -371,7 +381,8 @@ class Processes:
                 "module_path": current_log.module_path,
                 "first_seen": logtime(current_log.first_seen),
                 "calls": current_log.calls,
-                "threads" : current_log.threads
+                "threads" : current_log.threads,
+                "environ" : current_log.environdict
             })
 
         # Sort the items in the results list chronologically. In this way we
