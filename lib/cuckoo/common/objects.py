@@ -261,7 +261,7 @@ class File:
                     return
 
                 try:
-                    rules = yara.compile(rulepath, error_on_warning=True)
+                    rules = yara.compile(rulepath, error_on_warning=False)
 
                     for match in rules.match(self.file_path):
                         strings = []
