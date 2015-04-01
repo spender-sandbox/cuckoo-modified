@@ -113,12 +113,20 @@ def get_analysis_info(db, id=-1, task=None):
         if rtmp.has_key("malfamily") and rtmp["malfamily"]:
             new["malfamily"] = rtmp["malfamily"]
 
+        if settings.DISPLAY_SHRIKE and rtmp.has_key("info") and rtmp["info"].has_key("shrike_msg") and rtmp["info"]["shrike_msg"]:
+            new["shrike_msg"] = rtmp["info"]["shrike_msg"]
+
         if settings.MOLOCH_ENABLED:
             if settings.MOLOCH_BASE[-1] != "/":
                 settings.MOLOCH_BASE = settings.MOLOCH_BASE + "/"
             new["moloch_url"] = settings.MOLOCH_BASE + "?date=-1&expression=tags" + quote("\x3d\x3d\x22%s\x3a%s\x22" % (settings.MOLOCH_NODE,new["id"]),safe='')
 
     return new
+
+if settings.DISPLAY_SHRIKE:
+    global_settings["display_shrike"] = True
+else:
+    global_settings["display_shrike"] = False
 
 @require_safe
 def index(request, page=1):
@@ -339,6 +347,17 @@ def filtered_chunk(request, task_id, pid, category, apilist):
                                   context_instance=RequestContext(request))
     else:
         raise PermissionDenied
+
+def shrike(request,task_id):
+    shrike = results_db.analysis.find_one({"info.id": int(task_id)},{"info.shrike_url": 1,"info.shrike_msg": 1,"info.shrike_sid":1, "info.shrike_refer":1},sort=[("_id", pymongo.DESCENDING)])
+    if not shrike:
+        return render_to_response("error.html",
+                                  {"error": "The specified analysis does not exist"},
+                                  context_instance=RequestContext(request))
+
+    return render_to_response("analysis/shrike.html",
+                              {"shrike": shrike},
+                              context_instance=RequestContext(request))
 
 @csrf_exempt
 def search_behavior(request, task_id):
@@ -766,6 +785,14 @@ def search(request):
                     records = results_db.analysis.find({"virustotal.results.sig": {"$regex": value, "$options": "-i"}}).sort([["_id", -1]])
                 elif term == "comment":
                     records = results_db.analysis.find({"info.comments.Data": {"$regex": value, "$options": "-i"}}).sort([["_id", -1]])
+                elif term == "shrikemsg":
+                    records = results_db.analysis.find({"info.shrike_msg": {"$regex" : value, "$options" : "-1"}}).sort([["_id", -1]])
+                elif term == "shrikeurl":
+                    records = results_db.analysis.find({"info.shrike_url": {"$regex" : value, "$options" : "-1"}}).sort([["_id", -1]])
+                elif term == "shrikerefer":
+                    records = results_db.analysis.find({"info.shrike_refer": {"$regex" : value, "$options" : "-1"}}).sort([["_id", -1]])
+                elif term == "shrikesid":
+                    records = results_db.analysis.find({"info.shrike_sid": int(value)}).sort([["_id", -1]])
                 else:
                     return render_to_response("analysis/search.html",
                                               {"analyses": None,
@@ -827,6 +854,14 @@ def search(request):
                     records = es.search(index=fullidx, doc_type="analysis", q="virustotal.results.sig: %s" % value)["hits"]["hits"]
                 elif term == "comment":
                     records = es.search(index=fullidx, doc_type="analysis", q="info.comments.Data: %s" % value)["hits"]["hits"]
+                elif term == "shrikemsg":
+                    records = es.search(index=fullidx, doc_type="analysis", q="info.shrike_msg: %s" % value)["hits"]["hits"]
+                elif term == "shrikeurl":
+                    records = es.search(index=fullidx, doc_type="analysis", q="info.shrike_url: %s" % value)["hits"]["hits"]
+                elif term == "shrikerefer":
+                    records = es.search(index=fullidx, doc_type="analysis", q="info.shrike_refer: %s" % value)["hits"]["hits"]
+                elif term == "shrikesid":
+                    records = es.search(index=fullidx, doc_type="analysis", q="info.shrike_sid: %s" % value)["hits"]["hits"]
                 else:
                     return render_to_response("analysis/search.html",
                                               {"analyses": None,

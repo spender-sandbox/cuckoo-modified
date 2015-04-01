@@ -17,4 +17,5 @@ urlpatterns = patterns("",
     url(r"^procdump/(?P<object_id>\w+)/(?P<task_id>\d+)/(?P<process_id>\d+)/(?P<start>\w+)/(?P<end>\w+)/$", "analysis.views.procdump"),
     url(r"^(?P<task_id>\d+)/pcapstream/(?P<conntuple>[.,\w]+)/$", "analysis.views.pcapstream"),
     url(r"^(?P<task_id>\d+)/comments/$", "analysis.views.comments"),
+    url(r"^shrike/(?P<task_id>\d+)/$", "analysis.views.shrike"),
 )

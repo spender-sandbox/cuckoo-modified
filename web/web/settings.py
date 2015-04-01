@@ -24,6 +24,11 @@ if not cfg.mongodb.get("enabled") and not cfg.elasticsearchdb.get("enabled"):
 if cfg.mongodb.get("enabled") and cfg.elasticsearchdb.get("enabled"):
     raise Exception("Both database backend reporting modules are enabled. Please only enabled ElasticSearch or MongoDB.")
 
+aux_cfg =  Config("auxiliary")
+vtdl_cfg = aux_cfg.virustotaldl
+tor_cfg = aux_cfg.tor
+display_shrike_cfg = aux_cfg.displayshrikeinwebui
+
 # Get connection options from reporting.conf.
 MONGO_HOST = cfg.mongodb.get("host", "127.0.0.1")
 MONGO_PORT = cfg.mongodb.get("port", 27017)
@@ -65,6 +70,9 @@ OPT_ZER0M0N = False
 
 # To disable comment support, change the below to False
 COMMENTS = True
+
+TOR_ENABLED = tor_cfg.get("enabled",False)
+DISPLAY_SHRIKE = display_shrike_cfg.get("enabled",False)
 
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
