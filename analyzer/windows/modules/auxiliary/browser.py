@@ -31,7 +31,7 @@ class Browser(Auxiliary, Thread):
             return True
 
         while self.do_run:
-            time.sleep(1000)
+            time.sleep(1)
             self.seconds_elapsed = self.seconds_elapsed + 1
             if self.seconds_elapsed == 30:
                 iexplore = os.path.join(os.getenv("ProgramFiles"), "Internet Explorer", "iexplore.exe")
