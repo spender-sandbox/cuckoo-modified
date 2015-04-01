@@ -185,6 +185,11 @@ def index(request):
                                         tags=tags)
                             if task_id:
                                 task_ids.append(task_id)
+                    elif r.status_code == 403:
+                        return render_to_response("error.html",
+                                                  {"error": "API key provided is not a valid VirusTotal Private API key"},
+                                                  context_instance=RequestContext(request))
+
 
                 if not onesuccess:
                     return render_to_response("error.html",
