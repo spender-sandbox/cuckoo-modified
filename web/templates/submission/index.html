@@ -57,6 +57,9 @@ $(document).ready( function() {
                 <ul class="nav nav-tabs">
                     <li class="active"><a href="#file" data-toggle="tab"><span class="glyphicon glyphicon-file"></span> File</a></li>
                     <li><a href="#url" data-toggle="tab"><span class="glyphicon glyphicon-globe"></span> URL</a></li>
+                    {% if vtdlenabled %}
+                        <li><a href="#vtdl" data-toggle="tab"><span class="glyphicon glyphicon-globe"></span> VirusTotal Download</a></li>
+                    {% endif %}
                 </ul>
                 <div class="tab-content">
                     <div class="tab-pane fade in active" id="file">
