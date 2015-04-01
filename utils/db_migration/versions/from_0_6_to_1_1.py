@@ -235,7 +235,7 @@ def upgrade():
             op.create_table(
                 "tasks",
                 sa.Column("id", sa.Integer(), nullable=False),
-                sa.Column("target", sa.String(length=255), nullable=False),
+                sa.Column("target", sa.Text(), nullable=False),
                 sa.Column("category", sa.String(length=255), nullable=False),
                 sa.Column("timeout", sa.Integer(), server_default="0", nullable=False),
                 sa.Column("priority", sa.Integer(), server_default="1", nullable=False),
