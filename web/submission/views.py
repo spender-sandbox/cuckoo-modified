@@ -182,6 +182,11 @@ def index(request):
                                         tags=tags)
                             if task_id:
                                 task_ids.append(task_id)
+                    else:
+                        return render_to_response("error.html",
+                                              {"error": "Provided hash not found on VirusTotal"},
+                                              context_instance=RequestContext(request))
+
 
 
         tasks_count = len(task_ids)
