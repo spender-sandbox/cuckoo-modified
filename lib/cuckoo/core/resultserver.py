@@ -263,6 +263,9 @@ class ResultHandler(SocketServer.BaseRequestHandler):
     def log_thread(self, context, pid):
         log.debug("New thread (tid={0}, pid={1})".format(context[3], pid))
 
+    def log_environ(self, context, environdict):
+        log.debug("Environ received for pid {0}".format(self.pid))
+
     def log_anomaly(self, subcategory, tid, funcname, msg):
         log.debug("Anomaly (tid=%s, category=%s, funcname=%s): %s",
                   tid, subcategory, funcname, msg)
