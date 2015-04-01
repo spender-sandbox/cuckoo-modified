@@ -32,7 +32,8 @@ MOLOCH_ENABLED = moloch_cfg.get("enabled", False)
 
 GATEWAYS = aux_cfg.get("gateways")
 VTDL_ENABLED = vtdl_cfg.get("enabled",False)
-VTDL_KEY = vtdl_cfg.get("dlkey",None)
+VTDL_PRIV_KEY = vtdl_cfg.get("dlprivkey",None)
+VTDL_INTEL_KEY = vtdl_cfg.get("dlintelkey",None)
 VTDL_PATH = vtdl_cfg.get("dlpath",None)
 
 DEBUG = True

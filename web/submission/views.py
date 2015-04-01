@@ -136,9 +136,9 @@ def index(request):
                     task_ids.append(task_id)
         elif settings.VTDL_ENABLED and "vtdl" in request.POST:
             vtdl = request.POST.get("vtdl").strip()
-            if not settings.VTDL_KEY or not settings.VTDL_PATH:
+            if (not settings.VTDL_PRIV_KEY and not settings.VTDL_INTEL_KEY) or not settings.VTDL_PATH:
                     return render_to_response("error.html",
-                                              {"error": "You specified VirusTotal but must edit the file and specify your VTDL_KEY variable and VTDL_PATH base directory"},
+                                              {"error": "You specified VirusTotal but must edit the file and specify your VTDL_PRIV_KEY or VTDL_INTEL_KEY variable and VTDL_PATH base directory"},
                                               context_instance=RequestContext(request))
             else:
                 base_dir = tempfile.mkdtemp(prefix='cuckoovtdl',dir=settings.VTDL_PATH)
@@ -151,8 +151,12 @@ def index(request):
 
                 for h in hashlist:
                     filename = base_dir + "/" + h
-                    url = 'https://www.virustotal.com/vtapi/v2/file/download'
-                    params = {'apikey': settings.VTDL_KEY, 'hash': h}
+                    if settings.VTDL_PRIV_KEY:
+                        url = 'https://www.virustotal.com/vtapi/v2/file/download'
+                        params = {'apikey': settings.VTDL_PRIV_KEY, 'hash': h}
+                    else:
+                        url = 'https://www.virustotal.com/intelligence/download/'
+                        params = {'apikey': settings.VTDL_INTEL_KEY, 'hash': h}
 
                     try:
                         r = requests.get(url, params=params, verify=True)
@@ -187,7 +191,7 @@ def index(request):
                                 task_ids.append(task_id)
                     elif r.status_code == 403:
                         return render_to_response("error.html",
-                                                  {"error": "API key provided is not a valid VirusTotal Private API key"},
+                                                  {"error": "API key provided is not a valid VirusTotal key or is not authorized for VirusTotal downloads"},
                                                   context_instance=RequestContext(request))
 
 
