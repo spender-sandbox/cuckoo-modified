@@ -160,9 +160,15 @@ def index(request):
                                               {"error": "Error completing connection to VirusTotal: {0}".format(e)},
                                               context_instance=RequestContext(request))
                     if r.status_code == 200:
-                        f = open(filename, 'wb')
-                        f.write(r.content)
-                        f.close()
+                        try:
+                            f = open(filename, 'wb')
+                            f.write(r.content)
+                            f.close()
+                        except:
+                            return render_to_response("error.html",
+                                              {"error": "Error writing VirusTotal download file to temporary path"},
+                                              context_instance=RequestContext(request))
+
                         for entry in task_machines:
                             task_id = db.add_path(file_path=filename,
                                         package=package,
