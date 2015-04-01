@@ -161,6 +161,8 @@ def init_logging():
 
     log.setLevel(logging.INFO)
 
+    logging.getLogger("urllib3").setLevel(logging.WARNING)
+
 def init_console_logging():
     """Initializes logging only to console."""
     formatter = logging.Formatter("%(asctime)s [%(name)s] %(levelname)s: %(message)s")
