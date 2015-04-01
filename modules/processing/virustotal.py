@@ -1,11 +1,10 @@
-# Copyright (C) 2010-2015 Cuckoo Foundation.
+# Copyright (C) 2010-2015 Cuckoo Foundation, Accuvant, Inc. (bspengler@accuvant.com)
 # This file is part of Cuckoo Sandbox - http://www.cuckoosandbox.org
 # See the file 'docs/LICENSE' for copying permission.
 
 import os
 import json
-import urllib
-import urllib2
+import requests
 import re
 
 from lib.cuckoo.common.abstracts import Processing
@@ -68,19 +67,14 @@ class VirusTotal(Processing):
             # Not supported type, exit.
             return virustotal
 
-        data = urllib.urlencode({"resource": resource, "apikey": key})
+        data = {"resource": resource, "apikey": key}
 
         try:
-            request = urllib2.Request(url, data)
-            response = urllib2.urlopen(request, timeout=int(timeout))
-            response_data = response.read()
-        except urllib2.URLError as e:
-            raise CuckooProcessingError("Unable to establish connection "
+            r = requests.get(url, params=data, verify=True, timeout=int(timeout))
+            response_data = r.content
+        except requests.exceptions.RequestException as e:
+            raise CuckooProcessingError("Unable to complete connection "
                                         "to VirusTotal: {0}".format(e))
-        except urllib2.HTTPError as e:
-            raise CuckooProcessingError("Unable to perform HTTP request to "
-                                        "VirusTotal "
-                                        "(http code={0})".format(e.code))
 
         try:
             virustotal = json.loads(response_data)

@@ -23,10 +23,17 @@ MONGO_PORT = cfg.get("port", 27017)
 MONGO_DB = cfg.get("db", "cuckoo")
 
 moloch_cfg = Config("reporting").moloch
+aux_cfg =  Config("auxiliary")
+vtdl_cfg = Config("auxiliary").virustotaldl
 
 MOLOCH_BASE = moloch_cfg.get("base", None)
 MOLOCH_NODE = moloch_cfg.get("node", None)
 MOLOCH_ENABLED = moloch_cfg.get("enabled", False)
+
+GATEWAYS = aux_cfg.get("gateways")
+VTDL_ENABLED = vtdl_cfg.get("enabled",False)
+VTDL_KEY = vtdl_cfg.get("dlkey",None)
+VTDL_PATH = vtdl_cfg.get("dlpath",None)
 
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG

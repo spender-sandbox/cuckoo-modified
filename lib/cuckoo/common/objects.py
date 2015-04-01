@@ -289,8 +289,8 @@ class File:
 
         return matches
     def get_clamav(self):
-        """Get Yara signatures matches.
-        @return: matched Yara signatures.
+        """Get ClamAV signatures matches.
+        @return: matched ClamAV signatures.
         """
         matches = None
 

@@ -75,6 +75,14 @@ $(document).ready( function() {
                             <input type="text" class="form-control" id="form_url" name="url" placeholder="URL" />
                         </div>
                     </div>
+                    {% if vtdlenabled %}
+                     <div class="tab-pane fade" id="vtdl">
+                         <div class="input-group">
+                             <label class="sr-only" form="form_vtdl">VirusTotal Download</label>
+                             <input type="text" class="form-control" id="form_vtdl" name="vtdl" placeholder="VTDL" />
+                         </div>
+                     </div>
+                    {% endif %}
                 </div>
             </div>
             <div class="panel" id="accordion" style="margin-top: 20px;">
@@ -82,7 +90,7 @@ $(document).ready( function() {
                     <div class="panel-heading">
                         <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion" href="#options"><i class="icon icon-cog"></i> Advanced Options</a>
                     </div>
-                    <div id="options" class="panel-collapse collapse" style="text-align: left;">
+                    <div id="options" class="panel-collapse collapse in" style="text-align: left;">
                         <div class="panel-body">
                             <div class="form-group">
                                 <label for="form_package">Analysis Package</label>
@@ -91,6 +99,23 @@ $(document).ready( function() {
                                     {% for package in packages %}
                                     <option value="{{package}}">{{package}}</option>
                                     {% endfor %}
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="form_machine">Machine</label>
+                                <select class="form-control" id="form_machine" name="machine">
+                                {% for id,label in machines %}
+                                    <option value="{{id}}">{{label}}</option>
+                                {% endfor %}
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="form_gateway">Gateway</label>
+                                <select class="form-control" id="form_gateway" name="gateway">
+                                <option value="" active>Default</option>
+                                {% for k,v in gateways.items %}
+                                    <option value="{{k}}">{{k}}</option>
+                                {% endfor %}
                                 </select>
                             </div>
                             <div class="form-group">
@@ -107,14 +132,6 @@ $(document).ready( function() {
                                     <option value="1">Low</option>
                                     <option value="2">Medium</option>
                                     <option value="3">High</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="form_machine">Machine</label>
-                                <select class="form-control" id="form_machine" name="machine">
-                                {% for id,label in machines %}
-                                    <option value="{{id}}">{{label}}</option>
-                                {% endfor %}
                                 </select>
                             </div>
                             <div class="form-group">

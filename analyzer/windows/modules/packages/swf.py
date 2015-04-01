@@ -3,7 +3,6 @@
 # See the file 'docs/LICENSE' for copying permission.
 
 from lib.common.abstracts import Package
-from lib.api.process import Process
 
 class SWF(Package):
     """Shockwave Flash analysis package.
@@ -12,12 +11,4 @@ class SWF(Package):
     """
 
     def start(self, path):
-        p = Process()
-        free = self.options.get("free")
-        dll = self.options.get("dll")
-        p.execute(path="bin/flashplayer.exe", args=path, suspended=True)
-        p.inject(dll, path)
-        p.resume()
-        if free:
-            return None
-        return p.pid
+        return self.execute(path="bin/flashplayer.exe", path, path)
