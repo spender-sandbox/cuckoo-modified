@@ -147,6 +147,7 @@ def index(request):
                     hashlist=vtdl.split(",")
                 else:
                     hashlist.append(vtdl)
+                onesuccess = False
 
                 for h in hashlist:
                     filename = base_dir + "/" + h
@@ -169,6 +170,8 @@ def index(request):
                                               {"error": "Error writing VirusTotal download file to temporary path"},
                                               context_instance=RequestContext(request))
 
+                        onesuccess = True
+
                         for entry in task_machines:
                             task_id = db.add_path(file_path=filename,
                                         package=package,
@@ -182,8 +185,9 @@ def index(request):
                                         tags=tags)
                             if task_id:
                                 task_ids.append(task_id)
-                    else:
-                        return render_to_response("error.html",
+
+                if not onesuccess:
+                    return render_to_response("error.html",
                                               {"error": "Provided hash not found on VirusTotal"},
                                               context_instance=RequestContext(request))
 
