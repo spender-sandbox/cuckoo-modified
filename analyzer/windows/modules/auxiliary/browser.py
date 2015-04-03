@@ -15,8 +15,8 @@ log = logging.getLogger(__name__)
 class Browser(Auxiliary, Thread):
     """Launch a browser 30 seconds into the analysis"""
 
-    def __init__(self, options):
-        Auxiliary.__init__(self, options)
+    def __init__(self, options, config):
+        Auxiliary.__init__(self, options, config)
         Thread.__init__(self)
         self.do_run = True
         self.seconds_elapsed = 0
