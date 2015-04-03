@@ -408,6 +408,7 @@ class Summary:
         self.delete_files = []
         self.started_services = []
         self.created_services = []
+        self.executed_commands = []
 
     def event_apicall(self, call, process):
         """Generate processes list from streamed calls/processes.
@@ -540,6 +541,34 @@ class Summary:
             if servicename and servicename not in self.created_services:
                 self.created_services.append(servicename)
 
+        elif call["api"] == "CreateProcessInternalW":
+            cmdline = None
+            for argument in call["arguments"]:
+                if argument["name"] == "CommandLine":
+                    cmdline = argument["value"].strip()
+            if cmdline and cmdline not in self.executed_processes:
+                self.executed_processes.append(cmdline)
+        elif call["api"] == "ShellExecuteExW":
+            path = ""
+            params = ""
+            cmdline = None
+            for argument in call["arguments"]:
+                if argument["name"] == "FilePath":
+                    path = argument["value"].strip()
+                elif argument["name"] == "Parameters":
+                    params = argument["value"].strip()
+            if path:
+                cmdline = path + " " + params
+            if cmdline and cmdline not in self.executed_processes:
+                self.executed_processes.append(cmdline)
+        elif call["api"].startswith("NtCreateProcess"):
+            cmdline = None
+            for argument in call["arguments"]:
+                if argument["name"] == "FileName":
+                    cmdline = argument["value"].strip()
+            if cmdline and cmdline not in self.executed_processes:
+                self.executed_processes.append(cmdline)
+
         elif call["api"] == "MoveFileWithProgressW":
             origname = None
             newname = None
@@ -608,7 +637,7 @@ class Summary:
         """Get registry keys, mutexes and files.
         @return: Summary of keys, read keys, written keys, mutexes and files.
         """
-        return {"files": self.files, "read_files" : self.read_files, "write_files" : self.write_files, "delete_files" : self.delete_files, "keys": self.keys, "read_keys": self.read_keys, "write_keys": self.write_keys, "delete_keys" : self.delete_keys, "mutexes": self.mutexes, "created_services" : self.created_services, "started_services" : self.started_services }
+        return {"files": self.files, "read_files" : self.read_files, "write_files" : self.write_files, "delete_files" : self.delete_files, "keys": self.keys, "read_keys": self.read_keys, "write_keys": self.write_keys, "delete_keys" : self.delete_keys, "executed_commands" : self.executed_commands, "mutexes": self.mutexes, "created_services" : self.created_services, "started_services" : self.started_services }
 
 class Enhanced(object):
     """Generates a more extensive high-level representation than Summary."""

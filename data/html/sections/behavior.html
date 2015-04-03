@@ -68,18 +68,6 @@
             {% endif %}
         </div>
         <div class="well well-small">
-            <b>Mutexes</b>
-            {% if results.behavior.summary.mutexes %}
-                <ul>
-                    {% for mutex in results.behavior.summary.mutexes %}
-                    <li><span class="mono">{{mutex}}</span></li>
-                    {% endfor %}
-                </ul>
-            {% else %}
-                Nothing to display.
-            {% endif %}
-        </div>
-        <div class="well well-small">
             <b>Registry Keys</b>
             {% if results.behavior.summary["keys"] %}
                 <ul>
@@ -121,6 +109,30 @@
                 <ul>
                     {% for key in results.behavior.summary["delete_keys"] %}
                     <li><span class="mono">{{key}}</span></li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                Nothing to display.
+            {% endif %}
+        </div>
+        <div class="well well-small">
+            <b>Executed Commands</b>
+            {% if results.behavior.summary.executed_commands %}
+                <ul>
+                    {% for cmd in results.behavior.summary.executed_commands %}
+                    <li><span class="mono">{{cmd}}</span></li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                Nothing to display.
+            {% endif %}
+        </div>
+        <div class="well well-small">
+            <b>Mutexes</b>
+            {% if results.behavior.summary.mutexes %}
+                <ul>
+                    {% for mutex in results.behavior.summary.mutexes %}
+                    <li><span class="mono">{{mutex}}</span></li>
                     {% endfor %}
                 </ul>
             {% else %}

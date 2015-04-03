@@ -10,6 +10,7 @@
             <li><a href="#summary_read_keys" data-toggle="tab">Read Registry Keys</a></li>
             <li><a href="#summary_write_keys" data-toggle="tab">Modified Registry Keys</a></li>
             <li><a href="#summary_delete_keys" data-toggle="tab">Deleted Registry Keys</a></li>
+            <li><a href="#summary_executed_commands" data-toggle="tab">Executed Commands</a></li>
             <li><a href="#summary_mutexes" data-toggle="tab">Mutexes</a></li>
             <li><a href="#summary_created_services" data-toggle="tab">Created Services</a></li>
             <li><a href="#summary_started_services" data-toggle="tab">Started Services</a></li>
@@ -83,6 +84,15 @@
                 {% if analysis.behavior.summary.delete_keys %}
                     {% for key in analysis.behavior.summary.delete_keys %}
                         {{key}}<br />
+                    {% endfor %}
+                {% endif %}
+                </div>
+            </div>
+            <div class="tab-pane fade" id="summary_executed_commands">
+                <div class="well mono">
+                {% if results.behavior.summary.executed_commands %}
+                    {% for cmd in results.behavior.summary.executed_commands %}
+                        {{cmd}}<br />
                     {% endfor %}
                 {% endif %}
                 </div>
