@@ -90,8 +90,8 @@
             </div>
             <div class="tab-pane fade" id="summary_executed_commands">
                 <div class="well mono">
-                {% if results.behavior.summary.executed_commands %}
-                    {% for cmd in results.behavior.summary.executed_commands %}
+                {% if analysis.behavior.summary.executed_commands %}
+                    {% for cmd in analysis.behavior.summary.executed_commands %}
                         {{cmd}}<br />
                     {% endfor %}
                 {% endif %}
