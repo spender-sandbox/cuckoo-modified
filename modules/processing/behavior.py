@@ -541,7 +541,7 @@ class Summary:
             if servicename and servicename not in self.created_services:
                 self.created_services.append(servicename)
 
-        elif call["api"] == "CreateProcessInternalW":
+        elif call["api"] == "CreateProcessInternalW" or call["api"] == "NtCreateUserProcess":
             cmdline = None
             for argument in call["arguments"]:
                 if argument["name"] == "CommandLine":
