@@ -11,7 +11,7 @@ from ctypes import c_bool, c_int, create_unicode_buffer
 
 from lib.common.abstracts import Auxiliary
 from lib.common.defines import KERNEL32, USER32
-from lib.common.defines import WM_GETTEXT, WM_GETTEXTLENGTH, BM_CLICK
+from lib.common.defines import WM_GETTEXT, WM_GETTEXTLENGTH, WM_CLOSE, BM_CLICK
 
 log = logging.getLogger(__name__)
 
@@ -105,8 +105,8 @@ def click_mouse():
 class Human(Auxiliary, Thread):
     """Human after all"""
 
-    def __init__(self, options):
-        Auxiliary.__init__(self, options)
+    def __init__(self, options, config):
+        Auxiliary.__init__(self, options, config)
         Thread.__init__(self)
         self.do_run = True
 
@@ -114,12 +114,30 @@ class Human(Auxiliary, Thread):
         self.do_run = False
 
     def run(self):
+        seconds = 0
         nohuman = self.options.get("nohuman")
         if nohuman:
             return True
+        file_type = self.config.file_type
+        file_name = self.config.file_name
+        officedoc = False
+        if "Rich Text Format" in file_type or "Microsoft Word" in file_type or \
+            "Microsoft Office Word" in file_type or file_name.endswith((".doc", ".docx", ".rtf")):
+            officedoc = True
+        elif "Microsoft Office Excel" in file_type or "Microsoft Excel" in file_type or \
+            file_name.endswith((".xls", ".xlsx")):
+            officedoc = True
+        elif "Microsoft PowerPoint" in file_type or \
+            file_name.endswith((".ppt", ".pptx", ".pps", ".ppsx", ".pptm", ".potm", ".potx", ".ppsm")):
+            officedoc = True
 
         while self.do_run:
+            if officedoc and seconds == 30:
+                # send ALT+F4 equivalent
+                USER32.SendMessage(USER32.GetForegroundWindow(), WM_CLOSE, None, None)
+
             click_mouse()
             move_mouse()
             USER32.EnumWindows(EnumWindowsProc(foreach_window), 0)
             KERNEL32.Sleep(1000)
+            seconds += 1

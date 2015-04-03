@@ -80,6 +80,7 @@ FILE_ATTRIBUTE_HIDDEN     = 0x00000002
 
 WM_GETTEXT                = 0x0000000D
 WM_GETTEXTLENGTH          = 0x0000000E
+WM_CLOSE                  = 0x00000010
 BM_CLICK                  = 0x000000F5
 
 GENERIC_READ              = 0x80000000

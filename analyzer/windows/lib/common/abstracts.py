@@ -129,6 +129,7 @@ class Package(object):
         return True
 
 class Auxiliary(object):
-    def __init__(self, options={}):
+    def __init__(self, options={}, config=None):
         """@param options: options dict."""
         self.options = options
+        self.config = config
