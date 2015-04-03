@@ -869,6 +869,25 @@ class Signature(object):
                                  all=all,
                                  ignorecase=False)
 
+    def check_executed_command(self, pattern, regex=False, all=False, ignorecase=True):
+        """Checks for a command being executed.
+        @param pattern: string or expression to check for.
+        @param regex: boolean representing if the pattern is a regular
+                      expression or not and therefore should be compiled.
+        @param all: boolean representing if all results should be returned
+                      in a set or not
+        @param ignorecase: whether the search should be performed case-insensitive
+                      or not
+        @return: depending on the value of param 'all', either a set of
+                      matched items or the first matched item
+        """
+        subject = self.results["behavior"]["summary"]["executed_commands"]
+        return self._check_value(pattern=pattern,
+                                 subject=subject,
+                                 regex=regex,
+                                 all=all,
+                                 ignorecase=ignorecase)
+
     def check_api(self, pattern, process=None, regex=False, all=False):
         """Checks for an API being called.
         @param pattern: string or expression to check for.

@@ -568,7 +568,7 @@ class Summary:
 
         elif call["category"] == "synchronization":
             value = self.get_argument(call, "MutexName")
-            if value not in self.mutexes:
+            if value and value not in self.mutexes:
                 self.mutexes.append(value)
 
     def run(self):
