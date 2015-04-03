@@ -134,7 +134,7 @@ class Human(Auxiliary, Thread):
         while self.do_run:
             if officedoc and seconds == 30:
                 # send ALT+F4 equivalent
-                USER32.SendMessage(USER32.GetForegroundWindow(), WM_CLOSE, None, None)
+                USER32.SendMessageW(USER32.GetForegroundWindow(), WM_CLOSE, None, None)
 
             click_mouse()
             move_mouse()
