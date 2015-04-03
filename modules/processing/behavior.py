@@ -442,7 +442,6 @@ class Summary:
                self.write_keys.append(name)
         elif call["api"] == "NtDeleteValueKey" or call["api"] == "NtDeleteKey" or call["api"].startswith("RegDeleteValue"):
             name = self.get_argument(call, "FullName")
-
             if name and name not in self.keys:
                self.keys.append(name)
             if name and name not in self.delete_keys:
@@ -509,20 +508,20 @@ class Summary:
 
         elif call["api"] == "CreateProcessInternalW" or call["api"] == "NtCreateUserProcess":
             cmdline = self.get_argument(call, "CommandLine", strip=True)
-            if cmdline and cmdline not in self.executed_processes:
-                self.executed_processes.append(cmdline)
+            if cmdline and cmdline not in self.executed_commands:
+                self.executed_commands.append(cmdline)
         elif call["api"] == "ShellExecuteExW":
             path = self.get_argument(call, "FilePath", strip=True)
             params = self.get_argument(call, "Parameters", strip=True)
             cmdline = None
             if path:
                 cmdline = path + " " + params
-            if cmdline and cmdline not in self.executed_processes:
-                self.executed_processes.append(cmdline)
+            if cmdline and cmdline not in self.executed_commands:
+                self.executed_commands.append(cmdline)
         elif call["api"].startswith("NtCreateProcess"):
             cmdline = self.get_argument(call, "FileName")
-            if cmdline and cmdline not in self.executed_processes:
-                self.executed_processes.append(cmdline)
+            if cmdline and cmdline not in self.executed_commands:
+                self.executed_commands.append(cmdline)
 
         elif call["api"] == "MoveFileWithProgressW":
             origname = self.get_argument(call, "ExistingFileName")
