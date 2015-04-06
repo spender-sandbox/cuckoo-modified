@@ -9,7 +9,7 @@ import struct
 
 from lib.cuckoo.common.abstracts import Processing
 from lib.cuckoo.common.config import Config
-from lib.cuckoo.common.netlog import NetlogParser, BsonParser
+from lib.cuckoo.common.netlog import BsonParser
 from lib.cuckoo.common.utils import convert_to_printable, pretty_print_arg, pretty_print_retval, logtime
 
 log = logging.getLogger(__name__)
@@ -63,14 +63,12 @@ class ParseProcessLog(list):
             self.api_call_cache.append(None)
 
     def parse_first_and_reset(self):
-        """ Open file and either init Netlog or Bson Parser. Read till first process
+        """ Open file and init Bson Parser. Read till first process
         """
         self.fd = open(self._log_path, "rb")
 
         if self._log_path.endswith(".bson"):
             self.parser = BsonParser(self)
-        elif self._log_path.endswith(".raw"):
-            self.parser = NetlogParser(self)
         else:
             self.fd.close()
             self.fd = None

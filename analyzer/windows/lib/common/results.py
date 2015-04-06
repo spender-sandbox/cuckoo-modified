@@ -20,7 +20,7 @@ def upload_to_host(file_path, dump_path, duplicate):
             infd = open(file_path, "rb")
             buf = infd.read(BUFSIZE)
             while buf:
-            	nc.send(buf, retry=False)
+                nc.send(buf, retry=False)
                 buf = infd.read(BUFSIZE)
     except Exception as e:
         log.error("Exception uploading file %s to host: %s", file_path, e)

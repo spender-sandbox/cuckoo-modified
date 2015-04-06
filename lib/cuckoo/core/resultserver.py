@@ -15,14 +15,13 @@ from lib.cuckoo.common.constants import CUCKOO_ROOT
 from lib.cuckoo.common.exceptions import CuckooOperationalError
 from lib.cuckoo.common.exceptions import CuckooCriticalError
 from lib.cuckoo.common.exceptions import CuckooResultError
-from lib.cuckoo.common.netlog import NetlogParser, BsonParser
+from lib.cuckoo.common.netlog import BsonParser
 from lib.cuckoo.common.utils import create_folder, Singleton, logtime
 
 log = logging.getLogger(__name__)
 
 BUFSIZE = 16 * 1024
 EXTENSIONS = {
-    NetlogParser: ".raw",
     BsonParser: ".bson",
 }
 
@@ -157,7 +156,7 @@ class ResultHandler(SocketServer.BaseRequestHandler):
                 raise Disconnect()
             buf += tmp
 
-        if isinstance(self.protocol, (NetlogParser, BsonParser)):
+        if isinstance(self.protocol, BsonParser):
             if self.rawlogfd:
                 self.rawlogfd.write(buf)
             else:
@@ -182,9 +181,7 @@ class ResultHandler(SocketServer.BaseRequestHandler):
         # Read until newline.
         buf = self.read_newline()
 
-        if "NETLOG" in buf:
-            self.protocol = NetlogParser(self)
-        elif "BSON" in buf:
+        if "BSON" in buf:
             self.protocol = BsonParser(self)
         elif "FILE" in buf:
             self.protocol = FileUpload(self, is_binary=False, duplicate=False)
@@ -251,8 +248,8 @@ class ResultHandler(SocketServer.BaseRequestHandler):
             path = os.path.join(self.storagepath, "logs", "%d.csv" % pid)
             self.logfd = open(path, "wb")
 
-        # Raw Bson or Netlog extension.
-        ext = EXTENSIONS.get(type(self.protocol), ".raw")
+        # Raw Bson extension.
+        ext = EXTENSIONS.get(type(self.protocol), ".bson")
         path = os.path.join(self.storagepath, "logs", str(pid) + ext)
         self.rawlogfd = open(path, "wb")
         self.rawlogfd.write(self.startbuf)
