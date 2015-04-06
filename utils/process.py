@@ -130,6 +130,8 @@ def main():
     if args.debug:
         log.setLevel(logging.DEBUG)
 
+    logging.getLogger("urllib3").setLevel(logging.WARNING)
+
     init_modules()
 
     if args.id == "auto":
