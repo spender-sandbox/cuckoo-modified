@@ -31,7 +31,8 @@
                 <td><a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion" href="#filecreate">Example</a></td>
             </tr>
             <tr class="collapse" id="filecreate">
-                <td colspan="5"><pre>curl -F file=@/path/to/file -F machine="VM-Name" {{ config.api.url }}/api/tasks/create/file/<br />Note: machine is optional.</pre></td>
+                <td colspan="5"><pre>curl -F file=@/path/to/file -F machine="VM-Name" {{ config.api.url }}/api/tasks/create/file/
+Note: machine is optional.</pre></td>
             </tr>
             <tr>
                 <td>URL Create</td>
@@ -46,7 +47,7 @@
                 <td><a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion" href="#urlcreate">Example</a></td>
             </tr>
             <tr class="collapse" id="urlcreate">
-              <td colspan="5"><pre>curl -F url="somebadness.tld" -F {{ config.api.url }}/api/tasks/create/file/</pre></td>
+              <td colspan="5"><pre>curl -F url="somebadness.tld" {{ config.api.url }}/api/tasks/create/url/</pre></td>
             </tr>
             <tr>
                 <td>File View</td>
@@ -61,7 +62,9 @@
                 <td><a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion" href="#fileview">Example</a></td>
             </tr>
             <tr class="collapse" id="fileview">
-              <td colspan="5"><pre>curl {{ config.api.url }}/api/files/view/md5/[md5 hash]/<br />curl {{ config.api.url }}/api/files/view/sha256/[sha256 hash]/<br />curl {{ config.api.url }}/api/files/view/id/[sample id]/</pre></td>
+              <td colspan="5"><pre>curl {{ config.api.url }}/api/files/view/md5/[md5 hash]/
+curl {{ config.api.url }}/api/files/view/sha256/[sha256 hash]/
+curl {{ config.api.url }}/api/files/view/id/[sample id]/</pre></td>
             </tr>
             <tr>
                 <td>Task Search</td>
@@ -76,7 +79,8 @@
                 <td><a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion" href="#tasksearch">Example</a></td>
             </tr>
             <tr class="collapse" id="tasksearch">
-              <td colspan="5"><pre>curl {{ config.api.url }}/api/tasks/search/md5/[md5 hash]/<br />curl {{ config.api.url }}/api/tasks/search/sha256/[sha256 hash]/</pre></td>
+              <td colspan="5"><pre>curl {{ config.api.url }}/api/tasks/search/md5/[md5 hash]/
+curl {{ config.api.url }}/api/tasks/search/sha256/[sha256 hash]/</pre></td>
             </tr>
             <tr>
                 <td>Tasks List</td>
@@ -91,7 +95,9 @@
                 <td><a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion" href="#tasklist">Example</a></td>
             </tr>
             <tr class="collapse" id="tasklist">
-              <td colspan="5"><pre>curl {{ config.api.url }}/api/tasks/<br />curl {{ config.api.url }}/api/tasks/[limit]/ (specify a limit of tasks to return)<br />curl {{ config.api.url }}/api/tasks/[limit]/[offset]/ (specify a limit of tasks to return, offset by a specific amount)</pre></td>
+              <td colspan="5"><pre>curl {{ config.api.url }}/api/tasks/list/
+curl {{ config.api.url }}/api/tasks/list/[limit]/ (specify a limit of tasks to return)
+curl {{ config.api.url }}/api/tasks/list/[limit]/[offset]/ (specify a limit of tasks to return, offset by a specific amount)</pre></td>
             </tr>
             <tr>
                 <td>Task View</td>
