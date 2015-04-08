@@ -1230,7 +1230,7 @@ def demux_sample_and_add_to_db(db, file_path, timeout=0, package="", options="",
                                memory=False, enforce_timeout=False, clock=None):
     """
     Handles ZIP file submissions, submitting each extracted file to the database
-    Returns a set of added task IDs
+    Returns a list of added task IDs
     """
     task_ids = []
     # extract files from the ZIP
