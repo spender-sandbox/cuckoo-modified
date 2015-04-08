@@ -238,7 +238,7 @@ def main():
                     return False
 
                 json = response.json()
-                task_id = json["task_id"]
+                task_ids = [ json["task_id"] ]
             else:
                 if args.unique:
                     sha256 = File(file_path).get_sha256()
@@ -248,20 +248,15 @@ def main():
                             print(bold(yellow("Duplicate")) + msg)
                         continue
 
-                task_id = db.add_path(file_path=file_path,
-                                      package=args.package,
-                                      timeout=sane_timeout,
-                                      options=args.options,
-                                      priority=args.priority,
-                                      machine=args.machine,
-                                      platform=args.platform,
-                                      custom=args.custom,
-                                      memory=args.memory,
-                                      enforce_timeout=args.enforce_timeout,
-                                      clock=args.clock,
-                                      tags=args.tags)
+                task_ids = demux_sample_and_add_to_db(db=db, file_path=file_path, package=args.package, timeout=sane_timeout, options=args.options,
+                                                      priority=args.priority, machine=args.machine, platform=args.platform, memory=args.memory,
+                                                      custom=args.custom, enforce_timeout=args.enforce_timeout, clock=args.clock, tags=args.tags)
 
-            if task_id:
+            tasks_count = len(task_ids)
+            if tasks_count > 1:
+                if not args.quiet:
+                    print(bold(green("Success")) + u": File \"{0}\" added as task with IDs {1}".format(file_path, task_ids))
+            elif tasks_count > 0:
                 if not args.quiet:
                     print(bold(green("Success")) + u": File \"{0}\" added as task with ID {1}".format(file_path, task_id))
             else:

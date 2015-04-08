@@ -22,7 +22,7 @@ except ImportError:
 sys.path.append(os.path.join(os.path.abspath(os.path.dirname(__file__)), ".."))
 
 from lib.cuckoo.common.constants import CUCKOO_VERSION, CUCKOO_ROOT
-from lib.cuckoo.common.utils import store_temp_file, delete_folder
+from lib.cuckoo.common.utils import store_temp_file, delete_folder, demux_sample_and_add_to_db
 from lib.cuckoo.core.database import Database, TASK_RUNNING, Task
 
 # Global DB pointer.
@@ -70,22 +70,9 @@ def tasks_create_file():
         enforce_timeout = True
 
     temp_file_path = store_temp_file(data.file.read(), data.filename)
-    task_id = db.add_path(
-        file_path=temp_file_path,
-        package=package,
-        timeout=timeout,
-        priority=priority,
-        options=options,
-        machine=machine,
-        platform=platform,
-        tags=tags,
-        custom=custom,
-        memory=memory,
-        enforce_timeout=enforce_timeout,
-        clock=clock
-    )
-
-    response["task_id"] = task_id
+    task_ids = demux_sample_and_add_to_db(db=db, file_path=temp_file_path, package=package, timeout=timeout, options=options, priority=priority,
+                                          machine=machine, platform=platform, custom=custom, memory=memory, enforce_timeout=enforce_timeout, tags=tags, clock=clock)
+    response["task_ids"] = task_ids
     return jsonize(response)
 
 @route("/tasks/create/url", method="POST")
