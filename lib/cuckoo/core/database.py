@@ -13,7 +13,7 @@ from lib.cuckoo.common.exceptions import CuckooDatabaseError
 from lib.cuckoo.common.exceptions import CuckooOperationalError
 from lib.cuckoo.common.exceptions import CuckooDependencyError
 from lib.cuckoo.common.objects import File, URL
-from lib.cuckoo.common.utils import create_folder, Singleton, classlock, SuperLock
+from lib.cuckoo.common.utils import create_folder, demux_sample, Singleton, classlock, SuperLock
 
 try:
     from sqlalchemy import create_engine, Column
@@ -1061,6 +1061,35 @@ class Database(object):
         return self.add(File(file_path), timeout, package, options, priority,
                         custom, machine, platform, tags, memory,
                         enforce_timeout, clock)
+
+    def demux_sample_and_add_to_db(self, file_path, timeout=0, package="", options="", priority=1,
+                                   custom="", machine="", platform="", tags=None,
+                                   memory=False, enforce_timeout=False, clock=None):
+        """
+        Handles ZIP file submissions, submitting each extracted file to the database
+        Returns a list of added task IDs
+        """
+        task_ids = []
+        # extract files from the (potential) ZIP
+        extracted_files = demux_sample(file_path)
+        # create tasks for each file in the ZIP
+        for file in extracted_files:
+            task_id = self.add_path(file_path=file,
+                                    timeout=timeout,
+                                    priority=priority,
+                                    options=options,
+                                    package=package,
+                                    machine=machine,
+                                    platform=platform,
+                                    memory=memory,
+                                    custom=custom,
+                                    enforce_timeout=enforce_timeout,
+                                    tags=tags,
+                                    clock=clock)
+            if task_id:
+                task_ids.append(task_id)
+
+        return task_ids
 
     @classlock
     def add_url(self, url, timeout=0, package="", options="", priority=1,

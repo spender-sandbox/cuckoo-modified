@@ -29,7 +29,7 @@ sys.path.append(os.path.join(os.path.abspath(os.path.dirname(__file__)), ".."))
 
 from lib.cuckoo.core.database import Database
 from lib.cuckoo.common.constants import CUCKOO_ROOT
-from lib.cuckoo.common.utils import store_temp_file, demux_sample_and_add_to_db
+from lib.cuckoo.common.utils import store_temp_file
 
 # Templating engine.
 env = Environment()
@@ -238,8 +238,8 @@ def submit():
                                 "memory": memory})
 
     temp_file_path = store_temp_file(data.file.read(), data.filename)
-    task_ids = demux_sample_and_add_to_db(db=db, file_path=temp_file_path, package=package, timeout=timeout, options=options, priority=priority,
-                                                          machine=entry, memory=memory)
+    task_ids = db.demux_sample_and_add_to_db(file_path=temp_file_path, package=package, timeout=timeout, options=options, priority=priority,
+                                             machine=entry, memory=memory)
     tasks_count = len(task_ids)
     if tasks_count > 0:
         template = env.get_template("success.html")

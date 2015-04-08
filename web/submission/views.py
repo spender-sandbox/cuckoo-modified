@@ -16,7 +16,7 @@ from django.template import RequestContext
 sys.path.append(settings.CUCKOO_PATH)
 
 from lib.cuckoo.core.database import Database
-from lib.cuckoo.common.utils import store_temp_file, demux_sample_and_add_to_db
+from lib.cuckoo.common.utils import store_temp_file
 
 def force_int(value):
     try:
@@ -102,8 +102,8 @@ def index(request):
                                        sample.name)
     
                 for entry in task_machines:
-                    task_ids_new = demux_sample_and_add_to_db(db=db, file_path=path, package=package, timeout=timeout, options=options, priority=priority,
-                                                          machine=entry, custom=custom, memory=memory, enforce_timeout=enforce_timeout, tags=tags)
+                    task_ids_new = db.demux_sample_and_add_to_db(file_path=path, package=package, timeout=timeout, options=options, priority=priority,
+                                                                 machine=entry, custom=custom, memory=memory, enforce_timeout=enforce_timeout, tags=tags)
                     task_ids.extend(task_ids_new)
         elif "url" in request.POST and request.POST.get("url").strip():
             url = request.POST.get("url").strip()
@@ -168,8 +168,8 @@ def index(request):
                         onesuccess = True
 
                         for entry in task_machines:
-                            task_ids_new = demux_sample_and_add_to_db(db=db, file_path=filename, package=package, timeout=timeout, options=options, priority=priority,
-                                                          machine=entry, custom=custom, memory=memory, enforce_timeout=enforce_timeout, tags=tags)
+                            task_ids_new = db.demux_sample_and_add_to_db(file_path=filename, package=package, timeout=timeout, options=options, priority=priority,
+                                                                         machine=entry, custom=custom, memory=memory, enforce_timeout=enforce_timeout, tags=tags)
                             task_ids.extend(task_ids_new)
                     elif r.status_code == 403:
                         return render_to_response("error.html",

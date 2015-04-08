@@ -1083,6 +1083,14 @@ def store_temp_file(filedata, filename, path=None):
 
     return tmp_file_path
 
+def demux_sample(filename):
+    """
+    If file is a ZIP, extract its included files and return their file paths
+    """
+    retlist = []
+    retlist.append(filename)
+    return retlist
+
 class TimeoutServer(xmlrpclib.ServerProxy):
     """Timeout server for XMLRPC.
     XMLRPC + timeout - still a bit ugly - but at least gets rid of setdefaulttimeout
@@ -1224,30 +1232,3 @@ class SuperLock(object):
     def __exit__(self, type, value, traceback):
         self.mlock.release()
         self.tlock.release()
-
-def demux_sample_and_add_to_db(db, file_path, timeout=0, package="", options="", priority=1,
-                               custom="", machine="", platform="", tags=None,
-                               memory=False, enforce_timeout=False, clock=None):
-    """
-    Handles ZIP file submissions, submitting each extracted file to the database
-    Returns a list of added task IDs
-    """
-    task_ids = []
-    # extract files from the ZIP
-    # create tasks for each file in the ZIP
-    task_id = db.add_path(file_path=file_path,
-                          timeout=timeout,
-                          priority=priority,
-                          options=options,
-                          package=package,
-                          machine=machine,
-                          platform=platform,
-                          memory=memory,
-                          custom=custom,
-                          enforce_timeout=enforce_timeout,
-                          tags=tags,
-                          clock=clock)
-    if task_id:
-        task_ids.append(task_id)
-
-    return task_ids

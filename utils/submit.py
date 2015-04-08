@@ -248,9 +248,9 @@ def main():
                             print(bold(yellow("Duplicate")) + msg)
                         continue
 
-                task_ids = demux_sample_and_add_to_db(db=db, file_path=file_path, package=args.package, timeout=sane_timeout, options=args.options,
-                                                      priority=args.priority, machine=args.machine, platform=args.platform, memory=args.memory,
-                                                      custom=args.custom, enforce_timeout=args.enforce_timeout, clock=args.clock, tags=args.tags)
+                task_ids = db.demux_sample_and_add_to_db(file_path=file_path, package=args.package, timeout=sane_timeout, options=args.options,
+                                                         priority=args.priority, machine=args.machine, platform=args.platform, memory=args.memory,
+                                                         custom=args.custom, enforce_timeout=args.enforce_timeout, clock=args.clock, tags=args.tags)
 
             tasks_count = len(task_ids)
             if tasks_count > 1:
