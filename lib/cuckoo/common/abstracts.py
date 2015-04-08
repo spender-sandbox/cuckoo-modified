@@ -644,6 +644,8 @@ class Signature(object):
     name = ""
     description = ""
     severity = 1
+    confidence = 100
+    weight = 1
     categories = []
     families = []
     authors = []
