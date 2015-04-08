@@ -17,7 +17,6 @@ from datetime import datetime
 
 from lib.cuckoo.common.exceptions import CuckooOperationalError
 from lib.cuckoo.common.config import Config
-from lib.cuckoo.core.database import Database
 
 try:
     import chardet
