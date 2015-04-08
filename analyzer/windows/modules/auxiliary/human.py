@@ -35,6 +35,7 @@ def foreach_child(hwnd, lparam):
         "agree",
         "enable",
         "don't send",
+        "don't save",
         "continue",
         "unzip",
         "open",
