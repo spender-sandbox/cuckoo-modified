@@ -48,7 +48,7 @@ The following libraries are not strictly required, but their installation is rec
     * `pygal`_ (Optional): for using statistics in ``web.py``
     * `clamd`_ (Optional): for scanning artifacts with ClamAV (release >= 0.3.3)
     * `m2crypto`_ (Optional): for extracting PE digital certificate information
-	* `django-ratelimit` (Optional): required if using the Django web interface
+	* `django-ratelimit`_ (Optional): required if using the Django web interface
 
 Some of them are already packaged in Debian/Ubuntu and can be installed with the following command::
 
