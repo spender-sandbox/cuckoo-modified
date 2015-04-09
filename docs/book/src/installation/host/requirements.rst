@@ -48,7 +48,7 @@ The following libraries are not strictly required, but their installation is rec
     * `pygal`_ (Optional): for using statistics in ``web.py``
     * `clamd`_ (Optional): for scanning artifacts with ClamAV (release >= 0.3.3)
     * `m2crypto`_ (Optional): for extracting PE digital certificate information
-	* `django-ratelimit`_ (Optional): required if using the Django web interface
+    * `django-ratelimit`_ (Optional): required if using the Django web interface
 
 Some of them are already packaged in Debian/Ubuntu and can be installed with the following command::
 
@@ -83,6 +83,9 @@ If you want to use KVM it's packaged too and you can install it with the followi
 .. _MAEC Python bindings: https://pypi.python.org/pypi/maec/4.1.0.11
 .. _Chardet: https://pypi.python.org/pypi/chardet
 .. _pygal: http://pygal.org/
+.. _clamd: https://pypi.python.org/pypi/clamd
+.. _m2crypto: https://pypi.python.org/pypi/M2Crypto
+.. _django-ratelimit: https://pypi.python.org/pypi/django-ratelimit
 
 If you want to use XenServer you'll have to install the *XenAPI* Python package::
 
