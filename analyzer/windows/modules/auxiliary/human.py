@@ -110,7 +110,7 @@ def get_office_window(hwnd, lparam):
         USER32.GetWindowTextW(hwnd, text, 1024)
         if "- Microsoft" in text:
             # send ALT+F4 equivalent
-            USER32.SendMessageW(USER32.GetForegroundWindow(), WM_CLOSE, None, None)
+            USER32.SendMessageW(hwnd, WM_CLOSE, None, None)
     return True
 
 class Human(Auxiliary, Thread):
