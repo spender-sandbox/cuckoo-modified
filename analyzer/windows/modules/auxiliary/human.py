@@ -103,6 +103,16 @@ def click_mouse():
     # Mouse up.
     USER32.mouse_event(4, 0, 0, 0, None)
 
+# Callback procedure invoked for every enumerated window.
+def get_office_window(hwnd, lparam):
+    if USER32.IsWindowVisible(hwnd):
+        text = create_unicode_buffer(1024)
+        USER32.GetWindowTextW(hwnd, text, 1024)
+        if "- Microsoft" in text:
+            # send ALT+F4 equivalent
+            USER32.SendMessageW(USER32.GetForegroundWindow(), WM_CLOSE, None, None)
+    return True
+
 class Human(Auxiliary, Thread):
     """Human after all"""
 
@@ -134,8 +144,7 @@ class Human(Auxiliary, Thread):
 
         while self.do_run:
             if officedoc and seconds == 30:
-                # send ALT+F4 equivalent
-                USER32.SendMessageW(USER32.GetForegroundWindow(), WM_CLOSE, None, None)
+                USER32.EnumWindows(EnumWindowsProc(get_office_window), 0)
 
             click_mouse()
             move_mouse()
