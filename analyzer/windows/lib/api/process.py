@@ -543,6 +543,8 @@ class Process:
                 config.write("force-sleepskip={0}\n".format(cfgoptions["force-sleepskip"]))
             if "full-logs" in cfgoptions:
                 config.write("full-logs={0}\n".format(cfgoptions["full-logs"]))
+            if "no-stealth" in cfgoptions:
+                config.write("no-stealth={0}\n".format(cfgoptions["no-stealth"]))
 
             if firstproc:
                 Process.first_process = False
