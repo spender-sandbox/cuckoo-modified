@@ -71,10 +71,12 @@ class CIF(Processing):
         if "network" in self.results:
             hosts = self.results["network"].get("hosts")
             if hosts:
-                resources.extend(hosts)
+                for host in hosts:
+                    resources.append(host["ip"])
             domains = self.results["network"].get("domains")
             if domains:
-                resources.extend(domains)
+                for domain in domains:
+                    resources.append(domain["domain"])
 
         # add IOCs from dropped files
         if "dropped" in self.results:
