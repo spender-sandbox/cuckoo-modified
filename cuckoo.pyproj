@@ -148,6 +148,7 @@
     <Compile Include="lib\__init__.py" />
     <Compile Include="modules\auxiliary\tor.py" />
     <Compile Include="modules\processing\suricata.py" />
+    <Compile Include="modules\processing\cif.py" />
     <Compile Include="modules\reporting\moloch.py" />
     <Compile Include="modules\reporting\resubmitexe.py">
       <SubType>Code</SubType>

@@ -599,11 +599,12 @@ class Processing(object):
     order = 1
     enabled = True
 
-    def __init__(self):
+    def __init__(self, results=None):
         self.analysis_path = ""
         self.logs_path = ""
         self.task = None
         self.options = None
+        self.results = results
 
     def set_options(self, options):
         """Set report options.
