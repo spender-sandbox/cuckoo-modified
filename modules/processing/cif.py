@@ -41,7 +41,7 @@ class CIF(Processing):
         per_lookup_limit = self.options.get("per_lookup_limit", 20)
         per_analysis_limit = self.options.get("per_analysis_limit", 200)
 
-        if not baseurl:
+        if not url:
             raise CuckooProcessingError("CIF URL not configured, skip")
 
         if not key:
