@@ -23,7 +23,6 @@ from StringIO import StringIO
 from zipfile import ZipFile, ZIP_STORED
 
 sys.path.append(settings.CUCKOO_PATH)
-
 from lib.cuckoo.common.config import Config
 from lib.cuckoo.common.constants import CUCKOO_ROOT, CUCKOO_VERSION
 from lib.cuckoo.common.quarantine import unquarantine
@@ -174,6 +173,7 @@ def tasks_create_file(request):
         memory = bool(request.POST.get("memory", False))
         clock = request.POST.get("clock", None)
         enforce_timeout = bool(request.POST.get("enforce_timeout", False))
+        gateway = request.POST.get("gateway",None)
 
         task_ids = []
         task_machines = []
@@ -205,6 +205,17 @@ def tasks_create_file(request):
             max_file_size = 5 * 1048576
         else:
             max_file_size = int(max_file_size) * 1048576
+
+        if gateway and gateway in settings.GATEWAYS:
+            if "," in settings.GATEWAYS[gateway]:
+                tgateway = random.choice(settings.GATEWAYS[gateway].split(","))
+                ngateway = settings.GATEWAYS[tgateway]
+            else:
+                ngateway = settings.GATEWAYS[gateway]
+            if options:
+                options += ","
+            options += "setgw=%s" % (ngateway)
+
         # Check if we are allowing multiple file submissions
         multifile = apiconf.filecreate.get("multifile")
         if multifile:
@@ -358,6 +369,16 @@ def tasks_create_url(request):
                 options += ","
             options += "referer=%s" % (referer)
 
+        if gateway and gateway in settings.GATEWAYS:
+            if "," in settings.GATEWAYS[gateway]:
+                tgateway = random.choice(settings.GATEWAYS[gateway].split(","))
+                ngateway = settings.GATEWAYS[tgateway]
+            else:
+                ngateway = settings.GATEWAYS[gateway]
+            if options:
+                options += ","
+            options += "setgw=%s" % (ngateway)
+
         task_id = db.add_url(url=url,
                              package=package,
                              timeout=timeout,
@@ -386,7 +407,7 @@ def tasks_create_url(request):
 
     return jsonize(resp, response=True)
 
-# dl a file from vT for analysis
+# Download a file from VT for analysis
 if apiconf.vtdl.get("enabled"):
     raterps = apiconf.vtdl.get("rps", None)
     raterpm = apiconf.vtdl.get("rpm", None)
@@ -443,10 +464,6 @@ def tasks_vtdl(request):
                                         ", ".join(vm_list)))}
                 return jsonize(resp, response=True)
         enforce_timeout = bool(request.POST.get("enforce_timeout", False))
-        shrike_url = request.POST.get("shrike_url", None)
-        shrike_msg = request.POST.get("shrike_msg", None)
-        shrike_sid = request.POST.get("shrike_sid", None)
-        shrike_refer = request.POST.get("shrike_refer", None)
         gateway = request.POST.get("gateway",None)
 
 
