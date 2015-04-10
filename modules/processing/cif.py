@@ -10,6 +10,7 @@ import urllib
 
 from lib.cuckoo.common.abstracts import Processing
 from lib.cuckoo.common.exceptions import CuckooProcessingError
+from lib.cuckoo.common.objects import File
 
 class CIF(Processing):
     """Queries IP/domain results from CIF server"""
