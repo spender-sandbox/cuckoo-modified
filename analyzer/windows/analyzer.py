@@ -583,7 +583,6 @@ class Analyzer:
             servidx = s.index("services.exe")
             servstr = s[servidx + 12:].strip()
             SERVICES_PID = int(servstr[:servstr.index(' ')], 10)
-            log.debug('services.exe PID is %s' % (SERVICES_PID))
 
         # Initialize and start the Pipe Servers. This is going to be used for
         # communicating with the injected and monitored processes.
