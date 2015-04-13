@@ -49,6 +49,7 @@ The following libraries are not strictly required, but their installation is rec
     * `clamd`_ (Optional): for scanning artifacts with ClamAV (release >= 0.3.3)
     * `m2crypto`_ (Optional): for extracting PE digital certificate information
     * `django-ratelimit`_ (Optional): required if using the Django web interface
+    * `weasyprint`_ (Optional): required for PDF reporting method
 
 Some of them are already packaged in Debian/Ubuntu and can be installed with the following command::
 
@@ -56,7 +57,7 @@ Some of them are already packaged in Debian/Ubuntu and can be installed with the
 
 Except for *python-magic*, *python-dpkt* and *python-libvirt*, the others can be installed through ``pip`` too::
 
-    $ sudo pip install jinja2 pymongo bottle pefile django chardet pygal m2crypto clamd django-ratelimit pycrypto
+    $ sudo pip install jinja2 pymongo bottle pefile django chardet pygal m2crypto clamd django-ratelimit pycrypto weasyprint
 
 To have MAEC support, you need to first install the Cybox and then the MAEC libraries::
 
@@ -86,6 +87,7 @@ If you want to use KVM it's packaged too and you can install it with the followi
 .. _clamd: https://pypi.python.org/pypi/clamd
 .. _m2crypto: https://pypi.python.org/pypi/M2Crypto
 .. _django-ratelimit: https://pypi.python.org/pypi/django-ratelimit
+.. _weasyprint: http://www.weasyprint.org
 
 If you want to use XenServer you'll have to install the *XenAPI* Python package::
 
