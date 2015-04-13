@@ -3,9 +3,9 @@
 # See the file 'docs/LICENSE' for copying permission.
 
 import os
+import logging
 
 from lib.cuckoo.common.abstracts import Report
-from lib.cuckoo.common.constants import CUCKOO_ROOT
 from lib.cuckoo.common.exceptions import CuckooReportError
 
 try:
@@ -29,6 +29,10 @@ class ReportPDF(Report):
             raise CuckooReportError("Unable to open HTML report to convert to PDF: "
                                     "Ensure reporthtml is enabled in reporting.conf")
         
+        logger = logging.getLogger("weasyprint")
+        logger.handlers = []
+        logger.setLevel(logging.ERROR)
+
         HTML(os.path.join(self.reports_path, "report.html")).write_pdf(os.path.join(self.reports_path, "report.pdf"))
 
         return True
