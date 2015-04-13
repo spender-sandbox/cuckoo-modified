@@ -350,6 +350,29 @@ def file(request, category, object_id):
                                   {"error": "File not found"},
                                   context_instance=RequestContext(request))
 
+@require_safe
+def filereport(request, task_id, category):
+    formats = {
+        "json": "report.json",
+        "html": "report.html",
+        "pdf": "report.pdf",
+        "maec": "report.maec-1.1.xml",
+        "metadata": "report.metadata.xml",
+    }
+
+    file_path = os.path.join(CUCKOO_ROOT, "storage", "analyses", str(task_id), "reports", formats[category])
+    file_name = str(task_id) + "_" + formats[category]
+    content_type = "application/octet-stream"
+
+    if os.path.exists(file_path):
+        response = HttpResponse(open(file_path, "rb").read(), content_type=content_type)
+        response["Content-Disposition"] = "attachment; filename={0}".format(file_name)
+
+        return response
+    else:
+        return render_to_response("error.html",
+                                  {"error": "File not found"},
+                                  context_instance=RequestContext(request))
 
 @require_safe
 def full_memory_dump_file(request, analysis_number):

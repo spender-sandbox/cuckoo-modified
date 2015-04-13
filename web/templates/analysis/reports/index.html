@@ -1,0 +1,7 @@
+<div class="alert alert-info center">
+    <a class="btn btn-primary btn-small" href="{% url "analysis.views.filereport" analysis.info.id "json" %}">Download JSON Report</a><br />
+    <a class="btn btn-primary btn-small" href="{% url "analysis.views.filereport" analysis.info.id "html" %}">Download HTML Report</a><br />
+    <a class="btn btn-primary btn-small" href="{% url "analysis.views.filereport" analysis.info.id "pdf" %}">Download PDF Report</a><br />
+    <a class="btn btn-primary btn-small" href="{% url "analysis.views.filereport" analysis.info.id "maec" %}">Download MAEC Report</a><br />
+    <a class="btn btn-primary btn-small" href="{% url "analysis.views.filereport" analysis.info.id "metadata" %}">Download Metadata Report</a><br />
+</div>
