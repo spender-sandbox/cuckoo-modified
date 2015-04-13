@@ -1,7 +1,7 @@
 {% if analysis.procmemory %}
     {% for proc in analysis.procmemory %}
         <div class="panel panel-default">
-            <table class="table table-striped">
+            <table class="table table-striped" style="table-layout: fixed; width: 100%">
                 <tr>
                     <th style="border-top: 0;" width="15%">Process ID</th>
                     <td style="border-top: 0;"><b>{{proc.pid}}</b></td>
