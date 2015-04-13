@@ -150,6 +150,7 @@
     <Compile Include="modules\processing\suricata.py" />
     <Compile Include="modules\processing\cif.py" />
     <Compile Include="modules\reporting\moloch.py" />
+    <Compile Include="modules\reporting\reportpdf.py" />
     <Compile Include="modules\reporting\resubmitexe.py">
       <SubType>Code</SubType>
     </Compile>
