@@ -340,6 +340,7 @@
     <Content Include="web\templates\analysis\network\_tcp.html" />
     <Content Include="web\templates\analysis\procmemory\index.html" />
     <Content Include="web\templates\analysis\static\_pdf.html" />
+    <Content Include="web\templates\api\index.html" />
     <Content Include="web\templates\base.html" />
     <Content Include="web\templates\error.html" />
     <Content Include="web\templates\footer.html" />
@@ -498,6 +499,7 @@
     <Folder Include="web\templates\analysis\overview" />
     <Folder Include="web\templates\analysis\procmemory\" />
     <Folder Include="web\templates\analysis\static" />
+    <Folder Include="web\templates\api\" />
     <Folder Include="web\templates\dashboard" />
     <Folder Include="web\templates\submission" />
     <Folder Include="web\web" />
