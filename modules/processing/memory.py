@@ -1050,10 +1050,13 @@ class Memory(Processing):
         """
         self.key = "memory"
 
+        results = {}
+        if "machine" not in self.task or not self.task["machine"]:
+            return results
+
         task_machine = self.task["machine"]["name"]
         machine_manager = self.task["machine"]["manager"].lower()
 
-        results = {}
         if HAVE_VOLATILITY:
             if self.memory_path and os.path.exists(self.memory_path):
                 try:
