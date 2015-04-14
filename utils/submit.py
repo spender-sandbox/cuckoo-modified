@@ -258,7 +258,7 @@ def main():
                     print(bold(green("Success")) + u": File \"{0}\" added as task with IDs {1}".format(file_path, task_ids))
             elif tasks_count > 0:
                 if not args.quiet:
-                    print(bold(green("Success")) + u": File \"{0}\" added as task with ID {1}".format(file_path, task_id))
+                    print(bold(green("Success")) + u": File \"{0}\" added as task with ID {1}".format(file_path, task_ids[0]))
             else:
                 print(bold(red("Error")) + ": adding task to database")
 
