@@ -1,24 +1,24 @@
-<div class="panel panel-default">
+<div class="panel panel-default" style="width: 30%;">
     <table class="table table-striped" style="table-layout: fixed;">
         <tr>
-            <th style="border-top: 0;" width="15%">JSON Report</th>
-            <td style="border-top: 0;"><a class="btn btn-primary btn-small" href="{% url "analysis.views.filereport" analysis.info.id "json" %}">Download</a></td>
+            <th style="border-top: 0; width: 50%;">JSON Report</th>
+            <td style="border-top: 0; text-align: right;"><a class="btn btn-primary btn-small" href="{% url "analysis.views.filereport" analysis.info.id "json" %}">Download</a></td>
         </tr>
         <tr>
             <th>HTML Report</th>
-            <td><a class="btn btn-primary btn-small" href="{% url "analysis.views.filereport" analysis.info.id "html" %}">Download</a></td>
+            <td style="text-align: right;"><a class="btn btn-primary btn-small" href="{% url "analysis.views.filereport" analysis.info.id "html" %}">Download</a></td>
         </tr>
         <tr>
             <th>PDF Report</th>
-            <td><a class="btn btn-primary btn-small" href="{% url "analysis.views.filereport" analysis.info.id "pdf" %}">Download</a></td>
+            <td style="text-align: right;"><a class="btn btn-primary btn-small" href="{% url "analysis.views.filereport" analysis.info.id "pdf" %}">Download</a></td>
         </tr>
         <tr>
             <th>MAEC Report</th>
-            <td><a class="btn btn-primary btn-small" href="{% url "analysis.views.filereport" analysis.info.id "maec" %}">Download</a></td>
+            <td style="text-align: right;"><a class="btn btn-primary btn-small" href="{% url "analysis.views.filereport" analysis.info.id "maec" %}">Download</a></td>
         </tr>
         <tr>
             <th>Metadata Report</th>
-            <td><a class="btn btn-primary btn-small" href="{% url "analysis.views.filereport" analysis.info.id "metadata" %}">Download</a></td>
+            <td style="text-align: right;"><a class="btn btn-primary btn-small" href="{% url "analysis.views.filereport" analysis.info.id "metadata" %}">Download</a></td>
         </tr>
     </table>
 </div>
