@@ -22,6 +22,7 @@ from urllib import quote
 sys.path.append(settings.CUCKOO_PATH)
 
 from lib.cuckoo.core.database import Database, TASK_PENDING
+from lib.cuckoo.common.config import Config
 from lib.cuckoo.common.constants import CUCKOO_ROOT
 import modules.processing.network as network
 
@@ -29,6 +30,7 @@ results_db = pymongo.MongoClient(settings.MONGO_HOST, settings.MONGO_PORT)[setti
 fs = GridFS(results_db)
 
 TASK_LIMIT = 25
+repconf = Config("reporting")
 
 @require_safe
 def index(request, page=1):
@@ -316,9 +318,20 @@ def report(request, task_id):
         domainlookups = dict()
         iplookups = dict()
 
+    conf = repconf.get_config()
+    enabledconf = dict()
+    for item in conf:
+        if conf[item]["enabled"] == "yes":
+            enabledconf[item] = True
+        else:
+            enabledconf[item] = False
+
     return render_to_response("analysis/report.html",
-                              {"analysis": report, "domainlookups": domainlookups, "iplookups": iplookups},
-                              context_instance=RequestContext(request))
+                             {"analysis": report,
+                              "domainlookups": domainlookups,
+                              "iplookups": iplookups,
+                              "config": enabledconf},
+                             context_instance=RequestContext(request))
 
 @require_safe
 def file(request, category, object_id):
