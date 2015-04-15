@@ -17,7 +17,7 @@ except ImportError:
 
 class ReportPDF(Report):
     """Stores report in PDF format."""
-    # ensure we run after the HTML report
+    # ensure we run after the summary HTML report
     order = 10
 
     def run(self, results):
@@ -25,14 +25,14 @@ class ReportPDF(Report):
             raise CuckooReportError("Failed to generate PDF report: "
                                     "Weasyprint Python library is not installed")
 
-        if not os.path.isfile(os.path.join(self.reports_path, "report.html")):
-            raise CuckooReportError("Unable to open HTML report to convert to PDF: "
-                                    "Ensure reporthtml is enabled in reporting.conf")
+        if not os.path.isfile(os.path.join(self.reports_path, "summary-report.html")):
+            raise CuckooReportError("Unable to open summary HTML report to convert to PDF: "
+                                    "Ensure reporthtmlsummary is enabled in reporting.conf")
         
         logger = logging.getLogger("weasyprint")
         logger.handlers = []
         logger.setLevel(logging.ERROR)
 
-        HTML(os.path.join(self.reports_path, "report.html")).write_pdf(os.path.join(self.reports_path, "report.pdf"))
+        HTML(os.path.join(self.reports_path, "summary-report.html")).write_pdf(os.path.join(self.reports_path, "report.pdf"))
 
         return True
