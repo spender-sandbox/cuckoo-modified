@@ -368,6 +368,7 @@ def filereport(request, task_id, category):
     formats = {
         "json": "report.json",
         "html": "report.html",
+        "htmlsummary": "summary-report.html",
         "pdf": "report.pdf",
         "maec": "report.maec-1.1.xml",
         "metadata": "report.metadata.xml",

@@ -12,6 +12,12 @@
             <td style="text-align: right;"><a class="btn btn-primary btn-small" href="{% url "analysis.views.filereport" analysis.info.id "html" %}">Download</a></td>
         </tr>
       {% endif %}
+      {% if config.reporthtmlsummary %}
+        <tr>
+            <th>Summary HTML Report</th>
+            <td style="text-align: right;"><a class="btn btn-primary btn-small" href="{% url "analysis.views.filereport" analysis.info.id "htmlsummary" %}">Download</a></td>
+        </tr>
+      {% endif %}
       {% if config.reportpdf %}
         <tr>
             <th>PDF Report</th>

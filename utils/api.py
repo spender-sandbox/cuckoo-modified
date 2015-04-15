@@ -227,6 +227,7 @@ def tasks_report(task_id, report_format="json"):
     formats = {
         "json": "report.json",
         "html": "report.html",
+        "htmlsumary": "summary-report.html",
         "pdf": "report.pdf",
         "maec": "report.maec-1.1.xml",
         "metadata": "report.metadata.xml",
