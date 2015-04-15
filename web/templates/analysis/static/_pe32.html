@@ -1,6 +1,6 @@
 <section id="static_analysis">
     {% if analysis.static %}
-        {% if results.static.pe_timestamp or results.static.pe_imphash %}
+        {% if analysis.static.pe_timestamp or analysis.static.pe_imphash %}
             <div>
                 <h4>PE Information</h4>
                 <div id="pe_information">
