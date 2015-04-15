@@ -351,8 +351,8 @@ class PortableExecutable:
                     if xst:
                         for cert in xst:
                             sn = cert.get_serial_number()
-                            sha1_fingerprint = cert.get_fingerprint(self, md='sha1')
-                            md5_fingerprint = cert.get_fingerprint(self, md='md5')
+                            sha1_fingerprint = cert.get_fingerprint('sha1').lower()
+                            md5_fingerprint = cert.get_fingerprint('md5').lower()
                             subject_str = str(cert.get_subject())
                             cn = subject_str[subject_str.index("/CN=")+len("/CN="):]
                             results["digital_signers"].append({"sn":str(sn), "cn":cn, "sha1_fingerprint" : sha1_fingerprint, "md5_fingerprint" : md5_fingerprint })
