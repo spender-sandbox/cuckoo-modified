@@ -1,4 +1,4 @@
-# Copyright (C) 2010-2015 Cuckoo Foundation.
+# Copyright (C) 2010-2015 Cuckoo Foundation, Accuvant, Inc. (bspengler@accuvant.com)
 # This file is part of Cuckoo Sandbox - http://www.cuckoosandbox.org
 # See the file 'docs/LICENSE' for copying permission.
 
@@ -29,7 +29,15 @@ class Strings(Processing):
                 data = open(self.file_path, "r").read()
             except (IOError, OSError) as e:
                 raise CuckooProcessingError("Error opening file %s" % e)
-            strings = re.findall("[\x20-\x7e]{6,}", data)
-            strings += [str(ws.decode("utf-16le")) for ws in re.findall("(?:[\x20-\x7e][\x00]){6,}", data)]
+
+            nulltermonly = self.options.get("nullterminated_only", True)
+            minchars = self.options.get("minchars", 5)
+
+            if nulltermonly:
+                strings = re.findall("([\x20-\x7e]{" + str(minchars) + ",})\x00", data)
+                strings += [str(ws.decode("utf-16le")) for ws in re.findall("((?:[\x20-\x7e][\x00]){" + str(minchars) + ",})\x00\x00", data)]
+            else:
+                strings = re.findall("([\x20-\x7e]{" + str(minchars) + ",})\x00", data)
+                strings += [str(ws.decode("utf-16le")) for ws in re.findall("(?:[\x20-\x7e][\x00]){" + str(minchars) + ",}", data)]
 
         return strings
