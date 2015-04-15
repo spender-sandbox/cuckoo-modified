@@ -8,7 +8,7 @@ body {
 
 @page {
     size: A5;
-    margin: 1cm
+    margin: 1cm;
 }
 
 @media (max-width: 979px) {
