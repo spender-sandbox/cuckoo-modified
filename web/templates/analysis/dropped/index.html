@@ -1,10 +1,10 @@
 {% if analysis.dropped|length > 0 %}
     {% for file in analysis.dropped %}
         <div class="panel panel-default">
-            <table class="table table-striped">
+            <table class="table table-striped" style="table-layout: fixed;">
                 <tr>
-                    <th style="border-top: 0;" width="15%">File name</th>
-                    <td style="border-top: 0;"><b>{{file.name}}</b></td>
+                    <th style="border-top: 0; width: 15%;">File name</th>
+                    <td style="border-top: 0; word-wrap: break-word;"><b>{{file.name}}</b></td>
                 </tr>
                 <tr>
                     <th>Associated Filenames</th>
@@ -20,19 +20,19 @@
                 </tr>
                 <tr>
                     <th>File Type</th>
-                    <td>{{file.type}}</td>
+                    <td style="word-wrap: break-word;">{{file.type}}</td>
                 </tr>
                 <tr>
                     <th>MD5</th>
-                    <td>{{file.md5}}</td>
+                    <td style="word-wrap: break-word;">{{file.md5}}</td>
                 </tr>
                 <tr>
                     <th>SHA1</th>
-                    <td>{{file.sha1}}</td>
+                    <td style="word-wrap: break-word;">{{file.sha1}}</td>
                 </tr>
                 <tr>
                     <th>SHA256</th>
-                    <td>{{file.sha256}}</td>
+                    <td style="word-wrap: break-word;">{{file.sha256}}</td>
                 </tr>
                 <tr>
                     <th>CRC32</th>
@@ -40,7 +40,7 @@
                 </tr>
                 <tr>
                     <th>Ssdeep</th>
-                    <td>{{file.ssdeep}}</td>
+                    <td style="word-wrap: break-word;">{{file.ssdeep}}</tdstyle="word-wrap:>
                 </tr>
                 <tr>
                 <tr>

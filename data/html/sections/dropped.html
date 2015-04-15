@@ -13,18 +13,14 @@
                 <h4><a href="javascript:showHide('dropped_{{counter}}');">{{dropped_file.name}}</a></h4>
                 <div id="dropped_{{counter}}" style="display: none;">
                 {% endif %}
-                    <table class="table table-striped table-bordered">
-                        <colgroup>
-                            <col width="150" />
-                            <col width="*" />
-                        </colgroup>
+                    <table class="table table-striped table-bordered" style="table-layout: fixed;">
                         <tr>
-                            <th>File name</th>
-                            <td><span class="mono">{{dropped_file.name}}</span></td>
+                            <th style="width: 15%;">File name</th>
+                            <td style="word-wrap: break-word;"><span class="mono">{{dropped_file.name}}</span></td>
                         </tr>
                         <tr>
                             <th>Associated Filenames</th>
-                            <td>
+                            <td style="word-wrap: break-word;">
                                 <ul style="margin-top: 0;margin-bottom: 0;">
                                     {% for path in dropped_file.guest_paths %}
                                     <li>{{path}}</li>
@@ -38,27 +34,27 @@
                         </tr>
                         <tr>
                             <th>File type</th>
-                            <td><span class="mono">{{dropped_file.type}}</span></td>
+                            <td style="word-wrap: break-word;"><span class="mono">{{dropped_file.type}}</span></td>
                         </tr>
                         <tr>
                             <th>MD5</th>
-                            <td><span class="mono">{{dropped_file.md5}}</span></td>
+                            <td style="word-wrap: break-word;"><span class="mono">{{dropped_file.md5}}</span></td>
                         </tr>
                         <tr>
                             <th>SHA1</th>
-                            <td><span class="mono">{{dropped_file.sha1}}</span></td>
+                            <td style="word-wrap: break-word;"><span class="mono">{{dropped_file.sha1}}</span></td>
                         </tr>
                         <tr>
                             <th>SHA256</th>
-                            <td><span class="mono">{{dropped_file.sha256}}</span></td>
+                            <td style="word-wrap: break-word;"><span class="mono">{{dropped_file.sha256}}</span></td>
                         </tr>
                         <tr>
                             <th>SHA512</th>
-                            <td><span class="mono">{{dropped_file.sha512}}</span></td>
+                            <td style="word-wrap: break-word;"><span class="mono">{{dropped_file.sha512}}</span></td>
                         </tr>
                         <tr>
                             <th>Ssdeep</th>
-                            <td><span class="mono">{{dropped_file.ssdeep}}</span></td>
+                            <td style="word-wrap: break-word;"><span class="mono">{{dropped_file.ssdeep}}</span></td>
                         </tr>
                         <tr>
                             <th>Yara</th>
