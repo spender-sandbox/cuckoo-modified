@@ -15,6 +15,17 @@
             {% endif %}
             <b>{{sign.description}}</b>
             </div>
+            {% if summary_report %}
+                <div id="signature_{{sign.name}}">
+                {% if sign.data %}
+                    {% for sign in sign.data %}
+                        {% for key, value in sign.items %}
+                            <div><b>{{key}}</b>: {{value}}</div>
+                        {% endfor %}
+                    {% endfor %}
+                </div>
+                {% endif %}
+            {% endif %}
         {% endfor %}
     {% else %}
         No signatures matched

@@ -6,8 +6,13 @@
         {% set counter = 1 %}
         {% for dropped_file in results.dropped %}
             <div>
+                {% if summary_report %}
+                <h4>{{dropped_file.name}}</h4>
+                <div id="dropped_{{counter}}">
+                {% else %}
                 <h4><a href="javascript:showHide('dropped_{{counter}}');">{{dropped_file.name}}</a></h4>
                 <div id="dropped_{{counter}}" style="display: none;">
+                {% endif %}
                     <table class="table table-striped table-bordered">
                         <colgroup>
                             <col width="150" />

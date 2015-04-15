@@ -61,7 +61,7 @@ class ReportHTML(Report):
 
         try:
             tpl = env.get_template("report.html")
-            html = tpl.render({"results": results})
+            html = tpl.render({"results": results, "summary_report" : False})
         except Exception as e:
             raise CuckooReportError("Failed to generate HTML report: %s" % e)
         
