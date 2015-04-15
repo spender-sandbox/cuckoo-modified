@@ -5,6 +5,12 @@ body {
     padding-top: 60px;
     background: #ffffff url('/static/graphic/background.png') repeat-x;
 }
+
+@page {
+    size: A5;
+    margin: 1cm
+}
+
 @media (max-width: 979px) {
     body {
         padding-top: 0px;
