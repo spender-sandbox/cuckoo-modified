@@ -249,7 +249,7 @@ def submit():
         return template.render({"error": "The server encountered an internal error while submitting {0}".format(data.filename.decode("utf-8"))})
 
 @route("/view/<task_id>/download")
-def downlaod_report(task_id):
+def download_report(task_id):
     if not task_id.isdigit():
         return HTTPError(code=404, output="The specified ID is invalid")
 
