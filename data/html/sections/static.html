@@ -5,8 +5,13 @@
     {% if results.static %}
         {% if results.static.pe_timestamp or results.static.pe_imphash %}
             <div>
+                {% if summary_report %}
                 <h4>PE Information</h4>
                 <div id="pe_information">
+                {% else %}
+                <h4><a href="javascript:showHide('pe_information');">PE Information</a></h4>
+                <div id="pe_information" style="display: none;">
+                {% endif %}
                     <table class="table table-striped table-bordered">
                         <colgroup>
                             <col width="150" />
