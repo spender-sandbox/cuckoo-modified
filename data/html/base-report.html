@@ -95,6 +95,7 @@ img.fade:hover {
 <body>
 <div class="container-fluid">
     {% include "graphic/logo.html" %}
+    {% if not summary_report %}
     <div class="navbar navbar-inverse" style="margin-top: 10px;">
         <div class="navbar-inner">
             <div class="container-fluid">
@@ -123,11 +124,14 @@ img.fade:hover {
             </div>
         </div>
     </div>
+    {% endif %}
     {% block content %}{% endblock %}
 
     <footer class="footer">
+        {% if not summary_report %}
         <p class="pull-right"><a href="#">Back to top</a></p>
-        <p>&copy;2010-2015 <a href="http://www.cuckoosandbox.org">Cuckoo Sandbox</a></p>
+        {% endif %}
+        <p>&copy;2010-2015 <a href="http://www.cuckoosandbox.org">Cuckoo Sandbox</a>, Accuvant, Inc.</p>
     </footer>
 </div>
 <script>
