@@ -129,7 +129,7 @@ class Node(db.Model):
             files = dict(file=open(task.path, "rb"))
             r = requests.post(url, data=data, files=files)
             task.node_id = self.id
-            task.task_id = r.json()["task_id"]
+            task.task_ids = r.json()["task_ids"]
 
             # We have to refresh() the task object because otherwise we get
             # the unmodified object back in further sql queries..
