@@ -448,6 +448,8 @@ def search(request):
                 records = results_db.analysis.find({"network.hosts.ip": value}).sort([["_id", -1]])
             elif term == "signature":
                 records = results_db.analysis.find({"signatures.description": {"$regex": value, "$options": "-i"}}).sort([["_id", -1]])
+            elif term == "signame":
+                records = results_db.analysis.find({"signatures.name": {"$regex": value, "$options": "-i"}}).sort([["_id", -1]])
             elif term == "url":
                 records = results_db.analysis.find({"target.url": value}).sort([["_id", -1]])
             elif term == "imphash":
