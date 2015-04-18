@@ -599,7 +599,6 @@ class RunReporting:
 
         Database().set_statistics_time(self.task_id, REPORTING_FINISHED)
 
-
 class GetFeeds(object):
     """Feed Download and Parsing Engine
 

@@ -634,7 +634,6 @@ class Processing(object):
         self.pcap_path = os.path.join(self.analysis_path, "dump.pcap")
         self.pmemory_path = os.path.join(self.analysis_path, "memory")
         self.memory_path = os.path.join(self.analysis_path, "memory.dmp")
-        self.extract_path = os.path.join(self.analysis_path, "extract")
 
     def run(self):
         """Start processing.
@@ -1308,13 +1307,11 @@ class Feed(object):
 
     def __init__(self):
         self.data = ""
-        seld.downloaddata = ""
+        self.downloaddata = ""
         self.downloadurl = ""
         self.feedname = ""
         self.feedpath = ""
         self.frequency = 1
-        # Only set this to true if you want to update all feeds on every
-        # analysis. Can be time consuming...
         self.updatefeed = False
 
     def update(self):
