@@ -4,12 +4,14 @@
 
 import os
 import re
+import requests
 import logging
 import time
 
 import xml.etree.ElementTree as ET
 
 from lib.cuckoo.common.config import Config
+from lib.cuckoo.common.constants import CUCKOO_ROOT
 from lib.cuckoo.common.exceptions import CuckooCriticalError
 from lib.cuckoo.common.exceptions import CuckooMachineError
 from lib.cuckoo.common.exceptions import CuckooOperationalError
@@ -632,6 +634,7 @@ class Processing(object):
         self.pcap_path = os.path.join(self.analysis_path, "dump.pcap")
         self.pmemory_path = os.path.join(self.analysis_path, "memory")
         self.memory_path = os.path.join(self.analysis_path, "memory.dmp")
+        self.extract_path = os.path.join(self.analysis_path, "extract")
 
     def run(self):
         """Start processing.
@@ -1298,3 +1301,62 @@ class Report(object):
         @raise NotImplementedError: this method is abstract.
         """
         raise NotImplementedError
+
+class Feed(object):
+    """Base abstract class for feeds."""
+    name = ""
+
+    def __init__(self):
+        self.data = ""
+        seld.downloaddata = ""
+        self.downloadurl = ""
+        self.feedname = ""
+        self.feedpath = ""
+        self.frequency = 1
+        # Only set this to true if you want to update all feeds on every
+        # analysis. Can be time consuming...
+        self.updatefeed = False
+
+    def update(self):
+        """Determine if the feed needs to be updated based on the configured
+        frequency and update if it we have passed that time threshold.
+        """
+        self.feedpath = CUCKOO_ROOT + "/data/feeds/" + self.feedname + ".feed"
+        freq = self.frequency * 3600
+        # Check if feed file exists
+        if os.path.isfile(self.feedpath):
+            mtime = os.path.getmtime(self.feedpath)
+            # Check if feed file is older than configured update frequency
+            if time.time() - mtime > freq:
+                self.updatefeed = True
+            else:
+                self.updatefeed = False
+        else:
+            self.updatefeed = True
+
+        if self.updatefeed:
+            req = requests.get(self.downloadurl)
+            self.downloaddata = req.content
+            return True
+
+        return False
+
+    def get_feedpath(self):
+        return self.feedpath
+
+    def modify(self):
+        """Modify data before saving it to the feed file.
+        @raise NotImplementedError: this method is abstract.
+        """
+        raise NotImplementedError
+
+    def run(self, modified=False):
+        if self.updatefeed:
+            if modified and self.data:
+                with open(self.feedpath, "w") as feedfile:
+                    feedfile.write(self.data)
+            elif self.downloaddata:
+                with open(self.feedpath, "w") as feedfile:
+                    feedfile.write(self.downloaddata)
+        return
+

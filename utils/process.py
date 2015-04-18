@@ -20,12 +20,14 @@ from lib.cuckoo.common.config import Config
 from lib.cuckoo.common.constants import CUCKOO_ROOT
 from lib.cuckoo.core.database import Database, TASK_REPORTED, TASK_COMPLETED
 from lib.cuckoo.core.database import TASK_FAILED_PROCESSING
-from lib.cuckoo.core.plugins import RunProcessing, RunSignatures, RunReporting
+from lib.cuckoo.core.plugins import GetFeeds, RunProcessing, RunSignatures
+from lib.cuckoo.core.plugins import RunReporting
 from lib.cuckoo.core.startup import init_modules
 
 def process(task_id, target=None, copy_path=None, report=False, auto=False):
     assert isinstance(task_id, int)
     results = RunProcessing(task_id=task_id).run()
+    GetFeeds(results=results).run()
     RunSignatures(task_id=task_id, results=results).run()
 
 

@@ -22,7 +22,7 @@ from lib.cuckoo.core.database import TASK_FAILED_ANALYSIS
 from lib.cuckoo.core.database import ANALYSIS_STARTED, ANALYSIS_FINISHED
 from lib.cuckoo.core.guest import GuestManager
 from lib.cuckoo.core.plugins import list_plugins, RunAuxiliary, RunProcessing
-from lib.cuckoo.core.plugins import RunSignatures, RunReporting
+from lib.cuckoo.core.plugins import RunSignatures, RunReporting, GetFeeds
 from lib.cuckoo.core.resultserver import ResultServer
 
 try:
@@ -348,6 +348,7 @@ class AnalysisManager(Thread):
     def process_results(self):
         """Process the analysis results and generate the enabled reports."""
         results = RunProcessing(task_id=self.task.id).run()
+        GetFeeds(results=results).run()
         RunSignatures(task_id=self.task.id, results=results).run()
         RunReporting(task_id=self.task.id, results=results).run()
 

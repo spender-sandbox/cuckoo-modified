@@ -11,7 +11,7 @@ from collections import defaultdict
 from distutils.version import StrictVersion
 
 from lib.cuckoo.common.abstracts import Auxiliary, Machinery, Processing
-from lib.cuckoo.common.abstracts import Report, Signature
+from lib.cuckoo.common.abstracts import Report, Signature, Feed
 from lib.cuckoo.common.config import Config
 from lib.cuckoo.common.constants import CUCKOO_ROOT, CUCKOO_VERSION
 from lib.cuckoo.common.exceptions import CuckooCriticalError
@@ -60,6 +60,8 @@ def load_plugins(module):
                 register_plugin("reporting", value)
             elif issubclass(value, Signature) and value is not Signature:
                 register_plugin("signatures", value)
+            elif issubclass(value, Feed) and value is not Feed:
+                register_plugin("feeds", value)
 
 def register_plugin(group, name):
     global _modules
@@ -596,3 +598,49 @@ class RunReporting:
             log.info("No reporting modules loaded")
 
         Database().set_statistics_time(self.task_id, REPORTING_FINISHED)
+
+
+class GetFeeds(object):
+    """Feed Download and Parsing Engine
+
+    This class handles the downloading and modification of feed modules.
+    It then saves the parsed feed data to CUCKOO_ROOT/feeds/
+    """
+
+    def __init__(self, results):
+        self.results = results
+
+    def process(self, feed):
+        """Process modules with either downloaded data directly, or by
+        modifying / parsing the data within the feed module.
+        @param feed: feed module to update and process
+        """
+
+        try:
+            current = feed()
+        except:
+            log.exception("Failed to load feed \"{0}\":".format(current.name))
+            return
+
+        if current.update():
+            try:
+                current.modify()
+                current.run(modified=True)
+            except NotImplementedError:
+                current.run(modified=False)
+            except:
+                log.exception("Failed to run feed \"%s\"", current.name)
+                return
+        self.results["feeds"] = dict()
+        self.results["feeds"][current.name] = current.get_feedpath()
+
+    def run(self):
+        """Run a feed module.
+        @param module: feed module to run.
+        @return None
+        """
+        feeds_list = list_plugins(group="feeds")
+        if feeds_list:
+            for feed in feeds_list:
+                log.debug("Running feed module \"%s\"", feed.name)
+                runit = self.process(feed)

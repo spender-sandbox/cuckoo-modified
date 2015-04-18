@@ -16,6 +16,7 @@ import modules.auxiliary
 import modules.processing
 import modules.signatures
 import modules.reporting
+import modules.feeds
 
 from lib.cuckoo.common.colors import red, green, yellow, cyan
 from lib.cuckoo.common.config import Config
@@ -72,7 +73,8 @@ def create_structure():
         "log",
         "storage",
         os.path.join("storage", "analyses"),
-        os.path.join("storage", "binaries")
+        os.path.join("storage", "binaries"),
+        os.path.join("data", "feeds"),
     ]
 
     try:
@@ -202,6 +204,8 @@ def init_modules():
     import_package(modules.signatures)
     # Import all reporting modules.
     import_package(modules.reporting)
+    # Import all feeds modules.
+    import_package(modules.feeds)
 
     # Import machine manager.
     import_plugin("modules.machinery." + Config().cuckoo.machinery)
