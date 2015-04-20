@@ -15,7 +15,6 @@ class AbuseCH_SSL(Feed):
         self.feedname = "abuse_ch_ssl"
         # How much time must pass (in hours) before we update
         self.frequency = 6
-        self
 
     def modify(self):
         newdata = ""
