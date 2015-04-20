@@ -5,6 +5,8 @@
 import os
 import re
 import requests
+import datetime
+import threading
 import logging
 import time
 
@@ -1311,7 +1313,8 @@ class Feed(object):
         self.downloadurl = ""
         self.feedname = ""
         self.feedpath = ""
-        self.frequency = 1
+        # default to once per day
+        self.frequency = 24
         self.updatefeed = False
 
     def update(self):
@@ -1321,6 +1324,7 @@ class Feed(object):
         self.feedpath = CUCKOO_ROOT + "/data/feeds/" + self.feedname + ".feed"
         freq = self.frequency * 3600
         # Check if feed file exists
+        mtime = 0
         if os.path.isfile(self.feedpath):
             mtime = os.path.getmtime(self.feedpath)
             # Check if feed file is older than configured update frequency
@@ -1332,9 +1336,18 @@ class Feed(object):
             self.updatefeed = True
 
         if self.updatefeed:
-            req = requests.get(self.downloadurl)
-            self.downloaddata = req.content
-            return True
+            headers = dict()
+            if mtime:
+                timestr = datetime.datetime.utcfromtimestamp(mtime).strftime("%a, %d %b %Y %H:%M:%S GMT")
+                headers["If-Modified-Since"] = timestr
+            try:
+                req = requests.get(self.downloadurl, headers=headers, verify=True)
+            except requests.exceptions.RequestException as e:
+                log.warn("Error downloading feed for {0} : {1}".format(self.feedname, e))
+                return False
+            if req.status_code == 200:
+                self.downloaddata = req.content
+                return True
 
         return False
 
@@ -1349,11 +1362,13 @@ class Feed(object):
 
     def run(self, modified=False):
         if self.updatefeed:
-            if modified and self.data:
-                with open(self.feedpath, "w") as feedfile:
-                    feedfile.write(self.data)
-            elif self.downloaddata:
-                with open(self.feedpath, "w") as feedfile:
-                    feedfile.write(self.downloaddata)
+            lock = threading.Lock()
+            with lock:
+                if modified and self.data:
+                    with open(self.feedpath, "w") as feedfile:
+                        feedfile.write(self.data)
+                elif self.downloaddata:
+                    with open(self.feedpath, "w") as feedfile:
+                        feedfile.write(self.downloaddata)
         return
 
