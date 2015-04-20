@@ -147,6 +147,8 @@
     <Compile Include="lib\cuckoo\common\peepdf\__init__.py" />
     <Compile Include="lib\__init__.py" />
     <Compile Include="modules\auxiliary\tor.py" />
+    <Compile Include="modules\feeds\bad_ssl_certs.py" />
+    <Compile Include="modules\feeds\__init__.py" />
     <Compile Include="modules\processing\suricata.py" />
     <Compile Include="modules\processing\cif.py" />
     <Compile Include="modules\reporting\moloch.py" />
@@ -470,6 +472,7 @@
     <Folder Include="lib\maec" />
     <Folder Include="modules" />
     <Folder Include="modules\auxiliary" />
+    <Folder Include="modules\feeds\" />
     <Folder Include="modules\machinery" />
     <Folder Include="modules\processing" />
     <Folder Include="modules\reporting" />

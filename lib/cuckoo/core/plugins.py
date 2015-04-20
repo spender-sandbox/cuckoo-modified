@@ -641,5 +641,7 @@ class GetFeeds(object):
         feeds_list = list_plugins(group="feeds")
         if feeds_list:
             for feed in feeds_list:
-                log.debug("Running feed module \"%s\"", feed.name)
-                runit = self.process(feed)
+                # If the feed is disabled, skip it.
+                if feed.enabled:
+                    log.debug("Running feed module \"%s\"", feed.name)
+                    runit = self.process(feed)

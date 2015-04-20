@@ -7,6 +7,8 @@ from lib.cuckoo.common.abstracts import Feed
 class AbuseCH_SSL(Feed):
     # Results dict key value / exception handling / logging name
     name = "Bad_SSL_Certs"
+    # Change the below line to enable this feed
+    enabled = False
 
     def __init__(self):
         # Location of the feed to be fetched
