@@ -218,7 +218,7 @@ def pretty_print_arg(category, api_name, arg_name, arg_val):
                 0x6601 : "DES",
                 0x6603 : "3DES",
                 0x6609 : "Two-key 3DES"
-        }.get(val, None);
+        }.get(val, None)
     elif api_name == "SHGetFolderPathW" and arg_name == "Folder":
         val = int(arg_val, 16)
         res = []
@@ -372,9 +372,9 @@ def pretty_print_arg(category, api_name, arg_name, arg_val):
         val = int(arg_val, 16)
         res = []
         if val == 0x02000000:
-            return "MAXIMUM_ALLOWED";
+            return "MAXIMUM_ALLOWED"
         if val == 0xf003f:
-            return "SC_MANAGER_ALL_ACCESS";
+            return "SC_MANAGER_ALL_ACCESS"
         if val & 0x0001:
             res.append("SC_MANAGER_CONNECT")
             val &= ~0x0001
@@ -443,9 +443,9 @@ def pretty_print_arg(category, api_name, arg_name, arg_val):
         val = int(arg_val, 16)
         res = []
         if val == 0x02000000:
-            return "MAXIMUM_ALLOWED";
+            return "MAXIMUM_ALLOWED"
         if val == 0xf01ff:
-            return "SERVICE_ALL_ACCESS";
+            return "SERVICE_ALL_ACCESS"
         if val & 0x0001:
             res.append("SERVICE_QUERY_CONFIG")
             val &= ~0x0001
@@ -480,9 +480,9 @@ def pretty_print_arg(category, api_name, arg_name, arg_val):
         val = int(arg_val, 16)
         res = []
         if val == 0x02000000:
-            return "MAXIMUM_ALLOWED";
+            return "MAXIMUM_ALLOWED"
         if val == 0xf003f:
-            return "KEY_ALL_ACCESS";
+            return "KEY_ALL_ACCESS"
         elif val == 0x20019:
             return "KEY_READ"
         elif val == 0x20006:

@@ -419,8 +419,8 @@ class Database(object):
             try:
                 tmp_session.commit()
             except SQLAlchemyError as e:
-                raise CuckooDatabaseError("Unable to set schema version: {0}".format(e))
                 tmp_session.rollback()
+                raise CuckooDatabaseError("Unable to set schema version: {0}".format(e))
             finally:
                 tmp_session.close()
         else:

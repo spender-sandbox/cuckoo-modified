@@ -476,7 +476,7 @@ def pre_prediction(stream, predictor, columns, colors, bits):
                     else:
                         rowdata[i] = rowdata[i] - rowdata[i-1]
             elif filterByte == 2:
-                (-1,'Unsupported predictor')
+                return (-1,'Unsupported predictor')
             else:
                 return (-1,'Unsupported predictor')
             output += (''.join([chr(x) for x in rowdata]))

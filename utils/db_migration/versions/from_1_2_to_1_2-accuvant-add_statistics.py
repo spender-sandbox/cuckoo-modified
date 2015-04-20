@@ -18,7 +18,6 @@ from alembic import op
 import sqlalchemy as sa
 
 import os.path
-import sqlalchemy as sa
 import sys
 from datetime import datetime
 
