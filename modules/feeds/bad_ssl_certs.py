@@ -11,6 +11,7 @@ class AbuseCH_SSL(Feed):
     enabled = False
 
     def __init__(self):
+        Feed.__init__(self)
         # Location of the feed to be fetched
         self.downloadurl = "https://sslbl.abuse.ch/downloads/ssl_extended.csv"
         # Used in creating the file path on disk

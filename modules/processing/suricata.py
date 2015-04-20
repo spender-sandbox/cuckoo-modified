@@ -204,7 +204,7 @@ class Suricata(Processing):
                     d = json.loads(l)
                 except:
                     log.warning("failed to load JSON from file log")
-                    next
+                    continue
                 if d["stored"]==True:
                     src_file = "%s/file.%s" % (SURICATA_FILES_DIR_FULL_PATH,d["id"])
                     if SURICATA_FILE_COPY_MAGIC_RE and SURICATA_FILE_COPY_DST_DIR and os.path.exists(SURICATA_FILE_COPY_DST_DIR):

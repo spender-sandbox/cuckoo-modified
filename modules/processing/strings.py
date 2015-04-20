@@ -34,10 +34,14 @@ class Strings(Processing):
             minchars = self.options.get("minchars", 5)
 
             if nulltermonly:
-                strings = re.findall("([\x20-\x7e]{" + str(minchars) + ",})\x00", data)
-                strings += [str(ws.decode("utf-16le")) for ws in re.findall("((?:[\x20-\x7e][\x00]){" + str(minchars) + ",})\x00\x00", data)]
+                apat = "([\x20-\x7e]{" + str(minchars) + ",})\x00"
+                strings = re.findall(apat, data)
+                upat = "((?:[\x20-\x7e][\x00]){" + str(minchars) + ",})\x00\x00"
+                strings += [str(ws.decode("utf-16le")) for ws in re.findall(upat, data)]
             else:
-                strings = re.findall("([\x20-\x7e]{" + str(minchars) + ",})\x00", data)
-                strings += [str(ws.decode("utf-16le")) for ws in re.findall("(?:[\x20-\x7e][\x00]){" + str(minchars) + ",}", data)]
+                apat = "([\x20-\x7e]{" + str(minchars) + ",})\x00"
+                strings = re.findall(apat, data)
+                upat = "(?:[\x20-\x7e][\x00]){" + str(minchars) + ",}"
+                strings += [str(ws.decode("utf-16le")) for ws in re.findall(upat, data)]
 
         return strings

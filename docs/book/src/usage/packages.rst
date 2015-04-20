@@ -167,3 +167,4 @@ specify the package name whenever possible.
 For example, to launch a malware and specify some options you can do::
 
     $ ./utils/submit.py --package dll --options function=FunctionName,loader=explorer.exe /path/to/malware.dll
+

@@ -210,7 +210,7 @@
                         <td>{{call.timestamp[11:]}}</td>
                         <td>{{call.thread_id}}</td>
                         <td><span class="mono">{{call.api}}</span></td>
-                        <td style="word-wrap: break-word">
+                        <td style="word-wrap: break-word;">
                         {% for argument in call.arguments %}
                             {% if argument.pretty_value %}
                                 {{argument.name}} => <span class="mono">{{argument.pretty_value}}</span><br />
@@ -221,7 +221,7 @@
                         </td>
                         <td>{% if call.status %}SUCCESS{% else %}FAILURE{% endif %}</td>
                         {% if call.pretty_return %}
-                            <td style="word-wrap: break-word">{{call.pretty_return}}</td>
+                            <td style="word-wrap: break-word;">{{call.pretty_return}}</td>
                         {% else %}
                             <td>{{call.return}}</td>
                         {% endif %}

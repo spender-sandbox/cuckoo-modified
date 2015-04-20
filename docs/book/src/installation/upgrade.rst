@@ -79,3 +79,4 @@ configuration may corrupt your data, backup should save kittens!
 Run the database migrations with::
 
     alembic upgrade head
+

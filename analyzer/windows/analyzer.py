@@ -291,7 +291,7 @@ class PipeHandler(Thread):
                             filepath = proc.get_filepath()
                             filename = os.path.basename(filepath)
 
-                            if not protected_filename(filename):
+                            if not in_protected_path(filename):
                                 add_pid(process_id)
                                 log.info("Announce process name : %s", filename)
                 PROCESS_LOCK.release()                

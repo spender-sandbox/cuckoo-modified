@@ -62,7 +62,7 @@ class Moloch(Report):
         self.pcap_path = os.path.join(self.analysis_path, "dump.pcap")
         self.MOLOCH_URL = self.options.get("base",None)
 
-        m = re.search(r"\/(?P<task_id>\d+)\/dump.pcap$",self.pcap_path)
+        m = re.search(r"/(?P<task_id>\d+)/dump.pcap$",self.pcap_path)
         if m == None:
             log.warning("Unable to find task id from %s" % (self.pcap_path))
             return results  
@@ -118,7 +118,7 @@ class Moloch(Report):
          
         if results.has_key('suricata'):
            if results["suricata"].has_key("alerts"):
-               afastre = re.compile(r".+\[1\:(?P<sid>\d+)\:\d+\].+\{(?P<proto>UDP|TCP|ICMP|(PROTO\:)?\d+)\}\s(?P<src>\d+\.\d+\.\d+\.\d+)(:(?P<sport>\d+))?\s.+\s(?P<dst>\d+\.\d+\.\d+\.\d+)(:(?P<dport>\d+))?")
+               afastre = re.compile(r".+\[1:(?P<sid>\d+):\d+\].+\{(?P<proto>UDP|TCP|ICMP|(PROTO:)?\d+)\}\s(?P<src>\d+\.\d+\.\d+\.\d+)(:(?P<sport>\d+))?\s.+\s(?P<dst>\d+\.\d+\.\d+\.\d+)(:(?P<dport>\d+))?")
                for alert in results["suricata"]["alerts"]:
                    m = afastre.match(alert)
                    if m:
