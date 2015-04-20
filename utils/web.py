@@ -273,7 +273,7 @@ def view(task_id):
     if not os.path.exists(report_path):
         return HTTPError(code=404, output="Report not found")
 
-    return open(report_path, "rb").read().replace("<!-- BOTTLEREMOVEME", "").replace("BOTTLEREMOVEME --!>", "")
+    return open(report_path, "rb").read().replace("<!-- BOTTLEREMOVEME", "").replace("BOTTLEREMOVEME -->", "")
 
 @route("/pcap/<task_id>")
 def get_pcap(task_id):
