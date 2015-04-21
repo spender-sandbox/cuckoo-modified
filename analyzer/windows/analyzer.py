@@ -345,6 +345,11 @@ class PipeHandler(Thread):
 
                 process_id = int(command[5:])
                 if process_id not in (PID, PPID) and process_id in PROCESS_LIST:
+                    # dump the memory of exiting processes
+                    if self.options.get("procmemdump"):
+                        p = Process(pid=process_id)
+                        p.dump_memory()
+
                     # only notify processes we've hooked
                     event_name = TERMINATE_EVENT + str(process_id)
                     event_handle = KERNEL32.OpenEventA(EVENT_MODIFY_STATE, False, event_name)
