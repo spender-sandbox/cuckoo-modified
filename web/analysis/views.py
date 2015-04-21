@@ -438,6 +438,8 @@ def search(request):
                 records = results_db.analysis.find({"target.file.crc32": value}).sort([["_id", -1]])
             elif term == "file":
                 records = results_db.analysis.find({"behavior.summary.files": {"$regex": value, "$options": "-i"}}).sort([["_id", -1]])
+            elif term == "command":
+                records = results_db.analysis.find({"behavior.summary.executed_commands": {"$regex": value, "$options": "-i"}}).sort([["_id", -1]])
             elif term == "key":
                 records = results_db.analysis.find({"behavior.summary.keys": {"$regex": value, "$options": "-i"}}).sort([["_id", -1]])
             elif term == "mutex":
