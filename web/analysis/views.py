@@ -457,7 +457,7 @@ def search(request):
             elif term == "imphash":
                 records = results_db.analysis.find({"static.pe_imphash": value}).sort([["_id", -1]])
             elif term == "surialert":
-                records = results_db.analysis.find({"suricata.alerts": {"$regex" : value, "$options" : "-i"}}).sort([["_id", -1]])
+                records = results_db.analysis.find({"suricata.alerts.signature": {"$regex" : value, "$options" : "-i"}}).sort([["_id", -1]])
             elif term == "surihttp":
                 records = results_db.analysis.find({"suricata.http": {"$regex" : value, "$options" : "-i"}}).sort([["_id", -1]])
             elif term == "suritls":
