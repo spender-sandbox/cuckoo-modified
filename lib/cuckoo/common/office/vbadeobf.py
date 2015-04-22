@@ -1,5 +1,9 @@
-import re
 import string
+
+try:
+    import re2 as re
+except ImportError:
+    import re
 
 from itertools import chain, repeat, izip
 from lib.cuckoo.common.utils import convert_to_printable

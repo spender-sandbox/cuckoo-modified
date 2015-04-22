@@ -3,11 +3,15 @@
 # See the file 'docs/LICENSE' for copying permission.
 
 import os
-import re
 import struct
 import socket
 import logging
 from urlparse import urlunparse
+
+try:
+    import re2 as re
+except ImportError:
+    import re
 
 from lib.cuckoo.common.abstracts import Processing
 from lib.cuckoo.common.config import Config

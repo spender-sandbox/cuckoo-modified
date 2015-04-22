@@ -163,12 +163,16 @@ import struct
 import cStringIO
 import math
 import zipfile
-import re
 import optparse
 import os.path
 import binascii
 import base64
 import traceback
+
+try:
+    import re2 as re
+except ImportError:
+    import re
 
 import olefile
 #from thirdparty.prettytable import prettytable

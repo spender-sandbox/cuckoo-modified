@@ -29,7 +29,12 @@
 #
 # Modified to integrate it with peepdf
 
-import re, sys
+import sys
+
+try:
+    import re2 as re
+except ImportError:
+    import re
 
 class JJDecoder(object):
 

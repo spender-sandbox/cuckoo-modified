@@ -5,7 +5,11 @@
 import os
 import json
 import requests
-import re
+
+try:
+    import re2 as re
+except ImportError:
+    import re
 
 from lib.cuckoo.common.abstracts import Processing
 from lib.cuckoo.common.exceptions import CuckooProcessingError

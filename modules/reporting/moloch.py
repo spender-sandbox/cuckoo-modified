@@ -5,7 +5,6 @@
 import os
 import logging
 import subprocess
-import re
 import json
 import sys
 import urllib2
@@ -14,6 +13,11 @@ import time
 import socket
 import struct
 import copy
+
+try:
+    import re2 as re
+except ImportError:
+    import re
 
 from lib.cuckoo.common.constants import CUCKOO_ROOT
 from lib.cuckoo.common.abstracts import Report 

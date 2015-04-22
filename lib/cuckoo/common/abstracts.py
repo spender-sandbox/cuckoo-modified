@@ -3,13 +3,17 @@
 # See the file 'docs/LICENSE' for copying permission.
 
 import os
-import re
 import requests
 import datetime
 import threading
 import logging
 import time
 
+try:
+    import re2 as re
+except ImportError:
+    import re
+    
 import xml.etree.ElementTree as ET
 
 from lib.cuckoo.common.config import Config

@@ -5,7 +5,11 @@
 import os
 import shutil
 import logging
-import re
+
+try:
+    import re2 as re
+except ImportError:
+    import re
 
 from zipfile import ZipFile, BadZipfile
 

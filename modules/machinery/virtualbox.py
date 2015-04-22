@@ -3,11 +3,15 @@
 # See the file 'docs/LICENSE' for copying permission.
 
 import os
-import re
 import time
 import logging
 import subprocess
 import os.path
+
+try:
+    import re2 as re
+except ImportError:
+    import re
 
 from lib.cuckoo.common.abstracts import Machinery
 from lib.cuckoo.common.exceptions import CuckooCriticalError

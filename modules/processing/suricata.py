@@ -9,8 +9,13 @@ import time
 import sys
 import socket
 import json
-import re
 import shutil
+
+try:
+    import re2 as re
+except ImportError:
+    import re
+
 from lib.cuckoo.common.constants import CUCKOO_ROOT
 from lib.cuckoo.common.abstracts import Processing
 from lib.cuckoo.common.objects import File

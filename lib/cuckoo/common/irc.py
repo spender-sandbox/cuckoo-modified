@@ -6,8 +6,12 @@
 """IRC Protocol"""
 
 import cStringIO
-import re
 import logging
+
+try:
+    import re2 as re
+except ImportError:
+    import re
 
 from lib.cuckoo.common.utils import convert_to_printable
 

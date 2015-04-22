@@ -1,7 +1,11 @@
 import sys
 import getopt
-import re
 import string
+
+try:
+    import re2 as re
+except ImportError:
+    import re
 
 #
 # Originally written by Einar Lielmanis et al.,

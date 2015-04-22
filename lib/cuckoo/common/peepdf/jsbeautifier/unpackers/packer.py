@@ -12,7 +12,11 @@
 
 """Unpacker for Dean Edward's p.a.c.k.e.r"""
 
-import re
+try:
+    import re2 as re
+except ImportError:
+    import re
+
 import string
 from jsbeautifier.unpackers import UnpackingError
 

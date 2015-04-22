@@ -29,7 +29,11 @@
 
 """Deobfuscator for scripts messed up with MyObfuscate.com"""
 
-import re
+try:
+    import re2 as re
+except ImportError:
+    import re
+
 import base64
 
 # Python 2 retrocompatibility

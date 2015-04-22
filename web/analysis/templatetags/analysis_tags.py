@@ -1,4 +1,8 @@
-import re
+try:
+    import re2 as re
+except ImportError:
+    import re
+
 from django.template.defaultfilters import register
 
 @register.filter("mongo_id")

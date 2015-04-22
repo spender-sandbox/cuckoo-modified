@@ -15,8 +15,12 @@
 import os
 import logging
 import subprocess
-import re
 import socket
+
+try:
+    import re2 as re
+except ImportError:
+    import re
 
 log = logging.getLogger(__name__)
 

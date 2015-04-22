@@ -2,13 +2,17 @@
 # This file is part of Cuckoo Sandbox - http://www.cuckoosandbox.org
 # See the file 'docs/LICENSE' for copying permission.
 
-import re
 import os
 import time
 import shutil
 import logging
 import Queue
 from threading import Thread, Lock
+
+try:
+    import re2 as re
+except ImportError:
+    import re
 
 from lib.cuckoo.common.config import Config
 from lib.cuckoo.common.constants import CUCKOO_ROOT

@@ -3,7 +3,12 @@
 # See the file 'docs/LICENSE' for copying permission.
 
 import sys
-import re
+
+try:
+    import re2 as re
+except ImportError:
+    import re
+
 import os
 import json
 
