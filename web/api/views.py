@@ -535,7 +535,7 @@ def tasks_reschedule(request, task_id):
         resp = {"error": True, "error_value": "Method not allowed"}
         return jsonize(resp, response=True)
 
-    if not apiconf.tasksreschedule.get("enabled"):
+    if not apiconf.taskresched.get("enabled"):
         resp = {"error": True,
                 "error_value": "Task Reschedule API is Disabled"}
         return jsonize(resp, response=True)
