@@ -144,7 +144,7 @@ class RunProcessing(object):
     is then passed over the reporting engine.
     """
 
-    def __init__(self, task_id. results):
+    def __init__(self, task_id, results):
         """@param task_id: ID of the analyses to process."""
         self.task = Database().view_task(task_id).to_dict()
         self.task_id = task_id
