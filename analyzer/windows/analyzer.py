@@ -558,8 +558,11 @@ class Analyzer:
         # In addition DATE and TIME commands are blocking if an incorrect
         # syntax is provided, so an echo trick is used to bypass the input
         # request and not block analysis.
-        os.system("echo:|date {0}".format(clock.strftime("%m-%d-%y")))
-        os.system("echo:|time {0}".format(clock.strftime("%H:%M:%S")))
+        thedate = clock.strftime("%m-%d-%y")
+        thetime = clock.strftime("%H:%M:%S")
+        os.system("echo:|date {0}".format(thedate))
+        os.system("echo:|time {0}".format(thetime))
+        log.info("Date set to: {0}, time set to: {1}".format(thedate, thetime))
 
         # Set the default DLL to be used by the PipeHandler.
         DEFAULT_DLL = self.config.get_options().get("dll")
