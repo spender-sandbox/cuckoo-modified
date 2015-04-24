@@ -33,13 +33,15 @@ log = logging.getLogger(__name__)
 class ReSubmitExtractedEXE(Report):
     def run(self, results):
         self.noinject = self.options.get("noinject", False)
+        self.resublimit = int(self.options.get("resublimit",5))
         filesdict = {}
         self.task_options_stack = []
         self.task_options = None
         self.task_custom = None
+        self.resubcnt = 0
         report = dict(results)
 
-        if report["info"].has_key("options") and "resubmitjob=true" in report["info"]["options"]:
+        if report["info"].has_key("options") and report["info"]["options"].has_key("resubmitjob") and report["info"]["options"]["resubmitjob"]:
             return
         else:
            self.task_options_stack.append("resubmitjob=true")
@@ -51,14 +53,19 @@ class ReSubmitExtractedEXE(Report):
 
         report = dict(results)
         for dropped in report["dropped"]:
+            if self.resubcnt >= self.resublimit:
+                break
             if os.path.isfile(dropped["path"]):
                 if ("PE32" in dropped["type"] or "MS-DOS" in dropped["type"]) and "DLL" not in dropped["type"]:
                     if not filesdict.has_key(dropped['sha256']):
                         filesdict[dropped['sha256']] = dropped['path']
+                        self.resubcnt = self.resubcnt + 1
             
         if report.has_key("suricata") and report["suricata"]:
             if report["suricata"].has_key("files") and report["suricata"]["files"]:
                 for suricata_file_e in results["suricata"]["files"]:
+                    if self.resubcnt >= self.resublimit:
+                        break
                     if suricata_file_e.has_key("file_info"):
                         tmp_suricata_file_d = dict(suricata_file_e)
                         if os.path.isfile(suricata_file_e["file_info"]["path"]):
@@ -66,6 +73,7 @@ class ReSubmitExtractedEXE(Report):
                             if ("PE32" in ftype or "MS-DOS" in ftype) and "DLL" not in ftype:
                                 if not filesdict.has_key(suricata_file_e["file_info"]["sha256"]):
                                     filesdict[suricata_file_e["file_info"]["sha256"]] = suricata_file_e["file_info"]["path"]
+                                    self.resubcnt = self.resubcnt + 1
 
         db = Database()
 
