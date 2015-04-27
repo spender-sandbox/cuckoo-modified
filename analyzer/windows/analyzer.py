@@ -203,269 +203,274 @@ class PipeHandler(Thread):
         """
         global MONITORED_SERVICES
         global LASTINJECT_TIME
-        data = ""
-        response = "OK"
+        try:
+            data = ""
+            response = "OK"
 
-        # Read the data submitted to the Pipe Server.
-        while True:
-            bytes_read = c_int(0)
+            # Read the data submitted to the Pipe Server.
+            while True:
+                bytes_read = c_int(0)
 
-            buf = create_string_buffer(BUFSIZE)
-            success = KERNEL32.ReadFile(self.h_pipe,
-                                        buf,
-                                        sizeof(buf),
-                                        byref(bytes_read),
-                                        None)
+                buf = create_string_buffer(BUFSIZE)
+                success = KERNEL32.ReadFile(self.h_pipe,
+                                            buf,
+                                            sizeof(buf),
+                                            byref(bytes_read),
+                                            None)
 
-            data += buf.value
+                data += buf.value
 
-            if not success and KERNEL32.GetLastError() == ERROR_MORE_DATA:
-                continue
-            # elif not success or bytes_read.value == 0:
-            #    if KERNEL32.GetLastError() == ERROR_BROKEN_PIPE:
-            #        pass
+                if not success and KERNEL32.GetLastError() == ERROR_MORE_DATA:
+                    continue
+                # elif not success or bytes_read.value == 0:
+                #    if KERNEL32.GetLastError() == ERROR_BROKEN_PIPE:
+                #        pass
 
-            break
+                break
 
-        if data:
-            command = data.strip()
+            if data:
+                command = data.strip()
 
-            # Debug, Regular, Warning, or Critical information from CuckooMon.
-            if command.startswith("DEBUG:"):
-                log.debug(command[6:])
-            elif command.startswith("INFO:"):
-                log.info(command[5:])
-            elif command.startswith("WARNING:"):
-                log.warning(command[8:])
-            elif command.startswith("CRITICAL:"):
-                log.critical(command[9:])
+                # Debug, Regular, Warning, or Critical information from CuckooMon.
+                if command.startswith("DEBUG:"):
+                    log.debug(command[6:])
+                elif command.startswith("INFO:"):
+                    log.info(command[5:])
+                elif command.startswith("WARNING:"):
+                    log.warning(command[8:])
+                elif command.startswith("CRITICAL:"):
+                    log.critical(command[9:])
 
-            # Parse the prefix for the received notification.
-            # In case of GETPIDS we're gonna return the current process ID
-            # and the process ID of our parent process (agent.py).
-            elif command == "GETPIDS":
-                response = struct.pack("II", PID, PPID)
+                # Parse the prefix for the received notification.
+                # In case of GETPIDS we're gonna return the current process ID
+                # and the process ID of our parent process (agent.py).
+                elif command == "GETPIDS":
+                    response = struct.pack("II", PID, PPID)
 
-            # When analyzing we don't want to hook all functions, as we're
-            # having some stability issues with regards to webbrowsers.
-            elif command == "HOOKDLLS":
-                is_url = Config(cfg="analysis.conf").category != "file"
+                # When analyzing we don't want to hook all functions, as we're
+                # having some stability issues with regards to webbrowsers.
+                elif command == "HOOKDLLS":
+                    is_url = Config(cfg="analysis.conf").category != "file"
 
-                url_dlls = "ntdll", "kernel32"
+                    url_dlls = "ntdll", "kernel32"
 
-                def hookdll_encode(names):
-                    # We have to encode each dll name as unicode string
-                    # with length 16.
-                    names = [name + "\x00" * (16-len(name)) for name in names]
-                    f = lambda s: "".join(ch + "\x00" for ch in s)
-                    return "".join(f(name) for name in names)
+                    def hookdll_encode(names):
+                        # We have to encode each dll name as unicode string
+                        # with length 16.
+                        names = [name + "\x00" * (16-len(name)) for name in names]
+                        f = lambda s: "".join(ch + "\x00" for ch in s)
+                        return "".join(f(name) for name in names)
 
-                # If this sample is not a URL, then we don't want to limit
-                # any API hooks (at least for now), so we write a null-byte
-                # which indicates that all DLLs should be hooked.
-                if not is_url:
-                    response = "\x00"
-                else:
-                    response = hookdll_encode(url_dlls)
-
-            # remove pid from process list because we received a notification
-            # from kernel land
-            elif command.startswith("KTERMINATE:"):
-                data = command[11:]
-                process_id = int(data)
-                if process_id:
-                    if process_id in PROCESS_LIST:
-                        remove_pid(process_id) 
-
-            # same than below but we don't want to inject any DLLs because
-            # it's a kernel analysis
-            elif command.startswith("KPROCESS:"):
-                PROCESS_LOCK.acquire()
-                data = command[9:]
-                process_id = int(data)
-                thread_id = None
-                if process_id:
-                    if process_id not in (PID, PPID):
-                        if process_id not in PROCESS_LIST:
-                            proc = Process(pid=process_id,thread_id=thread_id)
-                            filepath = proc.get_filepath()
-                            filename = os.path.basename(filepath)
-
-                            if not in_protected_path(filename):
-                                add_pid(process_id)
-                                log.info("Announce process name : %s", filename)
-                PROCESS_LOCK.release()                
-            
-            elif command.startswith("KERROR:"):
-                error_msg = command[7:]
-                log.error("Error : %s", str(error_msg))
-           
-            # if a new driver has been loaded, we stop the analysis
-            elif command == "KSUBVERT":
-                for pid in PROCESS_LIST:
-                    log.info("Process with pid %s has terminated", pid)
-                    PROCESS_LIST.remove(pid)
-
-            # Handle case of a service being started by a monitored process
-            # Switch the service type to own process behind its back so we
-            # can monitor the service more easily with less noise
-            elif command.startswith("SERVICE:"):
-                servname = command[8:]
-                si = subprocess.STARTUPINFO()
-                si.dwFlags = subprocess.STARTF_USESHOWWINDOW
-                si.wShowWindow = subprocess.SW_HIDE
-                subprocess.call("sc config " + servname + " type= own", startupinfo=si)
-                log.info("Announced starting service \"%s\"", servname)
-
-                if not MONITORED_SERVICES:
-                    # Inject into services.exe so we can monitor service creation
-                    # if tasklist previously failed to get the services.exe PID we'll be
-                    # unable to inject
-                    if SERVICES_PID:
-                        servproc = Process(pid=SERVICES_PID,suspended=False)
-                        filepath = servproc.get_filepath()
-                        servproc.inject(dll=DEFAULT_DLL, interest=filepath, nosleepskip=True)
-                        LASTINJECT_TIME = datetime.now()
-                        servproc.close()
-                        KERNEL32.Sleep(1000)
-                        MONITORED_SERVICES = True
+                    # If this sample is not a URL, then we don't want to limit
+                    # any API hooks (at least for now), so we write a null-byte
+                    # which indicates that all DLLs should be hooked.
+                    if not is_url:
+                        response = "\x00"
                     else:
-                        log.error('Unable to monitor service %s' % (servname))
+                        response = hookdll_encode(url_dlls)
 
-            # For now all we care about is bumping up our LASTINJECT_TIME to account for long delays between
-            # injection and actual resume time where the DLL would have a chance to load in the new process
-            # and report back to have its pid added to the list of monitored processes
-            elif command.startswith("RESUME:"):
-                LASTINJECT_TIME = datetime.now()
+                # remove pid from process list because we received a notification
+                # from kernel land
+                elif command.startswith("KTERMINATE:"):
+                    data = command[11:]
+                    process_id = int(data)
+                    if process_id:
+                        if process_id in PROCESS_LIST:
+                            remove_pid(process_id) 
 
-            # Handle case of malware terminating a process -- notify the target
-            # ahead of time so that it can flush its log buffer
-            elif command.startswith("KILL:"):
-                PROCESS_LOCK.acquire()
-
-                process_id = int(command[5:])
-                if process_id not in (PID, PPID) and process_id in PROCESS_LIST:
-                    # dump the memory of exiting processes
-                    if self.options.get("procmemdump"):
-                        p = Process(pid=process_id)
-                        p.dump_memory()
-
-                    # only notify processes we've hooked
-                    event_name = TERMINATE_EVENT + str(process_id)
-                    event_handle = KERNEL32.OpenEventA(EVENT_MODIFY_STATE, False, event_name)
-                    if not event_handle:
-                        log.warning("Unable to open termination event for pid %u.", process_id)
-                    else:
-                        # make sure process is aware of the termination
-                        KERNEL32.SetEvent(event_handle)
-                        KERNEL32.CloseHandle(event_handle)
-
-                PROCESS_LOCK.release()
-            # Handle notification of cuckoomon loading in a process
-            elif command.startswith("LOADED:"):
-                PROCESS_LOCK.acquire()
-                process_id = int(command[7:])
-                if process_id not in PROCESS_LIST:
-                    add_pids(process_id)
-                PROCESS_LOCK.release()
-                log.info("Cuckoomon successfully loaded in process with pid %u.", process_id)
-
-            # In case of PID, the client is trying to notify the creation of
-            # a new process to be injected and monitored.
-            elif command.startswith("PROCESS:"):
-                # We acquire the process lock in order to prevent the analyzer
-                # to terminate the analysis while we are operating on the new
-                # process.
-                PROCESS_LOCK.acquire()
-
-                # Set the current DLL to the default one provided
-                # at submission.
-                dll = DEFAULT_DLL
-                suspended = False
-                # We parse the process ID.
-                data = command[8:]
-                if len(data) > 2 and data[1] == ':':
-                    if data[0] == '1':
-                        suspended = True
-                    data = command[10:]
-
-                process_id = thread_id = None
-                if "," not in data:
-                    if data.isdigit():
-                        process_id = int(data)
-                elif data.count(",") == 1:
-                    process_id, param = data.split(",")
+                # same than below but we don't want to inject any DLLs because
+                # it's a kernel analysis
+                elif command.startswith("KPROCESS:"):
+                    PROCESS_LOCK.acquire()
+                    data = command[9:]
+                    process_id = int(data)
                     thread_id = None
-                    if process_id.isdigit():
-                        process_id = int(process_id)
-                    else:
-                        process_id = None
+                    if process_id:
+                        if process_id not in (PID, PPID):
+                            if process_id not in PROCESS_LIST:
+                                proc = Process(pid=process_id,thread_id=thread_id)
+                                filepath = proc.get_filepath()
+                                filename = os.path.basename(filepath)
 
-                    if param.isdigit():
-                        thread_id = int(param)
+                                if not in_protected_path(filename):
+                                    add_pid(process_id)
+                                    log.info("Announce process name : %s", filename)
+                    PROCESS_LOCK.release()                
+            
+                elif command.startswith("KERROR:"):
+                    error_msg = command[7:]
+                    log.error("Error : %s", str(error_msg))
+           
+                # if a new driver has been loaded, we stop the analysis
+                elif command == "KSUBVERT":
+                    for pid in PROCESS_LIST:
+                        log.info("Process with pid %s has terminated", pid)
+                        PROCESS_LIST.remove(pid)
 
-                if process_id:
-                    if process_id not in (PID, PPID):
-                        # We inject the process only if it's not being
-                        # monitored already, otherwise we would generate
-                        # polluted logs.
-                        if process_id not in PROCESS_LIST:
-                            # Open the process and inject the DLL.
-                            # Hope it enjoys it.
-                            proc = Process(pid=process_id,
-                                           thread_id=thread_id,
-                                           suspended=suspended)
+                # Handle case of a service being started by a monitored process
+                # Switch the service type to own process behind its back so we
+                # can monitor the service more easily with less noise
+                elif command.startswith("SERVICE:"):
+                    servname = command[8:]
+                    si = subprocess.STARTUPINFO()
+                    si.dwFlags = subprocess.STARTF_USESHOWWINDOW
+                    si.wShowWindow = subprocess.SW_HIDE
+                    subprocess.call("sc config " + servname + " type= own", startupinfo=si)
+                    log.info("Announced starting service \"%s\"", servname)
 
-                            filepath = proc.get_filepath()
-                            is_64bit = proc.is_64bit()
-                            filename = os.path.basename(filepath)
+                    if not MONITORED_SERVICES:
+                        # Inject into services.exe so we can monitor service creation
+                        # if tasklist previously failed to get the services.exe PID we'll be
+                        # unable to inject
+                        if SERVICES_PID:
+                            servproc = Process(pid=SERVICES_PID,suspended=False)
+                            filepath = servproc.get_filepath()
+                            servproc.inject(dll=DEFAULT_DLL, interest=filepath, nosleepskip=True)
+                            LASTINJECT_TIME = datetime.now()
+                            servproc.close()
+                            KERNEL32.Sleep(1000)
+                            MONITORED_SERVICES = True
+                        else:
+                            log.error('Unable to monitor service %s' % (servname))
 
-                            log.info("Announced %s process name: %s pid: %d", "64-bit" if is_64bit else "32-bit", filename, process_id)
+                # For now all we care about is bumping up our LASTINJECT_TIME to account for long delays between
+                # injection and actual resume time where the DLL would have a chance to load in the new process
+                # and report back to have its pid added to the list of monitored processes
+                elif command.startswith("RESUME:"):
+                    LASTINJECT_TIME = datetime.now()
 
-                            if not in_protected_path(filename):
-                                res = proc.inject(dll, filepath)
-                                LASTINJECT_TIME = datetime.now()
-                            proc.close()
-                    else:
-                        log.warning("Received request to inject Cuckoo "
-                                    "process with pid %d, skip", process_id)
+                # Handle case of malware terminating a process -- notify the target
+                # ahead of time so that it can flush its log buffer
+                elif command.startswith("KILL:"):
+                    PROCESS_LOCK.acquire()
 
-                # Once we're done operating on the processes list, we release
-                # the lock.
-                PROCESS_LOCK.release()
-            # In case of FILE_NEW, the client is trying to notify the creation
-            # of a new file.
-            elif command.startswith("FILE_NEW:"):
-                # We extract the file path.
-                file_path = unicode(command[9:].decode("utf-8"))
-                # We add the file to the list.
-                add_file(file_path)
-            # In case of FILE_DEL, the client is trying to notify an ongoing
-            # deletion of an existing file, therefore we need to dump it
-            # straight away.
-            elif command.startswith("FILE_DEL:"):
-                # Extract the file path.
-                file_path = unicode(command[9:].decode("utf-8"))
-                # Dump the file straight away.
-                del_file(file_path)
-            elif command.startswith("FILE_MOVE:"):
-                # Syntax = "FILE_MOVE:old_file_path::new_file_path".
-                if "::" in command[10:]:
-                    old_fname, new_fname = command[10:].split("::", 1)
-                    move_file(unicode(old_fname.decode("utf-8")),
-                              unicode(new_fname.decode("utf-8")))
-            else:
-                log.warning("Received unknown command from cuckoomon: %s", command)
+                    process_id = int(command[5:])
+                    if process_id not in (PID, PPID) and process_id in PROCESS_LIST:
+                        # dump the memory of exiting processes
+                        if self.options.get("procmemdump"):
+                            p = Process(pid=process_id)
+                            p.dump_memory()
 
-        KERNEL32.WriteFile(self.h_pipe,
-                           create_string_buffer(response),
-                           len(response),
-                           byref(bytes_read),
-                           None)
+                        # only notify processes we've hooked
+                        event_name = TERMINATE_EVENT + str(process_id)
+                        event_handle = KERNEL32.OpenEventA(EVENT_MODIFY_STATE, False, event_name)
+                        if not event_handle:
+                            log.warning("Unable to open termination event for pid %u.", process_id)
+                        else:
+                            # make sure process is aware of the termination
+                            KERNEL32.SetEvent(event_handle)
+                            KERNEL32.CloseHandle(event_handle)
 
-        KERNEL32.CloseHandle(self.h_pipe)
+                    PROCESS_LOCK.release()
+                # Handle notification of cuckoomon loading in a process
+                elif command.startswith("LOADED:"):
+                    PROCESS_LOCK.acquire()
+                    process_id = int(command[7:])
+                    if process_id not in PROCESS_LIST:
+                        add_pids(process_id)
+                    PROCESS_LOCK.release()
+                    log.info("Cuckoomon successfully loaded in process with pid %u.", process_id)
 
-        return True
+                # In case of PID, the client is trying to notify the creation of
+                # a new process to be injected and monitored.
+                elif command.startswith("PROCESS:"):
+                    # We acquire the process lock in order to prevent the analyzer
+                    # to terminate the analysis while we are operating on the new
+                    # process.
+                    PROCESS_LOCK.acquire()
+
+                    # Set the current DLL to the default one provided
+                    # at submission.
+                    dll = DEFAULT_DLL
+                    suspended = False
+                    # We parse the process ID.
+                    data = command[8:]
+                    if len(data) > 2 and data[1] == ':':
+                        if data[0] == '1':
+                            suspended = True
+                        data = command[10:]
+
+                    process_id = thread_id = None
+                    if "," not in data:
+                        if data.isdigit():
+                            process_id = int(data)
+                    elif data.count(",") == 1:
+                        process_id, param = data.split(",")
+                        thread_id = None
+                        if process_id.isdigit():
+                            process_id = int(process_id)
+                        else:
+                            process_id = None
+
+                        if param.isdigit():
+                            thread_id = int(param)
+
+                    if process_id:
+                        if process_id not in (PID, PPID):
+                            # We inject the process only if it's not being
+                            # monitored already, otherwise we would generate
+                            # polluted logs.
+                            if process_id not in PROCESS_LIST:
+                                # Open the process and inject the DLL.
+                                # Hope it enjoys it.
+                                proc = Process(pid=process_id,
+                                               thread_id=thread_id,
+                                               suspended=suspended)
+
+                                filepath = proc.get_filepath()
+                                is_64bit = proc.is_64bit()
+                                filename = os.path.basename(filepath)
+
+                                log.info("Announced %s process name: %s pid: %d", "64-bit" if is_64bit else "32-bit", filename, process_id)
+
+                                if not in_protected_path(filename):
+                                    res = proc.inject(dll, filepath)
+                                    LASTINJECT_TIME = datetime.now()
+                                proc.close()
+                        else:
+                            log.warning("Received request to inject Cuckoo "
+                                        "process with pid %d, skip", process_id)
+
+                    # Once we're done operating on the processes list, we release
+                    # the lock.
+                    PROCESS_LOCK.release()
+                # In case of FILE_NEW, the client is trying to notify the creation
+                # of a new file.
+                elif command.startswith("FILE_NEW:"):
+                    # We extract the file path.
+                    file_path = unicode(command[9:].decode("utf-8"))
+                    # We add the file to the list.
+                    add_file(file_path)
+                # In case of FILE_DEL, the client is trying to notify an ongoing
+                # deletion of an existing file, therefore we need to dump it
+                # straight away.
+                elif command.startswith("FILE_DEL:"):
+                    # Extract the file path.
+                    file_path = unicode(command[9:].decode("utf-8"))
+                    # Dump the file straight away.
+                    del_file(file_path)
+                elif command.startswith("FILE_MOVE:"):
+                    # Syntax = "FILE_MOVE:old_file_path::new_file_path".
+                    if "::" in command[10:]:
+                        old_fname, new_fname = command[10:].split("::", 1)
+                        move_file(unicode(old_fname.decode("utf-8")),
+                                  unicode(new_fname.decode("utf-8")))
+                else:
+                    log.warning("Received unknown command from cuckoomon: %s", command)
+
+            KERNEL32.WriteFile(self.h_pipe,
+                               create_string_buffer(response),
+                               len(response),
+                               byref(bytes_read),
+                               None)
+
+            KERNEL32.CloseHandle(self.h_pipe)
+
+            return True
+        except Exception as e:
+            error_exc = traceback.format_exc()
+            log.exception(error_exc)
+            return True
 
 class PipeServer(Thread):
     """Cuckoo PIPE server.
@@ -488,31 +493,36 @@ class PipeServer(Thread):
         """Create and run PIPE server.
         @return: operation status.
         """
-        while self.do_run:
-            # Create the Named Pipe.
-            h_pipe = KERNEL32.CreateNamedPipeA(self.pipe_name,
-                                               PIPE_ACCESS_DUPLEX,
-                                               PIPE_TYPE_MESSAGE |
-                                               PIPE_READMODE_MESSAGE |
-                                               PIPE_WAIT,
-                                               PIPE_UNLIMITED_INSTANCES,
-                                               BUFSIZE,
-                                               BUFSIZE,
-                                               0,
-                                               None)
+        try:
+            while self.do_run:
+                # Create the Named Pipe.
+                h_pipe = KERNEL32.CreateNamedPipeA(self.pipe_name,
+                                                   PIPE_ACCESS_DUPLEX,
+                                                   PIPE_TYPE_MESSAGE |
+                                                   PIPE_READMODE_MESSAGE |
+                                                   PIPE_WAIT,
+                                                   PIPE_UNLIMITED_INSTANCES,
+                                                   BUFSIZE,
+                                                   BUFSIZE,
+                                                   0,
+                                                   None)
 
-            if h_pipe == INVALID_HANDLE_VALUE:
-                return False
+                if h_pipe == INVALID_HANDLE_VALUE:
+                    return False
 
-            # If we receive a connection to the pipe, we invoke the handler.
-            if KERNEL32.ConnectNamedPipe(h_pipe, None) or KERNEL32.GetLastError() == ERROR_PIPE_CONNECTED:
-                handler = PipeHandler(h_pipe)
-                handler.daemon = True
-                handler.start()
-            else:
-                KERNEL32.CloseHandle(h_pipe)
+                # If we receive a connection to the pipe, we invoke the handler.
+                if KERNEL32.ConnectNamedPipe(h_pipe, None) or KERNEL32.GetLastError() == ERROR_PIPE_CONNECTED:
+                    handler = PipeHandler(h_pipe)
+                    handler.daemon = True
+                    handler.start()
+                else:
+                    KERNEL32.CloseHandle(h_pipe)
 
-        return True
+            return True
+        except Exception as e:
+            error_exc = traceback.format_exc()
+            log.exception(error_exc)
+            return True
 
 class Analyzer:
     """Cuckoo Windows Analyzer.
