@@ -554,33 +554,28 @@ class Process:
         else:
             log.debug("Using CreateRemoteThread injection.")
 
+        bin_name = ""
+        bit_str = ""
         if is_64bit:
-            if os.path.exists("bin/loader_x64.exe"):
-                ret = subprocess.call(["bin/loader_x64.exe", "inject", str(self.pid), str(thread_id), dll])
-                if ret != 0:
-                    if ret == 1:
-                        log.info("Injected into suspended 64-bit process with pid %d", self.pid)
-                    else:
-                        log.error("Unable to inject into 64-bit process with pid %d, error: %d", self.pid, ret)
-                    return False
-                else:
-                    return True
-            else:
-                log.error("Please place the loader_x64.exe binary from cuckoomon into analyzer/windows/bin in order to analyze x64 binaries.")
-                return False
+            bin_name = "bin/loader_x64.exe"
+            bit_str = "64-bit"
         else:
-            if os.path.exists("bin/loader.exe"):
-                ret = subprocess.call(["bin/loader.exe", "inject", str(self.pid), str(thread_id), dll])
-                if ret != 0:
-                    if ret == 1:
-                        log.info("Injected into suspended 32-bit process with pid %d", self.pid)
-                    else:
-                        log.error("Unable to inject into 32-bit process with pid %d, error: %d", self.pid, ret)
-                    return False
+            bin_name = "bin/loader.exe"
+            bit_str = "32-bit"
+
+        if os.path.exists(bin_name):
+            ret = subprocess.call([bin_name, "inject", str(self.pid), str(thread_id), dll])
+            if ret != 0:
+                if ret == 1:
+                    log.info("Injected into suspended %s process with pid %d", bit_str, self.pid)
                 else:
-                    return True
+                    log.error("Unable to inject into %s process with pid %d, error: %d", bit_str, self.pid, ret)
+                return False
             else:
-                return self.old_inject(dll, self.thread_id or self.suspended)
+                return True
+        else:
+            log.error("Please place the %s binary from cuckoomon into analyzer/windows/bin in order to analyze %s binaries.", os.path.basename(bin_name), bit_str)
+            return False
 
     def dump_memory(self):
         """Dump process memory.
@@ -595,55 +590,41 @@ class Process:
                         "dump aborted", self.pid)
             return False
 
-        self.get_system_info()
+        bin_name = ""
+        bit_str = ""
+        file_path = os.path.join(PATHS["memory"], "%d.dmp".format(self.pid))
+        if self.is_64bit():
+            bin_name = "bin/loader_x64.exe"
+            bit_str = "64-bit"
+        else:
+            bin_name = "bin/loader.exe"
+            bit_str = "32-bit"
 
-        page_size = self.system_info.dwPageSize
-        min_addr = self.system_info.lpMinimumApplicationAddress
-        max_addr = self.system_info.lpMaximumApplicationAddress
-        mem = min_addr
-
-        root = os.path.join(PATHS["memory"], str(int(time())))
-
-        if not os.path.exists(root):
-            os.makedirs(root)
-
-        # Now upload to host from the StringIO.
-        nf = NetlogFile(os.path.join("memory", "%s.dmp" % str(self.pid)))
-
-        while mem < max_addr:
-            mbi = MEMORY_BASIC_INFORMATION()
-            count = c_ulong(0)
-
-            if KERNEL32.VirtualQueryEx(self.h_process,
-                                       mem,
-                                       byref(mbi),
-                                       sizeof(mbi)) < sizeof(mbi):
-                mem += page_size
-                continue
-
-            if mbi.State & MEM_COMMIT and \
-                    mbi.Type & (MEM_IMAGE | MEM_MAPPED | MEM_PRIVATE):
-                buf = create_string_buffer(mbi.RegionSize)
-                if KERNEL32.ReadProcessMemory(self.h_process,
-                                              mem,
-                                              buf,
-                                              mbi.RegionSize,
-                                              byref(count)):
-                    try:
-                        nf.sock.sendall(buf.raw)
-                    except Exception as e:
-                        try:
-                            nf.close()
-                        except:
-                            pass
-                        log.warning("Memory dump of process with pid %d failed", self.pid)
-                        return False
-
-                mem += mbi.RegionSize
+        if os.path.exists(bin_name):
+            ret = subprocess.call([bin_name, "dump", str(self.pid), file_path])
+            if ret != 0:
+                if ret == 1:
+                    log.info("Dumped %s process with pid %d", bit_str, self.pid)
+                else:
+                    log.error("Unable to dump %s process with pid %d, error: %d", bit_str, self.pid, ret)
+                return False
             else:
-                mem += page_size
+                return True
+        else:
+            log.error("Please place the %s binary from cuckoomon into analyzer/windows/bin in order to analyze %s binaries.", os.path.basename(bin_name), bit_str)
+            return False
 
-        nf.close()
+        nf = NetlogFile(os.path.join("memory", "%s.dmp" % str(self.pid)))
+        infd = open(file_path, "rb")
+        buf = infd.read(1024*1024)
+        try:
+            while buf:
+                nf.send(buf, retry=False)
+                buf = infd.read(1024*1024)
+            nf.close()
+        except:
+            log.warning("Memory dump of process with pid %d failed", self.pid)
+            return False
 
         log.info("Memory dump of process with pid %d completed", self.pid)
 
