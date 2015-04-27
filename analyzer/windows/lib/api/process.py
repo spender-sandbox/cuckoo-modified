@@ -615,7 +615,7 @@ class Process:
             log.error("Please place the %s binary from cuckoomon into analyzer/windows/bin in order to analyze %s binaries.", os.path.basename(bin_name), bit_str)
             return False
 
-        nf = NetlogFile(os.path.join("memory", "%s.dmp" % str(self.pid)))
+        nf = NetlogFile(os.path.join("memory", "{0}.dmp".format(self.pid)))
         infd = open(file_path, "rb")
         buf = infd.read(1024*1024)
         try:
