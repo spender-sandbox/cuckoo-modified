@@ -8,7 +8,10 @@ import logging
 import subprocess
 import os.path
 
-import re
+try:
+    import re2 as re
+except ImportError:
+    import re
 
 from lib.cuckoo.common.abstracts import Machinery
 from lib.cuckoo.common.exceptions import CuckooCriticalError
