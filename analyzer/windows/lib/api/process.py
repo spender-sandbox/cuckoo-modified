@@ -603,14 +603,11 @@ class Process:
 
         if os.path.exists(bin_name):
             ret = subprocess.call([bin_name, "dump", str(self.pid), file_path])
-            if ret != 0:
-                if ret == 1:
-                    log.info("Dumped %s process with pid %d", bit_str, self.pid)
-                else:
-                    log.error("Unable to dump %s process with pid %d, error: %d", bit_str, self.pid, ret)
-                return False
+            if ret == 1:
+                log.info("Dumped %s process with pid %d", bit_str, self.pid)
             else:
-                return True
+                log.error("Unable to dump %s process with pid %d, error: %d", bit_str, self.pid, ret)
+                return False
         else:
             log.error("Please place the %s binary from cuckoomon into analyzer/windows/bin in order to analyze %s binaries.", os.path.basename(bin_name), bit_str)
             return False
