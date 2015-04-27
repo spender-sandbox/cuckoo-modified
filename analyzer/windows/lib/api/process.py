@@ -592,7 +592,8 @@ class Process:
 
         bin_name = ""
         bit_str = ""
-        file_path = os.path.join(PATHS["memory"], "%d.dmp".format(self.pid))
+        file_path = os.path.join(PATHS["memory"], "{0}.dmp".format(self.pid))
+
         if self.is_64bit():
             bin_name = "bin/loader_x64.exe"
             bit_str = "64-bit"
