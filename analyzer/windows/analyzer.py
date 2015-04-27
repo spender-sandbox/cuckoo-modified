@@ -482,7 +482,7 @@ class PipeServer(Thread):
     new processes being spawned and for files being created or deleted.
     """
 
-    def __init__(self, pipe_name=PIPE, options=options):
+    def __init__(self, options, pipe_name=PIPE):
         """@param pipe_name: Cuckoo PIPE server name."""
         Thread.__init__(self)
         self.pipe_name = pipe_name
@@ -609,7 +609,7 @@ class Analyzer:
         # Initialize and start the Pipe Servers. This is going to be used for
         # communicating with the injected and monitored processes.
         for x in xrange(self.PIPE_SERVER_COUNT):
-            self.pipes[x] = PipeServer(options=self.config.get_options())
+            self.pipes[x] = PipeServer(self.config.get_options())
             self.pipes[x].daemon = True
             self.pipes[x].start()
 
