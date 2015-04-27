@@ -629,7 +629,16 @@ class Process:
                                               buf,
                                               mbi.RegionSize,
                                               byref(count)):
-                    nf.sock.sendall(buf.raw)
+                    try:
+                        nf.sock.sendall(buf.raw)
+                    except Exception as e:
+                        try:
+                            nf.close()
+                        except:
+                            pass
+                        log.warning("Memory dump of process with pid %d failed", self.pid)
+                        return False
+
                 mem += mbi.RegionSize
             else:
                 mem += page_size
