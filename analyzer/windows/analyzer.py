@@ -192,10 +192,13 @@ class PipeHandler(Thread):
     decides what to do with them.
     """
 
-    def __init__(self, h_pipe):
-        """@param h_pipe: PIPE to read."""
+    def __init__(self, h_pipe, options):
+        """@param h_pipe: PIPE to read.
+           @param options: options for analysis
+        """
         Thread.__init__(self)
         self.h_pipe = h_pipe
+        self.options = options
 
     def run(self):
         """Run handler.
@@ -479,10 +482,11 @@ class PipeServer(Thread):
     new processes being spawned and for files being created or deleted.
     """
 
-    def __init__(self, pipe_name=PIPE):
+    def __init__(self, pipe_name=PIPE, options):
         """@param pipe_name: Cuckoo PIPE server name."""
         Thread.__init__(self)
         self.pipe_name = pipe_name
+        self.options = options
         self.do_run = True
 
     def stop(self):
@@ -512,7 +516,7 @@ class PipeServer(Thread):
 
                 # If we receive a connection to the pipe, we invoke the handler.
                 if KERNEL32.ConnectNamedPipe(h_pipe, None) or KERNEL32.GetLastError() == ERROR_PIPE_CONNECTED:
-                    handler = PipeHandler(h_pipe)
+                    handler = PipeHandler(h_pipe, self.options)
                     handler.daemon = True
                     handler.start()
                 else:
@@ -605,7 +609,7 @@ class Analyzer:
         # Initialize and start the Pipe Servers. This is going to be used for
         # communicating with the injected and monitored processes.
         for x in xrange(self.PIPE_SERVER_COUNT):
-            self.pipes[x] = PipeServer()
+            self.pipes[x] = PipeServer(options=self.config.get_options())
             self.pipes[x].daemon = True
             self.pipes[x].start()
 
