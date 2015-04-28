@@ -361,6 +361,7 @@ def pretty_print_arg(category, api_name, arg_name, arg_val):
                 3 : "SystemLookasideInformation",
                 4 : "SystemPerformanceInformation",
                 5 : "SystemProcessInformation",
+                8 : "SystemProcessorPerformanceInformation",
                 21 : "SystemFileCacheInformation"
         }.get(val, None)
     elif category == "registry" and arg_name == "Type":
