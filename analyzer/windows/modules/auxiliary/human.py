@@ -61,18 +61,18 @@ def foreach_child(hwnd, lparam):
         # Check if the button is set as "clickable" and click it.
         for button in buttons:
             if button in text.value.lower():
+                dontclick = False
                 for btn in dontclick:
                     if btn in text.value.lower():
-                        return False
-                log.info("Found button \"%s\", clicking it" % text.value)
-                USER32.SetForegroundWindow(hwnd)
-                KERNEL32.Sleep(1000)
-                USER32.SendMessageW(hwnd, BM_CLICK, 0, 0)
-        # Don't search for childs (USER32.EnumChildWindows).
-        return False
-    else:
-        # Recursively search for childs (USER32.EnumChildWindows).
-        return True
+                        dontclick = True
+                if not dontclick:
+                    log.info("Found button \"%s\", clicking it" % text.value)
+                    USER32.SetForegroundWindow(hwnd)
+                    KERNEL32.Sleep(1000)
+                    USER32.SendMessageW(hwnd, BM_CLICK, 0, 0)
+                    # only stop searching when we click a button
+                    return False
+    return True
 
 
 # Callback procedure invoked for every enumerated window.
