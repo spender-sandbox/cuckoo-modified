@@ -26,6 +26,14 @@ class CIF(Processing):
                 rtn = False
         return rtn
 
+    def normalize_url(self, url):
+        # normalize URL according to CIF specification
+        uri = url
+        if ":" in url:
+            uri = url[url.index(':')+1:]
+        uri = uri.strip("/")
+        return urllib.quote(uri.encode('utf8')).lower()
+
     def run(self):
         """Runs CIF processing
         @return: full CIF report.
@@ -53,16 +61,10 @@ class CIF(Processing):
             if not os.path.exists(self.file_path):
                 raise CuckooProcessingError("File {0} not found, skipping it".format(self.file_path))
 
-            resource = File(self.file_path).get_md5()
+            resources.append(File(self.file_path).get_md5())
         elif self.task["category"] == "url":
-            # normalize URL according to CIF specification
-            suburl = self.task["target"]
-            uri = suburl
-            if ":" in suburl:
-                uri = suburl[suburl.index(':')+1:]
-            uri = uri.strip("/")
-            query = urllib.quote(uri.encode('utf8')).lower()
-            resource = hashlib.sha1(query).hexdigest()
+            query = self.normalize_url(self.task["target"])
+            resources.append(hashlib.sha1(query).hexdigest())
         else:
             # Not supported type, exit.
             return cif
@@ -77,6 +79,11 @@ class CIF(Processing):
             if domains:
                 for domain in domains:
                     resources.append(domain["domain"])
+            httpreqs = self.results["network"].get("http")
+            if httpreqs:
+                for req in httpreqs:
+                    uri = self.normalize_url(req["uri"])
+                    resources.append(hashlib.sha1(uri).hexdigest())
 
         # add IOCs from dropped files
         if "dropped" in self.results:
