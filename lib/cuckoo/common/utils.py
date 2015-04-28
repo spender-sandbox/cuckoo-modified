@@ -352,6 +352,17 @@ def pretty_print_arg(category, api_name, arg_name, arg_val):
         if val:
             res.append("0x{0:08x}".format(val))
         return "|".join(res)
+    elif arg_name == "SystemInformationClass":
+        val = int(arg_val, 10)
+        return {
+                0 : "SystemBasicInformation",
+                1 : "SystemExceptionInformation",
+                2 : "SystemInterruptInformation",
+                3 : "SystemLookasideInformation",
+                4 : "SystemPerformanceInformation",
+                5 : "SystemProcessInformation",
+                21 : "SystemFileCacheInformation"
+        }.get(val, None)
     elif category == "registry" and arg_name == "Type":
         val = int(arg_val, 16)
         return {
