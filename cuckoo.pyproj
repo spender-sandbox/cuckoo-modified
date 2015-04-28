@@ -178,6 +178,7 @@
     <Compile Include="utils\dist.py" />
     <Compile Include="utils\health_statistics.py" />
     <Compile Include="utils\process.py" />
+    <Compile Include="utils\listdump.py" />
     <Compile Include="utils\stats.py" />
     <Compile Include="utils\submit.py" />
     <Compile Include="utils\web.py" />
