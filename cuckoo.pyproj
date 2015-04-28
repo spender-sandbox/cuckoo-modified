@@ -336,6 +336,7 @@
     <Content Include="web\templates\analysis\behavior\_api_call.html" />
     <Content Include="web\templates\analysis\behavior\_search.html" />
     <Content Include="web\templates\analysis\behavior\_search_results.html" />
+    <Content Include="web\templates\analysis\network\_cif.html" />
     <Content Include="web\templates\analysis\reports\index.html" />
     <Content Include="web\templates\analysis\network\_suricata_alerts.html" />
     <Content Include="web\templates\analysis\network\_suricata_files.html" />
