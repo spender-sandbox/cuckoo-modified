@@ -285,7 +285,10 @@ class PortableExecutable:
         output = StringIO()
         strio.write(icon)
         strio.seek(0)
-        img = Image.open(strio)
+        try:
+            img = Image.open(strio)
+        except:
+            return None
         img.save(output, format="PNG")
         return base64.b64encode(output.getvalue())
 
