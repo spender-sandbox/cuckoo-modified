@@ -263,31 +263,31 @@ class PortableExecutable:
 
         try:
             rt_string_idx = [entry.id for entry in self.pe.DIRECTORY_ENTRY_RESOURCE.entries].index(pefile.RESOURCE_TYPE['RT_GROUP_ICON'])
-            rt_string_directory = pe.DIRECTORY_ENTRY_RESOURCE.entries[rt_string_idx]
-            rt_string_directory = [e for e in pe.DIRECTORY_ENTRY_RESOURCE.entries if e.id == pefile.RESOURCE_TYPE['RT_GROUP_ICON']][0]
+            rt_string_directory = self.pe.DIRECTORY_ENTRY_RESOURCE.entries[rt_string_idx]
+            rt_string_directory = [e for e in self.pe.DIRECTORY_ENTRY_RESOURCE.entries if e.id == pefile.RESOURCE_TYPE['RT_GROUP_ICON']][0]
             entry = rt_string_directory.directory.entries[-1] # gives the highest res icon
             offset = entry.directory.entries[0].data.struct.OffsetToData
             size = entry.directory.entries[0].data.struct.Size
-            data = pe.get_memory_mapped_image()[offset:offset+size]
+            data = self.pe.get_memory_mapped_image()[offset:offset+size]
             icon = data[:18]+'\x16\x00\x00\x00'
  
-            rt_string_idx = [entry.id for entry in pe.DIRECTORY_ENTRY_RESOURCE.entries].index(pefile.RESOURCE_TYPE['RT_ICON'])
-            rt_string_directory = pe.DIRECTORY_ENTRY_RESOURCE.entries[rt_string_idx]
-            rt_string_directory = [e for e in pe.DIRECTORY_ENTRY_RESOURCE.entries if e.id == pefile.RESOURCE_TYPE['RT_ICON']][0]
+            rt_string_idx = [entry.id for entry in self.pe.DIRECTORY_ENTRY_RESOURCE.entries].index(pefile.RESOURCE_TYPE['RT_ICON'])
+            rt_string_directory = self.pe.DIRECTORY_ENTRY_RESOURCE.entries[rt_string_idx]
+            rt_string_directory = [e for e in self.pe.DIRECTORY_ENTRY_RESOURCE.entries if e.id == pefile.RESOURCE_TYPE['RT_ICON']][0]
             entry = rt_string_directory.directory.entries[-1] # gives the highest res icon
             offset = entry.directory.entries[0].data.struct.OffsetToData
             size = entry.directory.entries[0].data.struct.Size
-            icon += pe.get_memory_mapped_image()[offset:offset+size]
-
-            strio = StringIO()
-            output = StringIO()
-            strio.write(icon)
-            strio.seek(0)
-            img = Image.open(strio)
-            img.save(output, format="PNG")
-            return base64.b64encode(output.getvalue())
+            icon += self.pe.get_memory_mapped_image()[offset:offset+size]
         except:
             return None
+
+        strio = StringIO()
+        output = StringIO()
+        strio.write(icon)
+        strio.seek(0)
+        img = Image.open(strio)
+        img.save(output, format="PNG")
+        return base64.b64encode(output.getvalue())
 
     def _get_versioninfo(self):
         """Get version info.
