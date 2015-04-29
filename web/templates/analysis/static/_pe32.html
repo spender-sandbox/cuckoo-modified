@@ -1,6 +1,6 @@
 <section id="static_analysis">
     {% if analysis.static %}
-        {% if analysis.static.pe_timestamp or analysis.static.pe_imphash %}
+        {% if analysis.static.pe_timestamp or analysis.static.pe_imphash or analysis.static.pe_icon %}
             <div>
                 <h4>PE Information</h4>
                 <div id="pe_information">
@@ -15,6 +15,12 @@
                             <tr>
                                 <th style="width: 15%;">Import Hash</th>
                                 <td>{{analysis.static.pe_imphash}}</td>
+                            </tr>
+                        {% endif %}
+                        {% if analysis.static.pe_icon %}
+                            <tr>
+                                <th style="width: 15%;">Icon</th>
+                                <td><img class="fade" src="data:image/jpeg;base64,{{analysis.static.pe_icon}}"/></td>
                             </tr>
                         {% endif %}
                     </table>

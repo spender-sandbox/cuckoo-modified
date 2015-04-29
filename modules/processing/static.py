@@ -7,6 +7,11 @@ import lib.cuckoo.common.office.olefile as olefile
 import lib.cuckoo.common.office.vbadeobf as vbadeobf
 import logging
 import os
+import base64
+
+from lib.cuckoo.common.icon import PEIcon
+from PIL import Image
+from StringIO import StringIO
 from datetime import datetime, date, time
 
 try:
@@ -215,8 +220,6 @@ class PortableExecutable:
         if not self.pe:
             return None
 
-        resources = []
-
         if hasattr(self.pe, "DIRECTORY_ENTRY_RESOURCE"):
             for resource_type in self.pe.DIRECTORY_ENTRY_RESOURCE.entries:
                 try:
@@ -247,6 +250,43 @@ class PortableExecutable:
                     continue
 
         return resources
+
+    def _get_icon(self):
+        """Get icon in PNG format.
+        @return: image data in PNG format, encoded as base64
+        """
+        if not self.pe:
+            return None
+
+        # .ico extraction from https://gist.github.com/arbor-jjones/0ead6f9a9f91e420f7c8
+
+        try:
+            rt_string_idx = [entry.id for entry in self.pe.DIRECTORY_ENTRY_RESOURCE.entries].index(pefile.RESOURCE_TYPE['RT_GROUP_ICON'])
+            rt_string_directory = pe.DIRECTORY_ENTRY_RESOURCE.entries[rt_string_idx]
+            rt_string_directory = [e for e in pe.DIRECTORY_ENTRY_RESOURCE.entries if e.id == pefile.RESOURCE_TYPE['RT_GROUP_ICON']][0]
+            entry = rt_string_directory.directory.entries[-1] # gives the highest res icon
+            offset = entry.directory.entries[0].data.struct.OffsetToData
+            size = entry.directory.entries[0].data.struct.Size
+            data = pe.get_memory_mapped_image()[offset:offset+size]
+            icon = data[:18]+'\x16\x00\x00\x00'
+ 
+            rt_string_idx = [entry.id for entry in pe.DIRECTORY_ENTRY_RESOURCE.entries].index(pefile.RESOURCE_TYPE['RT_ICON'])
+            rt_string_directory = pe.DIRECTORY_ENTRY_RESOURCE.entries[rt_string_idx]
+            rt_string_directory = [e for e in pe.DIRECTORY_ENTRY_RESOURCE.entries if e.id == pefile.RESOURCE_TYPE['RT_ICON']][0]
+            entry = rt_string_directory.directory.entries[-1] # gives the highest res icon
+            offset = entry.directory.entries[0].data.struct.OffsetToData
+            size = entry.directory.entries[0].data.struct.Size
+            icon += pe.get_memory_mapped_image()[offset:offset+size]
+
+            strio = StringIO()
+            output = StringIO()
+            strio.write(icon)
+            strio.seek(0)
+            img = Image.open(strio)
+            img.save(output, format="PNG")
+            return base64.b64encode(output.getvalue())
+        except:
+            return None
 
     def _get_versioninfo(self):
         """Get version info.
@@ -326,6 +366,7 @@ class PortableExecutable:
         results["pe_sections"] = self._get_sections()
         results["pe_overlay"] = self._get_overlay()
         results["pe_resources"] = self._get_resources()
+        results["pe_icon"] = self._get_icon()
         results["pe_versioninfo"] = self._get_versioninfo()
         results["pe_imphash"] = self._get_imphash()
         results["pe_timestamp"] = self._get_timestamp()
