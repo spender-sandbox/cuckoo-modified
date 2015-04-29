@@ -269,7 +269,7 @@ class PortableExecutable:
             offset = entry.directory.entries[0].data.struct.OffsetToData
             size = entry.directory.entries[0].data.struct.Size
             data = self.pe.get_memory_mapped_image()[offset:offset+size]
-            icon = data[:2] + '\x01\x00' + data[4:14] + '\x16\x00\x00\x00'
+            icon = data[:4] + '\x01\x00' + data[6:12] + '\x16\x00\x00\x00'
  
             rt_string_idx = [entry.id for entry in self.pe.DIRECTORY_ENTRY_RESOURCE.entries].index(pefile.RESOURCE_TYPE['RT_ICON'])
             rt_string_directory = self.pe.DIRECTORY_ENTRY_RESOURCE.entries[rt_string_idx]
