@@ -77,10 +77,16 @@ class Suricata(Processing):
             return suricata["alerts"]
 
         # Add to this if you wish to ignore any SIDs for the suricata alert logs
+        # Useful for ignoring SIDs without disabling them. Ex: surpress an alert for
+        # a SID which is a dependant of another. (Bad TCP data for HTTP(S) alert)
         sid_blacklist = [
                         2200074,
                         2210021,
-                        ]
+                        2210012,
+                        2210025,
+                        2210029,
+                        2210045,
+        ]
 
         if SURICATA_RUNMODE == "socket": 
             if SURICATA_SOCKET_PYLIB != None:
