@@ -220,6 +220,8 @@ class PortableExecutable:
         if not self.pe:
             return None
 
+        resources = []
+
         if hasattr(self.pe, "DIRECTORY_ENTRY_RESOURCE"):
             for resource_type in self.pe.DIRECTORY_ENTRY_RESOURCE.entries:
                 try:
