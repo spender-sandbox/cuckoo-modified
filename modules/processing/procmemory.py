@@ -27,6 +27,7 @@ class ProcessMemory(Processing):
             alloc["prot"] = mem_prot
             alloc["state"] = mem_state
             alloc["type"] = mem_type
+            alloc["offset"] = offset
             alloc["PE"] = False
             if f.read(2) == "MZ":
                 alloc["PE"] = True

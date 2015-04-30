@@ -369,6 +369,29 @@ def file(request, category, object_id):
                                   context_instance=RequestContext(request))
 
 @require_safe
+def procdump(request, object_id, task_id, process_id, start):
+    analysis = results_db.analysis.find({"info.id": int(task_id)})
+
+    file_item = fs.get(ObjectId(object_id))
+    file_name = "{0}_{1:x}.dmp".format(process_id, start)
+
+    if file_item and analysis and "procmemory" in analysis:
+        for proc in analysis["procmemory"]:
+            if proc["pid"] == process_id:
+                for map in proc["address_space"]:
+                    if map["start"] == start:
+                        file_item.seek(map["offset"])
+                        data = file_item.read(map["size"])
+                        content_type = "application/octet-stream"
+                        response = HttpResponse(data, content_type=content_type)
+                        response["Content-Disposition"] = "attachment; filename={0}".format(file_name)
+                        return response
+
+    return render_to_response("error.html",
+                                  {"error": "File not found"},
+                                  context_instance=RequestContext(request))
+
+@require_safe
 def filereport(request, task_id, category):
     formats = {
         "json": "report.json",
