@@ -3,6 +3,7 @@
 # See the file 'docs/LICENSE' for copying permission.
 
 import os
+import struct
 
 from lib.cuckoo.common.abstracts import Processing
 from lib.cuckoo.common.objects import File
