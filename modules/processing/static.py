@@ -9,6 +9,7 @@ import logging
 import os
 import base64
 
+from lib.cuckoo.common.icon import PEGroupIconDir
 from PIL import Image
 from StringIO import StringIO
 from datetime import datetime, date, time
