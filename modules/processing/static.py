@@ -259,38 +259,44 @@ class PortableExecutable:
         if not self.pe:
             return None
 
-        # .ico extraction from https://gist.github.com/arbor-jjones/0ead6f9a9f91e420f7c8
-
         try:
-            rt_string_idx = [entry.id for entry in self.pe.DIRECTORY_ENTRY_RESOURCE.entries].index(pefile.RESOURCE_TYPE['RT_GROUP_ICON'])
-            rt_string_directory = self.pe.DIRECTORY_ENTRY_RESOURCE.entries[rt_string_idx]
-            rt_string_directory = [e for e in self.pe.DIRECTORY_ENTRY_RESOURCE.entries if e.id == pefile.RESOURCE_TYPE['RT_GROUP_ICON']][0]
-            entry = rt_string_directory.directory.entries[-1] # gives the highest res icon
+            rt_group_icon_idx = [entry.id for entry in self.pe.DIRECTORY_ENTRY_RESOURCE.entries].index(pefile.RESOURCE_TYPE['RT_GROUP_ICON'])
+            rt_group_icon_dir = self.pe.DIRECTORY_ENTRY_RESOURCE.entries[rt_group_icon_idx]
+            entry = rt_group_icon_dir.directory.entries[0]
             offset = entry.directory.entries[0].data.struct.OffsetToData
             size = entry.directory.entries[0].data.struct.Size
-            data = self.pe.get_memory_mapped_image()[offset:offset+size]
-            icon = data[:4] + '\x01\x00' + data[6:12] + '\x16\x00\x00\x00'
- 
-            rt_string_idx = [entry.id for entry in self.pe.DIRECTORY_ENTRY_RESOURCE.entries].index(pefile.RESOURCE_TYPE['RT_ICON'])
-            rt_string_directory = self.pe.DIRECTORY_ENTRY_RESOURCE.entries[rt_string_idx]
-            rt_string_directory = [e for e in self.pe.DIRECTORY_ENTRY_RESOURCE.entries if e.id == pefile.RESOURCE_TYPE['RT_ICON']][0]
-            entry = rt_string_directory.directory.entries[-1] # gives the highest res icon
-            offset = entry.directory.entries[0].data.struct.OffsetToData
-            size = entry.directory.entries[0].data.struct.Size
-            icon += self.pe.get_memory_mapped_image()[offset:offset+size]
-        except:
-            return None
+            data = pe.get_memory_mapped_image()[offset:offset+size]
+            peicon = PEGroupIconDir(data)
+            bigwidth = 0
+            bigheight = 0
+            bigbpp = 0
+            bigidx = -1
+            iconidx = 0
+            for idx,icon in enumerate(peicon.icons):
+                if icon.bWidth >= bigwidth and icon.bHeight >= bigheight and icon.wBitCount >= bigbpp:
+                    bigwidth = icon.bWidth
+                    bigheight = icon.bHeight
+                    bigbpp = icon.wBitCount
+                    bigidx = icon.nID
+                    iconidx = idx
 
-        strio = StringIO()
-        output = StringIO()
-        strio.write(icon)
-        strio.seek(0)
-        try:
-            img = Image.open(strio)
+            rt_icon_idx = [entry.id for entry in self.pe.DIRECTORY_ENTRY_RESOURCE.entries].index(pefile.RESOURCE_TYPE['RT_ICON'])
+            rt_icon_dir = pe.DIRECTORY_ENTRY_RESOURCE.entries[rt_icon_idx]
+            for entry in rt_icon_dir.directory.entries:
+                if entry.id == bigidx:
+                    offset = entry.directory.entries[0].data.struct.OffsetToData
+                    size = entry.directory.entries[0].data.struct.Size
+                    icon = peicon.get_icon_file(iconidx, data)
+
+                    strio = StringIO()
+                    output = StringIO()
+                    strio.write(icon)
+                    strio.seek(0)
+                    img = Image.open(strio)
+                    img.save(output, format="PNG")
+                    return base64.b64encode(output.getvalue())
         except:
             return None
-        img.save(output, format="PNG")
-        return base64.b64encode(output.getvalue())
 
     def _get_versioninfo(self):
         """Get version info.

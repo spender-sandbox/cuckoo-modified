@@ -104,6 +104,9 @@
     <Compile Include="analyzer\windows\modules\packages\swf.py" />
     <Compile Include="cuckoo.py" />
     <Compile Include="agent\agent.py" />
+    <Compile Include="lib\cuckoo\common\icon.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="lib\cuckoo\common\office\DridexURLDecoder.py" />
     <Compile Include="lib\cuckoo\common\office\olefile.py" />
     <Compile Include="lib\cuckoo\common\office\oleid.py" />
