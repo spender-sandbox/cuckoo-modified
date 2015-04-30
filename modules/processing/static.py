@@ -265,8 +265,7 @@ class PortableExecutable:
             entry = rt_group_icon_dir.directory.entries[0]
             offset = entry.directory.entries[0].data.struct.OffsetToData
             size = entry.directory.entries[0].data.struct.Size
-            data = pe.get_memory_mapped_image()[offset:offset+size]
-            peicon = PEGroupIconDir(data)
+            peicon = PEGroupIconDir(self.pe.get_memory_mapped_image()[offset:offset+size])
             bigwidth = 0
             bigheight = 0
             bigbpp = 0
@@ -281,12 +280,12 @@ class PortableExecutable:
                     iconidx = idx
 
             rt_icon_idx = [entry.id for entry in self.pe.DIRECTORY_ENTRY_RESOURCE.entries].index(pefile.RESOURCE_TYPE['RT_ICON'])
-            rt_icon_dir = pe.DIRECTORY_ENTRY_RESOURCE.entries[rt_icon_idx]
+            rt_icon_dir = self.pe.DIRECTORY_ENTRY_RESOURCE.entries[rt_icon_idx]
             for entry in rt_icon_dir.directory.entries:
                 if entry.id == bigidx:
                     offset = entry.directory.entries[0].data.struct.OffsetToData
                     size = entry.directory.entries[0].data.struct.Size
-                    icon = peicon.get_icon_file(iconidx, data)
+                    icon = peicon.get_icon_file(iconidx, self.pe.get_memory_mapped_image()[offset:offset+size])
 
                     strio = StringIO()
                     output = StringIO()
