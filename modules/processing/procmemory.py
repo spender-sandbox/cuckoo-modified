@@ -11,6 +11,29 @@ from lib.cuckoo.common.constants import CUCKOO_ROOT
 class ProcessMemory(Processing):
     """Analyze process memory dumps."""
 
+    def parse_dump(self, dmp_path):
+        f = open(dmp_path, "rb")
+        address_space = []
+        while True:
+            data = f.read(24)
+            if data == '':
+                break
+            alloc = dict()
+            addr,size,mem_state,mem_type,mem_prot = struct.unpack("QIIII", data)
+            offset = f.tell()
+            alloc["start"] = addr
+            alloc["end"] = addr + size
+            alloc["size"] = size
+            alloc["prot"] = mem_prot
+            alloc["state"] = mem_state
+            alloc["type"] = mem_type
+            alloc["PE"] = False
+            if f.read(2) == "MZ":
+                alloc["PE"] = True
+            f.seek(size-2, 1)
+            address_space.append(alloc)
+        return address_space
+
     def run(self):
         """Run analysis.
         @return: structured results.
@@ -26,7 +49,8 @@ class ProcessMemory(Processing):
                 proc = dict(
                     file=dmp_path,
                     pid=os.path.splitext(os.path.basename(dmp_path))[0],
-                    yara=dmp_file.get_yara(os.path.join(CUCKOO_ROOT, "data", "yara", "index_memory.yar"))
+                    yara=dmp_file.get_yara(os.path.join(CUCKOO_ROOT, "data", "yara", "index_memory.yar")),
+                    address_space=parse_dump(dmp_path)
                 )
 
                 results.append(proc)
