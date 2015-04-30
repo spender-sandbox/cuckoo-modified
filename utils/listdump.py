@@ -7,6 +7,8 @@ import os
 import sys
 import struct
 
+PAGE_EXECUTE_READWRITE = 0x40
+
 def main():
     if len(sys.argv) != 2:
         print "Usage: listdump.py <dump file>"
@@ -14,14 +16,16 @@ def main():
     try:
         f = open(sys.argv[1], "rb")
         while True:
-            data = f.read(12)
+            data = f.read(24)
             if data == '':
                 break
-            addr,size = struct.unpack("QI", data)
+            addr,size,mem_state,mem_type,mem_prot = struct.unpack("QIIII", data)
             offset = f.tell()
             extra = ""
+            if mem_prot == PAGE_EXECUTE_READWRITE:
+                extra += ", RWX"
             if f.read(2) == "MZ":
-                extra = ", HAS PE"
+                extra += ", HAS PE"
             print "0x%x: " % offset + "(0x%x" % addr + " -> " + "0x%x)" % (addr + size) + extra
             f.seek(size-2, 1)
     except:
