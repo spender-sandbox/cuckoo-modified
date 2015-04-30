@@ -373,7 +373,7 @@ def procdump(request, object_id, task_id, process_id, start):
     analysis = results_db.analysis.find({"info.id": int(task_id)})
 
     file_item = fs.get(ObjectId(object_id))
-    file_name = "{0}_{1:x}.dmp".format(process_id, start)
+    file_name = "{0}_{1:x}.dmp".format(process_id, int(start))
 
     if file_item and analysis and "procmemory" in analysis:
         for proc in analysis["procmemory"]:
