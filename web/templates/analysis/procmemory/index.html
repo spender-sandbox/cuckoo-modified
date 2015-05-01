@@ -57,7 +57,7 @@
                                 <th>Download</th>
                             </tr>
                             {% for memmap in proc.address_space %}
-                                <tr class="clickable" data-toggle="collapse" data-targets=".map_{{memmap.start}}">
+                                <tr class="clickable" data-toggle="collapse" data-target=".map_{{memmap.start}}">
                                     <td>{{memmap.start}}</td>
                                     <td>{{memmap.end}}</td>
                                     <td>{{memmap.size}}</td>
