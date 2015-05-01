@@ -377,7 +377,7 @@ def procdump(request, object_id, task_id, process_id, start, end):
 
     if file_item and analysis and "procmemory" in analysis:
         for proc in analysis["procmemory"]:
-            if proc["pid"] == process_id:
+            if proc["pid"] == int(process_id):
                 data = ""
                 for memmap in proc["address_space"]:
                     for chunk in memmap["chunks"]:
