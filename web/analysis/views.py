@@ -370,7 +370,7 @@ def file(request, category, object_id):
 
 @require_safe
 def procdump(request, object_id, task_id, process_id, start):
-    analysis = results_db.analysis.find({"info.id": int(task_id)})
+    analysis = results_db.analysis.find_one({"info.id": int(task_id)}, sort=[("_id", pymongo.DESCENDING)])
 
     file_item = fs.get(ObjectId(object_id))
     file_name = "{0}_{1:x}.dmp".format(process_id, int(start))
@@ -378,10 +378,10 @@ def procdump(request, object_id, task_id, process_id, start):
     if file_item and analysis and "procmemory" in analysis:
         for proc in analysis["procmemory"]:
             if proc["pid"] == process_id:
-                for map in proc["address_space"]:
-                    if map["start"] == start:
-                        file_item.seek(map["offset"])
-                        data = file_item.read(map["size"])
+                for memmap in proc["address_space"]:
+                    if memmap["start"] == int(start):
+                        file_item.seek(memmap["offset"])
+                        data = file_item.read(memmap["size"])
                         content_type = "application/octet-stream"
                         response = HttpResponse(data, content_type=content_type)
                         response["Content-Disposition"] = "attachment; filename={0}".format(file_name)
