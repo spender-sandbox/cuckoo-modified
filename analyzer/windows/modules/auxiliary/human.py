@@ -61,11 +61,11 @@ def foreach_child(hwnd, lparam):
         # Check if the button is set as "clickable" and click it.
         for button in buttons:
             if button in text.value.lower():
-                dontclick = False
+                dontclickb = False
                 for btn in dontclick:
                     if btn in text.value.lower():
-                        dontclick = True
-                if not dontclick:
+                        dontclickb = True
+                if not dontclickb:
                     log.info("Found button \"%s\", clicking it" % text.value)
                     USER32.SetForegroundWindow(hwnd)
                     KERNEL32.Sleep(1000)
