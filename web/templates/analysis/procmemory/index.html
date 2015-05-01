@@ -57,7 +57,7 @@
                                 <th>Download</th>
                             </tr>
                             {% for memmap in proc.address_space %}
-                                <tr>
+                                <tr class="clickable" data-toggle="collapse" data-targets=".map_{{memmap.start}}">
                                     <td>{{memmap.start}}</td>
                                     <td>{{memmap.end}}</td>
                                     <td>{{memmap.size}}</td>
@@ -69,6 +69,16 @@
                                     {% endif %}
                                     <td><a class="btn btn-primary btn-small" href="{% url "analysis.views.procdump" proc.procmem_id analysis.info.id proc.pid memmap.start memmap.end %}">Download</a></td>
                                 </tr>
+                                {% for chunk in memmap.chunks %}
+                                    <tr class="collapse map_{{memmap.start}}">
+                                        <td>{{chunk.start}}</td>
+                                        <td>{{chunk.end}}</td>
+                                        <td>{{chunk.size}}</td>
+                                        <td>{{chunk.prot}}</td>
+                                        <td></td>
+                                        <td><a class="btn btn-primary btn-small" href="{% url "analysis.views.procdump" proc.procmem_id analysis.info.id proc.pid chunk.start chunk.end %}">Download</a></td>
+                                    </tr>
+                                {% endfor %}
                             {% endfor %}
                     </table>
                     {% endif %}
