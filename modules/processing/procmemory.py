@@ -65,7 +65,7 @@ class ProcessMemory(Processing):
             addr,size,mem_state,mem_type,mem_prot = struct.unpack("QIIII", data)
             offset = f.tell()
             if addr != lastend and len(curchunk):
-                address_space.append(coalesce_chunks(curchunk))
+                address_space.append(self.coalesce_chunks(curchunk))
                 curchunk = []
             alloc["start"] = "0x%.08x" % addr
             alloc["end"] = "0x%.08x" % (addr + size)
@@ -80,7 +80,7 @@ class ProcessMemory(Processing):
             f.seek(size-2, 1)
             curchunk.append(alloc)
         if len(curchunk):
-            address_space.append(coalesce_chunks(curchunk))
+            address_space.append(self.coalesce_chunks(curchunk))
 
         return address_space
 
