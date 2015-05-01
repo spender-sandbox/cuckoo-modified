@@ -69,6 +69,7 @@
                                     {% endif %}
                                     <td><a class="btn btn-primary btn-small" href="{% url "analysis.views.procdump" proc.procmem_id analysis.info.id proc.pid memmap.start memmap.end %}">Download</a></td>
                                 </tr>
+                                {% if memmap.chunks.count >= 2 %}
                                 {% for chunk in memmap.chunks %}
                                     <tr class="collapse map_{{memmap.start}}">
                                         <td>{{chunk.start}}</td>
@@ -79,6 +80,7 @@
                                         <td><a class="btn btn-primary btn-small" href="{% url "analysis.views.procdump" proc.procmem_id analysis.info.id proc.pid chunk.start chunk.end %}">Download</a></td>
                                     </tr>
                                 {% endfor %}
+                                {% endif %}
                             {% endfor %}
                     </table>
                     {% endif %}
