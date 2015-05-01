@@ -69,7 +69,7 @@ class ProcessMemory(Processing):
             if addr != lastend and len(curchunk):
                 address_space.append(self.coalesce_chunks(curchunk))
                 curchunk = []
-            lastend = addr
+            lastend = addr + size
             alloc["start"] = "0x%.08x" % addr
             alloc["end"] = "0x%.08x" % (addr + size)
             alloc["size"] = "0x%x" % size
