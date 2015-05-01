@@ -251,7 +251,7 @@ def tasks_create_file(request):
                                str(task_ids[0]))
                 if callback:
                     resp["url"] = ["{0}/submit/status/{1}/".format(
-                                  apiconf.filecreate.get("url"), task_ids[0])]
+                                  apiconf.api.get("url"), task_ids[0])]
             else:
                 resp["data"] = "Task IDs {0} have been submitted".format(
                                ", ".join(str(x) for x in task_ids))
