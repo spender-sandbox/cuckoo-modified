@@ -383,7 +383,7 @@ def procdump(request, object_id, task_id, process_id, start, end):
                     for chunk in memmap["chunks"]:
                         if int(memmap["start"], 16) >= int(start, 16) and int(memmap["end"], 16) <= int(end, 16):
                             file_item.seek(memmap["offset"])
-                            data += file_item.read(memmap["size"])
+                            data += file_item.read(int(memmap["size"], 16))
                 if len(data):
                     content_type = "application/octet-stream"
                     response = HttpResponse(data, content_type=content_type)
