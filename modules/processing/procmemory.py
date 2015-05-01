@@ -11,6 +11,7 @@ from lib.cuckoo.common.constants import CUCKOO_ROOT
 
 class ProcessMemory(Processing):
     """Analyze process memory dumps."""
+    order = 10
 
     def parse_dump(self, dmp_path):
         f = open(dmp_path, "rb")
@@ -22,9 +23,9 @@ class ProcessMemory(Processing):
             alloc = dict()
             addr,size,mem_state,mem_type,mem_prot = struct.unpack("QIIII", data)
             offset = f.tell()
-            alloc["start"] = addr
-            alloc["end"] = addr + size
-            alloc["size"] = size
+            alloc["start"] = "0x%.08x" % addr
+            alloc["end"] = "0x%.08x" % (addr + size)
+            alloc["size"] = "0x%x" % size
             alloc["prot"] = mem_prot
             alloc["state"] = mem_state
             alloc["type"] = mem_type
@@ -47,10 +48,19 @@ class ProcessMemory(Processing):
             for dmp in os.listdir(self.pmemory_path):
                 dmp_path = os.path.join(self.pmemory_path, dmp)
                 dmp_file = File(dmp_path)
-
+                process_name = ""
+                process_path = ""
+                process_id = os.path.splitext(os.path.basename(dmp_path))[0]
+                if "behavior" in self.results and "processes" in self.results["behavior"]:
+                    for process in self.results["behavior"]["processes"]:
+                        if process_id == process["process_id"]:
+                            process_name = process["process_name"]
+                            process_path = process["module_path"]
                 proc = dict(
                     file=dmp_path,
-                    pid=os.path.splitext(os.path.basename(dmp_path))[0],
+                    pid=process_id,
+                    name=process_name,
+                    path=process_path,
                     yara=dmp_file.get_yara(os.path.join(CUCKOO_ROOT, "data", "yara", "index_memory.yar")),
                     address_space=self.parse_dump(dmp_path)
                 )

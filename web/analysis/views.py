@@ -369,23 +369,25 @@ def file(request, category, object_id):
                                   context_instance=RequestContext(request))
 
 @require_safe
-def procdump(request, object_id, task_id, process_id, start):
+def procdump(request, object_id, task_id, process_id, start, end):
     analysis = results_db.analysis.find_one({"info.id": int(task_id)}, sort=[("_id", pymongo.DESCENDING)])
 
     file_item = fs.get(ObjectId(object_id))
-    file_name = "{0}_{1:x}.dmp".format(process_id, int(start))
+    file_name = "{0}_{1:x}.dmp".format(process_id, int(start, 16))
 
     if file_item and analysis and "procmemory" in analysis:
         for proc in analysis["procmemory"]:
             if proc["pid"] == process_id:
+                data = ""
                 for memmap in proc["address_space"]:
-                    if memmap["start"] == int(start):
+                    if int(memmap["start"], 16) >= int(start, 16) and int(memmap["end"], 16) <= int(end, 16):
                         file_item.seek(memmap["offset"])
-                        data = file_item.read(memmap["size"])
-                        content_type = "application/octet-stream"
-                        response = HttpResponse(data, content_type=content_type)
-                        response["Content-Disposition"] = "attachment; filename={0}".format(file_name)
-                        return response
+                        data += file_item.read(memmap["size"])
+                if len(data):
+                    content_type = "application/octet-stream"
+                    response = HttpResponse(data, content_type=content_type)
+                    response["Content-Disposition"] = "attachment; filename={0}".format(file_name)
+                    return response
 
     return render_to_response("error.html",
                                   {"error": "File not found"},

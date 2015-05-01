@@ -2,15 +2,24 @@
     <div class="tabbable tabs">
         <ul class="nav nav-pills" style="margin-bottom: 0;">
             {% for proc in analysis.procmemory %}
-                <li><a href="#procmemory_{{proc.pid}}" data-toggle="tab">{{proc.pid}}</a></li>
+                <li {%if forloop.first %}class="active"{% endif %}><a href="#procmemory_{{proc.pid}}" data-toggle="tab">{{proc.pid}}</a></li>
             {% endfor %}
         </ul>
         <div class="tab-content">
             {% for proc in analysis.procmemory %}
                 <div class="tab-pane fade" id="procmemory_{{proc.pid}}">
+                    <h4>Full Dump Information</h4>
                     <table class="table table-striped table-bordered" style="table-layout: fixed;">
                         <tr>
-                            <th width="15%">Yara</th>
+                            <th width="15%">Process Name</th>
+                            <td>{{proc.name}}</td>
+                        </tr>
+                        <tr>
+                            <th>Executable Path</th>
+                            <td>{{proc.path}}</td>
+                        </tr>
+                        <tr>
+                            <th>Yara</th>
                             <td>
                             {% if proc.yara %}
                                 {% for match in proc.yara %}
@@ -33,6 +42,7 @@
                         {% endif %}
                     </table>
                     {% if proc.address_space %}
+                    <h4>Address Space</h4>
                     <table class="table table-striped table-bordered">
                             <tr>
                                 <th width="15%">Start</th>
@@ -42,18 +52,18 @@
                                 <th>PE</th>
                                 <th>Download</th>
                             </tr>
-                            {% for map in proc.address_space %}
+                            {% for memmap in proc.address_space %}
                                 <tr>
-                                    <td>{{map.start}}</td>
-                                    <td>{{map.end}}</td>
-                                    <td>{{map.size}}</td>
-                                    <td>{{map.prot}}</td>
-                                    {% if map.PE %}
+                                    <td>{{memmap.start}}</td>
+                                    <td>{{memmap.end}}</td>
+                                    <td>{{memmap.size}}</td>
+                                    <td>{{memmap.prot}}</td>
+                                    {% if memmap.PE %}
                                     <td><span class="label label-success">Yes</span></td>
                                     {% else %}
                                     <td><span class="label label-primary">No</span></td>
                                     {% endif %}
-                                    <td><a class="btn btn-primary btn-small" href="{% url "analysis.views.procdump" proc.procmem_id analysis.info.id proc.pid map.start %}">Download</a></td>
+                                    <td><a class="btn btn-primary btn-small" href="{% url "analysis.views.procdump" proc.procmem_id analysis.info.id proc.pid memmap.start memmap.end %}">Download</a></td>
                                 </tr>
                             {% endfor %}
                     </table>
