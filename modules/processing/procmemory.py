@@ -50,6 +50,8 @@ class ProcessMemory(Processing):
         for chunk in chunklist:
             if chunk["prot"] != prot:
                 prot = "Mixed"
+        if len(chunklist) < 2:
+            chunklist = []
         return { "start" : low, "end" : high, "size" : "0x%x" % (int(high, 16) - int(low, 16)), "prot" : prot, "PE" : PE, "chunks" : chunklist }
 
     def parse_dump(self, dmp_path):
