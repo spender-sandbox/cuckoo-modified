@@ -48,7 +48,11 @@
                                     <td>{{map.end}}</td>
                                     <td>{{map.size}}</td>
                                     <td>{{map.prot}}</td>
-                                    <td>{{map.PE}}</td>
+                                    {% if map.PE %}
+                                    <td><span class="label label-success">Yes</span></td>
+                                    {% else %}
+                                    <td><span class="label label-primary">No</span></td>
+                                    {% endif %}
                                     <td><a class="btn btn-primary btn-small" href="{% url "analysis.views.procdump" proc.procmem_id analysis.info.id proc.pid map.start %}">Download</a></td>
                                 </tr>
                             {% endfor %}
