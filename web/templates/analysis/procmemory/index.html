@@ -57,8 +57,12 @@
                                 <th>Download</th>
                             </tr>
                             {% for memmap in proc.address_space %}
-                                <tr class="clickable" data-toggle="collapse" data-target=".map_{{memmap.start}}">
+                                <tr>
+                                    {% if memmap.chunks|length >= 2 %}
+                                    <td><a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion" href=".map_{{memmap.start}}">{{memmap.start}}</a></td>
+                                    {% else %}
                                     <td>{{memmap.start}}</td>
+                                    {% endif %}
                                     <td>{{memmap.end}}</td>
                                     <td>{{memmap.size}}</td>
                                     <td>{{memmap.prot}}</td>
