@@ -244,7 +244,9 @@ def tasks_create_file(request):
                                       )
                 if task_id:
                     task_ids.append(task_id)
+                    
         if len(task_ids) > 0:
+            resp["task_ids"] = task_ids
             callback = apiconf.filecreate.get("status")
             if len(task_ids) == 1:
                 resp["data"] = "Task ID {0} has been submitted".format(
@@ -253,6 +255,7 @@ def tasks_create_file(request):
                     resp["url"] = ["{0}/submit/status/{1}/".format(
                                   apiconf.api.get("url"), task_ids[0])]
             else:
+                resp["task_ids"] = task_ids
                 resp["data"] = "Task IDs {0} have been submitted".format(
                                ", ".join(str(x) for x in task_ids))
                 if callback:
@@ -319,6 +322,7 @@ def tasks_create_url(request):
                              clock=clock
                              )
         if task_id:
+            resp["task_ids"] = [task_id,]
             resp["data"] = "Task ID {0} has been submitted".format(
                            str(task_id))
             if apiconf.urlcreate.get("status"):
