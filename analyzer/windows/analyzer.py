@@ -48,7 +48,9 @@ PROCESS_LOCK = Lock()
 DEFAULT_DLL = None
 
 SERVICES_PID = None
+TASKENG_PID = None
 MONITORED_SERVICES = False
+MONITORED_TASKSCHED = False
 LASTINJECT_TIME = None
 
 PID = os.getpid()
@@ -205,6 +207,7 @@ class PipeHandler(Thread):
         @return: operation status.
         """
         global MONITORED_SERVICES
+        global MONITORED_TASKSCHED
         global LASTINJECT_TIME
         try:
             data = ""
@@ -335,6 +338,22 @@ class PipeHandler(Thread):
                             MONITORED_SERVICES = True
                         else:
                             log.error('Unable to monitor service %s' % (servname))
+
+                elif command.startswith("TASKSCHED:"):
+                    if not MONITORED_TASKSCHED:
+                        # Inject into taskeng.exe so we can monitor COM API task scheduling
+                        # if tasklist previously failed to get the taskeng.exe PID we'll be
+                        # unable to inject
+                        if TASKENG_PID:
+                            taskengproc = Process(pid=TASKENG_PID,suspended=False)
+                            filepath = taskengproc.get_filepath()
+                            taskengproc.inject(dll=DEFAULT_DLL, interest=filepath, nosleepskip=True)
+                            LASTINJECT_TIME = datetime.now()
+                            taskengproc.close()
+                            KERNEL32.Sleep(1000)
+                            MONITORED_TASKSCHED = True
+                        else:
+                            log.error('Unable to monitor taskeng.exe')
 
                 # For now all we care about is bumping up our LASTINJECT_TIME to account for long delays between
                 # injection and actual resume time where the DLL would have a chance to load in the new process
@@ -542,10 +561,36 @@ class Analyzer:
         self.config = None
         self.target = None
 
+    def pid_from_process_name(self, procname):
+        # tasklist sometimes fails under high-load (http://support.microsoft.com/kb/2732840)
+        # We can retry a few times to hopefully work around failures
+        retries = 4
+        while retries > 0: 
+            stdin, stdout, stderr = os.popen3("tasklist /V /FI \"IMAGENAME eq {0}\"".format(procname))
+            s = stdout.read()
+            err = stderr.read()
+            if procname not in s:
+                log.warning('tasklist failed with error "%s"' % (err))
+            else:
+                # it worked
+                break
+            retries -= 1
+
+
+        if procname not in s:
+            # All attempts failed
+            log.error("Unable to retreive {0} PID".format(procname))
+            return None
+        else:
+            procnameidx = s.index(procname)
+            procnamestr = s[procnameidx + len(procname):].strip()
+            return int(procnamestr[:procnamestr.index(' ')], 10)
+
     def prepare(self):
         """Prepare env for analysis."""
         global DEFAULT_DLL
         global SERVICES_PID
+        global TASKENG_PID
 
         # Get SeDebugPrivilege for the Python process. It will be needed in
         # order to perform the injections.
@@ -582,29 +627,10 @@ class Analyzer:
         DEFAULT_DLL = self.config.get_options().get("dll")
 
         # get PID for services.exe for monitoring services
-        # tasklist sometimes fails under high-load (http://support.microsoft.com/kb/2732840)
-        # We can retry a few times to hopefully work around failures
-        retries = 4
-        while retries > 0: 
-            stdin, stdout, stderr = os.popen3("tasklist /V /FI \"IMAGENAME eq services.exe\"")
-            s = stdout.read()
-            err = stderr.read()
-            if 'services.exe' not in s:
-                log.warning('tasklist failed with error "%s"' % (err))
-            else:
-                # it worked
-                break
-            retries -= 1
+        SERVICES_PID = self.pid_from_process_name("services.exe")
 
-
-        if 'services.exe' not in s:
-            # All attempts failed
-            log.error('Unable to retreive services.exe PID')
-            SERVICES_PID = None
-        else:
-            servidx = s.index("services.exe")
-            servstr = s[servidx + 12:].strip()
-            SERVICES_PID = int(servstr[:servstr.index(' ')], 10)
+        # get PID for taskeng.exe for monitoring services
+        TASKENG_PID = self.pid_from_process_name("taskeng.exe")
 
         # Initialize and start the Pipe Servers. This is going to be used for
         # communicating with the injected and monitored processes.
