@@ -48,9 +48,7 @@ PROCESS_LOCK = Lock()
 DEFAULT_DLL = None
 
 SERVICES_PID = None
-TASKENG_PID = None
 MONITORED_SERVICES = False
-MONITORED_TASKSCHED = False
 LASTINJECT_TIME = None
 
 PID = os.getpid()
@@ -207,7 +205,6 @@ class PipeHandler(Thread):
         @return: operation status.
         """
         global MONITORED_SERVICES
-        global MONITORED_TASKSCHED
         global LASTINJECT_TIME
         try:
             data = ""
@@ -338,22 +335,6 @@ class PipeHandler(Thread):
                             MONITORED_SERVICES = True
                         else:
                             log.error('Unable to monitor service %s' % (servname))
-
-                elif command.startswith("TASKSCHED:"):
-                    if not MONITORED_TASKSCHED:
-                        # Inject into taskeng.exe so we can monitor COM API task scheduling
-                        # if tasklist previously failed to get the taskeng.exe PID we'll be
-                        # unable to inject
-                        if TASKENG_PID:
-                            taskengproc = Process(pid=TASKENG_PID,suspended=False)
-                            filepath = taskengproc.get_filepath()
-                            taskengproc.inject(dll=DEFAULT_DLL, interest=filepath, nosleepskip=True)
-                            LASTINJECT_TIME = datetime.now()
-                            taskengproc.close()
-                            KERNEL32.Sleep(1000)
-                            MONITORED_TASKSCHED = True
-                        else:
-                            log.error('Unable to monitor taskeng.exe')
 
                 # For now all we care about is bumping up our LASTINJECT_TIME to account for long delays between
                 # injection and actual resume time where the DLL would have a chance to load in the new process
@@ -590,7 +571,6 @@ class Analyzer:
         """Prepare env for analysis."""
         global DEFAULT_DLL
         global SERVICES_PID
-        global TASKENG_PID
 
         # Get SeDebugPrivilege for the Python process. It will be needed in
         # order to perform the injections.
@@ -628,9 +608,6 @@ class Analyzer:
 
         # get PID for services.exe for monitoring services
         SERVICES_PID = self.pid_from_process_name("services.exe")
-
-        # get PID for taskeng.exe for monitoring services
-        TASKENG_PID = self.pid_from_process_name("taskeng.exe")
 
         # Initialize and start the Pipe Servers. This is going to be used for
         # communicating with the injected and monitored processes.
