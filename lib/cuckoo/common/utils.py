@@ -129,6 +129,7 @@ def pretty_print_retval(category, api_name, status, retval):
             0xc0000024 : "OBJECT_TYPE_MISMATCH",
             0xc0000033 : "OBJECT_NAME_INVALID",
             0xc0000034 : "OBJECT_NAME_NOT_FOUND",
+            0xc0000035 : "OBJECT_NAME_COLLISION",
             0xc0000039 : "OBJECT_PATH_INVALID",
             0xc000003a : "OBJECT_PATH_NOT_FOUND",
             0xc000003c : "DATA_OVERRUN",
