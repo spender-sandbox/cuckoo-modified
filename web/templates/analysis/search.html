@@ -161,15 +161,16 @@
                             {% if analysis.status == "reported" %}
                                 <a href="{% url "analysis.views.report" analysis.id %}">
                                 {% if analysis.category == "url" %}
-                                    <span class="mono">{{analysis.target}}</span></a>
+                                    <span class="mono">{{analysis.target}}</span>
                                 {% else %}
-                                    <span class="mono">{{analysis.sample.md5}}</span></a>
-                                {% endif %}</a>
+                                    <span class="mono">{{analysis.sample.md5}}</span>
+                                {% endif %}
+                                </a>
                             {% else %}
                                 {% if analysis.category == "url" %}
-                                    <span class="mono">{{analysis.target}}</span></a>
+                                    <span class="mono">{{analysis.target}}</span>
                                 {% else %}
-                                    <span class="mono">{{analysis.sample.md5}}</span></a>
+                                    <span class="mono">{{analysis.sample.md5}}</span>
                                 {% endif %}
                             {% endif %}
                         </td>
