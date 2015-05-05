@@ -842,9 +842,9 @@ def pretty_print_arg(category, api_name, arg_name, arg_val):
             res.append("PROCESS_ALL_ACCESS")
             val &= ~0x1fffff
         # for < vista
-        if (val & 0x1f03ff) == 0x1f0fff:
+        if (val & 0x1f0fff) == 0x1f0fff:
             res.append("PROCESS_ALL_ACCESS")
-            val &= ~0x1f03ff
+            val &= ~0x1f0fff
         val &= ~remove
         if val & 0x0001:
             res.append("PROCESS_TERMINATE")
