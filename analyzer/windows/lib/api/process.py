@@ -529,7 +529,22 @@ class Process:
             cfgoptions = cfg.get_options()
 
             # start the logserver for this monitored process
-            self.logserver = LogServer(cfg.ip, cfg.port, self.logserver_path)
+            h_pipe = KERNEL32.CreateNamedPipeA(self.logserver_path,
+                                                PIPE_ACCESS_INBOUND,
+                                                PIPE_TYPE_MESSAGE |
+                                                PIPE_READMODE_MESSAGE |
+                                                PIPE_WAIT,
+                                                PIPE_UNLIMITED_INSTANCES,
+                                                BUFSIZE,
+                                                LOGBUFSIZE,
+                                                0,
+                                                None)
+
+            if self.h_pipe == INVALID_HANDLE_VALUE:
+                log.warning("Unable to create log server pipe.")
+                return False
+
+            self.logserver = LogServer(h_pipe, cfg.ip, cfg.port)
             self.logserver.daemon = True
             self.logserver.start()
 

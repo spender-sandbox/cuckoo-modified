@@ -30,11 +30,10 @@ class LogServer(Thread):
     use synchronous logging without side-effects.
     """
 
-    def __init__(self, result_ip, result_port, pipe_name):
+    def __init__(self, h_pipe, result_ip, result_port):
         """@param pipe_name: Cuckoo Log Server PIPE name."""
         Thread.__init__(self)
-        self.pipe_name = pipe_name
-        self.h_pipe = None
+        self.h_pipe = h_pipe
         self.resultserver_ip = result_ip
         self.resultserver_port = result_port
         self.resultserver_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -74,20 +73,6 @@ class LogServer(Thread):
         try:
             while self.do_run:
                 # Create the Named Pipe.
-                self.h_pipe = KERNEL32.CreateNamedPipeA(self.pipe_name,
-                                                   PIPE_ACCESS_INBOUND,
-                                                   PIPE_TYPE_MESSAGE |
-                                                   PIPE_READMODE_MESSAGE |
-                                                   PIPE_WAIT,
-                                                   PIPE_UNLIMITED_INSTANCES,
-                                                   BUFSIZE,
-                                                   LOGBUFSIZE,
-                                                   0,
-                                                   None)
-
-                if self.h_pipe == INVALID_HANDLE_VALUE:
-                    return False
-
                 # If we receive a connection to the pipe, we invoke the handler.
                 if KERNEL32.ConnectNamedPipe(self.h_pipe, None) or KERNEL32.GetLastError() == ERROR_PIPE_CONNECTED:
                     self.handle_logs()
