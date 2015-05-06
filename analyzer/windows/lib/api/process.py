@@ -70,9 +70,7 @@ class Process:
         self.suspended = suspended
         self.system_info = SYSTEM_INFO()
         self.logserver_path = "\\\\.\\PIPE\\" + random_string(8, 12)
-        self.logserver = LogServer(Config("analysis.conf").get_options(), self.logserver_path)
-        self.logserver.daemon = True
-        self.logserver.run()
+        self.logserver = None
 
     def __del__(self):
         """Close open handles."""
@@ -524,6 +522,11 @@ class Process:
             log.warning("No valid DLL specified to be injected in process "
                         "with pid %d, injection aborted.", self.pid)
             return False
+
+        # start the logserver for this monitored process
+        self.logserver = LogServer(cfg.ip, cfg.port, self.logserver_path)
+        self.logserver.daemon = True
+        self.logserver.run()
 
         config_path = "C:\\%s.ini" % self.pid
         with open(config_path, "w") as config:

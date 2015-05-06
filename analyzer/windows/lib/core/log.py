@@ -14,7 +14,6 @@ from lib.common.defines import ERROR_MORE_DATA, ERROR_PIPE_CONNECTED
 from lib.common.defines import PIPE_ACCESS_INBOUND, PIPE_TYPE_MESSAGE
 from lib.common.defines import PIPE_READMODE_MESSAGE, PIPE_WAIT
 from lib.common.defines import PIPE_UNLIMITED_INSTANCES, INVALID_HANDLE_VALUE
-from lib.core.config import Config
 
 log = logging.getLogger()
 
@@ -31,14 +30,13 @@ class LogServer(Thread):
     use synchronous logging without side-effects.
     """
 
-    def __init__(self, options, pipe_name):
+    def __init__(self, result_ip, result_port, pipe_name):
         """@param pipe_name: Cuckoo Log Server PIPE name."""
         Thread.__init__(self)
         self.pipe_name = pipe_name
-        self.options = options
         self.h_pipe = None
-        self.resultserver_ip = self.options.get("host-ip")
-        self.resultserver_port = int(self.options.get("host-port"))
+        self.resultserver_ip = result_ip
+        self.resultserver_port = result_port
         self.resultserver_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.resultserver_socket.connect((self.resultserver_ip, self.resultserver_port))
         self.do_run = True
