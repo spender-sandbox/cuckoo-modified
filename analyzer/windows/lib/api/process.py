@@ -21,6 +21,9 @@ from lib.common.defines import MEMORY_BASIC_INFORMATION
 from lib.common.defines import WAIT_TIMEOUT, EVENT_MODIFY_STATE
 from lib.common.defines import MEM_IMAGE, MEM_MAPPED, MEM_PRIVATE
 from lib.common.defines import GENERIC_READ, GENERIC_WRITE, OPEN_EXISTING
+from lib.common.defines import PIPE_ACCESS_INBOUND, PIPE_TYPE_MESSAGE
+from lib.common.defines import PIPE_READMODE_MESSAGE, PIPE_WAIT
+from lib.common.defines import PIPE_UNLIMITED_INSTANCES, INVALID_HANDLE_VALUE
 from lib.common.errors import get_error_string
 from lib.common.rand import random_string
 from lib.common.results import NetlogFile

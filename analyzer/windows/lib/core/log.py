@@ -11,9 +11,6 @@ from threading import Thread
 
 from lib.common.defines import KERNEL32
 from lib.common.defines import ERROR_MORE_DATA, ERROR_PIPE_CONNECTED
-from lib.common.defines import PIPE_ACCESS_INBOUND, PIPE_TYPE_MESSAGE
-from lib.common.defines import PIPE_READMODE_MESSAGE, PIPE_WAIT
-from lib.common.defines import PIPE_UNLIMITED_INSTANCES, INVALID_HANDLE_VALUE
 
 log = logging.getLogger()
 
