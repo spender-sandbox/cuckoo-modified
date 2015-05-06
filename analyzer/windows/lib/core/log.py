@@ -104,6 +104,6 @@ class LogServer(object):
             log.warning("Unable to create log server pipe.")
             return False
 
-        logserver = LogServerThread(h_pipe, cfg.ip, cfg.port)
+        logserver = LogServerThread(h_pipe, result_ip, result_port)
         logserver.daemon = True
         logserver.start()
