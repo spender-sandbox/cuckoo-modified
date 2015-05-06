@@ -531,7 +531,7 @@ class Process:
             # start the logserver for this monitored process
             self.logserver = LogServer(cfg.ip, cfg.port, self.logserver_path)
             self.logserver.daemon = True
-            self.logserver.run()
+            self.logserver.start()
 
             firstproc = Process.first_process
 
