@@ -21,9 +21,6 @@ from lib.common.defines import MEMORY_BASIC_INFORMATION
 from lib.common.defines import WAIT_TIMEOUT, EVENT_MODIFY_STATE
 from lib.common.defines import MEM_IMAGE, MEM_MAPPED, MEM_PRIVATE
 from lib.common.defines import GENERIC_READ, GENERIC_WRITE, OPEN_EXISTING
-from lib.common.defines import PIPE_ACCESS_INBOUND, PIPE_TYPE_MESSAGE
-from lib.common.defines import PIPE_READMODE_MESSAGE, PIPE_WAIT
-from lib.common.defines import PIPE_UNLIMITED_INSTANCES, INVALID_HANDLE_VALUE
 from lib.common.errors import get_error_string
 from lib.common.rand import random_string
 from lib.common.results import NetlogFile
@@ -532,24 +529,7 @@ class Process:
             cfgoptions = cfg.get_options()
 
             # start the logserver for this monitored process
-            h_pipe = KERNEL32.CreateNamedPipeA(self.logserver_path,
-                                                PIPE_ACCESS_INBOUND,
-                                                PIPE_TYPE_MESSAGE |
-                                                PIPE_READMODE_MESSAGE |
-                                                PIPE_WAIT,
-                                                PIPE_UNLIMITED_INSTANCES,
-                                                BUFSIZE,
-                                                LOGBUFSIZE,
-                                                0,
-                                                None)
-
-            if h_pipe == INVALID_HANDLE_VALUE:
-                log.warning("Unable to create log server pipe.")
-                return False
-
-            self.logserver = LogServer(h_pipe, cfg.ip, cfg.port)
-            self.logserver.daemon = True
-            self.logserver.start()
+            self.logserver = LogServer(cfg.ip, cfg.port, self.logserver_path)
 
             firstproc = Process.first_process
 

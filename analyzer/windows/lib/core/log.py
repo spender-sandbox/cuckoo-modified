@@ -11,13 +11,16 @@ from threading import Thread
 
 from lib.common.defines import KERNEL32
 from lib.common.defines import ERROR_MORE_DATA, ERROR_PIPE_CONNECTED
+from lib.common.defines import PIPE_ACCESS_INBOUND, PIPE_TYPE_MESSAGE
+from lib.common.defines import PIPE_READMODE_MESSAGE, PIPE_WAIT
+from lib.common.defines import PIPE_UNLIMITED_INSTANCES, INVALID_HANDLE_VALUE
 
 log = logging.getLogger()
 
 BUFSIZE = 512
 LOGBUFSIZE = 16384
 
-class LogServer(Thread):
+class LogServerThread(Thread):
     """Cuckoo Log Server.
 
     This Log Server receives the BSON-encoded logs from cuckoomon loaded in an individual process
@@ -83,3 +86,24 @@ class LogServer(Thread):
             log.exception(error_exc)
             return True
 
+
+class LogServer(object):
+    def __init__(self, result_ip, result_port, logserver_path):
+        h_pipe = KERNEL32.CreateNamedPipeA(logserver_path,
+                                            PIPE_ACCESS_INBOUND,
+                                            PIPE_TYPE_MESSAGE |
+                                            PIPE_READMODE_MESSAGE |
+                                            PIPE_WAIT,
+                                            PIPE_UNLIMITED_INSTANCES,
+                                            BUFSIZE,
+                                            LOGBUFSIZE,
+                                            0,
+                                            None)
+
+        if h_pipe == INVALID_HANDLE_VALUE:
+            log.warning("Unable to create log server pipe.")
+            return False
+
+        logserver = LogServerThread(h_pipe, cfg.ip, cfg.port)
+        logserver.daemon = True
+        logserver.start()
