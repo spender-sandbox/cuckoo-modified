@@ -540,7 +540,7 @@ class Process:
                                                 0,
                                                 None)
 
-            if self.h_pipe == INVALID_HANDLE_VALUE:
+            if h_pipe == INVALID_HANDLE_VALUE:
                 log.warning("Unable to create log server pipe.")
                 return False
 
