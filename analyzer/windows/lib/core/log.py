@@ -21,59 +21,6 @@ log = logging.getLogger()
 BUFSIZE = 512
 LOGBUFSIZE = 16384
 
-class LogHandler(Thread):
-    """Pipe Handler.
-
-    This class handles the notifications received through the Pipe Server and
-    decides what to do with them.
-    """
-
-    def __init__(self, h_pipe, options):
-        """@param h_pipe: PIPE to read.
-           @param options: options for analysis
-        """
-        Thread.__init__(self)
-        self.h_pipe = h_pipe
-        self.resultserver_ip = options.get("host-ip")
-        self.resultserver_port = int(options.get("host-port"))
-        self.resultserver_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.resultserver_socket.connect((self.resultserver_ip, self.resultserver_port))
-
-    def run(self):
-        """Run handler.
-        @return: operation status.
-        """
-        try:
-            # Read the data submitted to the Log Server.
-            while True:
-                data = ""
-                while True:
-                    bytes_read = c_int(0)
-                    buf = create_string_buffer(LOGBUFSIZE)
-                    success = KERNEL32.ReadFile(self.h_pipe,
-                                                buf,
-                                                sizeof(buf),
-                                                byref(bytes_read),
-                                                None)
-
-                    data += buf.value
-
-                    if success or KERNEL32.GetLastError() != ERROR_MORE_DATA:
-                        break
-
-                # got an entire message, send it off to the resultserver
-                if data:
-                    self.resultserver_socket.sendall(data)
-
-            KERNEL32.CloseHandle(self.h_pipe)
-            self.resultserver_socket.close()
-
-            return True
-        except Exception as e:
-            error_exc = traceback.format_exc()
-            log.exception(error_exc)
-            return True
-
 class LogServer(Thread):
     """Cuckoo Log Server.
 
@@ -89,11 +36,38 @@ class LogServer(Thread):
         Thread.__init__(self)
         self.pipe_name = pipe_name
         self.options = options
+        self.h_pipe = None
+        self.resultserver_ip = self.options.get("host-ip")
+        self.resultserver_port = int(self.options.get("host-port"))
+        self.resultserver_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.resultserver_socket.connect((self.resultserver_ip, self.resultserver_port))
         self.do_run = True
 
     def stop(self):
         """Stop Log Server."""
         self.do_run = False
+
+    def handle_logs(self):
+        # Read the data submitted to the Log Server.
+        while True:
+            data = ""
+            while True:
+                bytes_read = c_int(0)
+                buf = create_string_buffer(LOGBUFSIZE)
+                success = KERNEL32.ReadFile(self.h_pipe,
+                                            buf,
+                                            sizeof(buf),
+                                            byref(bytes_read),
+                                            None)
+
+                data += buf.value
+
+                if success or KERNEL32.GetLastError() != ERROR_MORE_DATA:
+                    break
+
+            # got an entire message, send it off to the resultserver
+            if data:
+                self.resultserver_socket.sendall(data)
 
     def run(self):
         """Create and run Log Server.
@@ -102,7 +76,7 @@ class LogServer(Thread):
         try:
             while self.do_run:
                 # Create the Named Pipe.
-                h_pipe = KERNEL32.CreateNamedPipeA(self.pipe_name,
+                self.h_pipe = KERNEL32.CreateNamedPipeA(self.pipe_name,
                                                    PIPE_ACCESS_INBOUND,
                                                    PIPE_TYPE_MESSAGE |
                                                    PIPE_READMODE_MESSAGE |
@@ -113,17 +87,16 @@ class LogServer(Thread):
                                                    0,
                                                    None)
 
-                if h_pipe == INVALID_HANDLE_VALUE:
+                if self.h_pipe == INVALID_HANDLE_VALUE:
                     return False
 
                 # If we receive a connection to the pipe, we invoke the handler.
-                if KERNEL32.ConnectNamedPipe(h_pipe, None) or KERNEL32.GetLastError() == ERROR_PIPE_CONNECTED:
-                    handler = LogHandler(h_pipe, self.options)
-                    handler.daemon = True
-                    handler.start()
-                else:
-                    KERNEL32.CloseHandle(h_pipe)
+                if KERNEL32.ConnectNamedPipe(self.h_pipe, None) or KERNEL32.GetLastError() == ERROR_PIPE_CONNECTED:
+                    self.handle_logs()
 
+                KERNEL32.CloseHandle(self.h_pipe)
+                self.resultserver_socket.close()
+    
             return True
         except Exception as e:
             error_exc = traceback.format_exc()

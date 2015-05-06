@@ -25,7 +25,7 @@ from lib.common.errors import get_error_string
 from lib.common.rand import random_string
 from lib.common.results import NetlogFile
 from lib.core.config import Config
-from lib.core.log import LogServer, LogHandler
+from lib.core.log import LogServer
 
 IOCTL_PID = 0x222008
 IOCTL_CUCKOO_PATH = 0x22200C
