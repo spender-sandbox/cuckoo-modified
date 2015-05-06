@@ -523,15 +523,15 @@ class Process:
                         "with pid %d, injection aborted.", self.pid)
             return False
 
-        # start the logserver for this monitored process
-        self.logserver = LogServer(cfg.ip, cfg.port, self.logserver_path)
-        self.logserver.daemon = True
-        self.logserver.run()
-
         config_path = "C:\\%s.ini" % self.pid
         with open(config_path, "w") as config:
             cfg = Config("analysis.conf")
             cfgoptions = cfg.get_options()
+
+            # start the logserver for this monitored process
+            self.logserver = LogServer(cfg.ip, cfg.port, self.logserver_path)
+            self.logserver.daemon = True
+            self.logserver.run()
 
             firstproc = Process.first_process
 
