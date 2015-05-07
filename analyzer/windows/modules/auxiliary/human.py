@@ -23,6 +23,8 @@ RESOLUTION = {
     "y": USER32.GetSystemMetrics(1)
 }
 
+ELAPSED_SECONDS = 0
+
 def foreach_child(hwnd, lparam):
     # List of buttons labels to click.
     buttons = [
@@ -83,6 +85,13 @@ def foreach_window(hwnd, lparam):
         USER32.EnumChildWindows(hwnd, EnumChildProc(foreach_child), 0)
     return True
 
+def setrandforeground(hwnd, lparam):
+    if USER32.IsWindowVisible(hwnd):
+        if random.randint(0, 3) == 0 and (ELAPSED_SECONDS % 60) < 30:
+            USER32.SetForegroundWindow(hwnd)
+            return False
+    return True
+
 def move_mouse():
     x = random.randint(0, RESOLUTION["x"])
     y = random.randint(0, RESOLUTION["y"])
@@ -126,6 +135,7 @@ class Human(Auxiliary, Thread):
         self.do_run = False
 
     def run(self):
+        global ELAPSED_SECONDS
         seconds = 0
         nohuman = self.options.get("nohuman")
         if nohuman:
@@ -152,6 +162,8 @@ class Human(Auxiliary, Thread):
                 click_mouse()
                 move_mouse()
 
+            USER32.EnumWindows(EnumWindowsProc(setrandforeground), 0)
             USER32.EnumWindows(EnumWindowsProc(foreach_window), 0)
             KERNEL32.Sleep(1000)
+            ELAPSED_SECONDS += 1
             seconds += 1
