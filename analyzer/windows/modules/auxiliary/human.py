@@ -147,8 +147,11 @@ class Human(Auxiliary, Thread):
             if officedoc and seconds == 30:
                 USER32.EnumWindows(EnumWindowsProc(get_office_window), 0)
 
-            click_mouse()
-            move_mouse()
+            # only move the mouse 50% of the time, as malware can choose to act on an "idle" system just as it can on an "active" system
+            if random.randint(0, 3) > 1:
+                click_mouse()
+                move_mouse()
+
             USER32.EnumWindows(EnumWindowsProc(foreach_window), 0)
             KERNEL32.Sleep(1000)
             seconds += 1
