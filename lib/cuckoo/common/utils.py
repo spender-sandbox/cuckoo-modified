@@ -553,6 +553,7 @@ def pretty_print_arg(category, api_name, arg_name, arg_val):
                 0x4d008 : "IOCTL_SCSI_MINIPORT",
                 0x4d014 : "IOCTL_SCSI_PASS_THROUGH_DIRECT",
                 0x70000 : "IOCTL_DISK_GET_DRIVE_GEOMETRY",
+                0x700a0 : "IOCTL_DISK_GET_DRIVE_GEOMETRY_EX",
                 0x7405c : "IOCTL_DISK_GET_LENGTH_INFO",
                 0x90018 : "FSCTL_LOCK_VOLUME",
                 0x9001c : "FSCTL_UNLOCK_VOLUME",
