@@ -57,7 +57,7 @@ class LogServerThread(Thread):
                                             byref(bytes_read),
                                             None)
 
-                data += buf.value
+                data += buf.raw[:bytes_read.value]
 
                 if success or KERNEL32.GetLastError() != ERROR_MORE_DATA:
                     break
