@@ -59,13 +59,13 @@ def foreach_child(hwnd, lparam):
         length = USER32.SendMessageW(hwnd, WM_GETTEXTLENGTH, 0, 0)
         text = create_unicode_buffer(length + 1)
         USER32.SendMessageW(hwnd, WM_GETTEXT, length + 1, text)
-
+        textval = text.value.replace('&','')
         # Check if the button is set as "clickable" and click it.
         for button in buttons:
-            if button in text.value.lower():
+            if button in textval.lower():
                 dontclickb = False
                 for btn in dontclick:
-                    if btn in text.value.lower():
+                    if btn in textval.lower():
                         dontclickb = True
                 if not dontclickb:
                     log.info("Found button \"%s\", clicking it" % text.value)
