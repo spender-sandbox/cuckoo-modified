@@ -154,11 +154,22 @@ class MongoDB(Report):
         if "procmemory" in report:
             # Store the process memory dump file in GridFS and reference it back in the report.
             for idx, procmem in enumerate(report['procmemory']):
-                procmem_path = os.path.join(self.analysis_path, "memory", "{0}.dmp".format(procmem['pid']))
+                if procmem.has_key("zipdump") and procmem["zipdump"]:
+                    procmem_path = os.path.join(self.analysis_path, "memory", "{0}.dmp.zip".format(procmem['pid']))
+                else:
+                    procmem_path = os.path.join(self.analysis_path, "memory", "{0}.dmp".format(procmem['pid']))
                 procmem_file = File(procmem_path)
                 if procmem_file.valid():
                     procmem_id = self.store_file(procmem_file)
                     report["procmemory"][idx].update({"procmem_id": procmem_id})
+                if procmem.has_key("zipstrings") and procmem["zipstrings"]:
+                    procmem_strings_path = os.path.join(self.analysis_path, "memory", "{0}.dmp.strings.zip".format(procmem['pid']))
+                else:
+                    procmem_strings_path = os.path.join(self.analysis_path, "memory", "{0}.dmp.strings".format(procmem['pid']))
+                procmem_strings_file = File(procmem_strings_path)
+                if procmem_strings_file.valid():
+                    procmem_strings_id = self.store_file(procmem_strings_file)
+                    report["procmemory"][idx].update({"procmem_strings_id": procmem_strings_id})
 
         # Store the suri extracted files in GridFS and reference it back in the report.
         suri_extracted_zip_path = os.path.join(self.analysis_path, "logs/files.zip")

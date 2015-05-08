@@ -497,6 +497,8 @@ def mongo_file(request, category, object_id):
             file_name += ".jpg"
         elif category == 'memdump':
             file_name += ".dmp"
+        elif category == "zip":
+            file_name += ".zip"
         else:
             file_name += ".bin"
 
@@ -519,6 +521,14 @@ def mongo_file(request, category, object_id):
 def elastic_file(request, category, task_id, dlfile):
     file_name = dlfile
     cd = ""
+
+    extmap = {
+        "memdump" : ".dmp",
+        "memdumpzip" : ".dmp.zip",
+        "memdumpstrings" : ".dmp.strings",
+        "memdumpstringszip" : ".dmp.strings.zip"
+    }
+
     if category == "sample":
         path = os.path.join(CUCKOO_ROOT, "storage", "binaries", dlfile)
         file_name += ".bin"
@@ -534,8 +544,8 @@ def elastic_file(request, category, task_id, dlfile):
         path = os.path.join(CUCKOO_ROOT, "storage", "analyses",
                             task_id, "shots", file_name)
         cd = "image/jpeg"
-    elif category == "memdump":
-        file_name += ".dmp"
+    elif category in extmap:
+        file_name += extmap[category]
         path = os.path.join(CUCKOO_ROOT, "storage", "analyses",
                             task_id, "memory", file_name)
     elif category == "dropped":
@@ -650,16 +660,44 @@ def filereport(request, task_id, category):
 def full_memory_dump_file(request, analysis_number):
     file_path = os.path.join(CUCKOO_ROOT, "storage", "analyses", str(analysis_number), "memory.dmp")
     if os.path.exists(file_path):
+        filename = os.path.basename(file_path)
+    else:
+        file_path = os.path.join(CUCKOO_ROOT, "storage", "analyses", str(analysis_number), "memory.dmp.zip")
+        if os.path.exists(file_path):
+            filename = os.path.basename(file_path)
+    if filename:
         content_type = "application/octet-stream"
-        response = HttpResponse(open(file_path, "rb").read(), content_type=content_type)
-        response["Content-Disposition"] = "attachment; filename=memory.dmp"
-
+        chunk_size = 8192
+        response = StreamingHttpResponse(FileWrapper(open(file_path), chunk_size),
+                                   content_type=content_type)
+        response['Content-Length'] = os.path.getsize(file_path)
+        response['Content-Disposition'] = "attachment; filename=%s" % filename
         return response
     else:
         return render_to_response("error.html",
                                   {"error": "File not found"},
                                   context_instance=RequestContext(request))
-
+@require_safe
+def full_memory_dump_strings(request, analysis_number):
+    file_path = os.path.join(CUCKOO_ROOT, "storage", "analyses", str(analysis_number), "memory.dmp.strings")
+    if os.path.exists(file_path):
+        filename = os.path.basename(file_path)
+    else:
+        file_path = os.path.join(CUCKOO_ROOT, "storage", "analyses", str(analysis_number), "memory.dmp.strings.zip")
+        if os.path.exists(file_path):
+            filename = os.path.basename(file_path)
+    if filename:
+        content_type = "application/octet-stream"
+        chunk_size = 8192
+        response = StreamingHttpResponse(FileWrapper(open(file_path), chunk_size),
+                                   content_type=content_type)
+        response['Content-Length'] = os.path.getsize(file_path)
+        response['Content-Disposition'] = "attachment; filename=%s" % filename
+        return response
+    else:
+        return render_to_response("error.html",
+                                  {"error": "File not found"},
+                                  context_instance=RequestContext(request))
 
 def search(request):
     if "search" in request.POST:

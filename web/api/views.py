@@ -1397,35 +1397,28 @@ def tasks_fullmemory(request, task_id):
 
     if not apiconf.taskfullmemory.get("enabled"):
         resp = {"error": True,
-                "error_value": "Process memory download API is disabled"}
+                "error_value": "Full memory download API is disabled"}
         return jsonize(resp, response=True)
 
     check = validate_task(task_id)
     if check["error"]:
         return jsonize(check, response=True)
 
-    srcfile = os.path.join(CUCKOO_ROOT, "storage", "analyses", "%s" % task_id,
-                           "memory.dmp")
-    if os.path.exists(srcfile):
-        if apiconf.taskfullmemory.get("compress"):
-            fname = srcfile.split("/")[-1]
-            s = StringIO
-            tar = tarfile.open(fileobj=s, mode="w:bz2")
-            tar.add(srcfile, arcname=fname)
-            tar.close()
-            resp = HttpResponse(s.getvalue(),
-                                content_type="application/octet-stream;")
-            archive = "%%s_dmp.tar.bz2" % task_id
-            resp["Content-Disposition"] = "attachment; filename=" + archive
-        else:
-            mime = "application/octet-stream"
-            fname = "%s.dmp" % task_id
-            resp = StreamingHttpResponse(FileWrapper(open(srcfile), 8096),
-                                         content_type=mime)
-            resp["Content-Length"] = os.path.getsize(srcfile)
-            resp["Content-Disposition"] = "attachment; filename=" + fname
-        return resp
-
+    file_path = os.path.join(CUCKOO_ROOT, "storage", "analyses", str(analysis_number), "memory.dmp")
+    if os.path.exists(file_path):
+        filename = os.path.basename(file_path)
+    else:
+        file_path = os.path.join(CUCKOO_ROOT, "storage", "analyses", str(analysis_number), "memory.dmp.zip")
+        if os.path.exists(file_path):
+            filename = os.path.basename(file_path)
+    if filename:
+        content_type = "application/octet-stream"
+        chunk_size = 8192
+        response = StreamingHttpResponse(FileWrapper(open(file_path), chunk_size),
+                                   content_type=content_type)
+        response['Content-Length'] = os.path.getsize(file_path)
+        response['Content-Disposition'] = "attachment; filename=%s" % filename
+        return response
     else:
         resp = {"error": True,
                 "error_value": "Memory dump not found for task " + task_id}

@@ -13,6 +13,7 @@ urlpatterns = patterns("",
     url(r"^file/(?P<category>\w+)/(?P<task_id>\d+)/(?P<dlfile>\w+)/$", "analysis.views.elastic_file"),
     url(r"^filereport/(?P<task_id>\w+)/(?P<category>\w+)/$", "analysis.views.filereport"),
     url(r"^full_memory/(?P<analysis_number>\w+)/$", "analysis.views.full_memory_dump_file"),
+    url(r"^full_memory_strings/(?P<analysis_number>\w+)/$", "analysis.views.full_memory_dump_strings"),
     url(r"^dashboard/", include("dashboard.urls")),
     url(r"^api/", include("api.urls")),
 )

@@ -5,6 +5,12 @@
 import os
 import logging
 import time
+import zipfile
+
+try:
+    import re2 as re
+except ImportError:
+    import re
 
 from lib.cuckoo.common.abstracts import Processing
 from lib.cuckoo.common.config import Config
@@ -1059,6 +1065,8 @@ class VolatilityManager(object):
             results["netscan"] = vol.netscan()
 
         self.find_taint(results)
+        self.do_strings()
+        self.zipdump()
         self.cleanup()
 
         return self.mask_filter(results)
@@ -1097,6 +1105,58 @@ class VolatilityManager(object):
                 os.remove(self.memfile)
             except OSError:
                 log.error("Unable to delete memory dump file at path \"%s\" ", self.memfile)
+
+    def do_strings(self):
+        strings_path = None
+        if self.voptions.basic.dostrings:
+            try:
+                data = open(self.memfile, "r").read()
+            except (IOError, OSError) as e:
+                raise CuckooProcessingError("Error opening file %s" % e)
+
+            nulltermonly = self.voptions.basic.get("strings_nullterminated_only", True)
+            minchars = self.voptions.basic.get("strings_minchars", 5)
+
+            if nulltermonly:
+                apat = "([\x20-\x7e]{" + str(minchars) + ",})\x00"
+                strings = re.findall(apat, data)
+                upat = "((?:[\x20-\x7e][\x00]){" + str(minchars) + ",})\x00\x00"
+                strings += [str(ws.decode("utf-16le")) for ws in re.findall(upat, data)]
+                data = None
+                f=open(dmp_path + ".strings", "w")
+                f.write("\n".join(strings))
+                f.close()
+                strings_path = self.memfile + ".strings"
+            else:
+                apat = "([\x20-\x7e]{" + str(minchars) + ",})\x00"
+                strings = re.findall(apat, data)
+                upat = "(?:[\x20-\x7e][\x00]){" + str(minchars) + ",}"
+                strings += [str(ws.decode("utf-16le")) for ws in re.findall(upat, data)]
+                data = None
+                f=open(self.memfile + ".strings", "w")
+                f.write("\n".join(strings))
+                f.close()
+                strings_path = self.memfile + ".strings"
+
+            if self.voptions.basic.zipstrings:
+                try:
+                    f = zipfile.ZipFile("%s.zip" % (strings_path), "w",allowZip64=True)
+                    f.write(strings_path, os.path.basename(strings_path), zipfile.ZIP_DEFLATED)
+                    f.close()
+                    os.remove(strings_path)
+                    strings_path = "%s.zip" % (strings_path)
+                except Exception as e:
+                    raise CuckooProcessingError("Error creating Process Memory Strings Zip File %s" % e)
+
+    def zipdump(self):
+        if self.voptions.basic.zipdump:
+            try:
+                f = zipfile.ZipFile("%s.zip" % (self.memfile), "w",allowZip64=True)
+                f.write(self.memfile, os.path.basename(self.memfile), zipfile.ZIP_DEFLATED)
+                f.close()
+                os.remove(self.memfile)
+            except Exception as e:
+                 log.error("Error creating Process Memory Zip File %s" % e)
 
 class Memory(Processing):
     """Volatility Analyzer."""
