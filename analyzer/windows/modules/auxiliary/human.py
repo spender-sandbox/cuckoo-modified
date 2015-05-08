@@ -23,7 +23,7 @@ RESOLUTION = {
     "y": USER32.GetSystemMetrics(1)
 }
 
-ELAPSED_SECONDS = 0
+INITIAL_HWNDS = []
 
 def foreach_child(hwnd, lparam):
     # List of buttons labels to click.
@@ -85,11 +85,10 @@ def foreach_window(hwnd, lparam):
         USER32.EnumChildWindows(hwnd, EnumChildProc(foreach_child), 0)
     return True
 
-def setrandforeground(hwnd, lparam):
+def getwindowlist(hwnd, lparam):
+    global INITIAL_HWNDS
     if USER32.IsWindowVisible(hwnd):
-        if random.randint(0, 3) == 0 and (ELAPSED_SECONDS % 60) < 30:
-            USER32.SetForegroundWindow(hwnd)
-            return False
+        INITIAL_HWNDS.append(hwnd)
     return True
 
 def move_mouse():
@@ -135,8 +134,8 @@ class Human(Auxiliary, Thread):
         self.do_run = False
 
     def run(self):
-        global ELAPSED_SECONDS
         seconds = 0
+        randoff = random.randint(0, 10)
         nohuman = self.options.get("nohuman")
         if nohuman:
             return True
@@ -153,6 +152,8 @@ class Human(Auxiliary, Thread):
             file_name.endswith((".ppt", ".pptx", ".pps", ".ppsx", ".pptm", ".potm", ".potx", ".ppsm")):
             officedoc = True
 
+        USER32.EnumWindows(EnumWindowsProc(getwindowlist), 0)
+
         while self.do_run:
             if officedoc and seconds == 30:
                 USER32.EnumWindows(EnumWindowsProc(get_office_window), 0)
@@ -162,8 +163,15 @@ class Human(Auxiliary, Thread):
                 click_mouse()
                 move_mouse()
 
-            USER32.EnumWindows(EnumWindowsProc(setrandforeground), 0)
+            if (seconds % (15 + randoff)) == 0:
+                curwind = USER32.GetForegroundWindow()
+                other_hwnds = INITIAL_HWNDS[:]
+                try:
+                    other_hands.remove(USER32.GetForegroundWindow())
+                except:
+                    pass
+                USER32.SetForegroundWindow(other_hwnds[random.randint(0, len(other_hwnds)-1)])
+
             USER32.EnumWindows(EnumWindowsProc(foreach_window), 0)
             KERNEL32.Sleep(1000)
-            ELAPSED_SECONDS += 1
             seconds += 1
