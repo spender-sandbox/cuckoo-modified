@@ -7,11 +7,12 @@ import random
 import logging
 from threading import Thread
 from ctypes import WINFUNCTYPE, POINTER
-from ctypes import c_bool, c_int, create_unicode_buffer
+from ctypes import c_bool, c_int, create_unicode_buffer, create_string_buffer, memmove
 
 from lib.common.abstracts import Auxiliary
 from lib.common.defines import KERNEL32, USER32
 from lib.common.defines import WM_GETTEXT, WM_GETTEXTLENGTH, WM_CLOSE, BM_CLICK
+from lib.common.defines import GMEM_MOVEABLE, CF_TEXT
 
 log = logging.getLogger(__name__)
 
@@ -136,6 +137,24 @@ class Human(Auxiliary, Thread):
     def run(self):
         seconds = 0
         randoff = random.randint(0, 10)
+
+        # add some random data to the clipboard
+        randchars = list("   aaaabcddeeeeeefghhhiiillmnnnooooprrrsssttttuwy")
+        cliplen = random.randint(10,1000)
+        clipval = []
+        for i in range(cliplen):
+            clipval.append(randchars[random.randint(0, len(randchars)-1)])
+        clipstr = "".join(clipval)
+        cliprawstr = create_string_buffer(clipstr)
+        USER32.OpenClipboard(None)
+        USER32.EmptyClipboard()
+
+        buf = KERNEL32.GlobalAlloc(GMEM_MOVEABLE, sizeof(cliprawstr))
+        lockbuf = KERNEL32.GlobalLock(buf)
+        memmove(lockbuf, cliprawstr, sizeof(cliprawstr))
+        KERNEL32.GlobalUnlock(buf)
+        USER32.SetClipboardData(CF_TEXT, buf)
+
         nohuman = self.options.get("nohuman")
         if nohuman:
             return True

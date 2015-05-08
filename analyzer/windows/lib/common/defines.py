@@ -84,6 +84,9 @@ OPEN_EXISTING             = 0x00000003
 
 TH32CS_SNAPPROCESS        = 0x02L
 
+GMEM_MOVEABLE             = 0x0002
+CF_TEXT                   = 0x0001
+
 class STARTUPINFO(Structure):
     _fields_ = [
         ("cb",            DWORD),
