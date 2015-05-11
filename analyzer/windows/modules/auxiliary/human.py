@@ -7,7 +7,7 @@ import random
 import logging
 from threading import Thread
 from ctypes import WINFUNCTYPE, POINTER
-from ctypes import c_bool, c_int, create_unicode_buffer, create_string_buffer, memmove
+from ctypes import c_bool, c_int, create_unicode_buffer, create_string_buffer, memmove, sizeof
 
 from lib.common.abstracts import Auxiliary
 from lib.common.defines import KERNEL32, USER32
