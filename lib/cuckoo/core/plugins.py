@@ -479,6 +479,14 @@ class RunSignatures(object):
         # Sort the matched signatures by their severity level.
         matched.sort(key=lambda key: key["severity"])
 
+        # Tweak later as needed
+        malscore = 0.0
+        for match in matched:
+            malscore += match["weight"] * match["severity"] * (match["confidence"] / 100.0)
+        if malscore > 10.0:
+            malscore = 10.0
+        self.results["malscore"] = malscore
+
         # Doing signature statistics
         alert = 0
         normal = 0

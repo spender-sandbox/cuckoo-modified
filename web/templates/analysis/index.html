@@ -29,16 +29,14 @@
             <table class="table table-striped" style="table-layout: fixed;">
                 <thead>
                 <tr>
-                    <th width="3%">ID</th>
+                    <th width="5%">ID</th>
                     <th width="12%">Timestamp</th>
-                    <th width="29%">Filename</th>
+                    <th width="34%">Filename</th>
                     <th width="20%">MD5</th>
-                    <th width="5%">VT</th>
-                    <th width="5%">SuriAlert</th>
-                    <th width="5%">SuriHTTP</th>
-                    <th width="5%">SuriTLS</th>
-                    <th width="5%">SuriFiles</th>
                     <th width="5%">Moloch</th>
+                    <th width="5%">SuriAlert</th>
+                    <th width="5%">VT</th>
+                    <th width="8%">MalScore</th>
                     <th width="6%" style="text-align: right;">Status</th>
                 </tr>
                 </thead>
@@ -66,8 +64,8 @@
                             {% endif %}
                         </td>
                         <td>
-                            {% if analysis.virustotal_summary %}
-                                <span class="mono">{{analysis.virustotal_summary}}</span>
+                            {% if analysis.moloch_url %}
+                                <a href={{analysis.moloch_url}} target="_blank"><span class="mono">MOLOCH</span></a>
                             {% else %}
                                   <span class="mono">None</span>
                             {% endif %}
@@ -80,31 +78,23 @@
                             {% endif %}
                         </td>
                         <td>
-                            {% if analysis.suri_http_cnt %}
-                                <span class="mono">{{analysis.suri_http_cnt}}</span>
+                            {% if analysis.virustotal_summary %}
+                                <span class="mono">{{analysis.virustotal_summary}}</span>
                             {% else %}
                                   <span class="mono">None</span>
                             {% endif %}
                         </td>
                         <td>
-                            {% if analysis.suri_tls_cnt %}
-                                <span class="mono">{{analysis.suri_tls_cnt}}</span>
+                            {% if analysis.malscore %}
+                                {% if analysis.malscore <= 2.0 %}
+                                <span class="label label-success">{{analysis.malscore}}</span>
+                                {% elif analysis.malscore <= 6.0 %}
+                                <span class="label label-warning">{{analysis.malscore}}</span>
+                                {% else %}
+                                <span class="label label-danger">{{analysis.malscore}}</span>
+                                {% endif %}
                             {% else %}
-                                  <span class="mono">None</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if analysis.suri_file_cnt %}
-                                <span class="mono">{{analysis.suri_file_cnt}}</span>
-                            {% else %}
-                                  <span class="mono">None</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if analysis.moloch_url %}
-                                <a href={{analysis.moloch_url}} target="_blank"><span class="mono">MOLOCH</span></a>
-                            {% else %}
-                                  <span class="mono">None</span>
+                                <span class="mono">None</span>
                             {% endif %}
                         </td>
                         <td style="text-align: right;">
@@ -157,14 +147,12 @@
             <table class="table table-striped" style="table-layout: fixed;">
                 <thead>
                 <tr>
-                    <th width="3%">ID</th>
+                    <th width="5%">ID</th>
                     <th width="12%">Timestamp</th>
-                    <th width="53%">URL</th>
-                    <th width="5%">SuriAlert</th>
-                    <th width="5%">SuriHTTP</th>
-                    <th width="5%">SuriTLS</th>
-                    <th width="5%">SuriFiles</th>
+                    <th width="58%">URL</th>
                     <th width="5%">Moloch</th>
+                    <th width="5%">SuriAlert</th>
+                    <th width="8%">MalScore</th>
                     <th width="7%" style="text-align: right;">Status</th>
                 </tr>
                 </thead>
@@ -183,10 +171,18 @@
                         </td>
                         <td style="word-wrap: break-word;">
                             {% if analysis.status == "reported" %}
-                                <a href="{% url "analysis.views.report" analysis.id %}"><span class="mono">{{analysis.target}}</span></a></td>
+                                <a href="{% url "analysis.views.report" analysis.id %}"><span class="mono">{{analysis.target}}</span></a>
                             {% else %}
                                 <span class="mono">{{analysis.target}}</span>
                             {% endif %}
+                        </td>
+                        <td>
+                            {% if analysis.moloch_url %}
+                                <a href={{analysis.moloch_url}} target="_blank"><span class="mono">MOLOCH</span></a>
+                            {% else %}
+                                  <span class="mono">None</span>
+                            {% endif %}
+                        </td>
                         <td>
                             {% if analysis.suri_alert_cnt %}
                                 <span class="mono">{{analysis.suri_alert_cnt}}</span>
@@ -195,31 +191,16 @@
                             {% endif %}
                         </td>
                         <td>
-                            {% if analysis.suri_http_cnt %}
-                                <span class="mono">{{analysis.suri_http_cnt}}</span>
+                            {% if analysis.malscore %}
+                                {% if analysis.malscore <= 2.0 %}
+                                <span class="label label-success">{{analysis.malscore}}</span>
+                                {% elif analysis.malscore <= 6.0 %}
+                                <span class="label label-warning">{{analysis.malscore}}</span>
+                                {% else %}
+                                <span class="label label-danger">{{analysis.malscore}}</span>
+                                {% endif %}
                             {% else %}
-                                  <span class="mono">None</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if analysis.suri_tls_cnt %}
-                                <span class="mono">{{analysis.suri_tls_cnt}}</span>
-                            {% else %}
-                                  <span class="mono">None</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if analysis.suri_file_cnt %}
-                                <span class="mono">{{analysis.suri_file_cnt}}</span></a>
-                            {% else %}
-                                  <span class="mono">None</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if analysis.moloch_url %}
-                                <a href={{analysis.moloch_url}} target="_blank"><span class="mono">MOLOCH</span></a>
-                            {% else %}
-                                  <span class="mono">None</span>
+                                <span class="mono">None</span>
                             {% endif %}
                         </td>
                         <td style="text-align: right;">
