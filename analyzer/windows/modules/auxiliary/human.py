@@ -1,10 +1,11 @@
 #!/usr/bin/env python
-# Copyright (C) 2010-2015 Cuckoo Foundation.
+# Copyright (C) 2010-2015 Cuckoo Foundation, Accuvant, Inc. (bspengler@accuvant.com)
 # This file is part of Cuckoo Sandbox - http://www.cuckoosandbox.org
 # See the file 'docs/LICENSE' for copying permission.
 
 import random
 import logging
+import traceback
 from threading import Thread
 from ctypes import WINFUNCTYPE, POINTER
 from ctypes import c_bool, c_int, create_unicode_buffer, create_string_buffer, memmove, sizeof
@@ -135,62 +136,67 @@ class Human(Auxiliary, Thread):
         self.do_run = False
 
     def run(self):
-        seconds = 0
-        randoff = random.randint(0, 10)
+        try:
+            seconds = 0
+            randoff = random.randint(0, 10)
 
-        # add some random data to the clipboard
-        randchars = list("   aaaabcddeeeeeefghhhiiillmnnnooooprrrsssttttuwy")
-        cliplen = random.randint(10,1000)
-        clipval = []
-        for i in range(cliplen):
-            clipval.append(randchars[random.randint(0, len(randchars)-1)])
-        clipstr = "".join(clipval)
-        cliprawstr = create_string_buffer(clipstr)
-        USER32.OpenClipboard(None)
-        USER32.EmptyClipboard()
+            # add some random data to the clipboard
+            randchars = list("   aaaabcddeeeeeefghhhiiillmnnnooooprrrsssttttuwy")
+            cliplen = random.randint(10,1000)
+            clipval = []
+            for i in range(cliplen):
+                clipval.append(randchars[random.randint(0, len(randchars)-1)])
+            clipstr = "".join(clipval)
+            cliprawstr = create_string_buffer(clipstr)
+            USER32.OpenClipboard(None)
+            USER32.EmptyClipboard()
 
-        buf = KERNEL32.GlobalAlloc(GMEM_MOVEABLE, sizeof(cliprawstr))
-        lockbuf = KERNEL32.GlobalLock(buf)
-        memmove(lockbuf, cliprawstr, sizeof(cliprawstr))
-        KERNEL32.GlobalUnlock(buf)
-        USER32.SetClipboardData(CF_TEXT, buf)
+            buf = KERNEL32.GlobalAlloc(GMEM_MOVEABLE, sizeof(cliprawstr))
+            lockbuf = KERNEL32.GlobalLock(buf)
+            memmove(lockbuf, cliprawstr, sizeof(cliprawstr))
+            KERNEL32.GlobalUnlock(buf)
+            USER32.SetClipboardData(CF_TEXT, buf)
 
-        nohuman = self.options.get("nohuman")
-        if nohuman:
-            return True
-        file_type = self.config.file_type
-        file_name = self.config.file_name
-        officedoc = False
-        if "Rich Text Format" in file_type or "Microsoft Word" in file_type or \
-            "Microsoft Office Word" in file_type or file_name.endswith((".doc", ".docx", ".rtf")):
-            officedoc = True
-        elif "Microsoft Office Excel" in file_type or "Microsoft Excel" in file_type or \
-            file_name.endswith((".xls", ".xlsx")):
-            officedoc = True
-        elif "Microsoft PowerPoint" in file_type or \
-            file_name.endswith((".ppt", ".pptx", ".pps", ".ppsx", ".pptm", ".potm", ".potx", ".ppsm")):
-            officedoc = True
+            nohuman = self.options.get("nohuman")
+            if nohuman:
+                return True
+            file_type = self.config.file_type
+            file_name = self.config.file_name
+            officedoc = False
+            if "Rich Text Format" in file_type or "Microsoft Word" in file_type or \
+                "Microsoft Office Word" in file_type or file_name.endswith((".doc", ".docx", ".rtf")):
+                officedoc = True
+            elif "Microsoft Office Excel" in file_type or "Microsoft Excel" in file_type or \
+                file_name.endswith((".xls", ".xlsx")):
+                officedoc = True
+            elif "Microsoft PowerPoint" in file_type or \
+                file_name.endswith((".ppt", ".pptx", ".pps", ".ppsx", ".pptm", ".potm", ".potx", ".ppsm")):
+                officedoc = True
 
-        USER32.EnumWindows(EnumWindowsProc(getwindowlist), 0)
+            USER32.EnumWindows(EnumWindowsProc(getwindowlist), 0)
 
-        while self.do_run:
-            if officedoc and seconds == 30:
-                USER32.EnumWindows(EnumWindowsProc(get_office_window), 0)
+            while self.do_run:
+                if officedoc and seconds == 30:
+                    USER32.EnumWindows(EnumWindowsProc(get_office_window), 0)
 
-            # only move the mouse 50% of the time, as malware can choose to act on an "idle" system just as it can on an "active" system
-            if random.randint(0, 3) > 1:
-                click_mouse()
-                move_mouse()
+                # only move the mouse 50% of the time, as malware can choose to act on an "idle" system just as it can on an "active" system
+                if random.randint(0, 3) > 1:
+                    click_mouse()
+                    move_mouse()
 
-            if (seconds % (15 + randoff)) == 0:
-                curwind = USER32.GetForegroundWindow()
-                other_hwnds = INITIAL_HWNDS[:]
-                try:
-                    other_hands.remove(USER32.GetForegroundWindow())
-                except:
-                    pass
-                USER32.SetForegroundWindow(other_hwnds[random.randint(0, len(other_hwnds)-1)])
+                if (seconds % (15 + randoff)) == 0:
+                    curwind = USER32.GetForegroundWindow()
+                    other_hwnds = INITIAL_HWNDS[:]
+                    try:
+                        other_hands.remove(USER32.GetForegroundWindow())
+                    except:
+                        pass
+                    USER32.SetForegroundWindow(other_hwnds[random.randint(0, len(other_hwnds)-1)])
 
-            USER32.EnumWindows(EnumWindowsProc(foreach_window), 0)
-            KERNEL32.Sleep(1000)
-            seconds += 1
+                USER32.EnumWindows(EnumWindowsProc(foreach_window), 0)
+                KERNEL32.Sleep(1000)
+                seconds += 1
+        except Exception as e:
+            error_exc = traceback.format_exc()
+            log.exception(error_exc)
+
