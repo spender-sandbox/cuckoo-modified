@@ -194,7 +194,7 @@
                             {% endif %}
                         </td>
                         <td>
-                            {% if analysis.malscore %}
+                            {% if analysis.malscore != None %}
                                 {% if analysis.malscore <= 2.0 %}
                                 <span class="label label-success">{{analysis.malscore}}</span>
                                 {% elif analysis.malscore <= 6.0 %}
