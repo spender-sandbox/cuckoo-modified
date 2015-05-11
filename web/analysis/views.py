@@ -98,7 +98,7 @@ def index(request, page=1):
                     new["suri_file_cnt"] = rtmp["suri_file_cnt"]
                 if rtmp.has_key("suri_http_cnt") and rtmp["suri_http_cnt"]:
                     new["suri_http_cnt"] = rtmp["suri_http_cnt"]
-                if rtmp.has_key("malscore") and rtmp["malscore"]:
+                if rtmp.has_key("malscore"):
                     new["malscore"] = rtmp["malscore"]
 
             if settings.MOLOCH_ENABLED:
@@ -132,7 +132,7 @@ def index(request, page=1):
                     new["suri_file_cnt"] = rtmp["suri_file_cnt"]
                 if rtmp.has_key("suri_http_cnt") and rtmp["suri_http_cnt"]:
                     new["suri_http_cnt"] = rtmp["suri_http_cnt"]
-                if rtmp.has_key("malscore") and rtmp["malscore"]:
+                if rtmp.has_key("malscore"):
                     new["malscore"] = rtmp["malscore"]
 
             if settings.MOLOCH_ENABLED:
@@ -562,7 +562,7 @@ def search(request):
                     new["suri_http_cnt"] = rtmp["suri_http_cnt"]
                 if rtmp.has_key("mlist_cnt") and rtmp["mlist_cnt"]:
                     new["mlist_cnt"] = rtmp["mlist_cnt"]
-                if rtmp.has_key("malscore") and rtmp["malscore"]:
+                if rtmp.has_key("malscore"):
                     new["malscore"] = rtmp["malscore"]
 
             if settings.MOLOCH_ENABLED:
