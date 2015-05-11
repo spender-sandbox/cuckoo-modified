@@ -948,7 +948,85 @@ def tasks_pcap(request, task_id):
 
     else:
         resp = {"error": True,
-                "error_value": "Screenshot does not exist"}
+                "error_value": "PCAP does not exist"}
+        return jsonize(resp, response=True)
+
+if apiconf.taskdropped.get("enabled"):
+    raterps = apiconf.taskdropped.get("rps")
+    raterpm = apiconf.taskdropped.get("rpm")
+    rateblock = True
+@ratelimit(key="ip", rate=raterps, block=rateblock)
+@ratelimit(key="ip", rate=raterpm, block=rateblock)
+def tasks_dropped(request, task_id):
+    if request.method != "GET":
+        resp = {"error": True, "error_value": "Method not allowed"}
+        return jsonize(resp, response=True)
+
+    if not apiconf.taskdropped.get("enabled"):
+        resp = {"error": True,
+                "error_value": "Dropped File download API is disabled"}
+        return jsonize(resp, response=True)
+
+    check = validate_task(task_id)
+    if check["error"]:
+        return jsonize(check, response=True)
+
+    srcdir = os.path.join(CUCKOO_ROOT, "storage", "analyses",
+                          "%s" % task_id, "files")
+
+    if not len(os.listdir(srcdir)):
+        resp = {"error": True,
+                "error_value": "No files dropped for task %s" % task_id}
+        return jsonize(resp, response=True)
+
+    else:
+        fname = "%s_dropped.tar.bz2" % task_id
+        s = StringIO()
+        tar = tarfile.open(fileobj=s, mode="w:bz2")
+        for dirfile in os.listdir(srcdir):
+            tar.add(os.path.join(srcdir, dirfile), arcname=dirfile)
+        tar.close()
+        resp = HttpResponse(s.getvalue(),
+                            content_type="application/octet-stream;")
+        resp["Content-Length"] = str(len(s.getvalue()))
+        resp["Content-Disposition"] = "attachment; filename=" + fname
+        return resp
+
+if apiconf.tasksurifile.get("enabled"):
+    raterps = apiconf.tasksurifile.get("rps")
+    raterpm = apiconf.tasksurifile.get("rpm")
+    rateblock = True
+@ratelimit(key="ip", rate=raterps, block=rateblock)
+@ratelimit(key="ip", rate=raterpm, block=rateblock)
+def tasks_surifile(request, task_id):
+    if request.method != "GET":
+        resp = {"error": True, "error_value": "Method not allowed"}
+        return jsonize(resp, response=True)
+
+    if not apiconf.taskdropped.get("enabled"):
+        resp = {"error": True,
+                "error_value": "Suricata File download API is disabled"}
+        return jsonize(resp, response=True)
+
+    check = validate_task(task_id)
+    if check["error"]:
+        return jsonize(check, response=True)
+
+    srcfile = os.path.join(CUCKOO_ROOT, "storage", "analyses",
+                          "%s" % task_id, "logs", "files.zip")
+
+    if os.path.exists(srcfile):
+        with open(srcfile, "rb") as surifile:
+            data = surifile.read()
+        fname = "%s_surifiles.zip" % task_id
+        resp = HttpResponse(data, content_type="application/octet-stream;")
+        resp["Content-Length"] = str(len(data))
+        resp["Content-Disposition"] = "attachment; filename=" + fname
+        return resp
+
+    else:
+        resp = {"error": True,
+                "error_value": "No suricata files captured for task %s" % task_id}
         return jsonize(resp, response=True)
 
 if apiconf.taskprocmemory.get("enabled"):
