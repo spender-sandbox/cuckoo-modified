@@ -482,7 +482,10 @@ class RunSignatures(object):
         # Tweak later as needed
         malscore = 0.0
         for match in matched:
-            malscore += match["weight"] * match["severity"] * (match["confidence"] / 100.0)
+            if match["severity"] == 1:
+                malscore += match["weight"] * 0.5 * (match["confidence"] / 100.0)
+            else:
+                malscore += match["weight"] * (match["severity"] - 1) * (match["confidence"] / 100.0)
         if malscore > 10.0:
             malscore = 10.0
         self.results["malscore"] = malscore
