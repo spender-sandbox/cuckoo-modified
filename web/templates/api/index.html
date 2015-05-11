@@ -224,6 +224,36 @@ curl {{ config.api.url }}/api/tasks/get/screenshot/[screenshot number]/[task id]
               <td colspan="5"><pre>curl {{ config.api.url }}/api/tasks/get/pcap/[task id]/</pre></td>
             </tr>
             <tr>
+                <td>Task Dropped Files</td>
+                {% if config.taskdropped.enabled %}
+                <td><span class="label label-success">Yes</span></td>
+                {% else %}
+                <td><span class="label label-danger">No</span></td>
+                {% endif %}
+                <td><ul><li>RPS: {{ config.taskdropped.rps }}</li>
+                        <li>RPM: {{ config.taskdropped.rpm }}</li></ul></td>
+                <td>Download the dropped files associated with a Task by ID. Return object will be octet-stream. (.tar.bz2)</td>
+                <td><a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion" href="#taskdropped">Example</a></td>
+            </tr>
+            <tr class="collapse" id="taskdropped">
+              <td colspan="5"><pre>curl {{ config.api.url }}/api/tasks/get/dropped/[task id]/</pre></td>
+            </tr>
+            <tr>
+                <td>Task SuriFiles</td>
+                {% if config.tasksurifile.enabled %}
+                <td><span class="label label-success">Yes</span></td>
+                {% else %}
+                <td><span class="label label-danger">No</span></td>
+                {% endif %}
+                <td><ul><li>RPS: {{ config.tasksurifile.rps }}</li>
+                        <li>RPM: {{ config.tasksurifile.rpm }}</li></ul></td>
+                <td>Download the Suricata captured files associated with a Task by ID. Return object will be octet-stream. (.zip)</td>
+                <td><a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion" href="#tasksurifile">Example</a></td>
+            </tr>
+            <tr class="collapse" id="tasksurifile">
+              <td colspan="5"><pre>curl {{ config.api.url }}/api/tasks/get/surifile/[task id]/</pre></td>
+            </tr>
+            <tr>
                 <td>Task Process Dump</td>
                 {% if config.taskprocmemory.enabled %}
                 <td><span class="label label-success">Yes</span></td>
