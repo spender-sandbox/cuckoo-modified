@@ -1255,6 +1255,8 @@ class Signature(object):
             name=self.name,
             description=self.description,
             severity=self.severity,
+            weight=self.weight,
+            confidence=self.confidence,
             references=self.references,
             data=self.data,
             new_data=self.new_data,
