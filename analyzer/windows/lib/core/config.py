@@ -39,7 +39,7 @@ class Config:
             try:
                 # Split the options by comma.
                 fields = self.options.split(",")
-            except ValueError as e:
+            except (ValueError, AttributeError) as e:
                 pass
             else:
                 for field in fields:
