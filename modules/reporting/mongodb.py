@@ -257,4 +257,4 @@ class MongoDB(Report):
                 report["suri_http_cnt"] = len(results["suricata"]["http"])
         # Store the report and retrieve its object id.
         self.db.analysis.save(report)
-        self.conn.disconnect()
+        self.conn.close()
