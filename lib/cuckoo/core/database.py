@@ -5,7 +5,7 @@
 import os
 import json
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from lib.cuckoo.common.config import Config
 from lib.cuckoo.common.constants import CUCKOO_ROOT
@@ -272,6 +272,9 @@ class Task(Base):
     """Analysis task queue."""
     __tablename__ = "tasks"
 
+    cfg = Config()
+    clocktime = datetime.now() + timedelta(days=cfg.cuckoo.daydelta)
+
     id = Column(Integer(), primary_key=True)
     target = Column(Text(), nullable=False)
     category = Column(String(255), nullable=False)
@@ -288,7 +291,7 @@ class Task(Base):
     memory = Column(Boolean, nullable=False, default=False)
     enforce_timeout = Column(Boolean, nullable=False, default=False)
     clock = Column(DateTime(timezone=False),
-                   default=datetime.now,
+                   default=clocktime,
                    nullable=False)
     added_on = Column(DateTime(timezone=False),
                       default=datetime.now,
