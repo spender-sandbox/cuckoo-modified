@@ -10,7 +10,7 @@ It offers a number of advantages over the upstream Cuckoo:
 + Ability to follow APC injection and stealth explorer injection
 + Pretty-printed API flags
 + Per-analysis Tor support
-+ ~50 new signature modules
++ Over 60 new signature modules
 + Anti-anti-sandbox and anti-anti-VM techniques built-in
 + More stable hooking
 + Ability to restore removed hooks
