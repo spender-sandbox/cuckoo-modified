@@ -23,7 +23,7 @@ def upload_to_host(file_path, dump_path, duplicate):
                 nc.send(buf, retry=False)
                 buf = infd.read(BUFSIZE)
     except Exception as e:
-        log.error("Exception uploading file %s to host: %s", file_path, e)
+        log.error("Exception uploading file {0} to host: {1}".format(file_path, e))
     finally:
         if infd:
             infd.close()
