@@ -15,7 +15,7 @@ BUFSIZE = 1024*1024
 def upload_to_host(file_path, dump_path, duplicate):
     nc = infd = None
     try:
-        nc = NetlogBinary(file_path, dump_path, duplicate)
+        nc = NetlogBinary(unicode(file_path).encode("utf-8", "replace"), dump_path, duplicate)
         if not duplicate:
             infd = open(file_path, "rb")
             buf = infd.read(BUFSIZE)
@@ -23,7 +23,7 @@ def upload_to_host(file_path, dump_path, duplicate):
                 nc.send(buf, retry=False)
                 buf = infd.read(BUFSIZE)
     except Exception as e:
-        log.error("Exception uploading file {0} to host: {1}".format(file_path, e))
+        log.error("Exception uploading file {0} to host: {1}".format(unicode(file_path).encode("utf-8", "replace"), e))
     finally:
         if infd:
             infd.close()
