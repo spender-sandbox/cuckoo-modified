@@ -16,7 +16,7 @@ from lib.cuckoo.common.exceptions import CuckooOperationalError
 from lib.cuckoo.common.exceptions import CuckooCriticalError
 from lib.cuckoo.common.exceptions import CuckooResultError
 from lib.cuckoo.common.netlog import BsonParser
-from lib.cuckoo.common.utils import create_folder, Singleton, logtime, sanitize_filename
+from lib.cuckoo.common.utils import create_folder, Singleton, logtime, sanitize_pathname
 
 log = logging.getLogger(__name__)
 
@@ -323,10 +323,10 @@ class FileUpload(object):
         buf = self.handler.read_newline().strip().replace("\\", "/")
         guest_path = ""
         if self.is_binary:
-            guest_path = sanitize_filename(self.handler.read_newline().strip()[:32768])
+            guest_path = sanitize_pathname(self.handler.read_newline().strip()[:32768])
 
         dir_part, filename = os.path.split(buf)
-        filename = sanitize_filename(filename)
+        filename = sanitize_pathname(filename)
         buf = os.path.join(dir_part, filename)
 
         log.debug("File upload request for {0}".format(buf))

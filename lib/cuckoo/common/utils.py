@@ -118,7 +118,7 @@ def convert_to_printable(s, cache=None):
         cache[s] = "".join(convert_char(c) for c in s)
     return cache[s]
 
-def sanitize_filename(s):
+def sanitize_pathname(s):
     """Sanitize filename.
     @param s: string.
     @return: sanitized filename.
