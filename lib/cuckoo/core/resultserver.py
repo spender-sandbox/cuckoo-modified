@@ -320,14 +320,16 @@ class FileUpload(object):
         # Read until newline for file path, e.g.,
         # shots/0001.jpg or files/9498687557/libcurl-4.dll.bin
 
-        buf = sanitize_filename(self.handler.read_newline().strip().replace("\\", "/"))
+        buf = self.handler.read_newline().strip().replace("\\", "/")
         guest_path = ""
         if self.is_binary:
             guest_path = sanitize_filename(self.handler.read_newline().strip()[:32768])
 
-        log.debug("File upload request for {0}".format(buf))
-
         dir_part, filename = os.path.split(buf)
+        filename = sanitize_filename(filename)
+        buf = os.path.join(dir_part, filename)
+
+        log.debug("File upload request for {0}".format(buf))
 
         if "./" in buf or not dir_part or buf.startswith("/"):
             raise CuckooOperationalError("FileUpload failure, banned path.")
@@ -342,7 +344,7 @@ class FileUpload(object):
             log.error("Unable to create folder %s" % dir_part)
             return False
 
-        file_path = os.path.join(self.storagepath, buf.strip())
+        file_path = os.path.join(self.storagepath, buf)
 
         if not file_path.startswith(self.storagepath):
             raise CuckooOperationalError("FileUpload failure, path sanitization failed.")
