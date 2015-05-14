@@ -16,7 +16,7 @@ from lib.cuckoo.common.exceptions import CuckooOperationalError
 from lib.cuckoo.common.exceptions import CuckooCriticalError
 from lib.cuckoo.common.exceptions import CuckooResultError
 from lib.cuckoo.common.netlog import BsonParser
-from lib.cuckoo.common.utils import create_folder, Singleton, logtime
+from lib.cuckoo.common.utils import create_folder, Singleton, logtime, convert_to_printable
 
 log = logging.getLogger(__name__)
 
@@ -320,10 +320,10 @@ class FileUpload(object):
         # Read until newline for file path, e.g.,
         # shots/0001.jpg or files/9498687557/libcurl-4.dll.bin
 
-        buf = self.handler.read_newline().strip().replace("\\", "/")
+        buf = convert_to_printable(self.handler.read_newline().strip().replace("\\", "/"))
         guest_path = ""
         if self.is_binary:
-            guest_path = self.handler.read_newline().strip()[:32768]
+            guest_path = convert_to_printable(self.handler.read_newline().strip()[:32768])
 
         log.debug("File upload request for {0}".format(buf))
 

@@ -62,8 +62,9 @@ class File:
     notified_yara = False
     notified_pydeep = False
 
-    def __init__(self, file_path, guest_paths=None):
+    def __init__(self, file_path, guest_paths=None, file_name=None):
         """@param file_path: file path."""
+        self.file_name = file_name
         self.file_path = file_path
         self.guest_paths = guest_paths
 
@@ -79,6 +80,8 @@ class File:
         """Get file name.
         @return: file name.
         """
+        if self.file_name:
+            return self.file_name
         file_name = os.path.basename(self.file_path)
         return file_name
 
