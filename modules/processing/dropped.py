@@ -23,7 +23,7 @@ class Dropped(Processing):
                 file_path = os.path.join(dir_name, file_name)
                 if file_name.endswith("_info.txt") and not os.path.exists(file_path + "_info.txt"):
                     continue
-                guest_paths = [convert_to_printable(line.strip()) for line in open(file_path + "_info.txt")]
+                guest_paths = [line.strip() for line in open(file_path + "_info.txt")]
 
                 file_info = File(file_path=file_path,guest_paths=guest_paths).get_all()
                 if "ASCII" in file_info["type"]:

@@ -67,6 +67,8 @@ def delete_folder(folder):
 PRINTABLE_CHARACTERS = \
     string.letters + string.digits + string.punctuation + " \t\r\n"
 
+FILENAME_CHARACTERS = string.letters + string.digits + string.punctuation.replace("/", "") + " "
+
 def convert_char(c):
     """Escapes characters.
     @param c: dirty char.
@@ -84,6 +86,23 @@ def is_printable(s):
             return False
     return True
 
+def convert_filename_char(c):
+    """Escapes filename characters.
+    @param c: dirty char.
+    @return: sanitized char.
+    """
+    if c in FILENAME_CHARACTERS:
+        return c
+    else:
+        return "\\x%02x" % ord(c)
+
+def is_sane_filename(s):
+    """ Test if a filename is sane."""
+    for c in s:
+        if c not in FILENAME_CHARACTERS:
+            return False
+    return True
+
 def convert_to_printable(s, cache=None):
     """Convert char to printable.
     @param s: string.
@@ -98,6 +117,16 @@ def convert_to_printable(s, cache=None):
     elif not s in cache:
         cache[s] = "".join(convert_char(c) for c in s)
     return cache[s]
+
+def sanitize_filename(s):
+    """Sanitize filename.
+    @param s: string.
+    @return: sanitized filename.
+    """
+    if is_sane_filename(s):
+        return s
+
+    return "".join(convert_filename_char(c) for c in s)
 
 def pretty_print_retval(category, api_name, status, retval):
     """Creates pretty-printed versions of an API return value
