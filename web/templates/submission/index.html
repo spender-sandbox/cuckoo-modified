@@ -113,6 +113,10 @@ $(document).ready( function() {
                                 </select>
                             </div>
                             <div class="form-group">
+                                <label for="form_tags">Tags</label>
+                                <input type="text" class="form-control" id="form_tags" name="tags" />
+                            </div>
+                            <div class="form-group">
                                 <label for="form_gateway">Gateway</label>
                                 <select class="form-control" id="form_gateway" name="gateway">
                                 <option value="" active>Default</option>
@@ -137,6 +141,20 @@ $(document).ready( function() {
                                     <option value="3">High</option>
                                 </select>
                             </div>
+                            <div class="form-group">
+                                <label for="form_custom">Clock</label>
+                                <div class='input-group date' id='datetimepicker1'>
+                                    <input type='text' class="form-control" />
+                                    <span class="input-group-addon">
+                                        <span class="glyphicon glyphicon-calendar"></span>
+                                    </span>
+                                </div>
+                            </div>
+                            <script type="text/javascript">
+                                $(function () {
+                                    $('#datetimepicker1').datetimepicker();
+                                });
+                            </script>
                             <div class="form-group">
                                 <label for="form_custom">Custom</label>
                                 <input type="text" class="form-control" id="form_custom" name="custom" />
@@ -175,10 +193,6 @@ $(document).ready( function() {
                                 <label>
                                     <input type="checkbox" name="enforce_timeout" /> Enforce Timeout
                                 </label>
-                            </div>
-                            <div class="form-group">
-                                <label for="form_tags">Tags</label>
-                                <input type="text" class="form-control" id="form_tags" name="tags" />
                             </div>
                         </div>
                     </div>
