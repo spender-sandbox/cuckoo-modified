@@ -144,7 +144,7 @@ $(document).ready( function() {
                             <div class="form-group">
                                 <label for="form_custom">Clock</label>
                                 <div class='input-group date' id='datetimepicker1'>
-                                    <input type='text' class="form-control" />
+                                    <input type='text' class="form-control" name="clock"/>
                                     <span class="input-group-addon">
                                         <span class="glyphicon glyphicon-calendar"></span>
                                     </span>
@@ -152,7 +152,9 @@ $(document).ready( function() {
                             </div>
                             <script type="text/javascript">
                                 $(function () {
-                                    $('#datetimepicker1').datetimepicker();
+                                    $('#datetimepicker1').datetimepicker({
+                                        format: 'MM-DD-YYYY HH:mm:00'
+                                    });
                                 });
                             </script>
                             <div class="form-group">
