@@ -212,7 +212,7 @@
                             {% elif analysis.status == "running" %}
                                 <span class="text-warning">running</span>
                             {% elif analysis.status == "completed" %}
-                                <span class="text-info">completed</span>
+                                <span class="text-info">processing</span>
                             {% elif analysis.status == "reported" %}
                                 {% if analysis.errors %}
                                     <span class="text-danger">

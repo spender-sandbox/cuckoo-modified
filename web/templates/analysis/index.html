@@ -66,7 +66,7 @@
                             {% if analysis.status == "reported" %}
                                 <a href="{% url "analysis.views.report" analysis.id %}"><span class="mono">{{analysis.sample.md5}}</span></a>
                             {% elif analysis.status == "running" or analysis.status == "completed" %}
-                                <a href="{% url "submission.views.status" analysis.id %}"><span class="mono">{{analysis.target}}</span></a>
+                                <a href="{% url "submission.views.status" analysis.id %}"><span class="mono">{{analysis.sample.md5}}</span></a>
                             {% else %}
                                 <span class="mono">{{analysis.sample.md5}}</span>
                             {% endif %}
@@ -117,7 +117,7 @@
                             {% elif analysis.status == "running" %}
                                 <span class="text-warning">running</span>
                             {% elif analysis.status == "completed" %}
-                                <span class="text-info">completed</span>
+                                <span class="text-info">processing</span>
                             {% elif analysis.status == "reported" %}
                                 {% if analysis.errors %}
                                     <span class="text-danger">
@@ -245,7 +245,7 @@
                             {% elif analysis.status == "running" %}
                                 <span class="text-warning">running</span>
                             {% elif analysis.status == "completed" %}
-                                <span class="text-info">completed</span>
+                                <span class="text-info">processing</span>
                             {% elif analysis.status == "reported" %}
                                 <span class="text-success">reported</span>
                             {% else %}
