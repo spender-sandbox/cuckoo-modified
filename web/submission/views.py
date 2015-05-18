@@ -123,7 +123,8 @@ def index(request):
                                      custom=custom,
                                      memory=memory,
                                      enforce_timeout=enforce_timeout,
-                                     tags=tags)
+                                     tags=tags,
+                                     clock=clock)
                 if task_id:
                     task_ids.append(task_id)
         elif settings.VTDL_ENABLED and "vtdl" in request.POST:
@@ -170,7 +171,7 @@ def index(request):
 
                         for entry in task_machines:
                             task_ids_new = db.demux_sample_and_add_to_db(file_path=filename, package=package, timeout=timeout, options=options, priority=priority,
-                                                                         machine=entry, custom=custom, memory=memory, enforce_timeout=enforce_timeout, tags=tags)
+                                                                         machine=entry, custom=custom, memory=memory, enforce_timeout=enforce_timeout, tags=tags, clock=clock)
                             task_ids.extend(task_ids_new)
                     elif r.status_code == 403:
                         return render_to_response("error.html",
