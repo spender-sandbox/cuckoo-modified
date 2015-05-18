@@ -243,8 +243,12 @@ def status(request, task_id):
     if task.status == "reported":
         completed = True
 
+    status = task.status
+    if status == "completed":
+        status = "processing"
+
     return render_to_response("submission/status.html",
                               {"completed" : completed,
-                               "status" : task.status,
+                               "status" : status,
                                "task_id" : task_id},
                               context_instance=RequestContext(request))
