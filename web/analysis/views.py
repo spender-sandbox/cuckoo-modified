@@ -35,7 +35,17 @@ results_db = pymongo.MongoClient(settings.MONGO_HOST, settings.MONGO_PORT)[setti
 fs = GridFS(results_db)
 
 TASK_LIMIT = 25
-repconf = Config("reporting")
+
+# Used for displaying enabled config options in Django UI
+enabledconf = dict()
+for cfile in ["reporting", "processing"]:
+    curconf = Config(cfile)
+    confdata = curconf.get_config()
+    for item in confdata:
+        if confdata[item]["enabled"] == "yes":
+            enabledconf[item] = True
+        else:
+            enabledconf[item] = False
 
 @require_safe
 def index(request, page=1):
@@ -146,7 +156,8 @@ def index(request, page=1):
 
     return render_to_response("analysis/index.html",
             {"files": analyses_files, "urls": analyses_urls,
-             "paging": paging}, context_instance=RequestContext(request))
+             "paging": paging, "config": enabledconf},
+            context_instance=RequestContext(request))
 
 @require_safe
 def pending(request):
@@ -326,14 +337,6 @@ def report(request, task_id):
     else:
         domainlookups = dict()
         iplookups = dict()
-
-    conf = repconf.get_config()
-    enabledconf = dict()
-    for item in conf:
-        if conf[item]["enabled"] == "yes":
-            enabledconf[item] = True
-        else:
-            enabledconf[item] = False
 
     return render_to_response("analysis/report.html",
                              {"analysis": report,

@@ -1,8 +1,12 @@
 <div class="tabbable tabs">
     <ul class="nav nav-pills" style="margin-bottom: 0;">
         <li class="active"><a href="#static_analysis_tab" data-toggle="tab">Static Analysis</a></li>
+        {% if results.info.category == "file" %}
         <li><a href="#static_strings_tab" data-toggle="tab">Strings</a></li>
+        {% endif %}
+        {% if config.virustotal %}
         <li><a href="#static_antivirus_tab" data-toggle="tab">Antivirus</a></li>
+        {% endif %}
     </ul>
     <div class="tab-content">
         <div class="tab-pane fade in active" id="static_analysis_tab">
@@ -34,17 +38,21 @@
                 {% elif ".pptx" in analysis.target.file.name %}
                     {% include "analysis/static/_office.html" %}
                 {% else %}
-                    No static analysis available. Testing
+                    No static analysis available.
                 {% endif %}
             {% else %}
                 No static analysis available.
             {% endif %}
         </div>
+        {% if results.info.category == "file" %}
         <div class="tab-pane fade" id="static_strings_tab">
             {% include "analysis/static/_strings.html" %}
         </div>
+        {% endif %}
+        {% if config.virustotal %}
         <div class="tab-pane fade" id="static_antivirus_tab">
             {% include "analysis/static/_antivirus.html" %}
         </div>
+        {% endif %}
     </div>
 </div>

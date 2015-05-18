@@ -10,11 +10,15 @@
         <li><a href="#network_http_tab" data-toggle="tab">HTTP ({{ analysis.network.http|length }})</a></li>
         <li><a href="#network_irc_tab" data-toggle="tab">IRC ({{ analysis.network.irc|length }})</a></li>
         <li><a href="#network_icmp_tab" data-toggle="tab">ICMP ({{ analysis.network.icmp|length }})</a></li>
+        {% if config.cif %}
         <li><a href="#network_cif_tab" data-toggle="tab">CIF Results ({{ analysis.cif|length }})</a></li>
+        {% endif %}
+        {% if config.suricata %}
         <li><a href="#network_suri_alerts_tab" data-toggle="tab">Suricata Alerts ({{ analysis.suricata.alerts|length }})</a></li>
         <li><a href="#network_suri_tls_tab" data-toggle="tab">Suricata TLS ({{ analysis.suricata.tls|length }})</a></li>
         <li><a href="#network_suri_http_tab" data-toggle="tab">Suricata HTTP ({{ analysis.suricata.http|length }})</a></li>
         <li><a href="#network_suri_files" data-toggle="tab">Suricata Files ({{ analysis.suricata.files|length }})</a></li>
+        {% endif %}
     </ul>
     <div class="tab-content">
         <div class="tab-pane fade in active" id="network_hosts_tab">{% include "analysis/network/_hosts.html" %}</div>
