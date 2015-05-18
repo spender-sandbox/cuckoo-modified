@@ -3,7 +3,7 @@
         <h4>Static Analysis</h4>
     </div>
     {% if results.static %}
-        {% if results.static.pe_timestamp or results.static.pe_imphash %}
+        {% if results.static.pe_imagebase or results.static.pe_entrypoint or results.static.pe_timestamp or results.static.pe_imphash or results.static.pe_icon %}
             <div>
                 {% if summary_report %}
                 <h4>PE Information</h4>
@@ -13,6 +13,18 @@
                 <div id="pe_information" style="display: none;">
                 {% endif %}
                     <table class="table table-striped table-bordered" style="table-layout: fixed;">
+                        {% if results.static.pe_imagebase %}
+                            <tr>
+                                <th style="width: 15%;">Image Base</th>
+                                <td>{{results.static.pe_imagebase}}</td>
+                            </tr>
+                        {% endif %}
+                        {% if results.static.pe_entrypoint %}
+                            <tr>
+                                <th style="width: 15%;">Entry Point</th>
+                                <td>{{results.static.pe_entrypoint}}</td>
+                            </tr>
+                        {% endif %}
                         {% if results.static.pe_timestamp %}
                             <tr>
                                 <th style="width: 15%;">Compile Time</th>
@@ -23,6 +35,12 @@
                             <tr>
                                 <th style="width: 15%;">Import Hash</th>
                                 <td>{{results.static.pe_imphash}}</td>
+                            </tr>
+                        {% endif %}
+                        {% if results.static.pe_icon %}
+                            <tr>
+                                <th style="width: 15%;">Icon</th>
+                                <td><img src="data:image/jpeg;base64,{{results.static.pe_icon}}"/></td>
                             </tr>
                         {% endif %}
                     </table>

@@ -213,6 +213,24 @@ class PortableExecutable:
 
         return overlay
 
+    def _get_imagebase(self):
+        """Get information on the Image Base
+        @return: image base or None.
+        """
+        if not self.pe:
+            return None
+
+        return "0x{0:08x}".format(self.pe.OPTIONAL_HEADER.ImageBase)
+
+    def _get_entrypoint(self):
+        """Get full virtual address of entrypoint
+        @return: entrypoint or None.
+        """
+        if not self.pe:
+            return None
+
+        return "0x{0:08x}".format(self.pe.OPTIONAL_HEADER.ImageBase + self.pe.OPTIONAL_HEADER.AddressOfEntryPoint)
+
     def _get_resources(self):
         """Get resources.
         @return: resources dict or None.
@@ -370,6 +388,8 @@ class PortableExecutable:
 
         results = {}
         results["peid_signatures"] = self._get_peid_signatures()
+        results["pe_imagebase"] = self._get_imagebase()
+        results["pe_entrypoint"] = self._get_entrypoint()
         results["pe_imports"] = self._get_imported_symbols()
         results["pe_exports"] = self._get_exported_symbols()
         results["pe_dirents"] = self._get_directory_entries()
