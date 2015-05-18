@@ -1342,6 +1342,17 @@ def sanitize_filename(x):
 
     return out
 
+def default_converter(v):
+    # Fix signed ints (bson is kind of limited there).
+    if type(v) is int:
+        return v & 0xFFFFFFFF
+    elif type(v) is long:
+        if v & 0xFFFFFFFF00000000:
+            return v & 0xFFFFFFFFFFFFFFFF
+        else:
+            return v & 0xFFFFFFFF
+    return v
+
 def classlock(f):
     """Classlock decorator (created for database.Database).
     Used to put a lock to avoid sqlite errors.

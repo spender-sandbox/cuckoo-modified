@@ -28,7 +28,7 @@ from lib.cuckoo.common.defines import REG_DWORD_BIG_ENDIAN
 from lib.cuckoo.common.defines import REG_DWORD_LITTLE_ENDIAN
 from lib.cuckoo.common.exceptions import CuckooResultError
 from lib.cuckoo.common.logtbl import table as LOGTBL
-from lib.cuckoo.common.utils import get_filename_from_path
+from lib.cuckoo.common.utils import get_filename_from_path, default_converter
 
 log = logging.getLogger(__name__)
 
@@ -45,12 +45,6 @@ TYPECONVERTERS = {
 
 # 20 Mb max message length.
 MAX_MESSAGE_LENGTH = 20 * 1024 * 1024
-
-def default_converter(v):
-    # Fix signed ints (bson is kind of limited there).
-    if type(v) in (int, long) and v < 0:
-        return v + 0x100000000
-    return v
 
 def check_names_for_typeinfo(arginfo):
     argnames = [i[0] if type(i) in (list, tuple) else i for i in arginfo]

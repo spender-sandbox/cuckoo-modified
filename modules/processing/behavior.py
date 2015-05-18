@@ -10,7 +10,7 @@ import struct
 from lib.cuckoo.common.abstracts import Processing
 from lib.cuckoo.common.config import Config
 from lib.cuckoo.common.netlog import BsonParser
-from lib.cuckoo.common.utils import convert_to_printable, pretty_print_arg, pretty_print_retval, logtime
+from lib.cuckoo.common.utils import convert_to_printable, pretty_print_arg, pretty_print_retval, logtime, default_converter
 
 log = logging.getLogger(__name__)
 
@@ -306,14 +306,14 @@ class ParseProcessLog(list):
 
         call["timestamp"] = timestamp
         call["thread_id"] = str(thread_id)
-        call["caller"] = "0x%.08x" % caller
-        call["parentcaller"] = "0x%.08x" % parentcaller
+        call["caller"] = "0x%.08x" % default_converter(caller)
+        call["parentcaller"] = "0x%.08x" % default_converter(parentcaller)
         call["category"] = category
         call["api"] = api_name
         call["status"] = bool(int(status_value))
 
         if isinstance(return_value, int) or isinstance(return_value, long):
-            call["return"] = "0x%.08x" % return_value
+            call["return"] = "0x%.08x" % default_converter(return_value)
         else:
             call["return"] = convert_to_printable(str(return_value), self.conversion_cache)
 
