@@ -189,8 +189,8 @@ class PortableExecutable:
                     ]
         tags = []
         for idx, flagstr in enumerate(flags):
-            if flagstr[idx] and (val & (1 << idx)):
-                tags.append(flagstr(idx))
+            if flags[idx] and (val & (1 << idx)):
+                tags.append(flagstr)
 
         if val & 0x00F00000:
             alignval = (val >> 20) & 0xF
