@@ -174,6 +174,31 @@ class PortableExecutable:
 
         return dirents
 
+    def _convert_section_characteristics(self, val):
+        flags = [ "", "", "", "", "IMAGE_SCN_TYPE_NO_PAD", "", "IMAGE_SCN_CNT_CODE", "IMAGE_SCN_CNT_INITIALIZED_DATA", "IMAGE_SCN_CNT_UNINITIALIZED_DATA", "IMAGE_SCN_LNK_OTHER",
+                 "IMAGE_SCN_LNK_INFO", "", "IMAGE_SCN_LNK_REMOVE", "IMAGE_SCN_LNK_COMDAT", "", "IMAGE_SCN_NO_DEFER_SPEC_EXC", "IMAGE_SCN_GPREL", "IMAGE_SCN_MEM_PURGEABLE",
+                 "IMAGE_SCN_MEM_LOCKED", "IMAGE_SCN_MEM_PRELOAD",
+                 # alignment bytes
+                 "", "", "", "",
+                 "IMAGE_SCN_LNK_NRELOC_OVFL", "IMAGE_SCN_MEM_DISCARDABLE", "IMAGE_SCN_MEM_NOT_CACHED", "IMAGE_SCN_MEM_NOT_PAGED", "IMAGE_SCN_MEM_SHARED", "IMAGE_SCN_MEM_EXECUTE",
+                 "IMAGE_SCN_MEM_READ", "IMAGE_SCN_MEM_WRITE"
+                ]
+        alignment = ["", "IMAGE_SCN_ALIGN_1BYTES", "IMAGE_SCN_ALIGN_2BYTES", "IMAGE_SCN_ALIGN_4BYTES", "IMAGE_SCN_ALIGN_8BYTES",
+                     "IMAGE_SCN_ALIGN_16BYTES", "IMAGE_SCN_ALIGN_32BYTES", "IMAGE_SCN_ALIGN_64BYTES", "IMAGE_SCN_ALIGN_128BYTES", "IMAGE_SCN_ALIGN_256BYTES",
+                     "IMAGE_SCN_ALIGN_512BYTES", "IMAGE_SCN_ALIGN_1024BYTES", "IMAGE_SCN_ALIGN_2048BYTES", "IMAGE_SCN_ALIGN_4096BYTES", "IMAGE_SCN_ALIGN_8192BYTES", ""
+                    ]
+        tags = []
+        for idx, flagstr in enumerate(flags):
+            if flagstr[idx] and (val & (1 << idx)):
+                tags.append(flagstr(idx))
+
+        if val & 0x00F00000:
+            alignval = (val >> 20) & 0xF
+            if alignment[alignval]:
+                tags.append(alignment[alignval])
+
+        return "|".join(tags)
+
     def _get_sections(self):
         """Gets sections.
         @return: sections dict or None.
@@ -190,6 +215,8 @@ class PortableExecutable:
                 section["virtual_address"] = "0x{0:08x}".format(entry.VirtualAddress)
                 section["virtual_size"] = "0x{0:08x}".format(entry.Misc_VirtualSize)
                 section["size_of_data"] = "0x{0:08x}".format(entry.SizeOfRawData)
+                section["characteristics"] = self._convert_section_characteristics(entry.Characteristics)
+                section["characteristics_raw"] = "0x{0:08x}".format(entry.Characteristics)
                 section["entropy"] = "{0:.02f}".format(float(entry.get_entropy()))
                 sections.append(section)
             except:

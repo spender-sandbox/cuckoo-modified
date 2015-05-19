@@ -108,6 +108,7 @@
                             <th>Virtual Address</th>
                             <th>Virtual Size</th>
                             <th>Size of Raw Data</th>
+                            <th>Characteristics</th>
                             <th>Entropy</th>
                         </tr>
                         {% for section in analysis.static.pe_sections %}
@@ -116,6 +117,7 @@
                                 <td>{{section.virtual_address}}</td>
                                 <td>{{section.virtual_size}}</td>
                                 <td>{{section.size_of_data}}</td>
+                                <td>{{section.characteristics}}</td>
                                 <td>{{section.entropy}}</td>
                             </tr>
                         {% endfor %}
