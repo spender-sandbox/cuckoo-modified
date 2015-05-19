@@ -272,9 +272,6 @@ class Task(Base):
     """Analysis task queue."""
     __tablename__ = "tasks"
 
-    cfg = Config()
-    clocktime = datetime.now() + timedelta(days=cfg.cuckoo.daydelta)
-
     id = Column(Integer(), primary_key=True)
     target = Column(Text(), nullable=False)
     category = Column(String(255), nullable=False)
@@ -291,7 +288,7 @@ class Task(Base):
     memory = Column(Boolean, nullable=False, default=False)
     enforce_timeout = Column(Boolean, nullable=False, default=False)
     clock = Column(DateTime(timezone=False),
-                   default=clocktime,
+                   default=datetime.now(),
                    nullable=False)
     added_on = Column(DateTime(timezone=False),
                       default=datetime.now,
@@ -1019,6 +1016,13 @@ class Database(object):
                     task.clock = datetime.now()
             else:
                 task.clock = clock
+        elif isinstance(obj, File):
+            cfg = Config()
+            try:
+                clocktime = datetime.now() + timedelta(days=cfg.cuckoo.daydelta)
+                task.clock = clocktime
+            except:
+                pass
 
         session.add(task)
 
