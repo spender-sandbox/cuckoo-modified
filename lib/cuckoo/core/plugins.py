@@ -388,7 +388,7 @@ class RunSignatures(object):
         evented_list = [sig(self.results)
                         for sig in complete_list
                         if sig.enabled and sig.evented and
-                        self._check_signature_version(sig)]
+                        self._check_signature_version(sig) and (not sig.filter_analysistypes or self.results["target"]["category"] in sig.filter_analysistypes)]
 
         overlay = self._load_overlay()
         log.debug("Applying signature overlays for signatures: %s", ", ".join(overlay.keys()))
@@ -466,15 +466,16 @@ class RunSignatures(object):
             log.debug("Running non-evented signatures")
 
             for signature in complete_list:
-                match = self.process(signature)
-                # If the signature is matched, add it to the list.
-                if match:
-                    matched.append(match)
+                if not signature.filter_analysistypes or self.results["target"]["category"] in signature.filter_analysistypes:
+                    match = self.process(signature)
+                    # If the signature is matched, add it to the list.
+                    if match:
+                        matched.append(match)
 
-                # Reset the ParseProcessLog instances after each signature
-                if "behavior" in self.results:
-                    for process in self.results["behavior"]["processes"]:
-                        process["calls"].reset()
+                    # Reset the ParseProcessLog instances after each signature
+                    if "behavior" in self.results:
+                        for process in self.results["behavior"]["processes"]:
+                            process["calls"].reset()
 
         # Sort the matched signatures by their severity level.
         matched.sort(key=lambda key: key["severity"])

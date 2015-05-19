@@ -673,6 +673,7 @@ class Signature(object):
     filter_processnames = set()
     filter_apinames = set()
     filter_categories = set()
+    filter_analysistypes = set()
 
     def __init__(self, results=None):
         self.data = []
