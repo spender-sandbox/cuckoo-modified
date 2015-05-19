@@ -160,18 +160,19 @@ class Human(Auxiliary, Thread):
             nohuman = self.options.get("nohuman")
             if nohuman:
                 return True
-            file_type = self.config.file_type
-            file_name = self.config.file_name
             officedoc = False
-            if "Rich Text Format" in file_type or "Microsoft Word" in file_type or \
-                "Microsoft Office Word" in file_type or file_name.endswith((".doc", ".docx", ".rtf")):
-                officedoc = True
-            elif "Microsoft Office Excel" in file_type or "Microsoft Excel" in file_type or \
-                file_name.endswith((".xls", ".xlsx")):
-                officedoc = True
-            elif "Microsoft PowerPoint" in file_type or \
-                file_name.endswith((".ppt", ".pptx", ".pps", ".ppsx", ".pptm", ".potm", ".potx", ".ppsm")):
-                officedoc = True
+            if hasattr(self.config, "file_type"):
+                file_type = self.config.file_type
+                file_name = self.config.file_name
+                if "Rich Text Format" in file_type or "Microsoft Word" in file_type or \
+                    "Microsoft Office Word" in file_type or file_name.endswith((".doc", ".docx", ".rtf")):
+                    officedoc = True
+                elif "Microsoft Office Excel" in file_type or "Microsoft Excel" in file_type or \
+                    file_name.endswith((".xls", ".xlsx")):
+                    officedoc = True
+                elif "Microsoft PowerPoint" in file_type or \
+                    file_name.endswith((".ppt", ".pptx", ".pps", ".ppsx", ".pptm", ".potm", ".potx", ".ppsm")):
+                    officedoc = True
 
             USER32.EnumWindows(EnumWindowsProc(getwindowlist), 0)
 
