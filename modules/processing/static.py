@@ -231,7 +231,12 @@ class PortableExecutable:
         if not self.pe:
             return None
 
-        off = self.pe.get_overlay_data_start_offset()
+        try:
+            off = self.pe.get_overlay_data_start_offset()
+        except:
+            log.error("Your version of pefile is out of date.  Please update to the latest version on https://github.com/erocarrera/pefile")
+            return None
+
         if off is None:
             return None
         overlay = {}
