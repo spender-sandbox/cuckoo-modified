@@ -175,8 +175,8 @@ class PortableExecutable:
         return dirents
 
     def _convert_section_characteristics(self, val):
-        flags = [ "", "", "", "", "IMAGE_SCN_TYPE_NO_PAD", "", "IMAGE_SCN_CNT_CODE", "IMAGE_SCN_CNT_INITIALIZED_DATA", "IMAGE_SCN_CNT_UNINITIALIZED_DATA", "IMAGE_SCN_LNK_OTHER",
-                 "IMAGE_SCN_LNK_INFO", "", "IMAGE_SCN_LNK_REMOVE", "IMAGE_SCN_LNK_COMDAT", "", "IMAGE_SCN_NO_DEFER_SPEC_EXC", "IMAGE_SCN_GPREL", "IMAGE_SCN_MEM_PURGEABLE",
+        flags = [ "", "", "", "IMAGE_SCN_TYPE_NO_PAD", "", "IMAGE_SCN_CNT_CODE", "IMAGE_SCN_CNT_INITIALIZED_DATA", "IMAGE_SCN_CNT_UNINITIALIZED_DATA", "IMAGE_SCN_LNK_OTHER",
+                 "IMAGE_SCN_LNK_INFO", "", "IMAGE_SCN_LNK_REMOVE", "IMAGE_SCN_LNK_COMDAT", "", "IMAGE_SCN_NO_DEFER_SPEC_EXC", "IMAGE_SCN_GPREL", "", "IMAGE_SCN_MEM_PURGEABLE",
                  "IMAGE_SCN_MEM_LOCKED", "IMAGE_SCN_MEM_PRELOAD",
                  # alignment bytes
                  "", "", "", "",
