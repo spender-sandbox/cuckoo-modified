@@ -14,6 +14,16 @@ class Exe(Package):
         args = self.options.get("arguments")
         appdata = self.options.get("appdata")
         runasx86 = self.options.get("runasx86")
+
+        # If the file doesn't have an extension, add .exe
+        # See CWinApp::SetCurrentHandles(), it will throw
+        # an exception that will crash the app if it does
+        # not find an extension on the main exe's filename
+        if "." not in os.path.basename(path):
+            new_path = path + ".exe"
+            os.rename(path, new_path)
+            path = new_path
+
         if appdata:
             # run the executable from the APPDATA directory, required for some malware
             basepath = os.getenv('APPDATA')
