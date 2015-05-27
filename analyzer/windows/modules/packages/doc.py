@@ -17,4 +17,4 @@ class DOC(Package):
 
     def start(self, path):
         word = self.get_path("Microsoft Office Word")
-        return self.execute(word, "\"%s\"" % path, path)
+        return self.execute(word, "\"%s\" /q" % path, path)
