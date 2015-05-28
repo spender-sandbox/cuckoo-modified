@@ -122,7 +122,7 @@ def mist_convert(results):
     return "\n".join(lines)
 
 class Malheur(Processing):
-    """ Performs classification on the generated MIST ZIP """
+    """ Performs classification on the generated MIST reports """
     order = 99
 
     def run(self):
