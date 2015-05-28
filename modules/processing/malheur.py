@@ -110,7 +110,8 @@ def mist_convert(results):
         if "pe_imphash" in results["static"]:
             lines.append("pe imphash|" + sanitize_generic(results["static"]["pe_imphash"]))
         if "pe_icon" in results["static"]:
-            lines.append("pe icon|" + sanitize_generic(results["static"]["pe_icon"]))
+            if results["static"]["pe_icon"]:
+                lines.append("pe icon|" + sanitize_generic(results["static"]["pe_icon"]))
         if "pe_versioninfo" in results["static"]:
             for info in results["static"]["pe_versioninfo"]:
                 if info["value"]:
