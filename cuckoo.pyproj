@@ -155,6 +155,7 @@
     <Compile Include="modules\auxiliary\tor.py" />
     <Compile Include="modules\feeds\bad_ssl_certs.py" />
     <Compile Include="modules\feeds\__init__.py" />
+    <Compile Include="modules\processing\malheur.py" />
     <Compile Include="modules\processing\suricata.py" />
     <Compile Include="modules\processing\cif.py" />
     <Compile Include="modules\reporting\moloch.py" />

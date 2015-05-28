@@ -14,7 +14,7 @@ from lib.cuckoo.common.objects import File
 
 class CIF(Processing):
     """Queries IP/domain results from CIF server"""
-    order = 999
+    order = 100
 
     def getbool(self,s):
         if isinstance(s,bool):
