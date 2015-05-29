@@ -119,7 +119,7 @@ def get_office_window(hwnd, lparam):
     if USER32.IsWindowVisible(hwnd):
         text = create_unicode_buffer(1024)
         USER32.GetWindowTextW(hwnd, text, 1024)
-        if "- Microsoft" in text:
+        if "- Microsoft" in text.value:
             # send ALT+F4 equivalent
             log.info("Closing Office window.")
             USER32.SendMessageW(hwnd, WM_CLOSE, None, None)
