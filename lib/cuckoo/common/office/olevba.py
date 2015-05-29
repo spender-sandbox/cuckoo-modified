@@ -3,12 +3,15 @@
 olevba.py
 
 olevba is a script to parse OLE and OpenXML files such as MS Office documents
-(e.g. Word, Excel), to extract VBA Macro code in clear text.
+(e.g. Word, Excel), to extract VBA Macro code in clear text, deobfuscate
+and analyze malicious macros.
 
 Supported formats:
 - Word 97-2003 (.doc, .dot), Word 2007+ (.docm, .dotm)
 - Excel 97-2003 (.xls), Excel 2007+ (.xlsm, .xlsb)
 - PowerPoint 2007+ (.pptm, .ppsm)
+- Word 2003 XML (.xml)
+- Word/Excel Single File Web Page / MHTML (.mht)
 
 Author: Philippe Lagadec - http://www.decalage.info
 License: BSD, see source code or documentation
@@ -122,6 +125,19 @@ https://github.com/unixfreak0037/officeparser
 #                      - added several suspicious keywords
 #                      - improved Base64 detection and decoding
 #                      - fixed triage mode not to scan attrib lines
+# 2015-03-04 v0.25 PL: - added support for Word 2003 XML
+# 2015-03-22 v0.26 PL: - added suspicious keywords for sandboxing and
+#                        virtualisation detection
+# 2015-05-06 v0.27 PL: - added support for MHTML files with VBA macros
+#                        virtualisation detection
+# 2015-05-06 v0.27 PL: - added support for MHTML files with VBA macros
+#                        (issue #10 reported by Greg from SpamStopsHere)
+# 2015-05-24 v0.28 PL: - improved support for MHTML files with modified header
+#                        (issue #11 reported by Thomas Chopitea)
+# 2015-05-26 v0.29 PL: - improved MSO files parsing, taking into account
+#                        various data offsets (issue #12)
+#                      - improved detection of MSO files, avoiding incorrect
+#                        parsing errors (issue #7)
 
 __version__ = '0.24'
 
@@ -168,11 +184,30 @@ import os.path
 import binascii
 import base64
 import traceback
+import zlib
+import email
 
 try:
     import re2 as re
 except ImportError:
     import re
+
+try:
+    # lxml: best performance for XML processing
+    import lxml.etree as ET
+except ImportError:
+    try:
+        # Python 2.5+: batteries included
+        import xml.etree.cElementTree as ET
+    except ImportError:
+        try:
+            # Python <2.5: standalone ElementTree install
+            import elementtree.cElementTree as ET
+        except ImportError:
+            raise ImportError, "lxml or ElementTree are not installed, " \
+                               + "see http://codespeak.net/lxml " \
+                               + "or http://effbot.org/zone/element-index.htm"
+
 
 import olefile
 #from thirdparty.prettytable import prettytable
@@ -180,12 +215,28 @@ import olefile
 
 #--- CONSTANTS ----------------------------------------------------------------
 
-TYPE_OLE     = 'OLE'
+# URL and message to report issues:
+URL_OLEVBA_ISSUES = 'https://bitbucket.org/decalage/oletools/issues'
+MSG_OLEVBA_ISSUES = 'Please report this issue on %s' % URL_OLEVBA_ISSUES
+
+# Container types:
+TYPE_OLE = 'OLE'
 TYPE_OpenXML = 'OpenXML'
+TYPE_Word2003_XML = 'Word2003_XML'
+TYPE_MHTML = 'MHTML'
+
+# MSO files ActiveMime header magic
+MSO_ACTIVEMIME_HEADER = 'ActiveMime'
 
 MODULE_EXTENSION = "bas"
 CLASS_EXTENSION = "cls"
 FORM_EXTENSION = "frm"
+
+# Namespaces and tags for Word2003 XML parsing:
+NS_W = '{http://schemas.microsoft.com/office/word/2003/wordml}'
+# the tag <w:binData w:name="editdata.mso"> contains the VBA macro code:
+TAG_BINDATA = NS_W + 'binData'
+ATTR_NAME = NS_W + 'name'
 
 # Keywords to detect auto-executable macros
 AUTOEXEC_KEYWORDS = {
@@ -237,6 +288,9 @@ SUSPICIOUS_KEYWORDS = {
          'vbMinimizedNoFocus', 'WScript.Shell', 'Run'),
         #Shell: http://msdn.microsoft.com/en-us/library/office/gg278437%28v=office.15%29.aspx
         #WScript.Shell+Run sample: http://pastebin.com/Z4TMyuq6
+    'May run PowerShell commands':
+    #sample: https://malwr.com/analysis/M2NjZWNmMjA0YjVjNGVhYmJlZmFhNWY4NmQxZDllZTY/
+        ('PowerShell', ),
     'May hide the application':
         ('Application.Visible', 'ShowWindow', 'SW_HIDE'),
     'May create a directory':
@@ -258,6 +312,9 @@ SUSPICIOUS_KEYWORDS = {
     'May download files from the Internet':
         #TODO: regex to find urlmon+URLDownloadToFileA on same line
         ('URLDownloadToFileA', 'Msxml2.XMLHTTP', 'Microsoft.XMLHTTP'),
+    'May download files from the Internet using PowerShell':
+    #sample: https://malwr.com/analysis/M2NjZWNmMjA0YjVjNGVhYmJlZmFhNWY4NmQxZDllZTY/
+        ('New-Object System.Net.WebClient', 'DownloadFile'),
     'May control another application by simulating user keystrokes':
         ('SendKeys', 'AppActivate'),
         #SendKeys: http://msdn.microsoft.com/en-us/library/office/gg278655%28v=office.15%29.aspx
@@ -268,6 +325,43 @@ SUSPICIOUS_KEYWORDS = {
         #TODO: regex to find several Chr*, not just one
         ('Chr', 'ChrB', 'ChrW', 'StrReverse', 'Xor'),
         #Chr: http://msdn.microsoft.com/en-us/library/office/gg264465%28v=office.15%29.aspx
+    'May read or write registry keys':
+    #sample: https://malwr.com/analysis/M2NjZWNmMjA0YjVjNGVhYmJlZmFhNWY4NmQxZDllZTY/
+        ('RegOpenKeyExA', 'RegOpenKeyEx', 'RegCloseKey'),
+    'May read registry keys':
+    #sample: https://malwr.com/analysis/M2NjZWNmMjA0YjVjNGVhYmJlZmFhNWY4NmQxZDllZTY/
+        ('RegQueryValueExA', 'RegQueryValueEx',
+         'RegRead',  #with Wscript.Shell
+        ),
+    'May detect virtualization':
+    # sample: https://malwr.com/analysis/M2NjZWNmMjA0YjVjNGVhYmJlZmFhNWY4NmQxZDllZTY/
+        (r'SYSTEM\ControlSet001\Services\Disk\Enum', 'VIRTUAL', 'VMWARE', 'VBOX'),
+    'May detect Anubis Sandbox':
+    # sample: https://malwr.com/analysis/M2NjZWNmMjA0YjVjNGVhYmJlZmFhNWY4NmQxZDllZTY/
+    # sample: https://malwr.com/analysis/M2NjZWNmMjA0YjVjNGVhYmJlZmFhNWY4NmQxZDllZTY/
+    # NOTES: this sample also checks App.EXEName but that seems to be a bug, it works in VB6 but not in VBA
+    # ref: http://www.syssec-project.eu/m/page-media/3/disarm-raid11.pdf
+        ('GetVolumeInformationA', 'GetVolumeInformation',  # with kernel32.dll
+         '1824245000', r'HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProductId',
+         '76487-337-8429955-22614', 'andy', 'sample', r'C:\exec\exec.exe', 'popupkiller'
+        ),
+    'May detect Sandboxie':
+    # sample: https://malwr.com/analysis/M2NjZWNmMjA0YjVjNGVhYmJlZmFhNWY4NmQxZDllZTY/
+    # ref: http://www.cplusplus.com/forum/windows/96874/
+        ('SbieDll.dll', 'SandboxieControlWndClass'),
+    'May detect Sunbelt Sandbox':
+    # ref: http://www.cplusplus.com/forum/windows/96874/
+        (r'C:\file.exe',),
+    'May detect Norman Sandbox':
+    # ref: http://www.cplusplus.com/forum/windows/96874/
+        ('currentuser',),
+    'May detect CW Sandbox':
+    # ref: http://www.cplusplus.com/forum/windows/96874/
+        ('Schmidti',),
+    'May detect WinJail Sandbox':
+    # ref: http://www.cplusplus.com/forum/windows/96874/
+        ('Afx:400000:0',),
+
 }
 
 # Regular Expression for a URL:
@@ -321,6 +415,71 @@ BASE64_WHITELIST = set(['thisdocument', 'thisworkbook', 'test', 'temp', 'http', 
 re_dridex_string = re.compile(r'"[0-9A-Za-z]{20,}"')
 # regex to check that it is not just a hex string:
 re_nothex_check = re.compile(r'[G-Zg-z]')
+
+# === MSO/ActiveMime files parsing ===========================================
+
+def is_mso_file(data):
+    """
+    Check if the provided data is the content of a MSO/ActiveMime file, such as
+    the ones created by Outlook in some cases, or Word/Excel when saving a
+    file with the MHTML format or the Word 2003 XML format.
+    This function only checks the ActiveMime magic at the beginning of data.
+    :param data: bytes string, MSO/ActiveMime file content
+    :return: bool, True if the file is MSO, False otherwise
+    """
+    return data.startswith(MSO_ACTIVEMIME_HEADER)
+
+
+# regex to find zlib block headers, starting with byte 0x78 = 'x'
+re_zlib_header = re.compile(r'x')
+
+
+def mso_file_extract(data):
+    """
+    Extract the data stored into a MSO/ActiveMime file, such as
+    the ones created by Outlook in some cases, or Word/Excel when saving a
+    file with the MHTML format or the Word 2003 XML format.
+
+    :param data: bytes string, MSO/ActiveMime file content
+    :return: bytes string, extracted data (uncompressed)
+
+    raise a RuntimeError if the data cannot be extracted
+    """
+    # check the magic:
+    assert is_mso_file(data)
+    # First, attempt to get the compressed data offset from the header
+    # According to my tests, it should be an unsigned 16 bits integer,
+    # at offset 0x1E (little endian) + add 46:
+    try:
+        offset = struct.unpack_from('<H', data, offset=0x1E)[0] + 46
+        logging.debug('Parsing MSO file: data offset = 0x%X' % offset)
+    except:
+        logging.exception('Unable to parse MSO/ActiveMime file header')
+        raise RuntimeError('Unable to parse MSO/ActiveMime file header')
+    # In all the samples seen so far, Word always uses an offset of 0x32,
+    # and Excel 0x22A. But we read the offset from the header to be more
+    # generic.
+    # Let's try that offset, then 0x32 and 0x22A, just in case:
+    for start in (offset, 0x32, 0x22A):
+        try:
+            logging.debug('Attempting zlib decompression from MSO file offset 0x%X' % start)
+            extracted_data = zlib.decompress(data[start:])
+            return extracted_data
+        except:
+            logging.exception('zlib decompression failed')
+    # None of the guessed offsets worked, let's try brute-forcing by looking
+    # for potential zlib-compressed blocks starting with 0x78:
+    logging.debug('Looking for potential zlib-compressed blocks in MSO file')
+    for match in re_zlib_header.finditer(data):
+        start = match.start()
+        try:
+            logging.debug('Attempting zlib decompression from MSO file offset 0x%X' % start)
+            extracted_data = zlib.decompress(data[start:])
+            return extracted_data
+        except:
+            logging.exception('zlib decompression failed')
+    raise RuntimeError('Unable to decompress data from a MSO/ActiveMime file')
+
 
 #--- FUNCTIONS ----------------------------------------------------------------
 
@@ -1153,8 +1312,12 @@ class VBA_Parser(object):
     """
     Class to parse MS Office files, to detect VBA macros and extract VBA source code
     Supported file formats:
-    - Word 97-2003 (.doc, .dot), Word 2007+ (.docm, .dotm)
-    - Excel 97-2003 (.xls), Excel 2007+ (.xlsm, .xlsb)
+    - Word 97-2003 (.doc, .dot)
+    - Word 2007+ (.docm, .dotm)
+    - Word 2003 XML (.xml)
+    - Word MHT - Single File Web Page / MHTML (.mht)
+    - Excel 97-2003 (.xls)
+    - Excel 2007+ (.xlsm, .xlsb)
     - PowerPoint 2007+ (.pptm, .ppsm)
     """
 
@@ -1195,8 +1358,9 @@ class VBA_Parser(object):
             # This looks like an OLE file
             logging.debug('Parsing OLE file %s' % self.filename)
             # Open and parse the OLE file, using unicode for path names:
-            self.ole_file = olefile.OleFileIO(_file, path_encoding=None)
             self.type = TYPE_OLE
+            # TODO: handle OLE parsing exceptions
+            self.ole_file = olefile.OleFileIO(_file, path_encoding=None)
             #TODO: raise TypeError if this is a Powerpoint 97 file, since VBA macros cannot be detected yet
         elif zipfile.is_zipfile(_file):
             # This looks like a zip file, need to look for vbaProject.bin inside
@@ -1224,7 +1388,94 @@ class VBA_Parser(object):
                         continue
             z.close()
         else:
-            msg = '%s is not an OLE nor an OpenXML file, cannot extract VBA Macros.' % self.filename
+            # read file from disk, check if it is a Word 2003 XML file (WordProcessingML), Excel 2003 XML,
+            # or a plain text file containing VBA code
+            if data is None:
+                data = open(filename, 'rb').read()
+            # store a lowercase version for some tests:
+            data_lowercase = data.lower()
+            # TODO: move each format parser to a separate method
+            # check if it is a Word 2003 XML file (WordProcessingML): must contain the namespace
+            if 'http://schemas.microsoft.com/office/word/2003/wordml' in data:
+                logging.info('Opening Word 2003 XML file %s' % self.filename)
+                try:
+                    # parse the XML content
+                    # TODO: handle XML parsing exceptions
+                    et = ET.fromstring(data)
+                    # set type only if parsing succeeds
+                    self.type = TYPE_Word2003_XML
+                    # find all the binData elements:
+                    for bindata in et.getiterator(TAG_BINDATA):
+                        # the binData content is an OLE container for the VBA project, compressed
+                        # using the ActiveMime/MSO format (zlib-compressed), and Base64 encoded.
+                        # get the filename:
+                        fname = bindata.get(ATTR_NAME, 'noname.mso')
+                        # decode the base64 activemime
+                        mso_data = binascii.a2b_base64(bindata.text)
+                        if is_mso_file(mso_data):
+                            # decompress the zlib data stored in the MSO file, which is the OLE container:
+                            # TODO: handle different offsets => separate function
+                            ole_data = mso_file_extract(mso_data)
+                            try:
+                                self.ole_subfiles.append(VBA_Parser(filename=fname, data=ole_data))
+                            except:
+                                logging.error('%s does not contain a valid OLE file' % fname)
+                        else:
+                            logging.error('%s is not a valid MSO file' % fname)
+                except:
+                    # TODO: differentiate exceptions for each parsing stage
+                    logging.exception('Failed XML parsing for file %r' % self.filename)
+                    pass
+            # check if it is a MHT file (MIME HTML, Word or Excel saved as "Single File Web Page"):
+            # According to my tests, these files usually start with "MIME-Version: 1.0" on the 1st line
+            # BUT Word accepts a blank line or other MIME headers inserted before,
+            # and even whitespaces in between "MIME", "-", "Version" and ":". The version number is ignored.
+            # And the line is case insensitive.
+            # so we'll just check the presence of mime, version and multipart anywhere:
+            if self.type is None and 'mime' in data_lowercase and 'version' in data_lowercase and 'multipart' in data_lowercase:
+                logging.debug('Opening MHTML file %s' % self.filename)
+                try:
+                    # parse the MIME content
+                    # remove any leading whitespace or newline (workaround for issue in email package)
+                    stripped_data = data.lstrip('\r\n\t ')
+                    mhtml = email.message_from_string(stripped_data)
+                    self.type = TYPE_MHTML
+                    # find all the attached files:
+                    for part in mhtml.walk():
+                        content_type = part.get_content_type()  # always returns a value
+                        fname = part.get_filename(None)  # returns None if it fails
+                        # TODO: get content-location if no filename
+                        logging.debug('MHTML part: filename=%r, content-type=%r' % (fname, content_type))
+                        part_data = part.get_payload(decode=True)
+                        # VBA macros are stored in a binary file named "editdata.mso".
+                        # the data content is an OLE container for the VBA project, compressed
+                        # using the ActiveMime/MSO format (zlib-compressed), and Base64 encoded.
+                        # decompress the zlib data starting at offset 0x32, which is the OLE container:
+                        # check ActiveMime header:
+                        if isinstance(part_data, str) and is_mso_file(part_data):
+                            logging.debug('Found ActiveMime header, decompressing MSO container')
+                            try:
+                                ole_data = mso_file_extract(part_data)
+                                try:
+                                    # TODO: check if it is actually an OLE file
+                                    # TODO: get the MSO filename from content_location?
+                                    self.ole_subfiles.append(VBA_Parser(filename=fname, data=ole_data))
+                                except:
+                                    logging.debug('%s does not contain a valid OLE file' % fname)
+                            except:
+                                logging.exception('Failed decompressing an MSO container in %r - %s'
+                                              % (fname, MSG_OLEVBA_ISSUES))
+                                # TODO: bug here - need to split in smaller functions/classes?
+                except:
+                    logging.exception('Failed MIME parsing for file %r - %s'
+                                      % (self.filename, MSG_OLEVBA_ISSUES))
+                    pass
+
+        #TODO: handle exceptions
+        #TODO: Excel 2003 XML
+        #TODO: plain text VBA file
+        if self.type is None:
+            msg = '%s is not a supported file type, cannot extract VBA Macros.' % self.filename
             logging.error(msg)
             raise TypeError(msg)
 
@@ -1483,8 +1734,12 @@ def process_file_triage (container, filename, data):
                     nb_dridexstrings += dridex
         if vba.type == TYPE_OLE:
             flags = 'OLE:'
-        else:
+        elif vba.type == TYPE_OpenXML:
             flags = 'OpX:'
+        elif vba.type == TYPE_Word2003_XML:
+            flags = 'XML:'
+        elif vba.type == TYPE_MHTML:
+            flags = 'MHT:'
         macros = autoexec = suspicious = iocs = hexstrings = base64obf = dridex = '-'
         if nb_macros: macros = 'M'
         if nb_autoexec: autoexec = 'A'
