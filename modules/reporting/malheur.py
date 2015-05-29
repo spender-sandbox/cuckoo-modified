@@ -132,20 +132,20 @@ def mist_convert(results):
 class Malheur(Report):
     """ Performs classification on the generated MIST reports """
 
-    def run(self):
+    def run(self, results):
         """Runs Malheur processing
         @return: Nothing.  Results of this processing are obtained at an arbitrary future time.
         """
         basedir = os.path.join(CUCKOO_ROOT, "storage", "malheur")
         reportsdir = os.path.join(basedir, "reports")
-        task_id = str(self.results["info"]["id"])
+        task_id = str(results["info"]["id"])
         outputfile = os.path.join(basedir, "malheur.txt." + hashlib.md5(str(random.random())).hexdigest())
         try:
             os.makedirs(reportsdir)
         except:
             pass
 
-        mist = mist_convert(self.results)
+        mist = mist_convert(results)
         with open(os.path.join(reportsdir, task_id + ".txt"), "w") as outfile:
             outfile.write(mist)
 
