@@ -6,6 +6,7 @@ import os
 import subprocess
 import hashlib
 import urllib
+import random
 
 from lib.cuckoo.common.constants import CUCKOO_ROOT
 from lib.cuckoo.common.abstracts import Processing
@@ -13,12 +14,12 @@ from lib.cuckoo.common.exceptions import CuckooProcessingError
 
 def sanitize_file(filename):
     normals = filename.lower().replace('\\', ' ').replace('.', ' ').split(' ')
-    hashed_components = [hashlib.md5(normal).hexdigest()[:8] for normal in normals]
+    hashed_components = [hashlib.md5(normal).hexdigest()[:8] for normal in normals[-3:]]
     return ' '.join(hashed_components)
 
 def sanitize_reg(keyname):
     normals = keyname.lower().replace('\\', ' ').split(' ')
-    hashed_components = [hashlib.md5(normal).hexdigest()[:8] for normal in normals]
+    hashed_components = [hashlib.md5(normal).hexdigest()[:8] for normal in normals[-2:]]
     return ' '.join(hashed_components)
 
 def sanitize_cmd(cmd):
@@ -82,7 +83,13 @@ def mist_convert(results):
             if entry["data"]:
                 for res in entry["data"]:
                     for key, value in res.items():
-                        lines.append(sigline + sanitize_generic(value))
+                        lowerval = value.lower()
+                        if lowerval.startswith("hkey"):
+                            lines.append(sigline + sanitize_reg(value))
+                        elif lowerval.startswith("c:"):
+                            lines.append(sigline + sanitize_file(value))
+                        else:
+                            lines.append(sigline + sanitize_generic(value))
             else:
                 lines.append(sigline)
     if "network" in results:
@@ -132,22 +139,29 @@ class Malheur(Processing):
         """
         self.key = "malheur"
         basedir = os.path.join(CUCKOO_ROOT, "storage", "malheur")
-        basefile = str(self.results["info"]["id"])
-        outputfile = os.path.join(CUCKOO_ROOT, "storage", "analyses", basefile, "malheur.txt")
+        reportsdir = os.path.join(basedir, "reports")
+        task_id = str(self.results["info"]["id"])
+        outputfile = os.path.join(basedir, "malheur.txt." + hashlib.md5(str(random.random())).hexdigest())
         try:
-            os.makedirs(basedir)
+            os.makedirs(reportsdir)
         except:
             pass
 
         mist = mist_convert(self.results)
-        with open(os.path.join(basedir, basefile + ".txt"), "w") as outfile:
+        with open(os.path.join(reportsdir, task_id + ".txt"), "w") as outfile:
             outfile.write(mist)
 
-        path, dirs, files = os.walk(basedir).next()
+        # might need to prevent concurrent modifications to internal state of malheur by only allowing
+        # one analysis to be running malheur at a time
+
+        path, dirs, files = os.walk(reportsdir).next()
         if len(files) == 1:
             # if this is the first file being analyzed, reset Malheur's internal state
-            subprocess.call(["malheur", "--input.format", "mist", "--input.mist_level", "2", "-r", "-o", outputfile, "increment", basedir])
+            subprocess.call(["malheur", "--input.format", "mist", "--input.mist_level", "2", "-r", "-o", outputfile, "increment", reportsdir])
         else:
-            subprocess.call(["malheur", "--input.format", "mist", "--input.mist_level", "2", "-o", outputfile, "increment", basedir])
+            subprocess.call(["malheur", "--input.format", "mist", "--input.mist_level", "2", "-o", outputfile, "increment", reportsdir])
+
+        # replace previous classification state with new results atomically
+        os.rename(outputfile, outputfile[:-33])
 
         return []
