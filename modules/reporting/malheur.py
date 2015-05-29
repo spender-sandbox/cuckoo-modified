@@ -9,8 +9,8 @@ import urllib
 import random
 
 from lib.cuckoo.common.constants import CUCKOO_ROOT
-from lib.cuckoo.common.abstracts import Processing
-from lib.cuckoo.common.exceptions import CuckooProcessingError
+from lib.cuckoo.common.abstracts import Report
+from lib.cuckoo.common.exceptions import CuckooReportError
 
 def sanitize_file(filename):
     normals = filename.lower().replace('\\', ' ').replace('.', ' ').split(' ')
@@ -129,15 +129,13 @@ def mist_convert(results):
 
     return "\n".join(lines)
 
-class Malheur(Processing):
+class Malheur(Report):
     """ Performs classification on the generated MIST reports """
-    order = 99
 
     def run(self):
         """Runs Malheur processing
         @return: Nothing.  Results of this processing are obtained at an arbitrary future time.
         """
-        self.key = "malheur"
         basedir = os.path.join(CUCKOO_ROOT, "storage", "malheur")
         reportsdir = os.path.join(basedir, "reports")
         task_id = str(self.results["info"]["id"])
@@ -155,13 +153,14 @@ class Malheur(Processing):
         # one analysis to be running malheur at a time
 
         path, dirs, files = os.walk(reportsdir).next()
-        if len(files) == 1:
-            # if this is the first file being analyzed, reset Malheur's internal state
-            subprocess.call(["malheur", "--input.format", "mist", "--input.mist_level", "2", "-r", "-o", outputfile, "increment", reportsdir])
-        else:
-            subprocess.call(["malheur", "--input.format", "mist", "--input.mist_level", "2", "-o", outputfile, "increment", reportsdir])
+        try:
+            if len(files) == 1:
+                # if this is the first file being analyzed, reset Malheur's internal state
+                subprocess.call(["malheur", "--input.format", "mist", "--input.mist_level", "2", "-r", "-o", outputfile, "increment", reportsdir])
+            else:
+                subprocess.call(["malheur", "--input.format", "mist", "--input.mist_level", "2", "-o", outputfile, "increment", reportsdir])
 
-        # replace previous classification state with new results atomically
-        os.rename(outputfile, outputfile[:-33])
-
-        return []
+            # replace previous classification state with new results atomically
+            os.rename(outputfile, outputfile[:-33])
+        except Exception as e:
+            raise CuckooReportError("Failed to perform Malheur classification: %s" % e)
