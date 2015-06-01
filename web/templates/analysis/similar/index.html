@@ -1,0 +1,11 @@
+{% if similar|length > 0 %}
+    <div class="well well-small">
+    <ul>
+        {% for sim in similar %}
+            <li><a href="{% url "analysis.views.report" sim.id %}"><span class="mono">{{sim.id}}</span></a></li>
+        {% endfor %}
+        </ul>
+    </div>
+{% else %}
+    <div class="alert alert-info">No similar analyses found.</div>
+{% endif %}

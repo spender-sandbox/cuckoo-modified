@@ -338,10 +338,39 @@ def report(request, task_id):
         domainlookups = dict()
         iplookups = dict()
 
+    similar = []
+    if enabledconf["malheur"]:
+        malheur_file = os.path.join(CUCKOO_ROOT, "storage", "malheur", "malheur.txt")
+        classes = dict()
+        ourclassname = None
+        try:
+            with open(malheur_file, "r") as malfile:
+                for line in malfile:
+                    if line[0] == '#':
+                            continue
+                    parts = line.strip().split(' ')
+                    classname = parts[1]
+                    if classname != "rejected":
+                        if classname not in classes:
+                            classes[classname] = []
+                        addval = dict()
+                        addval["id"] = parts[0][:-4]
+                        addval["proto"] = parts[2][:-4]
+                        addval["distance"] = parts[3]
+                        if addval["id"] == task_id:
+                            ourclassname = classname
+                        else:
+                            classes[classname].append(addval)
+            if ourclassname:
+                similar = classes[ourclassname]
+        except:
+            pass
+
     return render_to_response("analysis/report.html",
                              {"analysis": report,
                               "domainlookups": domainlookups,
                               "iplookups": iplookups,
+                              "similar": similar,
                               "config": enabledconf},
                              context_instance=RequestContext(request))
 

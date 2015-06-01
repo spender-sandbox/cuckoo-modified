@@ -12,6 +12,7 @@
     <li><a href="#dropped" data-toggle="tab">Dropped Files</a></li>
     {% if analysis.procmemory %}<li><a href="#procmemory" data-toggle="tab">Process Memory</a></li>{% endif %}
     {% if analysis.memory %}<li><a href="#memory" data-toggle="tab">Memory Analysis</a></li>{% endif %}
+    {% if config.malheur %}<li><a href="#similar" data-toggle="tab">Similar</a></li>{% endif %}
     <li><a href="#reports" data-toggle="tab">Reports</a></li>
     <li><a href="#admin" data-toggle="tab">Admin</a></li>
 </ul>
@@ -43,6 +44,11 @@
     {% if analysis.memory %}
     <div class="tab-pane fade" id="memory">
         {% include "analysis/memory/index.html" %}
+    </div>
+    {% endif %}
+    {% if config.malheur %}
+    <div class="tab-pane fade" id="similar">
+        {% include "analysis/similar/index.html" %}
     </div>
     {% endif %}
     <div class="tab-pane fade" id="reports">
