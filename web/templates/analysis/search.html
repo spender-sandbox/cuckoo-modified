@@ -136,9 +136,15 @@
                     <th width="12%">Timestamp</th>
                     <th width="37%">Filename</th>
                     <th width="20%">Target/MD5</th>
+                    {% if config.moloch %}
                     <th width="5%">Moloch</th>
+                    {% endif %}
+                    {% if config.suricata %}
                     <th width="5%">SuriAlert</th>
+                    {% endif %}
+                    {% if config.virustotal %}
                     <th width="5%">VT</th>
+                    {% endif %}
                     <th width="5%">MalScore</th>
                     <th width="6%" style="text-align: right;">Status</th>
                 </tr>
@@ -176,6 +182,7 @@
                                 {% endif %}
                             {% endif %}
                         </td>
+                        {% if config.moloch %}
                         <td>
                             {% if analysis.moloch_url %}
                                 <a href={{analysis.moloch_url}} target="_blank"><span class="mono">MOLOCH</span></a>
@@ -183,6 +190,8 @@
                                 <span class="mono">None</span>
                             {% endif %}
                         </td>
+                        {% endif %}
+                        {% if config.suricata %}
                         <td>
                             {% if analysis.suri_alert_cnt %}
                                 <span class="mono">{{analysis.suri_alert_cnt}}</span>
@@ -190,6 +199,8 @@
                                 <span class="mono">None</span>
                             {% endif %}
                         </td>
+                        {% endif %}
+                        {% if config.virustotal %}
                         <td>
                             {% if analysis.virustotal_summary %}
                                 <span class="mono">{{analysis.virustotal_summary}}</span>
@@ -197,6 +208,7 @@
                                 <span class="mono">None</span>
                             {% endif %}
                         </td>
+                        {% endif %}
                         <td>
                             {% if analysis.malscore != None %}
                                 {% if analysis.malscore <= 2.0 %}

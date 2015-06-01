@@ -577,6 +577,7 @@ def search(request):
             analyses.append(new)
         return render_to_response("analysis/search.html",
                                   {"analyses": analyses,
+                                   "config": enabledconf,
                                    "term": request.POST["search"],
                                    "error": None},
                                   context_instance=RequestContext(request))
