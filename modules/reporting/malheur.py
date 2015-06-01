@@ -80,17 +80,23 @@ def mist_convert(results):
     if "signatures" in results:
         for entry in results["signatures"]:
             sigline = "sig " + entry["name"] + "|"
+            notadded = False
             if entry["data"]:
                 for res in entry["data"]:
                     for key, value in res.items():
-                        lowerval = value.lower()
-                        if lowerval.startswith("hkey"):
-                            lines.append(sigline + sanitize_reg(value))
-                        elif lowerval.startswith("c:"):
-                            lines.append(sigline + sanitize_file(value))
+                        if isinstance(value, basestring):
+                            lowerval = value.lower()
+                            if lowerval.startswith("hkey"):
+                                lines.append(sigline + sanitize_reg(value))
+                            elif lowerval.startswith("c:"):
+                                lines.append(sigline + sanitize_file(value))
+                            else:
+                                lines.append(sigline + sanitize_generic(value))
                         else:
-                            lines.append(sigline + sanitize_generic(value))
+                            notadded = True
             else:
+                notadded = True
+            if notadded:
                 lines.append(sigline)
     if "network" in results:
         hosts = results["network"].get("hosts")
