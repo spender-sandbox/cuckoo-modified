@@ -39,14 +39,14 @@ class Sniffer(Auxiliary):
             resultserver_port = str(self.machine.resultserver_port)
         else:
             resultserver_port = str(Config().resultserver.port)
-            
+
         if not os.path.exists(tcpdump):
             log.error("Tcpdump does not exist at path \"%s\", network "
                       "capture aborted", tcpdump)
             return
 
         mode = os.stat(tcpdump)[stat.ST_MODE]
-        if (mode & stat.S_ISUID) == 0:
+        if (mode & stat.S_ISUID) == 0 and os.geteuid() > 0:
             # now do a weak file capability check
             has_caps = False
             try:
