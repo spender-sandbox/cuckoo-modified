@@ -513,6 +513,8 @@ class Summary:
         elif call["api"] == "LdrGetProcedureAddress" and call["status"]:
             dllname = self.get_argument(call, "ModuleName").lower()
             funcname = self.get_argument(call, "FunctionName")
+            if not funcname:
+                funcname = "#" + str(self.get_argument(call, "Ordinal"))
             combined = dllname + "." + funcname
             if combined not in self.resolved_apis:
                 self.resolved_apis.append(combined)
