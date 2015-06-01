@@ -407,6 +407,7 @@ class Summary:
         self.started_services = []
         self.created_services = []
         self.executed_commands = []
+        self.resolved_apis = []
 
     def get_argument(self, call, argname, strip=False):
         for arg in call["arguments"]:
@@ -508,6 +509,14 @@ class Summary:
             cmdline = self.get_argument(call, "CommandLine", strip=True)
             if cmdline and cmdline not in self.executed_commands:
                 self.executed_commands.append(cmdline)
+
+        elif call["api"] == "LdrGetProcedureAddress" and call["status"]:
+            dllname = self.get_argument(call, "ModuleName").lower()
+            funcname = self.get_argument(call, "FunctionName")
+            combined = dllname + "." + funcname
+            if combined not in self.resolved_apis:
+                self.resolved_apis.append(combined)
+
         elif call["api"] == "ShellExecuteExW":
             path = self.get_argument(call, "FilePath", strip=True)
             params = self.get_argument(call, "Parameters", strip=True)
@@ -573,7 +582,7 @@ class Summary:
         """Get registry keys, mutexes and files.
         @return: Summary of keys, read keys, written keys, mutexes and files.
         """
-        return {"files": self.files, "read_files" : self.read_files, "write_files" : self.write_files, "delete_files" : self.delete_files, "keys": self.keys, "read_keys": self.read_keys, "write_keys": self.write_keys, "delete_keys" : self.delete_keys, "executed_commands" : self.executed_commands, "mutexes": self.mutexes, "created_services" : self.created_services, "started_services" : self.started_services }
+        return {"files": self.files, "read_files" : self.read_files, "write_files" : self.write_files, "delete_files" : self.delete_files, "keys": self.keys, "read_keys": self.read_keys, "write_keys": self.write_keys, "delete_keys" : self.delete_keys, "executed_commands" : self.executed_commands, "resolved_apis" : self.resolved_apis, "mutexes": self.mutexes, "created_services" : self.created_services, "started_services" : self.started_services }
 
 class Enhanced(object):
     """Generates a more extensive high-level representation than Summary."""

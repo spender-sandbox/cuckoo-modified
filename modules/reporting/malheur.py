@@ -71,6 +71,8 @@ def mist_convert(results):
             lines.append("reg delete|" + sanitize_reg(entry))
         for entry in results["behavior"]["summary"]["executed_commands"]:
             lines.append("cmd exec|" + sanitize_cmd(entry))
+        for entry in results["behavior"]["summary"]["resolved_apis"]:
+            lines.append("api resolv|" + sanitize_generic(entry))
         for entry in results["behavior"]["summary"]["mutexes"]:
             lines.append("mutex access|" + sanitize_generic(entry))
         for entry in results["behavior"]["summary"]["created_services"]:

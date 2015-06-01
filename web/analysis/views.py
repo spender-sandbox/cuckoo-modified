@@ -478,6 +478,8 @@ def search(request):
                 records = results_db.analysis.find({"behavior.summary.files": {"$regex": value, "$options": "-i"}}).sort([["_id", -1]])
             elif term == "command":
                 records = results_db.analysis.find({"behavior.summary.executed_commands": {"$regex": value, "$options": "-i"}}).sort([["_id", -1]])
+            elif term == "resolvedapi":
+                records = results_db.analysis.find({"behavior.summary.resolved_apis": {"$regex": value, "$options": "-i"}}).sort([["_id", -1]])
             elif term == "key":
                 records = results_db.analysis.find({"behavior.summary.keys": {"$regex": value, "$options": "-i"}}).sort([["_id", -1]])
             elif term == "mutex":

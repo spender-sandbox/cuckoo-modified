@@ -116,6 +116,18 @@
             {% endif %}
         </div>
         <div class="well well-small">
+            <b>Resolved APIs</b>
+            {% if results.behavior.summary.resolved_apis %}
+                <ul>
+                    {% for api in results.behavior.summary.resolved_apis %}
+                    <li><span class="mono">{{api}}</span></li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                Nothing to display.
+            {% endif %}
+        </div>
+        <div class="well well-small">
             <b>Executed Commands</b>
             {% if results.behavior.summary.executed_commands %}
                 <ul>
