@@ -726,7 +726,15 @@ def comments(request, task_id):
             curcomments = list()
         buf = dict()
         buf["Timestamp"] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        buf["Data"] = comment
+        escape_map = {
+            '&' : "&amp;",
+            '\"' : "&quot;",
+            '\'' : "&qpos;",
+            '<' : "&lt;",
+            '>' : "&gt;",
+            '\n' : "<br />",
+            }
+        buf["Data"] = "".join(escape_map.get(thechar, thechar) for thechar in comment)
         curcomments.insert(0, buf)
         results_db.analysis.update({"info.id": int(task_id)},{"$set":{"info.comments":curcomments}}, upsert=False, multi=True)
         return redirect('analysis.views.report', task_id=task_id)
