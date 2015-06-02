@@ -15,6 +15,9 @@ It offers a number of advantages over the upstream Cuckoo:
 + More stable hooking
 + Ability to restore removed hooks
 + Greatly improved behavioral analysis and signature module API
++ Ability to post comments about analyses
++ Automatic malware classification by [Malheur](http://mlsec.org/malheur/)
++ Significant contributions from [Jeremy Hedges](https://github.com/killerinstinct/) and [William Metcalf](https://github.com/wmetcalf)
 + Hundreds of other bugfixes
 
 For more information on the initial set of changes, see:
