@@ -372,6 +372,7 @@ def report(request, task_id):
                               "domainlookups": domainlookups,
                               "iplookups": iplookups,
                               "similar": similar,
+                              "settings": settings,
                               "config": enabledconf},
                              context_instance=RequestContext(request))
 

@@ -14,7 +14,7 @@
     {% if analysis.memory %}<li><a href="#memory" data-toggle="tab">Memory Analysis</a></li>{% endif %}
     {% if config.malheur %}<li><a href="#similar" data-toggle="tab">Similar</a></li>{% endif %}
     <li><a href="#reports" data-toggle="tab">Reports</a></li>
-    <li><a href="#comments" data-toggle="tab">Comments</a></li>
+    {% if settings.COMMENTS %}<li><a href="#comments" data-toggle="tab">Comments</a></li>{% endif %}
     <li><a href="#admin" data-toggle="tab">Admin</a></li>
 </ul>
 <div class="tab-content">
