@@ -62,4 +62,18 @@
         {% include "analysis/admin/index.html" %}
     </div>
 </div>
+<script>
+$(function() {
+  //for bootstrap 3 use 'shown.bs.tab' instead of 'shown' in the next line
+  $('a[data-toggle="tab"]').on('click', function (e) {
+    localStorage.setItem('lastAnalysisTab', $(e.target).attr('href'));
+  });
+
+  var lastAnalysisTab = localStorage.getItem('lastAnalysisTab');
+
+  if (lastAnalysisTab) {
+      $('a[href="'+lastAnalysisTab+'"]').click();
+  }
+});
+</script>
 {% endblock %}
