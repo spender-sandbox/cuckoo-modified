@@ -1,13 +1,9 @@
 <h4>Comments</h4><br />
 <form class="form-horizontal" role="form" method="post" action="/analysis/{{analysis.info.id}}/comments/">{% csrf_token %}
 <div class="row">
-  <div class="form group col-lg-12">
-    <div class="input-group">
-      <input type="text" class="form-control" name="commentbox" placeholder="Add comment ...">
-      <span class="input-group-btn">
-        <button class="btn btn-default" type="submit">Submit</button>
-      </span>
-    </div>
+  <div class="form group col-lg-10">
+      <textarea class="form-control" rows="7" name="commentbox" placeholder="Add comment ..."></textarea>
+      <button class="btn btn-primary pull-right" type="submit">Submit</button>
   </div>
 </div>
 </form>
