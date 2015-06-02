@@ -1,5 +1,22 @@
 {% extends "base.html" %}
 {% block content %}
+<script>
+$(function() {
+  //Apply only when we reload the same page
+  if (document.referrer === document.URL){
+    //for bootstrap 3 use 'shown.bs.tab' instead of 'shown' in the next line
+    $('a[data-toggle="tab"]').on('click', function (e) {
+      localStorage.setItem('lastAnalysisTab', $(e.target).attr('href'));
+    });
+
+    var lastAnalysisTab = localStorage.getItem('lastAnalysisTab');
+
+    if (lastAnalysisTab) {
+        $('a[href="'+lastAnalysisTab+'"]').click();
+    }
+  }
+});
+</script>
 <div class="row">
     <div class="col-md-6"><p style="margin-bottom: 10px;"><img src="{{ STATIC_URL }}graphic/cuckoo.png" /></p></div>
     <div class="col-md-6" style="text-align: right;"><a class="btn btn-primary" href="{% url "compare.views.left" analysis.info.id %}">Compare this analysis to...</a></div>
@@ -64,18 +81,4 @@
         {% include "analysis/admin/index.html" %}
     </div>
 </div>
-<script>
-$(function() {
-  //for bootstrap 3 use 'shown.bs.tab' instead of 'shown' in the next line
-  $('a[data-toggle="tab"]').on('click', function (e) {
-    localStorage.setItem('lastAnalysisTab', $(e.target).attr('href'));
-  });
-
-  var lastAnalysisTab = localStorage.getItem('lastAnalysisTab');
-
-  if (lastAnalysisTab) {
-      $('a[href="'+lastAnalysisTab+'"]').click();
-  }
-});
-</script>
 {% endblock %}
