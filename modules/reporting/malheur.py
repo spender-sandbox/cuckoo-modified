@@ -119,19 +119,18 @@ def mist_convert(results):
             lines.append("file drop|" + "%08x" % (int(dropped["size"]) & 0xfffffc00) + " " + sanitize_generic(dropped["type"]))
 
     if "static" in results:
-        if "digital_signers" in results["static"]:
+        if "digital_signers" in results["static"] and results["static"]["digital_signers"]:
             for info in results["static"]["digital_signers"]:
                 lines.append("pe sign|" + sanitize_generic(info["cn"]) + " " + sanitize_generic(info["md5_fingerprint"]))
-        if "pe_imphash" in results["static"]:
+        if "pe_imphash" in results["static"] and results["static"]["pe_imphash"]:
             lines.append("pe imphash|" + sanitize_generic(results["static"]["pe_imphash"]))
-        if "pe_icon" in results["static"]:
-            if results["static"]["pe_icon"]:
-                lines.append("pe icon|" + sanitize_generic(results["static"]["pe_icon"]))
-        if "pe_versioninfo" in results["static"]:
+        if "pe_icon" in results["static"] and results["static"]["pe_icon"]:
+            lines.append("pe icon|" + sanitize_generic(results["static"]["pe_icon"]))
+        if "pe_versioninfo" in results["static"] and results["static"]["pe_versioninfo"]:
             for info in results["static"]["pe_versioninfo"]:
                 if info["value"]:
                     lines.append("pe ver|" + sanitize_generic(info["name"]) + " " + sanitize_generic(info["value"]))
-        if "pe_sections" in results["static"]:
+        if "pe_sections" in results["static"] and results["static"]["pe_sections"]:
             for section in results["static"]["pe_sections"]:
                 lines.append("pe section|" + sanitize_generic(section["name"]) + " " + "%02x" % int(float(section["entropy"])))
 
