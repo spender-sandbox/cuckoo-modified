@@ -9,13 +9,14 @@ try:
 except ImportError:
     import re
 
+import datetime
 import os
 import json
 
 from django.conf import settings
 from django.template import RequestContext
 from django.http import HttpResponse
-from django.shortcuts import render_to_response
+from django.shortcuts import redirect, render_to_response
 from django.views.decorators.http import require_safe
 from django.views.decorators.csrf import csrf_exempt
 
@@ -709,3 +710,29 @@ def pcapstream(request, task_id, conntuple):
 
     packets = list(network.packets_for_stream(fobj, offset))
     return HttpResponse(json.dumps(packets), content_type="application/json")
+
+def comments(request, task_id):
+    if request.method == "POST":
+        comment = request.POST.get("commentbox", "")
+        if not comment:
+            return render_to_response("error.html",
+                                      {"error": "No comment provided."},
+                                      context_instance=RequestContext(request))
+
+        report = results_db.analysis.find_one({"info.id": int(task_id)}, sort=[("_id", pymongo.DESCENDING)])
+        if "comments" in report["info"]:
+            curcomments = report["info"]["comments"]
+        else:
+            curcomments = list()
+        buf = dict()
+        buf["Timestamp"] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        buf["Data"] = comment
+        curcomments.insert(0, buf)
+        results_db.analysis.update({"info.id": int(task_id)},{"$set":{"info.comments":curcomments}}, upsert=False, multi=True)
+        return redirect('analysis.views.report', task_id=task_id)
+
+    else:
+        return render_to_response("error.html",
+                                  {"error": "Invalid Method"},
+                                  context_instance=RequestContext(request))
+
