@@ -26,7 +26,7 @@ class Strings(Processing):
                 raise CuckooProcessingError("Sample file doesn't exist: \"%s\"" % self.file_path)
 
             try:
-                data = open(self.file_path, "r").read()
+                data = open(self.file_path, "rb").read()
             except (IOError, OSError) as e:
                 raise CuckooProcessingError("Error opening file %s" % e)
 

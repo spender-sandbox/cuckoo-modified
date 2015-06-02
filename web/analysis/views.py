@@ -583,7 +583,7 @@ def procdump(request, object_id, task_id, process_id, start, end):
         f.close()
         dumpfile = tmp_file_path
     try:
-        file_item = open(dumpfile, "r")
+        file_item = open(dumpfile, "rb")
     except IOError:
         file_item = None
 
@@ -997,7 +997,7 @@ def pcapstream(request, task_id, conntuple):
         # if we do, build out the path to it
         pcap_path = os.path.join(CUCKOO_ROOT, "storage", "analyses",
                                  task_id, "dump_sorted.pcap")
-        fobj = open(pcap_path, "r")
+        fobj = open(pcap_path, "rb")
     except Exception as e:
         #print str(e)
         return render_to_response("standalone_error.html",

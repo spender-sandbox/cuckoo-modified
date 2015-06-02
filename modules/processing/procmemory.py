@@ -134,7 +134,7 @@ class ProcessMemory(Processing):
                     
                 if do_strings:
                     try:
-                        data = open(dmp_path, "r").read()
+                        data = open(dmp_path, "rb").read()
                     except (IOError, OSError) as e:
                         raise CuckooProcessingError("Error opening file %s" % e)
 

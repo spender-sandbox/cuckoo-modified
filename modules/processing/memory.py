@@ -1110,7 +1110,7 @@ class VolatilityManager(object):
         strings_path = None
         if self.voptions.basic.dostrings:
             try:
-                data = open(self.memfile, "r").read()
+                data = open(self.memfile, "rb").read()
             except (IOError, OSError) as e:
                 raise CuckooProcessingError("Error opening file %s" % e)
 
