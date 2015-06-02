@@ -36,6 +36,9 @@ VTDL_PRIV_KEY = vtdl_cfg.get("dlprivkey",None)
 VTDL_INTEL_KEY = vtdl_cfg.get("dlintelkey",None)
 VTDL_PATH = vtdl_cfg.get("dlpath",None)
 
+# To disable comment support, change the below to False
+COMMENTS = True
+
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 

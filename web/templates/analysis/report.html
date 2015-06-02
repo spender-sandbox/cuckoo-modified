@@ -55,9 +55,11 @@
     <div class="tab-pane fade" id="reports">
         {% include "analysis/reports/index.html" %}
     </div>
+    {% if settings.COMMENTS %}
     <div class="tab-pane fade" id="comments">
         {% include "analysis/comments/index.html" %}
     </div>
+    {% endif %}
     <div class="tab-pane fade" id="admin">
         {% include "analysis/admin/index.html" %}
     </div>

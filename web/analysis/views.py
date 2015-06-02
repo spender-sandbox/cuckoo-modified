@@ -712,7 +712,7 @@ def pcapstream(request, task_id, conntuple):
     return HttpResponse(json.dumps(packets), content_type="application/json")
 
 def comments(request, task_id):
-    if request.method == "POST":
+    if request.method == "POST" and settings.COMMENTS:
         comment = request.POST.get("commentbox", "")
         if not comment:
             return render_to_response("error.html",
