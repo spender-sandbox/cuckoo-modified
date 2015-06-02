@@ -541,6 +541,8 @@ def search(request):
                 records = results_db.analysis.find({"strings": {"$regex": value, "$options": "-i"}}).sort([["_id", -1]])
             elif term == "virustotal":
                 records = results_db.analysis.find({"virustotal.results.sig": {"$regex": value, "$options": "-i"}}).sort([["_id", -1]])
+            elif term == "comment":
+                records = results_db.analysis.find({"info.comments.Data": {"$regex": value, "$options": "-i"}}).sort([["_id", -1]])
             else:
                 return render_to_response("analysis/search.html",
                                           {"analyses": None,
