@@ -54,15 +54,15 @@ def mist_convert(results):
     lines = []
 
     if results["target"]["category"] == "file":
-        lines.add("# FILE")
-        lines.add("# MD5: " + results["target"]["file"]["md5"])
-        lines.add("# SHA1: " + results["target"]["file"]["sha1"])
-        lines.add("# SHA256: " + results["target"]["file"]["sha256"])
+        lines.append("# FILE")
+        lines.append("# MD5: " + results["target"]["file"]["md5"])
+        lines.append("# SHA1: " + results["target"]["file"]["sha1"])
+        lines.append("# SHA256: " + results["target"]["file"]["sha256"])
     elif results["target"]["category"] == "url":
-        lines.add("# URL")
-        lines.add("# MD5: " + hashlib.md5(results["target"]["url"]).hexdigest())
-        lines.add("# SHA1: " + hashlib.sha1(results["target"]["url"]).hexdigest())
-        lines.add("# SHA256: " + hashlib.sha256(results["target"]["url"]).hexdigest())
+        lines.append("# URL")
+        lines.append("# MD5: " + hashlib.md5(results["target"]["url"]).hexdigest())
+        lines.append("# SHA1: " + hashlib.sha1(results["target"]["url"]).hexdigest())
+        lines.append("# SHA256: " + hashlib.sha256(results["target"]["url"]).hexdigest())
 
     if "behavior" in results and "summary" in results["behavior"]:
         for entry in results["behavior"]["summary"]["files"]:
