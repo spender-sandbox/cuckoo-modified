@@ -1374,6 +1374,7 @@ class VBA_Parser(object):
             #TODO: if the zip file is encrypted, suggest to use the -z option, or try '-z infected' automatically?
             # check each file within the zip if it is an OLE file, by reading its magic:
             for subfile in z.namelist():
+                magic = ""
                 try:
                     magic = z.open(subfile).read(len(olefile.MAGIC))
                 except:
