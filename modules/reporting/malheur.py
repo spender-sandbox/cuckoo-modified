@@ -11,7 +11,6 @@ import random
 from lib.cuckoo.common.constants import CUCKOO_ROOT
 from lib.cuckoo.common.abstracts import Report
 from lib.cuckoo.common.exceptions import CuckooReportError
-from lib.cuckoo.common.objects import File
 
 def sanitize_file(filename):
     normals = filename.lower().replace('\\', ' ').replace('.', ' ').split(' ')
@@ -50,20 +49,20 @@ def sanitize_url(url):
     quoted = urllib.quote(uri.encode('utf8')).lower()
     return hashlib.md5(quoted).hexdigest()[:8]
 
-def mist_convert(file_path, task, results):
+def mist_convert(results):
     """ Performs conversion of analysis results to MIST format """
     lines = []
 
-    if task["category"] == "file" and os.path.exists(file_path):
+    if results["target"]["category"] == "file":
         lines.add("# FILE")
-        lines.add("# MD5: " + File(file_path).get_md5())
-        lines.add("# SHA1: " + File(file_path).get_sha1())
-        lines.add("# SHA256: " + File(file_path).get_sha256())
-    elif self.task["category"] == "url":
+        lines.add("# MD5: " + results["target"]["file"]["md5"])
+        lines.add("# SHA1: " + results["target"]["file"]["sha1"])
+        lines.add("# SHA256: " + results["target"]["file"]["sha256"])
+    elif results["target"]["category"] == "url":
         lines.add("# URL")
-        lines.add("# MD5: " + hashlib.md5(task["target"]).hexdigest())
-        lines.add("# SHA1: " + hashlib.sha1(task["target"]).hexdigest())
-        lines.add("# SHA256: " + hashlib.sha256(task["target"]).hexdigest())
+        lines.add("# MD5: " + hashlib.md5(results["target"]["url"]).hexdigest())
+        lines.add("# SHA1: " + hashlib.sha1(results["target"]["url"]).hexdigest())
+        lines.add("# SHA256: " + hashlib.sha256(results["target"]["url"]).hexdigest())
 
     if "behavior" in results and "summary" in results["behavior"]:
         for entry in results["behavior"]["summary"]["files"]:
@@ -165,7 +164,7 @@ class Malheur(Report):
         except:
             pass
 
-        mist = mist_convert(self.file_path, self.task, results)
+        mist = mist_convert(results)
         with open(os.path.join(reportsdir, task_id + ".txt"), "w") as outfile:
             outfile.write(mist)
 
