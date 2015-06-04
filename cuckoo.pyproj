@@ -114,6 +114,12 @@
     <Compile Include="analyzer\windows\modules\packages\swf.py" />
     <Compile Include="cuckoo.py" />
     <Compile Include="agent\agent.py" />
+    <Compile Include="lib\cuckoo\common\decoders\darkcomet.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="lib\cuckoo\common\decoders\njrat.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="lib\cuckoo\common\icon.py">
       <SubType>Code</SubType>
     </Compile>
@@ -481,6 +487,7 @@
     <Folder Include="lib" />
     <Folder Include="lib\cuckoo" />
     <Folder Include="lib\cuckoo\common" />
+    <Folder Include="lib\cuckoo\common\decoders\" />
     <Folder Include="lib\cuckoo\common\office\" />
     <Folder Include="lib\cuckoo\common\pdftools\" />
     <Folder Include="lib\cuckoo\common\peepdf\" />

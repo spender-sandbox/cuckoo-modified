@@ -1,10 +1,12 @@
-# Copyright (C) 2010-2015 Cuckoo Foundation.
+# Copyright (C) 2010-2015 Cuckoo Foundation, Accuvant, Inc. (bspengler@accuvant.com)
 # This file is part of Cuckoo Sandbox - http://www.cuckoosandbox.org
 # See the file 'docs/LICENSE' for copying permission.
 
 import json
 import lib.cuckoo.common.office.olefile as olefile
 import lib.cuckoo.common.office.vbadeobf as vbadeobf
+import lib.cuckoo.common.decoders.darkcomet as darkcomet
+import lib.cuckoo.common.decoders.njrat as njrat
 import logging
 import os
 import base64
@@ -406,6 +408,40 @@ class PortableExecutable:
 
         return datetime.fromtimestamp(pe_timestamp).strftime("%Y-%m-%d %H:%M:%S")
 
+    def _get_digital_signers(self):
+        if not self.pe:
+            return None
+
+        retlist = None
+
+        if HAVE_CRYPTO:
+            address = self.pe.OPTIONAL_HEADER.DATA_DIRECTORY[pefile.DIRECTORY_ENTRY['IMAGE_DIRECTORY_ENTRY_SECURITY']].VirtualAddress
+
+            #check if file is digitally signed
+            if address == 0:
+                return retlist
+
+            signature = self.pe.write()[address+8:]
+            bio = BIO.MemoryBuffer(signature)
+
+            if bio:
+                swig_pkcs7 = m2.pkcs7_read_bio_der(bio.bio_ptr())
+
+                if swig_pkcs7:
+                    p7 = SMIME.PKCS7(swig_pkcs7)
+                    xst = p7.get0_signers(X509.X509_Stack())
+                    retlist = []
+                    if xst:
+                        for cert in xst:
+                            sn = cert.get_serial_number()
+                            sha1_fingerprint = cert.get_fingerprint('sha1').lower()
+                            md5_fingerprint = cert.get_fingerprint('md5').lower()
+                            subject_str = str(cert.get_subject())
+                            cn = subject_str[subject_str.index("/CN=")+len("/CN="):]
+                            retlist.append({"sn":str(sn), "cn":cn, "sha1_fingerprint" : sha1_fingerprint, "md5_fingerprint" : md5_fingerprint })
+
+        return retlist
+
     def run(self):
         """Run analysis.
         @return: analysis results dict or None.
@@ -432,33 +468,15 @@ class PortableExecutable:
         results["pe_versioninfo"] = self._get_versioninfo()
         results["pe_imphash"] = self._get_imphash()
         results["pe_timestamp"] = self._get_timestamp()
+        results["digital_signers"] = self._get_digital_signers()
         results["imported_dll_count"] = len([x for x in results["pe_imports"] if x.get("dll")])
 
-        if HAVE_CRYPTO:
-            address = self.pe.OPTIONAL_HEADER.DATA_DIRECTORY[pefile.DIRECTORY_ENTRY['IMAGE_DIRECTORY_ENTRY_SECURITY']].VirtualAddress
-
-            #check if file is digitally signed
-            if address == 0:
-                return results
-
-            signature = self.pe.write()[address+8:]
-            bio = BIO.MemoryBuffer(signature)
-
-            if bio:
-                swig_pkcs7 = m2.pkcs7_read_bio_der(bio.bio_ptr())
-
-                if swig_pkcs7:
-                    p7 = SMIME.PKCS7(swig_pkcs7)
-                    xst = p7.get0_signers(X509.X509_Stack())
-                    results["digital_signers"] = []
-                    if xst:
-                        for cert in xst:
-                            sn = cert.get_serial_number()
-                            sha1_fingerprint = cert.get_fingerprint('sha1').lower()
-                            md5_fingerprint = cert.get_fingerprint('md5').lower()
-                            subject_str = str(cert.get_subject())
-                            cn = subject_str[subject_str.index("/CN=")+len("/CN="):]
-                            results["digital_signers"].append({"sn":str(sn), "cn":cn, "sha1_fingerprint" : sha1_fingerprint, "md5_fingerprint" : md5_fingerprint })
+        darkcomet_config = darkcomet.extract_config(self.file_path, self.pe)
+        if darkcomet_config:
+            results["darkcomet_config"] = darkcomet_config
+        njrat_config = njrat.extract_config(self.file_path)
+        if njrat_config:
+            results["njrat_config"] = njrat_config
 
         return results
 

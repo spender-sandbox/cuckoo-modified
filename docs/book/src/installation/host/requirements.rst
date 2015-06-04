@@ -50,6 +50,7 @@ The following libraries are not strictly required, but their installation is rec
     * `m2crypto`_ (Optional): for extracting PE digital certificate information
     * `django-ratelimit`_ (Optional): required if using the Django web interface
     * `weasyprint`_ (Optional): required for PDF reporting method
+	* `pype32`_ (Optional): needed for some RAT decoders
 
 Some of them are already packaged in Debian/Ubuntu and can be installed with the following command::
 
@@ -88,6 +89,7 @@ If you want to use KVM it's packaged too and you can install it with the followi
 .. _m2crypto: https://pypi.python.org/pypi/M2Crypto
 .. _django-ratelimit: https://pypi.python.org/pypi/django-ratelimit
 .. _weasyprint: http://www.weasyprint.org
+.. _pype32: https://github.com/crackinglandia/pype32
 
 If you want to use XenServer you'll have to install the *XenAPI* Python package::
 
