@@ -15,7 +15,7 @@
                                     <th style="width: 15%;">{{key}}</th>
                                     <td>{{value}}</td>
                                 </tr>
-                            {% endif %}
+                            {% endfor %}
                         {% elif analyis.static.njrat_config %}
                             <tr>
                                 <th style="width: 15%;">Name</th>
@@ -26,7 +26,7 @@
                                     <th style="width: 15%;">{{key}}</th>
                                     <td>{{value}}</td>
                                 </tr>
-                            {% endif %}
+                            {% endfor %}
                         {% endif %}
                     </table>
                 </div>
