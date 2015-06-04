@@ -36,6 +36,10 @@ class ParseProcessLog(list):
         self.process_name = None
         self.parent_id = None
         self.module_path = None
+        # Using an empty initializer here allows the assignment of current_log.threads in the Processes run()
+        # method to get a reference to the threads list we eventually build up by fully parsing a log
+        # via the behavior analysis that happens later.  By the time the results dict is used later
+        # to extract this information, it will finally have valid info.
         self.threads = []
         self.first_seen = None
         self.calls = self
