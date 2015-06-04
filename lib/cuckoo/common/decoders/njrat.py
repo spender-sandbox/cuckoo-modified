@@ -8,10 +8,10 @@ import base64
 import string
 
 try:
-	import pype32
+    import pype32
     HAVE_PYPE32 = True
 except ImportError:
-	HAVE_PYPE32 = False
+    HAVE_PYPE32 = False
 
 # Confirm if there is Net MetaData in the File 
 def getStream(pe):
