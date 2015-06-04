@@ -74,9 +74,12 @@ class ParseProcessLog(list):
             self.fd = None
             return
 
-        # Get the process information from file to determine
-        # process id (file names.)
-        while not self.process_id:
+        # Get the process and environment information from file
+        # Note that we have to read in all messages until we
+        # get all the information we need, so the invariant below
+        # should involve the last process-related bit of
+        # information logged
+        while not self.environdict:
             self.parser.read_next_message()
 
         self.fd.seek(0)

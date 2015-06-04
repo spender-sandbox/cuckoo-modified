@@ -18,6 +18,11 @@
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'" />
   <PropertyGroup Condition="'$(Configuration)' == 'Release'" />
   <ItemGroup>
+    <Content Include="analyzer\windows\bin\execsc.exe" />
+    <Content Include="analyzer\windows\bin\loader.exe" />
+    <Content Include="analyzer\windows\bin\loader_x64.exe" />
+    <Content Include="analyzer\windows\dll\cuckoomon.dll" />
+    <Content Include="analyzer\windows\dll\cuckoomon_x64.dll" />
     <Content Include="conf\auxiliary.conf" />
     <Content Include="conf\cuckoo.conf" />
     <Content Include="conf\esx.conf" />
@@ -438,6 +443,8 @@
     <Folder Include="agent" />
     <Folder Include="analyzer\" />
     <Folder Include="analyzer\windows" />
+    <Folder Include="analyzer\windows\bin\" />
+    <Folder Include="analyzer\windows\dll\" />
     <Folder Include="analyzer\windows\lib" />
     <Folder Include="analyzer\windows\lib\api" />
     <Folder Include="analyzer\windows\lib\common" />
