@@ -14,6 +14,7 @@ import inspect
 import threading
 import multiprocessing
 from datetime import datetime
+from zipfile import ZipFile
 
 from lib.cuckoo.common.exceptions import CuckooOperationalError
 from lib.cuckoo.common.config import Config
@@ -1220,12 +1221,57 @@ def store_temp_file(filedata, filename, path=None):
 
     return tmp_file_path
 
-def demux_sample(filename):
+def demux_sample(filename, options):
     """
     If file is a ZIP, extract its included files and return their file paths
     """
     retlist = []
-    retlist.append(filename)
+
+    try:
+        extracted = []
+        password="infected"
+        fields = options.split(",")
+        for field in fields:
+            key, value = field.split("=", 1)
+            if key == "password":
+                password = value
+                break
+
+        with ZipFile(filename, "r") as archive:
+            infolist = archive.infolist()
+            for info in infolist:
+                # avoid obvious bombs
+                if info.file_size > 100 * 1024 * 1024:
+                    continue
+                base, ext = os.path.splitext(info.filename)
+                ext = ext.lower()
+                extensions = ["", ".exe", ".dll", ".pdf", ".doc", ".ppt", ".xls", ".msi", ".bin"]
+                for theext in extensions:
+                    if ext == theext:
+                        extracted.append(info.filename)
+                        break
+
+            options = Config()
+            tmp_path = options.cuckoo.get("tmppath", "/tmp")
+            target_path = os.path.join(tmp_path, "cuckoo-zip-tmp")
+            if not os.path.exists(target_path):
+                os.mkdir(target_path)
+            tmp_dir = tempfile.mkdtemp(prefix='cuckoozip_',dir=target_path)
+
+            for extfile in extracted:
+                try:
+                    retlist.append(archive.extract(extfile, path=tmp_dir, pwd=password))
+                except:
+                    retlist.append(archive.extract(extfile, path=tmp_dir))
+    except:
+        pass
+
+    # if it wasn't a ZIP or we weren't able to obtain anything interesting from the ZIP, then just submit the
+    # original file
+
+    if not retlist:
+        retlist.append(filename)
+
     return retlist
 
 class TimeoutServer(xmlrpclib.ServerProxy):
