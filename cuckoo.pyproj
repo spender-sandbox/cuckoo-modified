@@ -368,6 +368,7 @@
     <Content Include="web\templates\analysis\network\_tcp.html" />
     <Content Include="web\templates\analysis\procmemory\index.html" />
     <Content Include="web\templates\analysis\static\_pdf.html" />
+    <Content Include="web\templates\analysis\static\_ratconfig.html" />
     <Content Include="web\templates\api\index.html" />
     <Content Include="web\templates\base.html" />
     <Content Include="web\templates\error.html" />
