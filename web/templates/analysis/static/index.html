@@ -1,8 +1,10 @@
 <div class="tabbable tabs">
     <ul class="nav nav-pills" style="margin-bottom: 0;">
         <li class="active"><a href="#static_analysis_tab" data-toggle="tab">Static Analysis</a></li>
-        {% if analysis.info.category == "file" and analysis.static and (analysis.static.njrat_config or analysis.static.darkcomet_config) %}
+        {% if analysis.info.category == "file" and analysis.static %}
+        {% if analysis.static.njrat_config or analysis.static.darkcomet_config %}
         <li><a href="#static_ratconfig_tab" data-toggle="tab">RAT Configuration</a></li>
+        {% endif %}
         {% endif %}
         {% if analysis.info.category == "file" %}
         <li><a href="#static_strings_tab" data-toggle="tab">Strings</a></li>
@@ -47,10 +49,12 @@
                 No static analysis available.
             {% endif %}
         </div>
-        {% if analysis.info.category == "file" and analysis.static and (analysis.static.njrat_config or analysis.static.darkcomet_config) %}
+        {% if analysis.info.category == "file" and analysis.static %}
+        {% if analysis.static.njrat_config or analysis.static.darkcomet_config %}
         <div class="tab-pane fade" id="static_ratconfig_tab">
             {% include "analysis/static/_ratconfig.html" %}
         </div>
+        {% endif %}
         {% endif %}
         {% if analysis.info.category == "file" %}
         <div class="tab-pane fade" id="static_strings_tab">
