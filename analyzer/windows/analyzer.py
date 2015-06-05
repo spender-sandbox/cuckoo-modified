@@ -853,6 +853,16 @@ class Analyzer:
                 log.warning("Cannot terminate auxiliary module %s: %s",
                             aux.__class__.__name__, e)
 
+        # Tell all processes to flush their logs regardless of terminate_processes setting
+        if not kernel_analysis:
+            for pid in PROCESS_LIST:
+                proc = Process(pid=pid)
+                if proc.is_alive():
+                    try:
+                        proc.set_terminate_event()
+                    except:
+                        continue
+
         if self.config.terminate_processes:
             # Try to terminate remaining active processes. We do this to make sure
             # that we clean up remaining open handles (sockets, files, etc.).
@@ -866,7 +876,6 @@ class Analyzer:
                             if not proc.is_critical():
                                 proc.terminate()
                             else:
-                                proc.set_terminate_event()
                                 log.info("Not terminating critical process with pid %d.", proc.pid)
                         except:
                             continue

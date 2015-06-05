@@ -407,8 +407,6 @@ class Process:
         if self.h_process == 0:
             self.open()
 
-        self.set_terminate_event()
-
         if KERNEL32.TerminateProcess(self.h_process, 1):
             log.info("Successfully terminated process with pid %d.", self.pid)
             return True
