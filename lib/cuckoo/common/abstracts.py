@@ -1155,6 +1155,27 @@ class Signature(object):
 
         return None
 
+    def get_initial_process(self):
+        """ Obtains the initial process information
+        @return: dict containing initial process information or None
+        """
+
+        if not "behavior" in self.results or not "processes" in self.results["behavior"] or not len(self.results["behavior"]["processes"]):
+            return None
+
+        return self.results["behavior"]["processes"][0]
+
+    def get_environ_entry(self, proc, env_name):
+        """ Obtains environment entry from process
+        @param proc: Process to inspect
+        @param env_name: Name of environment entry
+        @return: value of environment entry or None
+        """
+        if not proc or not "environ" in proc or not env_name in proc["environ"]:
+            return None
+
+        return proc["environ"][env_name]
+
     def get_argument(self, call, name):
         """Retrieves the value of a specific argument from an API call.
         @param call: API call object.
