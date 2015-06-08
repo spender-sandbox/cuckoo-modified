@@ -26,12 +26,22 @@ $(function() {
     {% if analysis.static %}<li><a href="#static" data-toggle="tab">Static Analysis</a></li>{% endif %}
     {% if analysis.behavior.processes %}<li><a href="#behavior" data-toggle="tab" id="graph_hook">Behavioral Analysis</a></li>{% endif %}
     <li><a href="#network" data-toggle="tab">Network Analysis</a></li>
-    <li><a href="#dropped" data-toggle="tab">Dropped Files</a></li>
+    {% if analysis.dropped|length %}
+        <li><a href="#dropped" data-toggle="tab">Dropped Files ({{analysis.dropped|length}})</a></li>
+    {% else %}
+        <li><a href="#dropped" data-toggle="tab">Dropped Files</a></li>
+    {% endif %}
     {% if analysis.procmemory %}<li><a href="#procmemory" data-toggle="tab">Process Memory</a></li>{% endif %}
     {% if analysis.memory %}<li><a href="#memory" data-toggle="tab">Memory Analysis</a></li>{% endif %}
     {% if config.malheur %}<li><a href="#similar" data-toggle="tab">Similar</a></li>{% endif %}
     <li><a href="#reports" data-toggle="tab">Reports</a></li>
-    {% if settings.COMMENTS %}<li><a href="#comments" data-toggle="tab">Comments</a></li>{% endif %}
+    {% if settings.COMMENTS %}
+        {% if analysis.info.comments|length %}
+            <li><a href="#comments" data-toggle="tab">Comments ({{analysis.info.comments|length}})</a></li>
+        {% else %}
+            <li><a href="#comments" data-toggle="tab">Comments</a></li>
+        {% endif %}
+    {% endif %}
     <li><a href="#admin" data-toggle="tab">Admin</a></li>
 </ul>
 <div class="tab-content">
