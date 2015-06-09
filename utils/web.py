@@ -239,7 +239,7 @@ def submit():
 
     temp_file_path = store_temp_file(data.file.read(), data.filename)
     task_ids = db.demux_sample_and_add_to_db(file_path=temp_file_path, package=package, timeout=timeout, options=options, priority=priority,
-                                             machine=entry, memory=memory)
+                                             machine=machine, memory=memory)
     tasks_count = len(task_ids)
     if tasks_count > 0:
         template = env.get_template("success.html")
