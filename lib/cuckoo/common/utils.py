@@ -1283,8 +1283,11 @@ def demux_sample(filename, options):
 
 def get_vt_consensus(namelist):
     blacklist = [
+        "other",
+        "troj",
         "trojan",
         "win32",
+        "trojandownloader",
         "trojandropper",
         "dropper",
         "generik",
@@ -1312,13 +1315,15 @@ def get_vt_consensus(namelist):
         "graftor",
         "artemis",
         "zbot",
+        "w2km",
+        "docdl",
     ]
 
 
     finaltoks = defaultdict(int)
 
     for name in namelist:
-        toks = re.findall(r"[\w]+", name)
+        toks = re.findall(r"[A-Za-z0-9]+", name)
         acceptedtoks = []
         for tok in toks:
             accepted = True
