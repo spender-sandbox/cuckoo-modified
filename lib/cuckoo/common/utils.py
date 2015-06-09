@@ -13,11 +13,18 @@ import errno
 import inspect
 import threading
 import multiprocessing
+import operator
 from datetime import datetime
 from zipfile import ZipFile
+from collections import defaultdict
 
 from lib.cuckoo.common.exceptions import CuckooOperationalError
 from lib.cuckoo.common.config import Config
+
+try:
+    import re2 as re
+except ImportError:
+    import re
 
 try:
     import chardet
@@ -1273,6 +1280,66 @@ def demux_sample(filename, options):
         retlist.append(filename)
 
     return retlist
+
+def get_vt_consensus(namelist):
+    blacklist = [
+        "trojan",
+        "win32",
+        "trojandropper",
+        "dropper",
+        "generik",
+        "generic",
+        "tsgeneric",
+        "malware",
+        "dldr",
+        "downloader",
+        "injector",
+        "agent",
+        "nsis",
+        "generickd",
+        "behaveslike",
+        "heur",
+        "inject2",
+        "trojanspy",
+        "trojanpws",
+        "reputation",
+        "script",
+        "w97m",
+        "lookslike",
+        "macro",
+        "dloadr",
+        "kryptik",
+        "graftor",
+        "artemis",
+        "zbot",
+    ]
+
+
+    finaltoks = defaultdict(int)
+
+    for name in namelist:
+        toks = re.findall(r"[\w]+", name)
+        acceptedtoks = []
+        for tok in toks:
+            accepted = True
+            numlist = [x for x in tok if x.isdigit()]
+            if len(numlist) > 2 or len(tok) < 4:
+                accepted = False
+            if accepted:
+                for black in blacklist:
+                    if black == tok.lower():
+                        accepted = False
+                        break
+            if accepted:
+                acceptedtoks.append(tok)
+        for tok in acceptedtoks:
+            finaltoks[tok] += 1
+    sorted_finaltoks = sorted(finaltoks.items(), key=operator.itemgetter(1), reverse=True)
+    if len(sorted_finaltoks) == 1 and sorted_finaltoks[0][1] > 3:
+        return sorted_finaltoks[0][0]
+    elif len(sorted_finaltoks) > 1 and sorted_finaltoks[0][1] > sorted_finaltoks[1][1] * 2:
+        return sorted_finaltoks[0][0]
+    return ""
 
 class TimeoutServer(xmlrpclib.ServerProxy):
     """Timeout server for XMLRPC.

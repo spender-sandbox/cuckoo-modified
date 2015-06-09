@@ -10,6 +10,7 @@ import logging
 from collections import defaultdict
 from distutils.version import StrictVersion
 
+from lib.cuckoo.common.utils import get_vt_consensus
 from lib.cuckoo.common.abstracts import Auxiliary, Machinery, LibVirtMachinery, Processing
 from lib.cuckoo.common.abstracts import Report, Signature, Feed
 from lib.cuckoo.common.config import Config
@@ -490,6 +491,28 @@ class RunSignatures(object):
         if malscore > 10.0:
             malscore = 10.0
         self.results["malscore"] = malscore
+
+        family = ""
+        # Make a best effort detection of malware family name (can be updated later by re-processing the analysis)
+        for match in matched:
+            if "family" in match and match["family"]:
+                family = match["family"]
+                break
+        if not family and "virustotal" in self.results and "results" in self.results["virustotal"] and self.results["virustotal"]["results"]:
+            detectnames = []
+            for res in self.results["virustotal"]["results"]:
+                if res["sig"]:
+                    # weight Microsoft's detection, they seem to be more accurate than the rest
+                    if res["vendor"] == "Microsoft":
+                        detectnames.append(res["sig"])
+                        detectnames.append(res["sig"])
+                    else:
+                        detectnames.append(res["sig"])
+            family = get_vt_consensus(detectnames)
+        
+        # add detection based on suricata here
+
+        self.results["malfamily"] = family
 
         # Doing signature statistics
         alert = 0
