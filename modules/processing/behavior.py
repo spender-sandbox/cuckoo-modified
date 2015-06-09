@@ -44,7 +44,7 @@ class ParseProcessLog(list):
         self.first_seen = None
         self.calls = self
         self.lastcall = None
-        self.environdict = None
+        self.environdict = {}
         self.api_count = 0
         self.call_id = 0
         self.conversion_cache = {}
@@ -78,12 +78,14 @@ class ParseProcessLog(list):
             self.fd = None
             return
 
-        # Get the process and environment information from file
+        # Get the process information from file
         # Note that we have to read in all messages until we
         # get all the information we need, so the invariant below
         # should involve the last process-related bit of
         # information logged
-        while not self.environdict:
+        # Environment info will be filled in as the log is read
+        # and will be stored by reference into the results dict
+        while not self.process_id:
             self.parser.read_next_message()
 
         self.fd.seek(0)
@@ -212,7 +214,7 @@ class ParseProcessLog(list):
         @param environdict: dict of the various collected information, which will expand over time
         """
 
-        self.environdict = environdict
+        self.environdict.update(environdict)
 
     def log_anomaly(self, subcategory, tid, funcname, msg):
         """ log an anomaly parsed from data file
@@ -374,7 +376,7 @@ class Processes:
 
             # Invoke parsing of current log file.
             current_log = ParseProcessLog(file_path)
-            if current_log.environdict is None:
+            if current_log.process_id is None:
                 continue
 
             # If the current log actually contains any data, add its data to
