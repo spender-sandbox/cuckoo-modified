@@ -505,9 +505,7 @@ class RunSignatures(object):
                     # weight Microsoft's detection, they seem to be more accurate than the rest
                     if res["vendor"] == "Microsoft":
                         detectnames.append(res["sig"])
-                        detectnames.append(res["sig"])
-                    else:
-                        detectnames.append(res["sig"])
+                    detectnames.append(res["sig"])
             family = get_vt_consensus(detectnames)
         
         # add detection based on suricata here

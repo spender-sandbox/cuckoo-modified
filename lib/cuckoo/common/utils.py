@@ -1342,7 +1342,7 @@ def get_vt_consensus(namelist):
     sorted_finaltoks = sorted(finaltoks.items(), key=operator.itemgetter(1), reverse=True)
     if len(sorted_finaltoks) == 1 and sorted_finaltoks[0][1] > 3:
         return sorted_finaltoks[0][0]
-    elif len(sorted_finaltoks) > 1 and sorted_finaltoks[0][1] > sorted_finaltoks[1][1] * 2:
+    elif len(sorted_finaltoks) > 1 and sorted_finaltoks[0][1] >= sorted_finaltoks[1][1] * 2:
         return sorted_finaltoks[0][0]
     return ""
 
