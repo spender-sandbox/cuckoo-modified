@@ -1317,6 +1317,9 @@ def get_vt_consensus(namelist):
         "zbot",
         "w2km",
         "docdl",
+        "variant",
+        "packed",
+        "trojware",
     ]
 
 
