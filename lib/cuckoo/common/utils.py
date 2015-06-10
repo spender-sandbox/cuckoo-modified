@@ -1326,6 +1326,9 @@ def get_vt_consensus(namelist):
         "email",
         "obfuscated",
         "cryptor",
+        "obfus",
+        "virus",
+        "xpack",
     ]
 
     finaltoks = defaultdict(int)
