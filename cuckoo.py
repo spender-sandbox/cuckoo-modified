@@ -15,7 +15,7 @@ try:
     from lib.cuckoo.common.exceptions import CuckooCriticalError
     from lib.cuckoo.common.exceptions import CuckooDependencyError
     from lib.cuckoo.core.database import Database
-    from lib.cuckoo.core.startup import check_working_directory, check_configs, cuckoo_clean
+    from lib.cuckoo.core.startup import check_working_directory, check_configs, check_signatures, cuckoo_clean
     from lib.cuckoo.core.startup import check_version, create_structure
     from lib.cuckoo.core.startup import init_logging, init_modules, init_console_logging
     from lib.cuckoo.core.startup import init_tasks, init_yara
@@ -37,6 +37,7 @@ def cuckoo_init(quiet=False, debug=False, artwork=False, test=False):
     logo()
     check_working_directory()
     check_configs()
+    check_signatures()
     check_version()
     create_structure()
 
