@@ -14,7 +14,7 @@ import xmlrpclib
 import traceback
 import subprocess
 from ctypes import create_unicode_buffer, create_string_buffer
-from ctypes import c_wchar_p, byref, c_int, sizeof, cast, c_void_p
+from ctypes import c_wchar_p, byref, c_int, sizeof, cast, c_void_p, c_ulong
 from threading import Lock, Thread
 from datetime import datetime, timedelta
 
