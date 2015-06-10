@@ -1330,6 +1330,11 @@ def get_vt_consensus(namelist):
         "virus",
         "xpack",
         "crypt",
+        "rootkit",
+        "malwares",
+        "suspicious",
+        "riskware",
+        "risk",
     ]
 
     finaltoks = defaultdict(int)
