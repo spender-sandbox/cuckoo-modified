@@ -1324,29 +1324,29 @@ def get_vt_consensus(namelist):
         "genetic",
         "backdoor",
         "email",
+        "obfuscated",
+        "cryptor",
     ]
 
-
     finaltoks = defaultdict(int)
-
     for name in namelist:
         toks = re.findall(r"[A-Za-z0-9]+", name)
-        acceptedtoks = []
         for tok in toks:
-            lowertok = tok.lower()
-            accepted = True
-            numlist = [x for x in tok if x.isdigit()]
-            if len(numlist) > 2 or len(tok) < 4:
-                accepted = False
-            if accepted:
-                for black in blacklist:
-                    if black == lowertok:
-                        accepted = False
-                        break
-            if accepted:
-                acceptedtoks.append(tok)
-        for tok in acceptedtoks:
             finaltoks[tok] += 1
+    for tok in finaltoks.keys():
+        lowertok = tok.lower()
+        accepted = True
+        numlist = [x for x in tok if x.isdigit()]
+        if len(numlist) > 2 or len(tok) < 4:
+            accepted = False
+        if accepted:
+            for black in blacklist:
+                if black == lowertok:
+                    accepted = False
+                    break
+        if not accepted:
+            del finaltoks[tok]
+
     sorted_finaltoks = sorted(finaltoks.items(), key=operator.itemgetter(1), reverse=True)
     if len(sorted_finaltoks) == 1 and sorted_finaltoks[0][1] >= 2:
         return sorted_finaltoks[0][0]
