@@ -18,8 +18,9 @@ LPTSTR    = POINTER(c_char)
 HANDLE    = c_void_p
 PVOID     = c_void_p
 LPVOID    = c_void_p
-UINT_PTR  = c_ulong
-SIZE_T    = c_ulong
+UINT_PTR  = c_void_p
+ULONG_PTR  = c_void_p
+SIZE_T    = c_void_p
 HMODULE   = c_void_p
 
 DEBUG_PROCESS             = 0x00000001

@@ -12,6 +12,7 @@ from ctypes import byref, c_ulong, create_string_buffer, c_int, sizeof
 from shutil import copy
 
 from lib.common.constants import PIPE, PATHS, SHUTDOWN_MUTEX, TERMINATE_EVENT
+from lib.common.defines import ULONG_PTR
 from lib.common.defines import KERNEL32, NTDLL, SYSTEM_INFO, STILL_ACTIVE
 from lib.common.defines import THREAD_ALL_ACCESS, PROCESS_ALL_ACCESS, TH32CS_SNAPPROCESS
 from lib.common.defines import STARTUPINFO, PROCESS_INFORMATION, PROCESSENTRY32
@@ -193,8 +194,8 @@ class Process:
 
         NT_SUCCESS = lambda val: val >= 0
 
-        pbi = (c_int * 6)()
-        size = c_int()
+        pbi = (ULONG_PTR * 6)()
+        size = c_ulong()
 
         # Set return value to signed 32bit integer.
         NTDLL.NtQueryInformationProcess.restype = c_int
