@@ -21,7 +21,6 @@ from lib.cuckoo.common.exceptions import CuckooOperationalError
 from lib.cuckoo.common.exceptions import CuckooProcessingError
 from lib.cuckoo.common.exceptions import CuckooReportError
 from lib.cuckoo.common.exceptions import CuckooDependencyError
-from lib.cuckoo.core.database import Database
 from lib.cuckoo.core.database import PROCESSING_STARTED, PROCESSING_FINISHED, SIGNATURES_STARTED, SIGNATURES_FINISHED
 from lib.cuckoo.core.database import REPORTING_STARTED, REPORTING_FINISHED
 from lib.cuckoo.core.database import DROPPED_FILES, RUNNING_PROCESSES, API_CALLS, ACCESSED_DOMAINS, SIGNATURES_TOTAL
@@ -151,11 +150,10 @@ class RunProcessing(object):
     is then passed over the reporting engine.
     """
 
-    def __init__(self, task_id, results):
-        """@param task_id: ID of the analyses to process."""
-        self.task = Database().view_task(task_id).to_dict()
-        self.task_id = task_id
-        self.analysis_path = os.path.join(CUCKOO_ROOT, "storage", "analyses", str(task_id))
+    def __init__(self, task, results):
+        """@param task: task dictionary of the analysis to process."""
+        self.task = task
+        self.analysis_path = os.path.join(CUCKOO_ROOT, "storage", "analyses", str(task["id"]))
         self.cfg = Config("processing")
         self.results = results
 
@@ -624,16 +622,16 @@ class RunReporting:
     Engine and pass it over to the reporting modules before executing them.
     """
 
-    def __init__(self, task_id, results):
+    def __init__(self, task, results):
         """@param analysis_path: analysis folder path."""
-        self.task = Database().view_task(task_id).to_dict()
+        self.task = task
         self.task_id = task_id
         # remove unwanted/duplicate information from reporting
         for process in results["behavior"]["processes"]:
             process["calls"].begin_reporting()
 
         self.results = results
-        self.analysis_path = os.path.join(CUCKOO_ROOT, "storage", "analyses", str(task_id))
+        self.analysis_path = os.path.join(CUCKOO_ROOT, "storage", "analyses", str(task["id"]))
         self.cfg = Config("reporting")
 
     def process(self, module):

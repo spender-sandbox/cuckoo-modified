@@ -263,7 +263,7 @@ class AnalysisManager(Thread):
             machinery.release(self.machine.label)
             self.errors.put(e)
 
-        aux = RunAuxiliary(task=self.task, machine=self.machine)
+        aux = RunAuxiliary(task=self.task.to_dict(), machine=self.machine)
         aux.start()
 
         try:
@@ -373,9 +373,9 @@ class AnalysisManager(Thread):
         results["statistics"]["signatures"] = list()
         results["statistics"]["reporting"] = list()
         GetFeeds(results=results).run()
-        RunProcessing(task_id=self.task.id, results=results).run()
-        RunSignatures(task_id=self.task.id, results=results).run()
-        RunReporting(task_id=self.task.id, results=results).run()
+        RunProcessing(task=self.task.to_dict(), results=results).run()
+        RunSignatures(task=self.task.to_dict(), results=results).run()
+        RunReporting(task=self.task.to_dict(), results=results).run()
 
         # If the target is a file and the user enabled the option,
         # delete the original copy.
