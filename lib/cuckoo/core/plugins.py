@@ -511,7 +511,7 @@ class RunSignatures(object):
                     if res["vendor"] == "Microsoft":
                         detectnames.append(res["sig"])
                     detectnames.append(res["sig"])
-            family = get_consensus(detectnames)
+            family = get_vt_consensus(detectnames)
         
         # add detection based on suricata here
         if "suricata" in self.results and "alerts" in self.results["suricata"] and self.results["suricata"]["alerts"]:
