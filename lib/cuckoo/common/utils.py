@@ -1252,7 +1252,7 @@ def demux_sample(filename, options):
                     continue
                 base, ext = os.path.splitext(info.filename)
                 ext = ext.lower()
-                extensions = ["", ".exe", ".dll", ".pdf", ".doc", ".ppt", ".xls", ".msi", ".bin"]
+                extensions = ["", ".exe", ".dll", ".pdf", ".doc", ".ppt", ".pptx", ".docx", ".xls", ".msi", ".bin", ".scr"]
                 for theext in extensions:
                     if ext == theext:
                         extracted.append(info.filename)
