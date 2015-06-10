@@ -1329,6 +1329,7 @@ def get_vt_consensus(namelist):
         "obfus",
         "virus",
         "xpack",
+        "crypt",
     ]
 
     finaltoks = defaultdict(int)
