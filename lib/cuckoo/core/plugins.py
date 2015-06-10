@@ -27,6 +27,11 @@ from lib.cuckoo.core.database import DROPPED_FILES, RUNNING_PROCESSES, API_CALLS
 from lib.cuckoo.core.database import SIGNATURES_ALERT, FILES_WRITTEN, REGISTRY_KEYS_MODIFIED
 from lib.cuckoo.core.database import TASK_ISSUE_CRASH, TASK_ISSUE_ANTI, TASK_TIMEDOUT
 
+try:
+    import re2 as re
+except ImportError:
+    import re
+
 log = logging.getLogger(__name__)
 
 _modules = defaultdict(dict)
@@ -506,9 +511,34 @@ class RunSignatures(object):
                     if res["vendor"] == "Microsoft":
                         detectnames.append(res["sig"])
                     detectnames.append(res["sig"])
-            family = get_vt_consensus(detectnames)
+            family = get_consensus(detectnames)
         
         # add detection based on suricata here
+        if "suricata" in self.results and "alerts" in self.results["suricata"] and self.results["suricata"]["alerts"]:
+            for alert in self.results["suricata"]["alerts"]:
+                if "signature" in alert and alert["signature"]:
+                    if alert["signature"].startswith("ET TROJAN") or alert["signature"].startswith("ETPRO TROJAN"):
+                        words = re.findall(r"[A-Za-z0-9\.]+", alert["signature"])
+                        famcheck = words[2]
+                        famchecklower = words[2].lower()
+                        blacklist = [
+                            "upx",
+                            "executable",
+                            "potential",
+                            "likely",
+                            "rogue",
+                            "supicious",
+                            "generic",
+                            "possible",
+                            "known",
+                        ]
+                        isgood = True
+                        for black in blacklist:
+                            if black == famchecklower:
+                                isgood = False
+                                break
+                        if isgood:
+                            family = famcheck
 
         self.results["malfamily"] = family
 

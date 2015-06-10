@@ -1329,13 +1329,14 @@ def get_vt_consensus(namelist):
         toks = re.findall(r"[A-Za-z0-9]+", name)
         acceptedtoks = []
         for tok in toks:
+            lowertok = tok.lower()
             accepted = True
             numlist = [x for x in tok if x.isdigit()]
             if len(numlist) > 2 or len(tok) < 4:
                 accepted = False
             if accepted:
                 for black in blacklist:
-                    if black == tok.lower():
+                    if black == lowertok:
                         accepted = False
                         break
             if accepted:
@@ -1347,6 +1348,8 @@ def get_vt_consensus(namelist):
         return sorted_finaltoks[0][0]
     elif len(sorted_finaltoks) > 1 and sorted_finaltoks[0][1] >= sorted_finaltoks[1][1] * 2:
         return sorted_finaltoks[0][0]
+    elif len(sorted_finaltoks) > 1 and sorted_finaltoks[0][1] == sorted_finaltoks[1][1] and sorted_finaltoks[0][1] > 2:
+        return sorted_finaltoks[0][1]
     return ""
 
 class TimeoutServer(xmlrpclib.ServerProxy):
