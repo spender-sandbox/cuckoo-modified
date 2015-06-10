@@ -10,18 +10,22 @@ ADVAPI32 = windll.advapi32
 USER32   = windll.user32
 
 BYTE      = c_ubyte
+USHORT    = c_ushort
 WORD      = c_ushort
 DWORD     = c_uint
 LONG      = c_int
+ULONG     = c_uint
+UINT64    = c_ulonglong
 LPBYTE    = POINTER(c_ubyte)
 LPTSTR    = POINTER(c_char)
 HANDLE    = c_void_p
 PVOID     = c_void_p
 LPVOID    = c_void_p
 UINT_PTR  = c_void_p
-ULONG_PTR  = c_void_p
+ULONG_PTR = c_void_p
 SIZE_T    = c_void_p
 HMODULE   = c_void_p
+PWCHAR    = c_wchar_p
 
 DEBUG_PROCESS             = 0x00000001
 CREATE_NEW_CONSOLE        = 0x00000010
@@ -186,3 +190,26 @@ class SYSTEM_INFO(Structure):
         ("wProcessorLevel", WORD),
         ("wProcessorRevision", WORD),
     ]
+
+class UNICODE_STRING(Structure):
+	_pack_ = 1
+	_fields_ = [
+		("Length", USHORT),
+		("MaximumLength", USHORT),
+		("Buffer", PWCHAR),
+	]
+
+class SYSTEM_PROCESS_INFORMATION(Structure):
+	_fields_ = [
+		("NextEntryOffset", ULONG),
+		("NumberOfThreads", ULONG),
+		("Reserved0", UINT64),
+		("Reserved1", UINT64),
+		("Reserved2", UINT64),
+		("CreateTime", UINT64),
+		("UserTime", UINT64),
+		("KernelTime", UINT64),
+		("ImageName", UNICODE_STRING),
+		("BasePriority", ULONG),
+		("UniqueProcessId", PVOID),
+	]
