@@ -538,8 +538,9 @@ class RunSignatures(object):
                                 isgood = False
                                 break
                         if isgood:
-                            if famchecklower.startswith("win32/"):
+                            if famchecklower.startswith("win32"):
                                 famcheck = famcheck[6:]
+                            famcheck = famcheck.split(".")[0]
                             family = famcheck
 
         self.results["malfamily"] = family
