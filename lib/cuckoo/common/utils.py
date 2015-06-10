@@ -1356,7 +1356,7 @@ def get_vt_consensus(namelist):
     elif len(sorted_finaltoks) > 1 and (sorted_finaltoks[0][1] >= sorted_finaltoks[1][1] * 2 or sorted_finaltoks[0][1] > 8):
         return sorted_finaltoks[0][0]
     elif len(sorted_finaltoks) > 1 and sorted_finaltoks[0][1] == sorted_finaltoks[1][1] and sorted_finaltoks[0][1] > 2:
-        return sorted_finaltoks[0][1]
+        return sorted_finaltoks[0][0]
     return ""
 
 class TimeoutServer(xmlrpclib.ServerProxy):
