@@ -75,6 +75,7 @@ class AnalysisManager(Thread):
         self.storage = ""
         self.binary = ""
         self.machine = None
+        self.db = Database()
 
     def init_storage(self):
         """Initialize analysis storage folder."""
@@ -102,7 +103,7 @@ class AnalysisManager(Thread):
 
     def check_file(self):
         """Checks the integrity of the file to be analyzed."""
-        sample = Database().view_sample(self.task.sample_id)
+        sample = self.db.view_sample(self.task.sample_id)
 
         sha256 = File(self.task.target).get_sha256()
         if sha256 != sample.sha256:
@@ -270,10 +271,10 @@ class AnalysisManager(Thread):
             unlocked = False
 
             # Mark the selected analysis machine in the database as started.
-            guest_log = Database().guest_start(self.task.id,
-                                               self.machine.name,
-                                               self.machine.label,
-                                               machinery.__class__.__name__)
+            guest_log = self.db.guest_start(self.task.id,
+                                            self.machine.name,
+                                            self.machine.label,
+                                            machinery.__class__.__name__)
             # Start the machine.
             machinery.start(self.machine.label)
 
@@ -327,7 +328,7 @@ class AnalysisManager(Thread):
             # Mark the machine in the database as stopped. Unless this machine
             # has been marked as dead, we just keep it as "started" in the
             # database so it'll not be used later on in this session.
-            Database().guest_stop(guest_log)
+            self.db.guest_stop(guest_log)
 
             # After all this, we can make the ResultServer forget about the
             # internal state for this analysis task.
@@ -337,7 +338,7 @@ class AnalysisManager(Thread):
                 # Remove the guest from the database, so that we can assign a
                 # new guest when the task is being analyzed with another
                 # machine.
-                Database().guest_remove(guest_log)
+                self.db.guest_remove(guest_log)
 
                 # Remove the analysis directory that has been created so
                 # far, as launch_analysis() is going to be doing that again.
@@ -419,7 +420,7 @@ class AnalysisManager(Thread):
 
                 break
 
-            Database().set_status(self.task.id, TASK_COMPLETED)
+            self.db.set_status(self.task.id, TASK_COMPLETED)
 
             # If the task is still available in the database, update our task
             # variable with what's in the database, as otherwise we're missing
@@ -432,7 +433,7 @@ class AnalysisManager(Thread):
 
             if self.cfg.cuckoo.process_results:
                 self.process_results()
-                Database().set_status(self.task.id, TASK_REPORTED)
+                self.db.set_status(self.task.id, TASK_REPORTED)
 
             # We make a symbolic link ("latest") which links to the latest
             # analysis - this is useful for debugging purposes. This is only
