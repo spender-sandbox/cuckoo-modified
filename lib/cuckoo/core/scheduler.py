@@ -211,7 +211,7 @@ class AnalysisManager(Thread):
             # if it's a PE file, collect export information to use in more smartly determining the right
             # package to use
             options["exports"] = ""
-            if HAVE_PEFILE and ("PE32" in options["file_type"] or options["file_type"] == "MS-DOS executable"):
+            if HAVE_PEFILE and ("PE32" in options["file_type"] or "MS-DOS executable" in options["file_type"]):
                 try:
                     pe = pefile.PE(self.task.target)
                     if hasattr(pe, "DIRECTORY_ENTRY_EXPORT"):

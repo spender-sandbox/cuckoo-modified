@@ -15,7 +15,7 @@
     </ul>
     <div class="tab-content">
         <div class="tab-pane fade in active" id="static_analysis_tab">
-            {% if "PE32" in analysis.target.file.type or analysis.target.file.type == "MS-DOS executable" %}
+            {% if "PE32" in analysis.target.file.type or "MS-DOS executable" in analysis.target.file.type %}
                 {% include "analysis/static/_pe32.html" %}
             {% elif "PDF" in analysis.target.file.type %}
                 {% include "analysis/static/_pdf.html" %}

@@ -737,7 +737,7 @@ class Static(Processing):
 
         if self.task["category"] == "file":
             thetype = File(self.file_path).get_type()
-            if HAVE_PEFILE and ("PE32" in thetype or thetype == "MS-DOS executable"):
+            if HAVE_PEFILE and ("PE32" in thetype or "MS-DOS executable" in thetype):
                 static = PortableExecutable(self.file_path).run()
             elif "PDF" in thetype:
                 static = PDF(self.file_path).run()
