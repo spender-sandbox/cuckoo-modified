@@ -253,7 +253,6 @@ class AnalysisManager(Thread):
             log.error("Cannot acquire machine: {0}".format(e))
             return False
 
-        Database().set_statistics_time(self.task.id, ANALYSIS_STARTED)
         # Generate the analysis configuration file.
         options = self.build_options()
 
@@ -283,6 +282,8 @@ class AnalysisManager(Thread):
 
             # Start the analysis.
             guest.start_analysis(options)
+
+            Database().set_statistics_time(self.task.id, ANALYSIS_STARTED)
 
             guest.wait_for_completion()
             succeeded = True
