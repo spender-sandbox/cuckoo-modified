@@ -255,28 +255,6 @@ class PipeHandler(Thread):
                     hidepids.update([PID, PPID])
                     response = struct.pack("%dI" % len(hidepids), *hidepids)
 
-                # When analyzing we don't want to hook all functions, as we're
-                # having some stability issues with regards to webbrowsers.
-                elif command == "HOOKDLLS":
-                    is_url = Config(cfg="analysis.conf").category != "file"
-
-                    url_dlls = "ntdll", "kernel32"
-
-                    def hookdll_encode(names):
-                        # We have to encode each dll name as unicode string
-                        # with length 16.
-                        names = [name + "\x00" * (16-len(name)) for name in names]
-                        f = lambda s: "".join(ch + "\x00" for ch in s)
-                        return "".join(f(name) for name in names)
-
-                    # If this sample is not a URL, then we don't want to limit
-                    # any API hooks (at least for now), so we write a null-byte
-                    # which indicates that all DLLs should be hooked.
-                    if not is_url:
-                        response = "\x00"
-                    else:
-                        response = hookdll_encode(url_dlls)
-
                 # remove pid from process list because we received a notification
                 # from kernel land
                 elif command.startswith("KTERMINATE:"):
