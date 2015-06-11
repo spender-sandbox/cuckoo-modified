@@ -1,4 +1,4 @@
-This is a heavily modified version of Cuckoo Sandbox provided under the GPL by Accuvant, Inc.
+This is a heavily modified version of [Cuckoo Sandbox](http://www.cuckoosandbox.org) provided under the GPL by Accuvant, Inc.
 
 It offers a number of advantages over the upstream Cuckoo:
 + Fully-normalized file and registry names
