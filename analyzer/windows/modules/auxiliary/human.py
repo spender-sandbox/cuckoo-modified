@@ -44,12 +44,14 @@ def foreach_child(hwnd, lparam):
         "unzip",
         "open",
         "close the program",
-        "save"
+        "save",
+        "later",
     ]
 
     # List of buttons labels to not click.
     dontclick = [
         "don't run",
+        "do not ask again until the next update is available",
     ]
 
     classname = create_unicode_buffer(50)
