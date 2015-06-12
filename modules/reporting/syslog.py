@@ -90,6 +90,12 @@ class Syslog(Report):
         #        ticket = 'ticket="' + str(option.split(':')[-1]) + '" '
         #syslog += uname
         #syslog += ticket
+
+        if "malscore" in results:
+            syslog += 'MalScore="' + str(results["malscore"]) + '" '
+        if "malfamily" in results and results["malfamily"]:
+            syslog += 'MalFamily="' + str(results["malfamily"]) + '" '
+
         if "network" in results:
             goodips = []
             # Walks the IP exception list, appends to a multi-value ";" delimited field.
