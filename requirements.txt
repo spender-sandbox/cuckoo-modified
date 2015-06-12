@@ -1,5 +1,4 @@
 sqlalchemy
-bson
 jinja2
 pymongo
 bottle
