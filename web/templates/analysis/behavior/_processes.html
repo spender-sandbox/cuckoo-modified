@@ -113,6 +113,7 @@ function load_filtered_chunk(pid, category) {
                     <a id="badge_device_{{process.process_id}}" class="badge device" style="color:black;">device</a>
                     <a id="badge_sync_{{process.process_id}}" class="badge synchronization" style="color:black;">synchronization</a>
                     <a id="badge_crypto_{{process.process_id}}" class="badge crypto" style="color:black;">crypto</a>
+                    <a id="badge_browser_{{process.process_id}}" class="badge browser" style="color:black;">browser</a>
                     <a id="badge_all_{{process.process_id}}" class="badge all" style="color:black;">all</a>
                     <div class="form-group" style="position:absolute;right:0;top:0;">
                         <label class="sr-only" for="form_search">API Filter</label>
@@ -134,6 +135,7 @@ function load_filtered_chunk(pid, category) {
                 $("#badge_device_{{process.process_id}}").click(function() { load_filtered_chunk({{process.process_id}}, "device"); });
                 $("#badge_sync_{{process.process_id}}").click(function() { load_filtered_chunk({{process.process_id}}, "synchronization"); });
                 $("#badge_crypto_{{process.process_id}}").click(function() { load_filtered_chunk({{process.process_id}}, "crypto"); });
+                $("#badge_browser_{{process.process_id}}").click(function() { load_filtered_chunk({{process.process_id}}, "browser"); });
                 $("#badge_all_{{process.process_id}}").click(function() { load_filtered_chunk({{process.process_id}}, "all"); });
                 $('.tab-content').on('click', '.call-link', function (event) {
                     cid = $(this).attr('data-cid');
