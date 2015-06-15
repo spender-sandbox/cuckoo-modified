@@ -58,9 +58,11 @@ def foreach_child(hwnd, lparam):
     USER32.GetClassNameW(hwnd, classname, 50)
 
     # Check if the class of the child is button.
-    if classname.value == "Button":
+    if "button" in classname.value.lower():
         # Get the text of the button.
         length = USER32.SendMessageW(hwnd, WM_GETTEXTLENGTH, 0, 0)
+        if not length:
+            return True
         text = create_unicode_buffer(length + 1)
         USER32.SendMessageW(hwnd, WM_GETTEXT, length + 1, text)
         textval = text.value.replace('&','')
