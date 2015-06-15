@@ -1355,6 +1355,10 @@ def get_vt_consensus(namelist):
         "suspicious",
         "riskware",
         "risk",
+        "win64",
+        "troj64",
+        "drop",
+
     ]
 
     finaltoks = defaultdict(int)
