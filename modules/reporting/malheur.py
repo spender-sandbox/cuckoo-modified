@@ -173,11 +173,7 @@ class Malheur(Report):
 
         path, dirs, files = os.walk(reportsdir).next()
         try:
-            if len(files) == 1:
-                # if this is the first file being analyzed, reset Malheur's internal state
-                subprocess.call(["malheur", "--input.format", "mist", "--input.mist_level", "2", "-r", "-o", outputfile, "increment", reportsdir])
-            else:
-                subprocess.call(["malheur", "--input.format", "mist", "--input.mist_level", "2", "-o", outputfile, "increment", reportsdir])
+            subprocess.call(["malheur", "--input.format", "mist", "--input.mist_level", "2", "--cluster.reject_num", "2", "-o", outputfile, "cluster", reportsdir])
 
             # replace previous classification state with new results atomically
             os.rename(outputfile, outputfile[:-33])
