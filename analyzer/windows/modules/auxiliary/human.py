@@ -54,8 +54,8 @@ def foreach_child(hwnd, lparam):
         "do not ask again until the next update is available",
     ]
 
-    classname = create_unicode_buffer(50)
-    USER32.GetClassNameW(hwnd, classname, 50)
+    classname = create_unicode_buffer(128)
+    USER32.GetClassNameW(hwnd, classname, 128)
 
     # Check if the class of the child is button.
     if "button" in classname.value.lower():
