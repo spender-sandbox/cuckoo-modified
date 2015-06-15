@@ -1361,7 +1361,7 @@ def get_vt_consensus(namelist):
     for name in namelist:
         toks = re.findall(r"[A-Za-z0-9]+", name)
         for tok in toks:
-            finaltoks[tok] += 1
+            finaltoks[tok.title()] += 1
     for tok in finaltoks.keys():
         lowertok = tok.lower()
         accepted = True

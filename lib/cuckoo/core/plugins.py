@@ -542,7 +542,7 @@ class RunSignatures(object):
                             if famchecklower.startswith("win32"):
                                 famcheck = famcheck[6:]
                             famcheck = famcheck.split(".")[0]
-                            family = famcheck
+                            family = famcheck.title()
 
         self.results["malfamily"] = family
 
