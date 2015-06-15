@@ -7,6 +7,8 @@ import logging
 import random
 import subprocess
 import platform
+import urllib
+import base64
 from time import time
 from ctypes import byref, c_ulong, create_string_buffer, c_int, sizeof
 from shutil import copy
@@ -49,6 +51,22 @@ def randomize_dll(dll_path):
         return new_dll_path
     except:
         return dll_path
+
+def get_referrer_url(interest):
+    """Get a Google referrer URL
+    @return: URL to be added to the analysis config
+    """
+
+    if "://" not in interest:
+        return ""
+
+    escapedurl = urllib.quote(interest, '')
+    itemidx = str(random.randint(1, 30))
+    vedstr = "0CCEQfj" + base64.urlsafe_b64encode(random_string(random.randint(5, 8) * 3))
+    eistr = base64.urlsafe_b64encode(random_string(12))
+    usgstr = "AFQj" + base64.urlsafe_b64encode(random_string(12))
+    referrer = "http://www.google.com/url?sa=t&rct=j&q=&esrc=s&source=web&cd={0}&ved={1}&url={2}&ei={3}&usg={4}".format(itemidx, vedsr, escapedurl, eistr, usgstr)
+    return referrer
 
 class Process:
     """Windows process."""
@@ -551,7 +569,8 @@ class Process:
                 config.write("full-logs={0}\n".format(cfgoptions["full-logs"]))
             if "no-stealth" in cfgoptions:
                 config.write("no-stealth={0}\n".format(cfgoptions["no-stealth"]))
-
+            if "norefer" not in cfgoptions:
+                config.write("referrer={0}\n".format(get_referrer_url(interest)))
             if firstproc:
                 Process.first_process = False
 
