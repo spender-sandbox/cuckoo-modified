@@ -65,7 +65,7 @@ def get_referrer_url(interest):
     vedstr = "0CCEQfj" + base64.urlsafe_b64encode(random_string(random.randint(5, 8) * 3))
     eistr = base64.urlsafe_b64encode(random_string(12))
     usgstr = "AFQj" + base64.urlsafe_b64encode(random_string(12))
-    referrer = "http://www.google.com/url?sa=t&rct=j&q=&esrc=s&source=web&cd={0}&ved={1}&url={2}&ei={3}&usg={4}".format(itemidx, vedsr, escapedurl, eistr, usgstr)
+    referrer = "http://www.google.com/url?sa=t&rct=j&q=&esrc=s&source=web&cd={0}&ved={1}&url={2}&ei={3}&usg={4}".format(itemidx, vedstr, escapedurl, eistr, usgstr)
     return referrer
 
 class Process:
