@@ -1358,6 +1358,8 @@ def get_vt_consensus(namelist):
         "win64",
         "troj64",
         "drop",
+        "hacktool",
+        "exploit",
 
     ]
 
