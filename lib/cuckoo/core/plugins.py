@@ -500,8 +500,8 @@ class RunSignatures(object):
         family = ""
         # Make a best effort detection of malware family name (can be updated later by re-processing the analysis)
         for match in matched:
-            if "family" in match and match["family"]:
-                family = match["family"]
+            if "families" in match and match["families"]:
+                family = match["families"][0]
                 break
         if not family and "virustotal" in self.results and "results" in self.results["virustotal"] and self.results["virustotal"]["results"]:
             detectnames = []
