@@ -100,13 +100,18 @@
                         {% endif %}
                         <td>
                             {% if analysis.malscore != None %}
+                                <span 
                                 {% if analysis.malscore <= 2.0 %}
-                                <span class="label label-success">{{analysis.malscore|floatformat:1}}</span>
+                                class="label label-success"
                                 {% elif analysis.malscore <= 6.0 %}
-                                <span class="label label-warning">{{analysis.malscore|floatformat:1}}</span>
+                                class="label label-warning"
                                 {% else %}
-                                <span class="label label-danger">{{analysis.malscore|floatformat:1}}</span>
+                                class="label label-danger"
                                 {% endif %}
+                                {% if analysis.malfamily %}
+                                title="{{analysis.malfamily}}"
+                                {% endif %}
+                                >{{analysis.malscore|floatformat:1}}</span>
                             {% else %}
                                 <span class="mono">None</span>
                             {% endif %}
@@ -228,13 +233,18 @@
                         {% endif %}
                         <td>
                             {% if analysis.malscore != None %}
+                                <span 
                                 {% if analysis.malscore <= 2.0 %}
-                                <span class="label label-success">{{analysis.malscore}}</span>
+                                class="label label-success"
                                 {% elif analysis.malscore <= 6.0 %}
-                                <span class="label label-warning">{{analysis.malscore}}</span>
+                                class="label label-warning"
                                 {% else %}
-                                <span class="label label-danger">{{analysis.malscore}}</span>
+                                class="label label-danger"
                                 {% endif %}
+                                {% if analysis.malfamily %}
+                                title="{{analysis.malfamily}}"
+                                {% endif %}
+                                >{{analysis.malscore|floatformat:1}}</span>
                             {% else %}
                                 <span class="mono">None</span>
                             {% endif %}

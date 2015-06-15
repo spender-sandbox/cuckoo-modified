@@ -97,7 +97,7 @@ def index(request, page=1):
             if db.view_errors(task.id):
                 new["errors"] = True
 
-            rtmp = results_db.analysis.find_one({"info.id": int(new["id"])},{"virustotal_summary": 1, "malscore": 1, "suri_tls_cnt": 1, "suri_alert_cnt": 1, "suri_http_cnt": 1, "suri_file_cnt": 1},sort=[("_id", pymongo.DESCENDING)])
+            rtmp = results_db.analysis.find_one({"info.id": int(new["id"])},{"virustotal_summary": 1, "malscore": 1, "malfamily": 1, "suri_tls_cnt": 1, "suri_alert_cnt": 1, "suri_http_cnt": 1, "suri_file_cnt": 1},sort=[("_id", pymongo.DESCENDING)])
             if rtmp:
                 if rtmp.has_key("virustotal_summary") and rtmp["virustotal_summary"]:
                     new["virustotal_summary"] = rtmp["virustotal_summary"]
@@ -111,6 +111,8 @@ def index(request, page=1):
                     new["suri_http_cnt"] = rtmp["suri_http_cnt"]
                 if rtmp.has_key("malscore"):
                     new["malscore"] = rtmp["malscore"]
+                if rtmp.has_key("malfamily"):
+                    new["malfamily"] = rtmp["malfamily"]
 
             if settings.MOLOCH_ENABLED:
                 if settings.MOLOCH_BASE[-1] != "/":
@@ -131,7 +133,7 @@ def index(request, page=1):
             if db.view_errors(task.id):
                 new["errors"] = True
 
-            rtmp = results_db.analysis.find_one({"info.id": int(new["id"])},{"virustotal_summary": 1, "malscore": 1, "suri_tls_cnt": 1, "suri_alert_cnt": 1, "suri_http_cnt": 1, "suri_file_cnt": 1},sort=[("_id", pymongo.DESCENDING)])
+            rtmp = results_db.analysis.find_one({"info.id": int(new["id"])},{"virustotal_summary": 1, "malscore": 1, "malfamily": 1, "suri_tls_cnt": 1, "suri_alert_cnt": 1, "suri_http_cnt": 1, "suri_file_cnt": 1},sort=[("_id", pymongo.DESCENDING)])
             if rtmp:
                 if rtmp.has_key("virustotal_summary") and rtmp["virustotal_summary"]:
                     new["virustotal_summary"] = rtmp["virustotal_summary"]
@@ -145,6 +147,8 @@ def index(request, page=1):
                     new["suri_http_cnt"] = rtmp["suri_http_cnt"]
                 if rtmp.has_key("malscore"):
                     new["malscore"] = rtmp["malscore"]
+                if rtmp.has_key("malfamily"):
+                    new["malfamily"] = rtmp["malfamily"]
 
             if settings.MOLOCH_ENABLED:
                 if settings.MOLOCH_BASE[-1] != "/":
@@ -586,7 +590,7 @@ def search(request):
                 filename = os.path.basename(new["target"])
                 new.update({"filename": filename})
 
-            rtmp = results_db.analysis.find_one({"info.id": int(new["id"])},{"virustotal_summary": 1, "malscore": 1, "suri_tls_cnt": 1, "suri_alert_cnt": 1, "suri_http_cnt": 1, "suri_file_cnt": 1, "mlist_cnt": 1},sort=[("_id", pymongo.DESCENDING)])
+            rtmp = results_db.analysis.find_one({"info.id": int(new["id"])},{"virustotal_summary": 1, "malscore": 1, "malfamily": 1, "suri_tls_cnt": 1, "suri_alert_cnt": 1, "suri_http_cnt": 1, "suri_file_cnt": 1, "mlist_cnt": 1},sort=[("_id", pymongo.DESCENDING)])
             if rtmp:
                 if rtmp.has_key("virustotal_summary") and rtmp["virustotal_summary"]:
                     new["virustotal_summary"] = rtmp["virustotal_summary"]
@@ -602,6 +606,8 @@ def search(request):
                     new["mlist_cnt"] = rtmp["mlist_cnt"]
                 if rtmp.has_key("malscore"):
                     new["malscore"] = rtmp["malscore"]
+                if rtmp.has_key("malfamily") and rtmp["malfamily"]:
+                    new["malfamily"] = rtmp["malfamily"]
 
             if settings.MOLOCH_ENABLED:
                 if settings.MOLOCH_BASE[-1] != "/":
