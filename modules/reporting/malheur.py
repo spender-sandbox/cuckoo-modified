@@ -146,7 +146,10 @@ def mist_convert(results):
             for section in results["static"]["pe_sections"]:
                 lines.append("pe section|" + sanitize_generic(section["name"]) + " " + "%02x" % int(float(section["entropy"])))
 
-    return "\n".join(lines)
+    if len(lines) <= 4:
+        return ""
+
+    return "\n".join(lines) + "\n"
 
 class Malheur(Report):
     """ Performs classification on the generated MIST reports """
@@ -165,8 +168,9 @@ class Malheur(Report):
             pass
 
         mist = mist_convert(results)
-        with open(os.path.join(reportsdir, task_id + ".txt"), "w") as outfile:
-            outfile.write(mist)
+        if mist:
+            with open(os.path.join(reportsdir, task_id + ".txt"), "w") as outfile:
+                outfile.write(mist)
 
         # might need to prevent concurrent modifications to internal state of malheur by only allowing
         # one analysis to be running malheur at a time
