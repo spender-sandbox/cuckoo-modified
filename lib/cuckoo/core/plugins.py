@@ -514,7 +514,7 @@ class RunSignatures(object):
             family = get_vt_consensus(detectnames)
         
         # add detection based on suricata here
-        if "suricata" in self.results and "alerts" in self.results["suricata"] and self.results["suricata"]["alerts"]:
+        if not family and "suricata" in self.results and "alerts" in self.results["suricata"] and self.results["suricata"]["alerts"]:
             for alert in self.results["suricata"]["alerts"]:
                 if "signature" in alert and alert["signature"]:
                     if alert["signature"].startswith("ET TROJAN") or alert["signature"].startswith("ETPRO TROJAN"):
@@ -532,6 +532,7 @@ class RunSignatures(object):
                             "possible",
                             "known",
                             "common",
+                            "troj",
                         ]
                         isgood = True
                         for black in blacklist:
