@@ -430,6 +430,112 @@ def tasks_search(request, md5=None, sha256=None):
             resp["data"] = "Sample not found in database"
         return jsonize(resp, response=True)
 
+# Return Task ID's and data that match a hash.
+if apiconf.extendedtasksearch.get("enabled"):
+    raterps = apiconf.extendedtasksearch.get("rps", None)
+    raterpm = apiconf.extendedtasksearch.get("rpm", None)
+    rateblock = True
+@ratelimit(key="ip", rate=raterps, block=rateblock)
+@ratelimit(key="ip", rate=raterpm, block=rateblock)
+@csrf_exempt
+def ext_tasks_search(request):
+    resp = {}
+    if request.method != "POST":
+        resp = {"error": True, "error_value": "Method not allowed"}
+        return jsonize(resp, response=True)
+
+    if not apiconf.extendedtasksearch.get("enabled"):
+        resp = {"error": True,
+                "error_value": "Extended Task Search API is Disabled"}
+        return jsonize(resp, response=True)
+
+    option = request.POST.get("option", "")
+    dataarg = request.POST.get("argument", "")
+
+    if option and dataarg:
+        records = ""
+        if option == "name":
+            records = results_db.analysis.find({"target.file.name": {"$regex": dataarg, "$options": "-i"}}).sort([["_id", -1]])
+        elif option == "type":
+            records = results_db.analysis.find({"target.file.type": {"$regex": dataarg, "$options": "-i"}}).sort([["_id", -1]])
+        elif option == "string":
+            records = results_db.analysis.find({"strings" : {"$regex" : dataarg, "$options" : "-1"}}).sort([["_id", -1]])
+        elif option == "ssdeep":
+            records = results_db.analysis.find({"target.file.ssdeep": {"$regex": dataarg, "$options": "-i"}}).sort([["_id", -1]])
+        elif option == "crc32":
+            records = results_db.analysis.find({"target.file.crc32": dataarg}).sort([["_id", -1]])
+        elif option == "file":
+            records = results_db.analysis.find({"behavior.summary.files": {"$regex": dataarg, "$options": "-i"}}).sort([["_id", -1]])
+        elif option == "command":
+            records = results_db.analysis.find({"behavior.summary.executed_commands": {"$regex": dataarg, "$options": "-i"}}).sort([["_id", -1]])
+        elif option == "resolvedapi":
+            records = results_db.analysis.find({"behavior.summary.resolved_apis": {"$regex": dataarg, "$options": "-i"}}).sort([["_id", -1]])
+        elif option == "key":
+            records = results_db.analysis.find({"behavior.summary.keys": {"$regex": dataarg, "$options": "-i"}}).sort([["_id", -1]])
+        elif option == "mutex":
+            records = results_db.analysis.find({"behavior.summary.mutexes": {"$regex": dataarg, "$options": "-i"}}).sort([["_id", -1]])
+        elif option == "domain":
+            records = results_db.analysis.find({"network.domains.domain": {"$regex": dataarg, "$options": "-i"}}).sort([["_id", -1]])
+        elif option == "ip":
+            records = results_db.analysis.find({"network.hosts.ip": dataarg}).sort([["_id", -1]])
+        elif option == "signature":
+            records = results_db.analysis.find({"signatures.description": {"$regex": dataarg, "$options": "-i"}}).sort([["_id", -1]])
+        elif option == "signame":
+            records = results_db.analysis.find({"signatures.name": {"$regex": dataarg, "$options": "-i"}}).sort([["_id", -1]])
+        elif option == "url":
+            records = results_db.analysis.find({"target.url": dataarg}).sort([["_id", -1]])
+        elif option == "imphash":
+            records = results_db.analysis.find({"static.pe_imphash": dataarg}).sort([["_id", -1]])
+        elif option == "surialert":
+            records = results_db.analysis.find({"suricata.alerts.signature": {"$regex" : dataarg, "$options" : "-i"}}).sort([["_id", -1]])
+        elif option == "surihttp":
+            records = results_db.analysis.find({"suricata.http": {"$regex" : dataarg, "$options" : "-i"}}).sort([["_id", -1]])
+        elif option == "suritls":
+            records = results_db.analysis.find({"suricata.tls": {"$regex" : dataarg, "$options" : "-i"}}).sort([["_id", -1]])
+        elif option == "clamav":
+            records = results_db.analysis.find({"target.file.clamav": {"$regex": dataarg, "$options": "-i"}}).sort([["_id", -1]])
+        elif option == "yaraname":
+            records = results_db.analysis.find({"target.file.yara.name": {"$regex": dataarg, "$options": "-i"}}).sort([["_id", -1]])
+        elif option == "virustotal":
+            records = results_db.analysis.find({"virustotal.results.sig": {"$regex": dataarg, "$options": "-i"}}).sort([["_id", -1]])
+        elif option == "comment":
+            records = results_db.analysis.find({"info.comments.Data": {"$regex": dataarg, "$options": "-i"}}).sort([["_id", -1]])
+        elif option == "md5":
+            records = results_db.analysis.find({"target.file.md5": dataarg}).sort([["_id", -1]])
+        elif option == "sha1":
+            records = results_db.analysis.find({"target.file.sha1": dataarg}).sort([["_id", -1]])
+        elif option == "sha256":
+            records = results_db.analysis.find({"target.file.sha256": dataarg}).sort([["_id", -1]])
+        elif option == "sha512":
+            records = results_db.analysis.find({"target.file.sha512": dataarg}).sort([["_id", -1]])
+        else:
+            resp = {"error": True,
+                    "error_value": "Invalid Option. '%s' is not a valid option." % option}
+            return jsonize(resp, response=True)
+
+        if records:
+            ids = list()
+            for results in records:
+                ids.append(results["info"]["id"])
+            resp = {"error": False, "data": ids}
+        else:
+            resp = {"error": True,
+                    "error_value": "Unable to retrieve MongoDB records"}
+
+        return jsonize(resp, response=True)
+
+    else:
+        if not option:
+            resp = {"error": True,
+                    "error_value": "No option provided."}
+        if not dataarg:
+            resp = {"error": True,
+                    "error_value": "No argument provided."}
+        if not option and not dataarg:
+            resp = {"error": True,
+                    "error_value": "No option or argument provided."}
+        return jsonize(resp, response=True)
+
 # Return Task ID's and data within a range of Task ID's
 if apiconf.tasklist.get("enabled"):
     raterps = apiconf.tasklist.get("rps", None)

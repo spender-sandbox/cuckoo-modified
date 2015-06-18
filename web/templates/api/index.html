@@ -67,7 +67,7 @@ curl {{ config.api.url }}/api/files/view/sha256/[sha256 hash]/
 curl {{ config.api.url }}/api/files/view/id/[sample id]/</pre></td>
             </tr>
             <tr>
-                <td>Task Search</td>
+                <td>Basic Task Search</td>
                 {% if config.tasksearch.enabled %}
                 <td><span class="label label-success">Yes</span></td>
                 {% else %}
@@ -81,6 +81,50 @@ curl {{ config.api.url }}/api/files/view/id/[sample id]/</pre></td>
             <tr class="collapse" id="tasksearch">
               <td colspan="5"><pre>curl {{ config.api.url }}/api/tasks/search/md5/[md5 hash]/
 curl {{ config.api.url }}/api/tasks/search/sha256/[sha256 hash]/</pre></td>
+            </tr>
+            <tr>
+                <td>Extended Task Search</td>
+                {% if config.extendedtasksearch.enabled %}
+                <td><span class="label label-success">Yes</span></td>
+                {% else %}
+                <td><span class="label label-danger">No</span></td>
+                {% endif %}
+                <td><ul><li>RPS: {{ config.extendedtasksearch.rps }}</li>
+                        <li>RPM: {{ config.extendedtasksearch.rpm }}</li></ul></td>
+                <td>Search for Task ID's that's in MongoDB by various options. Return object will be JSON.</td>
+                <td><a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion" href="#extendedtasksearch">Example</a></td>
+            </tr>
+            <tr class="collapse" id="extendedtasksearch">
+              <td colspan="5"><pre>curl -d "option=[option]&argument=[argument]" {{ config.api.url }}/api/tasks/extendedsearch/
+
+Searchable Options List:
+name : Name of target file name
+type : Name of file type
+string : Match a strings in static analysis
+ssdeep : Match an ssdeep hash
+crc32 : Match a CRC32 hash
+file : Match a file in the behavioral analysis summary
+command : Match an executed command
+resolvedapi : Match an API that a sample resolved
+key : Match a registry key in the behavioral analysis summary
+mutex : Match a mutex in the behavioral analysis summary
+domain : Match a resolved domain
+ip : Match a contacted IP Address
+signature : Match a Cuckoo signature description
+signame : Match a Cuckoo signature name
+url : Match a URL target task (submitted URL task)
+imphash : Match an import hash
+surialert : Match a suricata alert signature
+surihttp : Match suricata HTTP data
+suritls : Match suricata TLS data
+clamav : Match a Clam AV signature
+yaraname : Match a Yara signature name
+virustotal : Match a virustotal AV Signature
+comment : Match a comment posted to a specific task
+md5 : Targets with a specific MD5 hash
+sha1 : Targets with a specific SHA1 hash
+sha256 : Targets with a specific SHA256 hash
+sha512 : Targets with a specific SHA512 hash</pre></td>
             </tr>
             <tr>
                 <td>Tasks List</td>
