@@ -100,7 +100,7 @@ curl {{ config.api.url }}/api/tasks/search/sha256/[sha256 hash]/</pre></td>
 Searchable Options List:
 name : Name of target file name
 type : Name of file type
-string : Match a strings in static analysis
+string : Match a string in the static analysis section
 ssdeep : Match an ssdeep hash
 crc32 : Match a CRC32 hash
 file : Match a file in the behavioral analysis summary
@@ -250,7 +250,7 @@ curl {{ config.api.url }}/api/tasks/get/iocs/[task id]/detailed/</pre></td>
             </tr>
             <tr class="collapse" id="taskscreenshot">
               <td colspan="5"><pre>curl {{ config.api.url }}/api/tasks/get/screenshot/[task id]/    (Downloads all screenshots)
-curl {{ config.api.url }}/api/tasks/get/screenshot/[screenshot number]/[task id]/</pre></td>
+curl {{ config.api.url }}/api/tasks/get/screenshot/[task id]/[screenshot number]/</pre></td>
             </tr>
             <tr>
                 <td>Task PCAP</td>
