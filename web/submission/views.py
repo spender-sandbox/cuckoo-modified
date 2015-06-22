@@ -113,6 +113,7 @@ def index(request):
                                           {"error": "You specified an invalid URL!"},
                                           context_instance=RequestContext(request))
 
+            url = url.replace("hxxps://", "https://").replace("hxxp://", "http://").replace("[.]", ".")
             for entry in task_machines:
                 task_id = db.add_url(url=url,
                                      package=package,
