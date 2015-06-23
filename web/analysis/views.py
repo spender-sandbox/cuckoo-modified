@@ -541,6 +541,8 @@ def search(request):
                 records = results_db.analysis.find({"target.file.clamav": {"$regex": value, "$options": "-i"}}).sort([["_id", -1]])
             elif term == "yaraname":
                 records = results_db.analysis.find({"target.file.yara.name": {"$regex": value, "$options": "-i"}}).sort([["_id", -1]])
+            elif term == "procmemyara":
+                records = results_db.analysis.find({"procmemory.yara.name": {"$regex": value, "$options": "-i"}}).sort([["_id", -1]])
             elif term == "virustotal":
                 records = results_db.analysis.find({"virustotal.results.sig": {"$regex": value, "$options": "-i"}}).sort([["_id", -1]])
             elif term == "comment":
