@@ -49,6 +49,7 @@ class ircMessage(object):
             log.error("Failed reading tcp stream buffer")
             return False
 
+        logirc = False
         for element in lines:
             if not re.match("^:", element) is None:
                 command = "([a-zA-Z]+|[0-9]{3})"
@@ -59,14 +60,18 @@ class ircMessage(object):
                     self._sc["command"] = convert_to_printable(irc_server_msg[0][1].strip())
                     self._sc["params"] = convert_to_printable(irc_server_msg[0][2].strip())
                     self._sc["type"] = "server"
-                    self._messages.append(dict(self._sc))
+                    if logirc:
+                        self._messages.append(dict(self._sc))
             else:
                 irc_client_msg = re.findall("([a-zA-Z]+\x20)(.+[\x0a\0x0d])",element)
                 if irc_client_msg and irc_client_msg[0][0].strip() in self.__methods_client:
                     self._cc["command"] = convert_to_printable(irc_client_msg[0][0].strip())
+                    if self._cc["command"] in ["NICK", "USER"]:
+                        logirc = True
                     self._cc["params"] = convert_to_printable(irc_client_msg[0][1].strip())
                     self._cc["type"] = "client"
-                    self._messages.append(dict(self._cc))
+                    if logirc:
+                        self._messages.append(dict(self._cc))
     
     def getClientMessages(self, buf):
         """Get irc client commands of tcp streams.

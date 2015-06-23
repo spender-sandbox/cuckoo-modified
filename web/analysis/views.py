@@ -504,7 +504,7 @@ def search(request):
             elif term == "type":
                 records = results_db.analysis.find({"target.file.type": {"$regex": value, "$options": "-i"}}).sort([["_id", -1]])
             elif term == "string":
-                records = results_db.analysis.find({"strings" : {"$regex" : value, "$options" : "-1"}}).sort([["_id", -1]])
+                records = results_db.analysis.find({"strings": {"$regex" : value, "$options" : "-i"}}).sort([["_id", -1]])
             elif term == "ssdeep":
                 records = results_db.analysis.find({"target.file.ssdeep": {"$regex": value, "$options": "-i"}}).sort([["_id", -1]])
             elif term == "crc32":
@@ -541,8 +541,6 @@ def search(request):
                 records = results_db.analysis.find({"target.file.clamav": {"$regex": value, "$options": "-i"}}).sort([["_id", -1]])
             elif term == "yaraname":
                 records = results_db.analysis.find({"target.file.yara.name": {"$regex": value, "$options": "-i"}}).sort([["_id", -1]])
-            elif term == "strings":
-                records = results_db.analysis.find({"strings": {"$regex": value, "$options": "-i"}}).sort([["_id", -1]])
             elif term == "virustotal":
                 records = results_db.analysis.find({"virustotal.results.sig": {"$regex": value, "$options": "-i"}}).sort([["_id", -1]])
             elif term == "comment":
