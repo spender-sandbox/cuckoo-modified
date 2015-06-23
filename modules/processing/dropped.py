@@ -26,7 +26,18 @@ class Dropped(Processing):
                 guest_paths = [line.strip() for line in open(file_path + "_info.txt")]
 
                 file_info = File(file_path=file_path,guest_paths=guest_paths).get_all()
-                if "ASCII" in file_info["type"]:
+                texttypes = [
+                    "ASCII",
+                    "Windows Registry text",
+                    "XML document text",
+                    "Unicode text",
+                ]
+                readit = False
+                for texttype in texttypes:
+                    if texttype in file_info["type"]:
+                        readit = True
+                        break
+                if readit:
                     with open(file_info["path"], "r") as drop_open:
                         filedata = drop_open.read(2049)
                     if len(filedata) > 2048:
