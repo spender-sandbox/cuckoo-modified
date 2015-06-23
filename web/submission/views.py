@@ -15,8 +15,9 @@ from django.template import RequestContext
 
 sys.path.append(settings.CUCKOO_PATH)
 
-from lib.cuckoo.core.database import Database
+from lib.cuckoo.common.config import Config
 from lib.cuckoo.common.utils import store_temp_file
+from lib.cuckoo.core.database import Database
 
 def force_int(value):
     try:
@@ -198,6 +199,26 @@ def index(request):
                                       {"error": "Error adding task to Cuckoo's database."},
                                       context_instance=RequestContext(request))
     else:
+        enabledconf = dict()
+        enabledconf["vt"] = settings.VTDL_ENABLED
+        enabledconf["kernel"] = settings.OPT_ZER0M0N
+        enabledconf["memory"] = Config("processing").memory.get("enabled")
+        enabledconf["procmemory"] = Config("processing").procmemory.get("enabled")
+        enabledconf["tor"] = Config("auxiliary").tor.get("enabled")
+        if Config("auxiliary").gateways:
+            enabledconf["gateways"] = True
+        else:
+            enabledconf["gateways"] = False
+        enabledconf["tags"] = False
+        # Get enabled machinery
+        machinery = Config("cuckoo").cuckoo.get("machinery")
+        # Get VM names for machinery config elements
+        vms = getattr(Config(machinery), machinery).get("machines").split(", ")
+        # Check each VM config element for tags
+        for vmtag in vms:
+            if "tags" in getattr(Config(machinery), vmtag).keys():
+                enabledconf["tags"] = True
+
         files = os.listdir(os.path.join(settings.CUCKOO_PATH, "analyzer", "windows", "modules", "packages"))
 
         packages = []
@@ -230,7 +251,7 @@ def index(request):
                                   {"packages": sorted(packages),
                                    "machines": machines,
                                    "gateways": settings.GATEWAYS,
-                                   "vtdlenabled": settings.VTDL_ENABLED},
+                                   "config": enabledconf},
                                   context_instance=RequestContext(request))
 
 def status(request, task_id):
