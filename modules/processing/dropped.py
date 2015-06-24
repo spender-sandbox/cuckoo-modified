@@ -41,7 +41,7 @@ class Dropped(Processing):
                 if readit:
                     with open(file_info["path"], "r") as drop_open:
                         filedata = drop_open.read(buf + 1)
-                    if len(filedata) > uf:
+                    if len(filedata) > buf:
                         file_info["data"] = convert_to_printable(filedata[:buf] + " <truncated>")
                     else:
                         file_info["data"] = convert_to_printable(filedata)
