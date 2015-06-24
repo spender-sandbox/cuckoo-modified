@@ -2,44 +2,45 @@
 # This file is part of Cuckoo Sandbox - http://www.cuckoosandbox.org
 # See the file 'docs/LICENSE' for copying permission.
 
-import os
-import logging
-import subprocess
-import time
-import sys
-import socket
 import json
+import logging
+import os
 import shutil
+import socket
+import subprocess
+import sys
+import time
 
 try:
     import re2 as re
 except ImportError:
     import re
 
-from lib.cuckoo.common.constants import CUCKOO_ROOT
 from lib.cuckoo.common.abstracts import Processing
+from lib.cuckoo.common.constants import CUCKOO_ROOT
 from lib.cuckoo.common.objects import File
+from lib.cuckoo.common.utils import convert_to_printable
 
 log = logging.getLogger(__name__)
 class Suricata(Processing):
     """Suricata processing."""
     def cmd_wrapper(self,cmd):
-        #print("running command and waiting for it to finish %s" % (cmd))
         p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
         stdout,stderr = p.communicate()
         return (p.returncode, stdout, stderr)
 
     def run(self):
         """Run Suricata.
-        @return: hash with alerts 
+        @return: hash with alerts
         """
         self.key = "suricata"
-        #General
+        # General
         SURICATA_CONF = self.options.get("conf", None)
         SURICATA_EVE_LOG = self.options.get("evelog", None)
         SURICATA_FILE_LOG = self.options.get("fileslog", None)
         SURICATA_FILES_DIR = self.options.get("filesdir", None)
         SURICATA_RUNMODE = self.options.get("runmode", None)
+        SURICATA_FILE_BUFFER = self.options.get("buffer", 8192)
         Z7_PATH = self.options.get("7zbin", None)
         FILES_ZIP_PASS = self.options.get("zippass", None)
         SURICATA_FILE_COPY_DST_DIR = self.options.get("file_copy_dest_dir", None)
@@ -50,11 +51,11 @@ class Suricata(Processing):
             except:
                 log.warning("Failed to compile suricata copy magic RE" % (SURICATA_FILE_COPY_MAGIC_RE))
                 SURICATA_FILE_COPY_MAGIC_RE = None
-        #Socket        
+        # Socket
         SURICATA_SOCKET_PATH = self.options.get("socket_file", None) 
         SURICATA_SOCKET_PYLIB = self.options.get("pylib_dir", None)
 
-        #Command Line
+        # Command Line
         SURICATA_BIN = self.options.get("bin", None)
 
         suricata = {}
@@ -62,7 +63,7 @@ class Suricata(Processing):
         suricata["tls"]=[]
         suricata["perf"]=[]
         suricata["files"]=[]
-        suricata["http"]=[]      
+        suricata["http"]=[]
         suricata["file_info"]=[]
 
         SURICATA_EVE_LOG_FULL_PATH = "%s/%s" % (self.logs_path, SURICATA_EVE_LOG)
@@ -89,11 +90,11 @@ class Suricata(Processing):
                         2210045,
         ]
 
-        if SURICATA_RUNMODE == "socket": 
+        if SURICATA_RUNMODE == "socket":
             if SURICATA_SOCKET_PYLIB != None:
                 sys.path.append(SURICATA_SOCKET_PYLIB)
             try:
-                from suricatasc import SuricataSC 
+                from suricatasc import SuricataSC
             except Exception as e:
                 log.warning("Failed to import suricatasc lib %s" % (e))
                 return suricata["alerts"]
@@ -103,8 +104,8 @@ class Suricata(Processing):
             loopsleep = 5
 
             args = {}
-            args["filename"] = self.pcap_path 
-            args["output-dir"] = self.logs_path 
+            args["filename"] = self.pcap_path
+            args["output-dir"] = self.logs_path
 
             suris = SuricataSC(SURICATA_SOCKET_PATH)
             try:
@@ -112,7 +113,7 @@ class Suricata(Processing):
                 suris.send_command("pcap-file",args)
             except Exception as e:
                 log.warning("Failed to connect to socket and send command %s: %s" % (SURICATA_SOCKET_PATH, e))
-                return suricata["alerts"] 
+                return suricata["alerts"]
             while loopcnt < maxloops:
                 try:
                     pcap_flist = suris.send_command("pcap-file-list")
@@ -232,15 +233,33 @@ class Suricata(Processing):
                         except Exception,e:
                             log.warning("Unable to copy suricata file: %s" % e)
                     file_info = File(file_path=src_file).get_all()
+                    texttypes = [
+                        "ASCII",
+                        "Windows Registry text",
+                        "XML document text",
+                        "Unicode text",
+                    ]
+                    readit = False
+                    for texttype in texttypes:
+                        if texttype in file_info["type"]:
+                            readit = True
+                            break
+                    if readit:
+                        with open(file_info["path"], "r") as drop_open:
+                            filedata = drop_open.read(SURICATA_FILE_BUFFER + 1)
+                        if len(filedata) > SURICATA_FILE_BUFFER:
+                            file_info["data"] = convert_to_printable(filedata[:SURICATA_FILE_BUFFER] + " <truncated>")
+                        else:
+                            file_info["data"] = convert_to_printable(filedata)
                     d["file_info"]=file_info
                 suricata["files"].append(d)
         else:
             log.warning("Suricata: Failed to find file log at %s" % (SURICATA_FILE_LOG_FULL_PATH))
 
         if os.path.exists(SURICATA_FILES_DIR_FULL_PATH) and os.path.exists(Z7_PATH):
-            #/usr/bin/7z a -pinfected -y files.zip files files-json.log
+            # /usr/bin/7z a -pinfected -y files.zip files files-json.log
             cmd = "cd %s && %s a -p%s -y files.zip %s %s" % (self.logs_path,Z7_PATH,FILES_ZIP_PASS,SURICATA_FILE_LOG,SURICATA_FILES_DIR)
             ret,stdout,stderr = self.cmd_wrapper(cmd)
             if ret != 0:
                 log.warning("Suricata: Failed to create Zip File" % (SURICATA_FILES_DIR_FULL_PATH))
-        return suricata 
+        return suricata
