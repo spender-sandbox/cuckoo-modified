@@ -213,7 +213,7 @@ def index(request):
         # Get enabled machinery
         machinery = Config("cuckoo").cuckoo.get("machinery")
         # Get VM names for machinery config elements
-        vms = getattr(Config(machinery), machinery).get("machines").split(", ")
+        vms = [x.strip() for x in getattr(Config(machinery), machinery).get("machines").split(",")]
         # Check each VM config element for tags
         for vmtag in vms:
             if "tags" in getattr(Config(machinery), vmtag).keys():
