@@ -15,7 +15,11 @@
                 </tr>
                 <tr>
                     <th>File Type</th>
+                    {% if file.file_info.type %}
+                    <td>{{file.file_info.type}}</td>
+                    {% else %}
                     <td>{{file.magic}}</td>
+                    {% endif %}
                 </tr>
                 <tr>
                     <th>File URL</th>
@@ -70,8 +74,17 @@
                 {% if file.object_id %}
                 <tr>
                     <th></th>
-                    <td><a href="{% url "analysis.views.file" "suricata" file.object_id %}" class="btn btn-primary btn-small">Download</a></td>
+                    <td><a href="{% url "analysis.views.file" "suricata" file.object_id %}" class="btn btn-primary btn-small">Download</a>
+                    {% if file.file_info.data %}
+                    &emsp;<a class="btn btn-primary btn-small" data-toggle="collapse" data-target="#{{file.object_id}}">Display Text</a>
+                    {% endif %}
+                    </td>
                 </tr>
+                {% if file.file_info.data %}
+                <tr class="collapse" id="{{file.object_id}}">
+                    <td colspan="2"><pre>{{file.file_info.data}}</pre></td>
+                </tr>
+                {% endif %}
                 {% endif %}
             </table>
         </div>

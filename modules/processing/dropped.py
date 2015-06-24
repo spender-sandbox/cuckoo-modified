@@ -17,6 +17,7 @@ class Dropped(Processing):
         """
         self.key = "dropped"
         dropped_files = []
+        buf = self.options.get("buffer", 8192)
 
         for dir_name, dir_names, file_names in os.walk(self.dropped_path):
             for file_name in file_names:
@@ -39,9 +40,9 @@ class Dropped(Processing):
                         break
                 if readit:
                     with open(file_info["path"], "r") as drop_open:
-                        filedata = drop_open.read(2049)
-                    if len(filedata) > 2048:
-                        file_info["data"] = convert_to_printable(filedata[:2048] + " <truncated>")
+                        filedata = drop_open.read(buf + 1)
+                    if len(filedata) > uf:
+                        file_info["data"] = convert_to_printable(filedata[:buf] + " <truncated>")
                     else:
                         file_info["data"] = convert_to_printable(filedata)
 
