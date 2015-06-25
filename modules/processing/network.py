@@ -7,6 +7,7 @@ import socket
 import struct
 import tempfile
 import logging
+from collections import OrderedDict
 from urlparse import urlunparse
 
 try:
@@ -76,9 +77,9 @@ class Pcap:
         # List containing all ICMP requests.
         self.icmp_requests = []
         # List containing all HTTP requests.
-        self.http_requests = {}
+        self.http_requests = OrderedDict()
         # List containing all DNS requests.
-        self.dns_requests = {}
+        self.dns_requests = OrderedDict()
         self.dns_answers = set()
         # List containing all SMTP requests.
         self.smtp_requests = []
@@ -663,7 +664,10 @@ class NetworkAnalysis(Processing):
         sorted_path = self.pcap_path.replace("dump.", "dump_sorted.")
         if Config().processing.sort_pcap:
             sort_pcap(self.pcap_path, sorted_path)
+            buf = Pcap(self.pcap_path).run()
             results = Pcap(sorted_path).run()
+            results["http"] = buf["http"]
+            results["dns"] = buf["dns"]
         else:
             results = Pcap(self.pcap_path).run()
 
