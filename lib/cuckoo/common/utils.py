@@ -1271,8 +1271,9 @@ def demux_sample(filename, options):
                 if info.file_size > 100 * 1024 * 1024:
                     continue
                 base, ext = os.path.splitext(info.filename)
+                basename = os.path.basename(info.filename)
                 ext = ext.lower()
-                if ext == "" and len(base) and base[0] == ".":
+                if ext == "" and len(basename) and basename[0] == ".":
                     continue
                 extensions = ["", ".exe", ".dll", ".pdf", ".doc", ".ppt", ".pptx", ".docx", ".xls", ".msi", ".bin", ".scr"]
                 for theext in extensions:
