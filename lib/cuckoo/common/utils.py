@@ -1272,7 +1272,7 @@ def demux_sample(filename, options):
                     continue
                 base, ext = os.path.splitext(info.filename)
                 ext = ext.lower()
-                if "ext" == "" and len(base) and base[0] == ".":
+                if ext == "" and len(base) and base[0] == ".":
                     continue
                 extensions = ["", ".exe", ".dll", ".pdf", ".doc", ".ppt", ".pptx", ".docx", ".xls", ".msi", ".bin", ".scr"]
                 for theext in extensions:
