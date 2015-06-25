@@ -495,6 +495,8 @@ class RunSignatures(object):
                 malscore += match["weight"] * (match["severity"] - 1) * (match["confidence"] / 100.0)
         if malscore > 10.0:
             malscore = 10.0
+        if malscore < 0.0:
+            malscore = 0.0
         self.results["malscore"] = malscore
 
         family = ""
