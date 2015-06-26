@@ -23,6 +23,7 @@ log = logging.getLogger(__name__)
 
 class MongoDB(Report):
     """Stores report in MongoDB."""
+    order = 9999
 
     # Mongo schema version, used for data migration.
     SCHEMA_VERSION = "1"
