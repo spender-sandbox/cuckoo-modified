@@ -20,6 +20,7 @@ from collections import defaultdict
 
 from lib.cuckoo.common.exceptions import CuckooOperationalError
 from lib.cuckoo.common.config import Config
+from lib.cuckoo.common.objects import File
 
 try:
     import re2 as re
@@ -1255,6 +1256,12 @@ def demux_sample(filename, options):
     retlist = []
 
     try:
+        # don't try to extract from office docs
+        magic = File(filename).get_type()
+        if "Microsoft" in magic:
+            retlist.append(filename)
+            return retlist
+
         extracted = []
         password="infected"
         fields = options.split(",")
