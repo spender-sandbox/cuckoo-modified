@@ -47,6 +47,7 @@ def foreach_child(hwnd, lparam):
         "save",
         "later",
         "finish",
+        "end",
     ]
 
     # List of buttons labels to not click.
