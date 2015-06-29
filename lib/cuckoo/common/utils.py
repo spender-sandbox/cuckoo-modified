@@ -1368,6 +1368,7 @@ def get_vt_consensus(namelist):
         "dropped",
         "program",
         "unwanted",
+        "heuristic",
     ]
 
     finaltoks = defaultdict(int)
