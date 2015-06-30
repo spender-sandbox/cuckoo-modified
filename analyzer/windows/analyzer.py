@@ -781,6 +781,8 @@ class Analyzer:
         if kernel_analysis != False:
             kernel_analysis = True
 
+        emptytime = None
+
         while True:
             time_counter += 1
             if time_counter == int(self.config.timeout):
@@ -807,9 +809,14 @@ class Analyzer:
                         # If none of the monitored processes are still alive, we
                         # can terminate the analysis.
                         if not PROCESS_LIST and (not LASTINJECT_TIME or (datetime.now() >= (LASTINJECT_TIME + timedelta(seconds=15)))):
-                            log.info("Process list is empty, "
-                                    "terminating analysis.")
-                            break
+                            if emptytime and (datetime.now() >= (emptytime + timedelta(seconds=5))):
+                                log.info("Process list is empty, "
+                                        "terminating analysis.")
+                                break
+                            elif not emptytime:
+                                emptytime = datetime.now()
+                        else:
+                            emptytime = None
 
                     # Update the list of monitored processes available to the
                     # analysis package. It could be used for internal
