@@ -588,7 +588,7 @@ class Process:
             orig_bin_name = "loader.exe"
             bit_str = "32-bit"
 
-        bin_name = randomize_bin(os.path.join("bin", bin_name), "exe")
+        bin_name = randomize_bin(os.path.join("bin", orig_bin_name), "exe")
 
         if os.path.exists(bin_name):
             ret = subprocess.call([bin_name, "inject", str(self.pid), str(thread_id), dll])
