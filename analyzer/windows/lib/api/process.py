@@ -39,18 +39,18 @@ log = logging.getLogger(__name__)
 def is_os_64bit():
     return platform.machine().endswith('64')
 
-def randomize_dll(dll_path):
-    """Randomize DLL name.
-    @return: new DLL path.
+def randomize_bin(bin_path, ext):
+    """Randomize binary name.
+    @return: new binary path.
     """
-    new_dll_name = random_string(6)
-    new_dll_path = os.path.join(os.getcwd(), "dll", "{0}.dll".format(new_dll_name))
+    new_bin_name = random_string(6)
+    new_bin_path = os.path.join(os.getcwd(), ext, "{0}.{1}".format(new_bin_name, ext))
 
     try:
-        copy(dll_path, new_dll_path)
-        return new_dll_path
+        copy(bin_path, new_bin_path)
+        return new_bin_path
     except:
-        return dll_path
+        return bin_path
 
 def get_referrer_url(interest):
     """Get a Google referrer URL
@@ -533,7 +533,7 @@ class Process:
             else:
                 dll = "cuckoomon.dll"
 
-        dll = randomize_dll(os.path.join("dll", dll))
+        dll = randomize_bin(os.path.join("dll", dll), "dll")
 
         if not dll or not os.path.exists(dll):
             log.warning("No valid DLL specified to be injected in process "
@@ -579,14 +579,16 @@ class Process:
         else:
             log.debug("Using CreateRemoteThread injection.")
 
-        bin_name = ""
+        orig_bin_name = ""
         bit_str = ""
         if is_64bit:
-            bin_name = "bin/loader_x64.exe"
+            orig_bin_name = "bin/loader_x64.exe"
             bit_str = "64-bit"
         else:
-            bin_name = "bin/loader.exe"
+            orig_bin_name = "bin/loader.exe"
             bit_str = "32-bit"
+
+        bin_name = randomize_bin(os.path.join("bin", bin_name), "exe")
 
         if os.path.exists(bin_name):
             ret = subprocess.call([bin_name, "inject", str(self.pid), str(thread_id), dll])
