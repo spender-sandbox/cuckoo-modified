@@ -582,10 +582,10 @@ class Process:
         orig_bin_name = ""
         bit_str = ""
         if is_64bit:
-            orig_bin_name = "bin/loader_x64.exe"
+            orig_bin_name = "loader_x64.exe"
             bit_str = "64-bit"
         else:
-            orig_bin_name = "bin/loader.exe"
+            orig_bin_name = "loader.exe"
             bit_str = "32-bit"
 
         bin_name = randomize_bin(os.path.join("bin", bin_name), "exe")
