@@ -730,14 +730,11 @@ class Analyzer:
             except (NotImplementedError, AttributeError):
                 log.warning("Auxiliary module %s was not implemented",
                             module.__name__)
-                continue
             except Exception as e:
                 log.warning("Cannot execute auxiliary module %s: %s",
                             module.__name__, e)
-                continue
-            finally:
-                log.debug("Started auxiliary module %s",
-                          module.__name__)
+            else:
+                log.debug("Started auxiliary module %s", module.__name__)
                 aux_enabled.append(aux)
 
         # Start analysis package. If for any reason, the execution of the
