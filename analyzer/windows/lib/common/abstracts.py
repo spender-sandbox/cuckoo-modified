@@ -47,10 +47,10 @@ class Package(object):
                 elif sys32:
                     yield os.path.join(os.getenv("SystemRoot"), "sysnative", *path[2:])
             elif basedir == "ProgramFiles":
-                yield os.path.join(os.getenv("ProgramFiles").replace(" (x86)", ""), *path[1:])
                 if os.getenv("ProgramFiles(x86)"):
                     yield os.path.join(os.getenv("ProgramFiles(x86)"),
                                        *path[1:])
+                yield os.path.join(os.getenv("ProgramFiles").replace(" (x86)", ""), *path[1:])
             elif basedir == "HomeDrive":
                 # os.path.join() does not work well when giving just C:
                 # instead of C:\\, so we manually add the backslash.
