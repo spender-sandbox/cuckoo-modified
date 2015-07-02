@@ -1258,7 +1258,7 @@ def demux_sample(filename, options):
     try:
         # don't try to extract from office docs
         magic = File(filename).get_type()
-        if "Microsoft" in magic:
+        if "Microsoft" in magic or "Java Jar" in magic:
             retlist.append(filename)
             return retlist
 
@@ -1275,7 +1275,10 @@ def demux_sample(filename, options):
             infolist = archive.infolist()
             for info in infolist:
                 # avoid obvious bombs
-                if info.file_size > 100 * 1024 * 1024:
+                if info.file_size > 100 * 1024 * 1024 or not info.file_size:
+                    continue
+                # ignore directories
+                if info.filename.endswith("/"):
                     continue
                 base, ext = os.path.splitext(info.filename)
                 basename = os.path.basename(info.filename)
