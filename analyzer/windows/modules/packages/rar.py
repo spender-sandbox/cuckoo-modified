@@ -90,12 +90,12 @@ class Rar(Package):
             # No name provided try to find a better name.
             if len(rarinfos):
                 # Attempt to find a valid exe extension in the archive
-                for f in zipinfos:
+                for f in rarinfos:
                     if exe_regex.search(f.filename):
                         file_name = f.filename
                         break
                 # Default to the first one if none found
-                file_name = file_name if file_name else zipinfos[0].filename
+                file_name = file_name if file_name else rarinfos[0].filename
                 log.debug("Missing file option, auto executing: {0}".format(file_name))
             else:
                 raise CuckooPackageError("Empty RAR archive")
