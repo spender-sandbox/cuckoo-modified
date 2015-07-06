@@ -107,6 +107,7 @@
     <Compile Include="analyzer\windows\modules\packages\chrome.py" />
     <Compile Include="analyzer\windows\modules\packages\msg.py" />
     <Compile Include="analyzer\windows\modules\packages\eml.py" />
+    <Compile Include="analyzer\windows\modules\packages\rar.py" />
     <Compile Include="analyzer\windows\modules\packages\regsvr.py" />
     <Compile Include="analyzer\windows\modules\packages\firefox.py" />
     <Compile Include="analyzer\windows\modules\packages\msi.py" />

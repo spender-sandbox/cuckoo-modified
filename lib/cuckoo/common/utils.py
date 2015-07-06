@@ -1249,10 +1249,7 @@ def store_temp_file(filedata, filename, path=None):
 
     return tmp_file_path
 
-def demux_sample(filename, options):
-    """
-    If file is a ZIP, extract its included files and return their file paths
-    """
+def demux_zip(filename, options):
     retlist = []
 
     try:
@@ -1306,7 +1303,32 @@ def demux_sample(filename, options):
     except:
         pass
 
-    # if it wasn't a ZIP or we weren't able to obtain anything interesting from the ZIP, then just submit the
+    return retlist
+
+def demux_email(filename, options):
+    retlist = []
+    try:
+        with open(filename, "rb") as openfile:
+            buf = openfile.read()
+            atts = find_attachments_in_email(buf, True)
+            if atts and len(atts):
+                for att in atts:
+                    retlist.append(att[0])
+    except:
+        pass
+
+    return retlist
+
+def demux_sample(filename, options):
+    """
+    If file is a ZIP, extract its included files and return their file paths
+    If file is an email, extracts its attachments and return their file paths (later we'll also extract URLs)
+    """
+    retlist = demux_zip(filename, options)
+    if not retlist:
+        retlist = demux_email(filename, options)
+
+    # if it wasn't a ZIP or an email or we weren't able to obtain anything interesting from either, then just submit the
     # original file
 
     if not retlist:
