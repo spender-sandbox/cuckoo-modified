@@ -127,6 +127,7 @@
     <Compile Include="lib\cuckoo\common\demux.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="lib\cuckoo\common\email_utils.py" />
     <Compile Include="lib\cuckoo\common\icon.py">
       <SubType>Code</SubType>
     </Compile>
