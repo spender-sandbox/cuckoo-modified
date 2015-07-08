@@ -124,6 +124,9 @@
     <Compile Include="lib\cuckoo\common\decoders\__init__.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="lib\cuckoo\common\demux.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="lib\cuckoo\common\icon.py">
       <SubType>Code</SubType>
     </Compile>
