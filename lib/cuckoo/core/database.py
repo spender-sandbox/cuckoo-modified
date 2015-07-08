@@ -1028,6 +1028,8 @@ class Database(object):
                 task.clock = clocktime
             except:
                 pass
+        else:
+            task.clock = datetime.now()
 
         session.add(task)
 
