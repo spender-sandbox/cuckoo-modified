@@ -7,6 +7,7 @@ from zipfile import ZipFile
 
 from lib.cuckoo.common.config import Config
 from lib.cuckoo.common.objects import File
+from lib.cuckoo.common.email_utils import find_attachments_in_email
 from lib.cuckoo.common.office.msgextract import Message
 
 def demux_zip(filename, options):
