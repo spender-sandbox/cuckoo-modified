@@ -79,38 +79,6 @@ def tasks_create_file():
     response["task_ids"] = task_ids
     return jsonize(response)
 
-@route("/tasks/create/file/email_mime", method="POST")
-def tasks_create_file_email_mime():
-    response = {}
-
-    if request.content_type ==  "text/x-mail":
-        body_text = request.body.read()
-    else:
-        body_param = request.forms.get("_body_param", "body-mime")
-        body_text = request.forms.get(body_param, "")
-    atts = find_attachments_in_email(body_text, True)
-    task_ids = []
-    for att in atts:
-        task_id = db.add_path(
-            file_path=att[0],
-            package="",
-            timeout="",
-            priority=1,
-            options="",
-            machine="",
-            platform="",
-            tags=None,
-            custom="",
-            owner="",
-            memory=False,
-            enforce_timeout=False,
-            clock=None
-        )
-        task_ids.append(task_id)
-
-    response['task_ids'] = task_ids
-    return jsonize(response)
-
 @route("/tasks/create/url", method="POST")
 @route("/v1/tasks/create/url", method="POST")
 def tasks_create_url():
