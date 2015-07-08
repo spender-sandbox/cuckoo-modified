@@ -89,11 +89,17 @@ def demux_msg(filename, options):
     return retlist
 
 
-def demux_sample(filename, options):
+def demux_sample(filename, package, options):
     """
     If file is a ZIP, extract its included files and return their file paths
     If file is an email, extracts its attachments and return their file paths (later we'll also extract URLs)
     """
+
+    # if a package was specified, then don't do anything special
+    # this will allow for the ZIP package to be used to analyze binaries with included DLL dependencies
+    if package:
+        return [ filename ]
+
     retlist = demux_zip(filename, options)
     if not retlist:
         retlist = demux_email(filename, options)

@@ -1083,7 +1083,7 @@ class Database(object):
         """
         task_ids = []
         # extract files from the (potential) ZIP
-        extracted_files = demux_sample(file_path, options)
+        extracted_files = demux_sample(file_path, package, options)
         # create tasks for each file in the ZIP
         for file in extracted_files:
             task_id = self.add_path(file_path=file,
