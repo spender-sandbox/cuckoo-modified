@@ -21,6 +21,7 @@ from collections import defaultdict
 from lib.cuckoo.common.exceptions import CuckooOperationalError
 from lib.cuckoo.common.config import Config
 from lib.cuckoo.common.objects import File
+from lib.cuckoo.common.office.msgextract import Message
 
 try:
     import re2 as re
@@ -1319,6 +1320,16 @@ def demux_email(filename, options):
 
     return retlist
 
+def demux_msg(filename, options):
+    retlist = []
+    try:
+        retlist = Message(filename).get_extracted_attachments()
+    except:
+        pass
+
+    return retlist
+
+
 def demux_sample(filename, options):
     """
     If file is a ZIP, extract its included files and return their file paths
@@ -1327,6 +1338,18 @@ def demux_sample(filename, options):
     retlist = demux_zip(filename, options)
     if not retlist:
         retlist = demux_email(filename, options)
+        if not retlist:
+            retlist = demux_msg(filename, options)
+    # handle ZIPs inside extracted files
+    if retlist:
+        newretlist = []
+        for item in retlist:
+            zipext = demux_zip(item, options)
+            if zipext:
+                newretlist.extend(zipext)
+            else:
+                newretlist.append(item)
+        retlist = newretlist
 
     # if it wasn't a ZIP or an email or we weren't able to obtain anything interesting from either, then just submit the
     # original file
