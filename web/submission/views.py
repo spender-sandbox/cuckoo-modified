@@ -17,6 +17,7 @@ sys.path.append(settings.CUCKOO_PATH)
 
 from lib.cuckoo.common.config import Config
 from lib.cuckoo.common.utils import store_temp_file
+from lib.cuckoo.common.quarantine import unquarantine
 from lib.cuckoo.core.database import Database
 
 def force_int(value):
@@ -103,6 +104,38 @@ def index(request):
                 path = store_temp_file(sample.read(),
                                        sample.name)
     
+                for entry in task_machines:
+                    task_ids_new = db.demux_sample_and_add_to_db(file_path=path, package=package, timeout=timeout, options=options, priority=priority,
+                                                                 machine=entry, custom=custom, memory=memory, enforce_timeout=enforce_timeout, tags=tags, clock=clock)
+                    task_ids.extend(task_ids_new)
+        elif "quarantine" in request.FILES:
+            for sample in request.FILES.getlist("quarantine"):
+                if sample.size == 0:
+                    return render_to_response("error.html",
+                                              {"error": "You uploaded an empty quarantine file."},
+                                              context_instance=RequestContext(request))
+                elif sample.size > settings.MAX_UPLOAD_SIZE:
+                    return render_to_response("error.html",
+                                              {"error": "You uploaded a quarantine file that exceeds that maximum allowed upload size."},
+                                              context_instance=RequestContext(request))
+    
+                # Moving sample from django temporary file to Cuckoo temporary storage to
+                # let it persist between reboot (if user like to configure it in that way).
+                tmp_path = store_temp_file(sample.read(),
+                                       sample.name)
+
+                path = unquarantine(tmp_path)
+                try:
+                    os.remove(tmp_path)
+
+                except:
+                    pass
+
+                if not path:
+                    return render_to_response("error.html",
+                                              {"error": "You uploaded an unsupported quarantine file."},
+                                              context_instance=RequestContext(request))
+
                 for entry in task_machines:
                     task_ids_new = db.demux_sample_and_add_to_db(file_path=path, package=package, timeout=timeout, options=options, priority=priority,
                                                                  machine=entry, custom=custom, memory=memory, enforce_timeout=enforce_timeout, tags=tags, clock=clock)
