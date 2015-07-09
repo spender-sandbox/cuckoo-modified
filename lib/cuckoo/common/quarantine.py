@@ -3,7 +3,7 @@
 # See the file 'docs/LICENSE' for copying permission.
 
 import os
-import lib.cuckoo.common.office.olefile
+import lib.cuckoo.common.office.olefile as olefile
 from lib.cuckoo.common.utils import store_temp_file
 
 def bytearray_xor(data, key):

@@ -34,7 +34,7 @@ import glob
 import traceback
 from email.parser import Parser as EmailParser
 import email.utils
-import lib.cuckoo.common.office.olefile as OleFile
+import olefile
 from lib.cuckoo.common.utils import store_temp_file
 
 def windowsUnicode(string):
