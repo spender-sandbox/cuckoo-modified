@@ -127,7 +127,6 @@ def index(request):
                 path = unquarantine(tmp_path)
                 try:
                     os.remove(tmp_path)
-
                 except:
                     pass
 
