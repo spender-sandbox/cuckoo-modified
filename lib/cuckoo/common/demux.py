@@ -5,7 +5,7 @@
 import os
 from zipfile import ZipFile
 try:
-    from rarfile import RarFile,BadRarFile
+    from rarfile import RarFile
     HAS_RARFILE = True
 except ImportError:
     HAS_RARFILE = False
