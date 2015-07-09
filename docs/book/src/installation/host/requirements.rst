@@ -51,6 +51,7 @@ The following libraries are not strictly required, but their installation is rec
     * `django-ratelimit`_ (Optional): required if using the Django web interface
     * `weasyprint`_ (Optional): required for PDF reporting method
 	* `pype32`_ (Optional): needed for some RAT decoders
+	* `rarfile`_ (Optional): needed for automatic extraction of RAR files on submission
 
 Some of them are already packaged in Debian/Ubuntu and can be installed with the following command::
 
@@ -58,7 +59,7 @@ Some of them are already packaged in Debian/Ubuntu and can be installed with the
 
 Except for *python-magic*, *python-dpkt* and *python-libvirt*, the others can be installed through ``pip`` too::
 
-    $ sudo pip install jinja2 pymongo bottle pefile django chardet pygal m2crypto clamd django-ratelimit pycrypto weasyprint
+    $ sudo pip install jinja2 pymongo bottle pefile django chardet pygal m2crypto clamd django-ratelimit pycrypto weasyprint rarfile
 
 To have MAEC support, you need to first install the Cybox and then the MAEC libraries::
 
@@ -90,6 +91,7 @@ If you want to use KVM it's packaged too and you can install it with the followi
 .. _django-ratelimit: https://pypi.python.org/pypi/django-ratelimit
 .. _weasyprint: http://www.weasyprint.org
 .. _pype32: https://github.com/crackinglandia/pype32
+.. _rarfile: https://pypi.python.org/pypi/rarfile
 
 If you want to use XenServer you'll have to install the *XenAPI* Python package::
 

@@ -4,6 +4,11 @@
 
 import os
 from zipfile import ZipFile
+try:
+    from rarfile import RarFile,BadRarFile
+    HAS_RARFILE = True
+except ImportError:
+    HAS_RARFILE = False
 
 from lib.cuckoo.common.config import Config
 from lib.cuckoo.common.objects import File
@@ -66,6 +71,60 @@ def demux_zip(filename, options):
 
     return retlist
 
+def demux_rar(filename, options):
+    retlist = []
+
+    if not HAS_RARFILE:
+        return retlist
+
+    try:
+        extracted = []
+        password="infected"
+        fields = options.split(",")
+        for field in fields:
+            key, value = field.split("=", 1)
+            if key == "password":
+                password = value
+                break
+
+        with RarFile(filename, "r") as archive:
+            infolist = archive.infolist()
+            for info in infolist:
+                # avoid obvious bombs
+                if info.file_size > 100 * 1024 * 1024 or not info.file_size:
+                    continue
+                # ignore directories
+                if info.filename.endswith("\\"):
+                    continue
+                base, ext = os.path.splitext(info.filename)
+                basename = os.path.basename(info.filename)
+                ext = ext.lower()
+                if ext == "" and len(basename) and basename[0] == ".":
+                    continue
+                extensions = ["", ".exe", ".dll", ".pdf", ".doc", ".ppt", ".pptx", ".docx", ".xls", ".msi", ".bin", ".scr"]
+                for theext in extensions:
+                    if ext == theext:
+                        extracted.append(info.filename)
+                        break
+
+            options = Config()
+            tmp_path = options.cuckoo.get("tmppath", "/tmp")
+            target_path = os.path.join(tmp_path, "cuckoo-rar-tmp")
+            if not os.path.exists(target_path):
+                os.mkdir(target_path)
+            tmp_dir = tempfile.mkdtemp(prefix='cuckoorar_',dir=target_path)
+
+            for extfile in extracted:
+                try:
+                    retlist.append(archive.extract(extfile, path=tmp_dir, pwd=password))
+                except:
+                    retlist.append(archive.extract(extfile, path=tmp_dir))
+    except:
+        pass
+
+    return retlist
+
+
 def demux_email(filename, options):
     retlist = []
     try:
@@ -103,10 +162,12 @@ def demux_sample(filename, package, options):
 
     retlist = demux_zip(filename, options)
     if not retlist:
+        retlist = demux_rar(filename, options)
+    if not retlist:
         retlist = demux_email(filename, options)
-        if not retlist:
-            retlist = demux_msg(filename, options)
-    # handle ZIPs inside extracted files
+    if not retlist:
+        retlist = demux_msg(filename, options)
+    # handle ZIPs/RARs inside extracted files
     if retlist:
         newretlist = []
         for item in retlist:
@@ -114,7 +175,11 @@ def demux_sample(filename, package, options):
             if zipext:
                 newretlist.extend(zipext)
             else:
-                newretlist.append(item)
+                rarext = demux_rar(item, options)
+                if rarext:
+                    newretlist.extend(rarext)
+                else:
+                    newretlist.append(item)
         retlist = newretlist
 
     # if it wasn't a ZIP or an email or we weren't able to obtain anything interesting from either, then just submit the
