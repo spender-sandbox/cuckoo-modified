@@ -7,7 +7,11 @@ import shutil
 import logging
 import re
 
-from rarfile import RarFile,BadRarFile
+try:
+    from rarfile import RarFile,BadRarFile
+    HAS_RARFILE = True
+except ImportError:
+    HAS_RARFILE = False
 
 from lib.common.abstracts import Package
 from lib.common.exceptions import CuckooPackageError
@@ -77,6 +81,9 @@ class Rar(Package):
             raise CuckooPackageError("Invalid Rar file")
 
     def start(self, path):
+        if not HAS_RARFILE:
+            raise CuckooPackageError("rarfile Python module not installed.  Please run `pip install rarfile` as an administrator.")
+
         root = os.environ["TEMP"]
         password = self.options.get("password")
         exe_regex = re.compile('(\.exe|\.scr|\.msi|\.bat|\.lnk)$',flags=re.IGNORECASE)
