@@ -3,6 +3,7 @@
 # See the file 'docs/LICENSE' for copying permission.
 
 import os
+import tempfile
 from zipfile import ZipFile
 try:
     from rarfile import RarFile
