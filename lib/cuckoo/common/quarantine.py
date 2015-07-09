@@ -68,7 +68,7 @@ def unquarantine(file):
     base = os.path.basename(file)
     realbase, ext = os.path.splitext(base)
 
-    if ext == ".bup" or olefile.isOleFile(file):
+    if ext.lower() == ".bup" or olefile.isOleFile(file):
         return mcafee_unquarantine(file)
 
     return forefront_unquarantine(file)
