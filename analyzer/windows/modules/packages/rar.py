@@ -82,7 +82,7 @@ class Rar(Package):
 
     def start(self, path):
         if not HAS_RARFILE:
-            raise CuckooPackageError("rarfile Python module not installed.  Please run `pip install rarfile` as an administrator.")
+            raise CuckooPackageError("rarfile Python module not installed in guest.")
 
         root = os.environ["TEMP"]
         password = self.options.get("password")
