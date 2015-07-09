@@ -103,6 +103,9 @@ def demux_rar(filename, options):
                 # ignore directories
                 if info.filename.endswith("\\"):
                     continue
+                # add some more sanity checking since RarFile invokes an external handler
+                if "..\\" in info.filename:
+                    continue
                 base, ext = os.path.splitext(info.filename)
                 basename = os.path.basename(info.filename)
                 ext = ext.lower()
@@ -122,10 +125,14 @@ def demux_rar(filename, options):
             tmp_dir = tempfile.mkdtemp(prefix='cuckoorar_',dir=target_path)
 
             for extfile in extracted:
+                # RarFile differs from ZipFile in that extract() doesn't return the path of the extracted file
+                # so we have to make it up ourselves
                 try:
-                    retlist.append(archive.extract(extfile, path=tmp_dir, pwd=password))
+                    archive.extract(extfile, path=tmp_dir, pwd=password)
+                    retlist.append(os.path.join(tmp_dir, extfile.replace("\\", "/")))
                 except:
-                    retlist.append(archive.extract(extfile, path=tmp_dir))
+                    archive.extract(extfile, path=tmp_dir)
+                    retlist.append(os.path.join(tmp_dir, extfile.replace("\\", "/")))
     except:
         pass
 
