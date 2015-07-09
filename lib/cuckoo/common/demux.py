@@ -29,10 +29,13 @@ def demux_zip(filename, options):
         password="infected"
         fields = options.split(",")
         for field in fields:
-            key, value = field.split("=", 1)
-            if key == "password":
-                password = value
-                break
+            try:
+                key, value = field.split("=", 1)
+                if key == "password":
+                    password = value
+                    break
+            except:
+                pass
 
         with ZipFile(filename, "r") as archive:
             infolist = archive.infolist()
@@ -82,10 +85,13 @@ def demux_rar(filename, options):
         password="infected"
         fields = options.split(",")
         for field in fields:
-            key, value = field.split("=", 1)
-            if key == "password":
-                password = value
-                break
+            try:
+                key, value = field.split("=", 1)
+                if key == "password":
+                    password = value
+                    break
+            except:
+                pass
 
         with RarFile(filename, "r") as archive:
             infolist = archive.infolist()
