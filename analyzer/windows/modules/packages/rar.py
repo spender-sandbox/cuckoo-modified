@@ -84,6 +84,13 @@ class Rar(Package):
         if not HAS_RARFILE:
             raise CuckooPackageError("rarfile Python module not installed in guest.")
 
+        # Check file extension.
+        ext = os.path.splitext(path)[-1].lower()
+        if ext != ".rar":
+            new_path = path + ".rar"
+            os.rename(path, new_path)
+            path = new_path
+
         root = os.environ["TEMP"]
         password = self.options.get("password")
         exe_regex = re.compile('(\.exe|\.scr|\.msi|\.bat|\.lnk)$',flags=re.IGNORECASE)
