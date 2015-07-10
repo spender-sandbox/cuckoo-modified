@@ -67,6 +67,27 @@ And change "type" to qcow2 and "source file" to your qcow2 disk image, like this
         <address type='drive' controller='0' bus='0' unit='0'/>
     </disk>
 
+KVM by default will pass through a feature flag, viewable in ECX as the 31st bit
+after executing the CPUID instruction with EAX set to 1. Some malware will use this
+unprivileged instruction to detect its execution in a VM. One way to avoid this is to modify
+your VM definition as follows:  find the following line::
+
+	<domain type='kvm'>
+
+Change it to::
+
+	  <domain type='kvm' xmlns:qemu='http://libvirt.org/schemas/domain/qemu/1.0'>
+
+Then within the domain element, add the following::
+
+    <qemu:commandline>
+      <qemu:arg value='-cpu'/>
+      <qemu:arg value='host,-hypervisor'/>
+    </qemu:commandline>
+
+Instead of using "host", you can also choose a number of other CPU models from the
+list displayed with the "qemu-system-i386 -cpu help" command (SandyBridge, Haswell, etc).
+
 Now test your virtual machine, if everything works prepare it for snapshotting while
 running Cuckoo's agent. This means the virtual machine needs to be running
 while you are taking the snapshot. Then you can shut it down.
