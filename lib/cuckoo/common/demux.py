@@ -23,7 +23,6 @@ def demux_zip(filename, options):
         # don't try to extract from office docs
         magic = File(filename).get_type()
         if "Microsoft" in magic or "Java Jar" in magic:
-            retlist.append(filename)
             return retlist
 
         extracted = []
@@ -82,6 +81,11 @@ def demux_rar(filename, options):
         return retlist
 
     try:
+        # don't try to auto-extract RAR SFXes
+        magic = File(filename).get_type()
+        if "PE32" in magic or "MS-DOS executable" in magic:
+            return retlist
+
         extracted = []
         password="infected"
         fields = options.split(",")
