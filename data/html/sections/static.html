@@ -3,7 +3,7 @@
         <h4>Static Analysis</h4>
     </div>
     {% if results.static %}
-        {% if results.static.pe_imagebase or results.static.pe_entrypoint or results.static.pe_timestamp or results.static.pe_imphash or results.static.pe_icon %}
+        {% if results.static.pe_imagebase or results.static.pe_entrypoint or results.static.pe_osversion or results.static.pe_timestamp or results.static.pe_imphash or results.static.pe_icon %}
             <div>
                 {% if summary_report %}
                 <h4>PE Information</h4>
@@ -23,6 +23,12 @@
                             <tr>
                                 <th style="width: 15%;">Entry Point</th>
                                 <td>{{results.static.pe_entrypoint}}</td>
+                            </tr>
+                        {% endif %}
+                        {% if results.static.pe_osversion %}
+                            <tr>
+                                <th style="width: 15%;">Minimum OS Version</th>
+                                <td>{{results.static.pe_osversion}}</td>
                             </tr>
                         {% endif %}
                         {% if results.static.pe_timestamp %}

@@ -265,6 +265,15 @@ class PortableExecutable:
 
         return "0x{0:08x}".format(self.pe.OPTIONAL_HEADER.ImageBase + self.pe.OPTIONAL_HEADER.AddressOfEntryPoint)
 
+    def _get_osversion(self):
+        """Get minimum required OS version for PE to execute
+        @return: minimum OS version or None.
+        """
+        if not self.pe:
+            return None
+
+        return "{0}.{1}".format(self.pe.OPTIONAL_HEADER.MajorOperatingSystemVersion, self.pe.OPTIONAL_HEADER.MinorOperatingSystemVersion)
+
     def _get_resources(self):
         """Get resources.
         @return: resources dict or None.
@@ -458,6 +467,7 @@ class PortableExecutable:
         results["peid_signatures"] = self._get_peid_signatures()
         results["pe_imagebase"] = self._get_imagebase()
         results["pe_entrypoint"] = self._get_entrypoint()
+        results["pe_osversion"] = self._get_osversion()
         results["pe_imports"] = self._get_imported_symbols()
         results["pe_exports"] = self._get_exported_symbols()
         results["pe_dirents"] = self._get_directory_entries()
