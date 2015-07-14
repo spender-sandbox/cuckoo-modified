@@ -1,6 +1,6 @@
 <section id="static_analysis">
     {% if analysis.static %}
-        {% if analysis.static.pe_imagebase or analysis.static.pe_entrypoint or analysis.static.pe_osversion or analysis.static.pe_timestamp or analysis.static.pe_imphash or analysis.static.pe_icon %}
+        {% if analysis.static.pe_imagebase or analysis.static.pe_entrypoint or analysis.static.pe_osversion or analysis.static.pe_pdbpath or analysis.static.pe_timestamp or analysis.static.pe_imphash or analysis.static.pe_icon %}
             <div>
                 <h4>PE Information</h4>
                 <div id="pe_information">
@@ -21,6 +21,12 @@
                             <tr>
                                 <th style="width: 15%;">Minimum OS Version</th>
                                 <td>{{analysis.static.pe_osversion}}</td>
+                            </tr>
+                        {% endif %}
+                        {% if analysis.static.pe_pdbpath %}
+                            <tr>
+                                <th style="width: 15%;">PDB Path</th>
+                                <td>{{analysis.static.pe_pdbpath}}</td>
                             </tr>
                         {% endif %}
                         {% if analysis.static.pe_timestamp %}
