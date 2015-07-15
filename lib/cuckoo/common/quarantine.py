@@ -69,12 +69,13 @@ def trend_unquarantine(file):
 
     bytesleft = len(data) - dataoffset
     unaligned = dataoffset % 4
-    firstiter = 1
+    firstiter = True
     curoffset = dataoffset
     while bytesleft:
         off = curoffset
         if firstiter:
             off = curoffset - unaligned
+            firstiter = False
         keyval = basekey + off
         buf = struct.pack("<I", keyval)
         crc = crc32(buf) & 0xffffffff
@@ -88,7 +89,6 @@ def trend_unquarantine(file):
             bytesleft -= 1
 
         unaligned = 0
-        firstiter = 0
 
     return store_temp_file(data[dataoffset:len(data)], origname)
 
