@@ -49,9 +49,9 @@ def trend_unquarantine(file):
     for i in range(numtags):
         code, tagdata = read_trend_tag(data, offset)
         if code == 1: # original pathname
-            origpath = unicode(tagdata, encoding="utf16")
+            origpath = unicode(tagdata, encoding="utf16").encode("utf8", "ignore")
         elif code == 2: # original filename
-            origname = unicode(tagdata, encoding="utf16")
+            origname = unicode(tagdata, encoding="utf16").encode("utf8", "ignore")
         elif code == 3: # platform
             platform = str(tagdata)
         elif code == 4: # file attributes
