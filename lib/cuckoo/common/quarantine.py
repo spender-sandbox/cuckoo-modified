@@ -68,7 +68,7 @@ def trend_unquarantine(file):
         return store_temp_file(data[dataoffset:len(data)], origname)
 
     bytesleft = len(data) - dataoffset
-    unaligned = bytesleft % 4
+    unaligned = dataoffset % 4
     firstiter = 1
     curoffset = dataoffset
     while bytesleft:
