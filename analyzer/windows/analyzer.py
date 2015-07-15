@@ -150,7 +150,7 @@ def del_file(fname):
     fnamelower = fname.lower()
 
     # we only dump files during deletion that we were previously aware of
-    for idx, name in FILES_LIST:
+    for idx, name in enumerate(FILES_LIST):
         namelower = name.lower()
         # dump streams associated with the file too
         if namelower == fnamelower or (namelower.startswith(fnamelower) and namelower[len(fnamelower)] == ':'):
