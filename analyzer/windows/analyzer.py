@@ -124,8 +124,7 @@ def dump_file(file_path):
 
     if os.path.isdir(file_path):
         return
-    name = os.path.basename(file_path)
-    file_name = name[name.find(u":")+1:]
+    file_name = os.path.basename(file_path)
     if duplicate:
         idx = DUMPED_LIST.index(sha256)
         upload_path = UPLOADPATH_LIST[idx]
