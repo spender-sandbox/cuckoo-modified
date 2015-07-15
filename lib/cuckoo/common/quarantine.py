@@ -49,9 +49,9 @@ def trend_unquarantine(file):
     for i in range(numtags):
         code, tagdata = read_trend_tag(data, offset)
         if code == 1: # original pathname
-            origpath = unicode(tagdata, encoding="utf16").encode("utf8", "ignore")
+            origpath = unicode(tagdata, encoding="utf16").encode("utf8", "ignore").rstrip("\0")
         elif code == 2: # original filename
-            origname = unicode(tagdata, encoding="utf16").encode("utf8", "ignore")
+            origname = unicode(tagdata, encoding="utf16").encode("utf8", "ignore").rstrip("\0")
         elif code == 3: # platform
             platform = str(tagdata)
         elif code == 4: # file attributes
@@ -152,8 +152,11 @@ def unquarantine(file):
     if ext.lower() == ".bup" or olefile.isOleFile(file):
         return mcafee_unquarantine(file)
 
-    quarfile = trend_unquarantine(file)
-    if quarfile:
-        return quarfile
+    try:
+        quarfile = trend_unquarantine(file)
+        if quarfile:
+            return quarfile
+    except:
+        pass
 
     return forefront_unquarantine(file)
