@@ -144,15 +144,27 @@ def dump_file(file_path):
 
 
 def del_file(fname):
-    dump_file(fname)
+
+    deleted_idxes = []
 
     # Filenames are case-insensitive in windows.
-    fnames = [x.lower() for x in FILES_LIST]
+    fnamelower = fname.lower()
+
+    # we only dump files during deletion that we were previously aware of
+    for idx, name in FILES_LIST:
+        namelower = name.lower()
+        # dump streams associated with the file too
+        if namelower == fnamelower or (namelower.startswith(fnamelower) and namelower[len(fnamelower)] == ':'):
+            dump_file(name)
+            deleted_idxes.append(idx)
+
+    for name in dumped_files:
+        dump_file(name)
 
     # If this filename exists in the FILES_LIST, then delete it, because it
     # doesn't exist anymore anyway.
-    if fname.lower() in fnames:
-        FILES_LIST.pop(fnames.index(fname.lower()))
+    for idx in deleted_idxes:
+        FILES_LIST.pop(idx)
 
 def move_file(old_fname, new_fname):
     # Filenames are case-insensitive in windows.
@@ -177,6 +189,9 @@ def move_file(old_fname, new_fname):
                replacepath = new_fname
            else:
                replacepath = new_fname + u"\\"
+        elif fname.startswith(lower_old_fname + u":"):
+            matchpath = lower_old_fname + u":"
+            replacepath = new_fname + u":"
 
         if matchpath:
             # Replace the old filename by the new filename, or replace the subdirectory if moved
