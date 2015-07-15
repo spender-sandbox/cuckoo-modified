@@ -158,9 +158,6 @@ def del_file(fname):
             dump_file(name)
             deleted_idxes.append(idx)
 
-    for name in dumped_files:
-        dump_file(name)
-
     # If this filename exists in the FILES_LIST, then delete it, because it
     # doesn't exist anymore anyway.
     for idx in deleted_idxes:
