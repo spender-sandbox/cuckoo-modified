@@ -308,4 +308,11 @@ def unquarantine(file):
     except:
         pass
 
+    try:
+        quarfile = sep_unquarantine(file)
+        if quarfile:
+            return quarfile
+    except:
+        pass
+
     return forefront_unquarantine(file)
