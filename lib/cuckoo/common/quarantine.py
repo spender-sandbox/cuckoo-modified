@@ -139,11 +139,6 @@ def sep_unquarantine(f):
         code, length, codeval, tagdata = read_sep_tag(data, offset)
         extralen = len(tagdata)
         if code == 9:
-            has_header = True
-            if lastlen == codeval:
-                xor_next_container = True
-                has_header = False
-                lastlen = 0
             if xor_next_container:
                 for i in range(len(tagdata)):
                     data[offset+5+i] ^= 0xff
@@ -170,14 +165,14 @@ def sep_unquarantine(f):
                 elif codeval == 0x10 or codeval == 0x8:
                     if codeval == 0x8:
                         xor_next_container = True
+                        lastlen = struct.unpack_from("<Q", data[offset+5:offset+5+8])[0]
                     else:
                         xor_next_container = False
                     decode_next_container = True
         elif code == 4:
-            if not decode_next_container:
-                lastlen = codeval
-            else:
-                lastlen = 0
+            if xor_next_container and lastlen == codeval:
+                binsize = codeval
+                has_header = False
 
         offset += length + extralen
         if offset == filesize:
