@@ -58,7 +58,8 @@ def read_trend_tag(data, offset):
 #
 # When we eventually find a container with a value of 0x8 (describing the length of its contained data),
 # its contained data will be the total length of its contained data, which will often itself include
-# a number of containers (as large files are broken up into chunks).  Naive parsers have assumed
+# a number of containers (as large files are broken up into chunks).  Instead of this, we may find a tag
+# of 0x04 with the associated value being the length of the following container.  Naive parsers have assumed
 # some "dirty bytes" were inserted into large binaries (uncoincidentally these arose from naively
 # xoring with 0xFF, mutating the container code and its associated dword length), or that "0x0900100000" was
 # some magic flag.  Instead, as we walk the tags, we should only be XORing with 0xFF the contained data.
@@ -128,12 +129,16 @@ def sep_unquarantine(f):
     collectedsize = 0
     bindata = bytearray()
     iters = 0
+    lastlen = 0
 
     while iters < 20000: # prevent infinite loop on malformed files
         iters += 1
         code, length, codeval, tagdata = read_sep_tag(data, offset)
         extralen = len(tagdata)
         if code == 9:
+            if lastlen == codeval:
+                xor_next_container = True
+                lastlen = 0
             if xor_next_container:
                 for i in range(len(tagdata)):
                     data[offset+5+i] ^= 0xff
@@ -163,6 +168,12 @@ def sep_unquarantine(f):
                     else:
                         xor_next_container = False
                     decode_next_container = True
+        elif code == 4:
+            if not decode_next_container:
+                lastlen = codeval
+            else:
+                lastlen = 0
+
         offset += length + extralen
         if offset == filesize:
             break
