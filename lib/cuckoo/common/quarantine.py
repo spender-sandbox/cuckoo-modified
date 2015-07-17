@@ -99,7 +99,7 @@ def read_sep_tag(data, offset):
         retdata = bytes(data[offset+5:offset+5+codeval])
     return code, length, codeval, retdata
 
-def seq_unquarantine(file):
+def sep_unquarantine(file):
     filesize = os.path.getsize(file)
     with open(file, "rb") as quarfile:
         qdata = quarfile.read()
