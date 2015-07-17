@@ -58,8 +58,7 @@ def read_trend_tag(data, offset):
 #
 # When we eventually find a container with a value of 0x8 (describing the length of its contained data),
 # its contained data will be the total length of its contained data, which will often itself include
-# a number of containers (as large files are broken up into chunks).  Instead of this, we may find a tag
-# of 0x04 with the associated value being the length of the following container.  Naive parsers have assumed
+# a number of containers (as large files are broken up into chunks).  Naive parsers have assumed
 # some "dirty bytes" were inserted into large binaries (uncoincidentally these arose from naively
 # xoring with 0xFF, mutating the container code and its associated dword length), or that "0x0900100000" was
 # some magic flag.  Instead, as we walk the tags, we should only be XORing with 0xFF the contained data.
@@ -76,6 +75,9 @@ def read_trend_tag(data, offset):
 # listed in the header.  This will happen when alternate data streams were appended to the end of the binary.
 # The streams will have their own header, which we won't bother to parse as we'll just cut off the contained
 # data after we reach the original file size.
+#
+# In the case where we find a tag of 0x04 prior to the final container containing the original binary, the
+# subsequent container will have no header.
 
 def read_sep_tag(data, offset):
     """ @return a code byte, metalength, metaval, and extra data tuple
@@ -124,7 +126,7 @@ def sep_unquarantine(f):
     offset = dataoffset
     decode_next_container = False
     xor_next_container = False
-    is_first_xor = True
+    has_header = True
     binsize = 0
     collectedsize = 0
     bindata = bytearray()
@@ -136,13 +138,15 @@ def sep_unquarantine(f):
         code, length, codeval, tagdata = read_sep_tag(data, offset)
         extralen = len(tagdata)
         if code == 9:
+            has_header = True
             if lastlen == codeval:
                 xor_next_container = True
+                has_header = False
                 lastlen = 0
             if xor_next_container:
                 for i in range(len(tagdata)):
                     data[offset+5+i] ^= 0xff
-                if is_first_xor:
+                if has_header:
                     headerlen = 12 + struct.unpack_from("<I", data[offset+5+8:offset+5+12])[0] + 28
                     binsize = struct.unpack_from("<I", data[offset+5+headerlen-12:offset+5+headerlen-8])[0]
                     collectedsize += len(tagdata) - headerlen
@@ -151,7 +155,7 @@ def sep_unquarantine(f):
                     else:
                         binlen = collectedsize
                     bindata += data[offset+5+headerlen:offset+5+headerlen+binlen]
-                    is_first_xor = False
+                    has_header = False
                 else:
                     binlen = len(tagdata)
                     collectedsize += binlen
