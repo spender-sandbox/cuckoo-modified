@@ -99,9 +99,9 @@ def read_sep_tag(data, offset):
         retdata = bytes(data[offset+5:offset+5+codeval])
     return code, length, codeval, retdata
 
-def sep_unquarantine(file):
-    filesize = os.path.getsize(file)
-    with open(file, "rb") as quarfile:
+def sep_unquarantine(f):
+    filesize = os.path.getsize(f)
+    with open(f, "rb") as quarfile:
         qdata = quarfile.read()
 
     data = bytearray(qdata)
@@ -173,8 +173,8 @@ def sep_unquarantine(file):
 # We don't need most of the header fields but include them here
 # for the sake of documentation
 
-def trend_unquarantine(file):
-    with open(file, "rb") as quarfile:
+def trend_unquarantine(f):
+    with open(f, "rb") as quarfile:
         qdata = quarfile.read()
 
     data = bytearray_xor(bytearray(qdata), 0xff)
@@ -241,11 +241,11 @@ def trend_unquarantine(file):
 
     return store_temp_file(data[dataoffset:len(data)], origname)
 
-def mcafee_unquarantine(file):
-    if not olefile.isOleFile(file):
+def mcafee_unquarantine(f):
+    if not olefile.isOleFile(f):
         return None
 
-    with open(file, "rb") as quarfile:
+    with open(f, "rb") as quarfile:
         qdata = quarfile.read()
 
     oledata = olefile.OleFileIO(qdata)
@@ -285,34 +285,34 @@ def mcafee_unquarantine(file):
                     # currently we're only returning the first found file in the quarantine file
                     return store_temp_file(decoded[item], malname)
 
-def forefront_unquarantine(file):
-    base = os.path.basename(file)
+def forefront_unquarantine(f):
+    base = os.path.basename(f)
     realbase, ext = os.path.splitext(base)
 
-    with open(file, "rb") as quarfile:
+    with open(f, "rb") as quarfile:
         qdata = bytearray_xor(bytearray(quarfile.read()), 0xff)
         # can't do much about the name for this case
         return store_temp_file(qdata, base)
 
-def unquarantine(file):
-    base = os.path.basename(file)
+def unquarantine(f):
+    base = os.path.basename(f)
     realbase, ext = os.path.splitext(base)
 
-    if ext.lower() == ".bup" or olefile.isOleFile(file):
-        return mcafee_unquarantine(file)
+    if ext.lower() == ".bup" or olefile.isOleFile(f):
+        return mcafee_unquarantine(f)
 
     try:
-        quarfile = trend_unquarantine(file)
+        quarfile = trend_unquarantine(f)
         if quarfile:
             return quarfile
     except:
         pass
 
     try:
-        quarfile = sep_unquarantine(file)
+        quarfile = sep_unquarantine(f)
         if quarfile:
             return quarfile
     except:
         pass
 
-    return forefront_unquarantine(file)
+    return forefront_unquarantine(f)
