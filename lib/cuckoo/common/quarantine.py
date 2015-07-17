@@ -77,7 +77,8 @@ def read_trend_tag(data, offset):
 # data after we reach the original file size.
 #
 # In the case where we find a tag of 0x04 prior to the final container containing the original binary, the
-# subsequent container will have no header.
+# subsequent container will have no header.  This can happen in cases where SEP quarantines files present
+# in archive formats.
 
 def read_sep_tag(data, offset):
     """ @return a code byte, metalength, metaval, and extra data tuple
