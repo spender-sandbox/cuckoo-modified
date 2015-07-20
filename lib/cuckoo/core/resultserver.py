@@ -117,7 +117,6 @@ class ResultServer(SocketServer.ThreadingTCPServer, object):
 
         return os.path.join(CUCKOO_ROOT, "storage", "analyses", str(task.id))
 
-
 class ResultHandler(SocketServer.BaseRequestHandler):
     """Result handler.
 
@@ -382,7 +381,6 @@ class FileUpload(object):
     def close(self):
         if self.fd:
             self.fd.close()
-
 
 class LogHandler(object):
     def __init__(self, handler):
