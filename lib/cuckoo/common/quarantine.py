@@ -263,6 +263,53 @@ def mse_unquarantine(f):
 
     return store_temp_file(outdata[headerlen:], "MSEDequarantineFile")
 
+# Never before published in an accurate form; reversed & developed by Accuvant, Inc.
+# http://forensicswiki.org/wiki/Kaspersky_Quarantine_File was close, but missed the
+# length/value encoding on metadata.  Mostly based on black-box reversing of the file
+# format, partially on reversing qb.ppl
+
+def kav_unquarantine(file):
+    with open(file, "rb") as quarfile:
+        data = bytearray(quarfile.read())
+
+    # check for KLQB header
+    magic = struct.unpack("<I", data[0:4])[0]
+    if magic != 0x42514c4b:
+        return None
+
+    fsize = len(data)
+
+    headerlen = struct.unpack("<I", data[8:12])[0]
+    metaoffset = struct.unpack("<I", data[0x10:0x14])[0]
+    metalen = struct.unpack("<I", data[0x20:0x24])[0]
+    origlen = struct.unpack("<I", data[0x30:0x34])[0]
+
+    if fsize != headerlen + origlen + metalen:
+        return None
+
+    origname = "KAVDequarantineFile"
+    key = [0xe2, 0x45, 0x48, 0xec, 0x69, 0x0e, 0x5c, 0xac]
+
+    curoffset = metaoffset
+    length = struct.unpack("<I", data[curoffset:curoffset+4])[0]
+    while length:
+        for i in range(length):
+            data[curoffset+4+i] ^= key[i % len(key)]
+        idlen = struct.unpack("<I", data[curoffset+4:curoffset+8])[0]
+        idname = str(data[curoffset+8:curoffset+8+idlen]).rstrip('\0')
+        if idname == "cNP_QB_FULLNAME":
+            vallen = length - idlen
+            origname = unicode(data[curoffset+8+idlen:curoffset+4+length]).decode("utf-16").encode("utf8", "ignore").rstrip('\0')
+        curoffset += 4 + length
+        if curoffset == fsize:
+            break
+        length = struct.unpack("<I", data[curoffset:curoffset+4])[0]
+
+    for i in range(origlen):
+        data[headerlen+i] ^= key[i % len(key)]
+
+    return store_temp_file(data[headerlen:headerlen+origlen], origname)
+
 # Never before published; reversed & developed by Accuvant, Inc.
 # We don't need most of the header fields but include them here
 # for the sake of documentation
@@ -395,6 +442,13 @@ def unquarantine(f):
     if ext.lower() == ".bup" or olefile.isOleFile(f):
         return mcafee_unquarantine(f)
 
+    try:
+        quarfile = kav_unquarantine(f)
+        if quarfile:
+            return quarfile
+    except:
+        pass
+    
     try:
         quarfile = trend_unquarantine(f)
         if quarfile:
