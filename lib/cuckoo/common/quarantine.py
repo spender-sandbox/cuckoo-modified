@@ -248,9 +248,9 @@ def mse_unquarantine(f):
     sbox = mse_ksa()
     outdata = mse_rc4_decrypt(sbox, data)
 
-    headerlen = 0x28 + struct.unpack("<I", outdata[8:12])
+    headerlen = 0x28 + struct.unpack("<I", outdata[8:12])[0]
 
-    origlen = struct.unpack("<I", outdata[headerlen-12:headerlen-8])
+    origlen = struct.unpack("<I", outdata[headerlen-12:headerlen-8])[0]
 
     if origlen + headerlen != fsize:
         return None
