@@ -242,15 +242,17 @@ def mse_unquarantine(f):
         data = bytearray(quarfile.read())
 
     fsize = len(data)
-    if fsize < 240 or data[0] != 0x0B or data[1] != 0xad or data[2] != 0x00:
+    if fsize < 12 or data[0] != 0x0B or data[1] != 0xad or data[2] != 0x00:
         return None
 
     sbox = mse_ksa()
     outdata = mse_rc4_decrypt(sbox, data)
 
-    origlen = struct.unpack("<I", outdata[0xe4:0xe8])
+    headerlen = 0x28 + struct.unpack("<I", outdata[8:12])
 
-    if origlen + 0xf0 != fsize:
+    origlen = struct.unpack("<I", outdata[headerlen-12:headerlen-8])
+
+    if origlen + headerlen != fsize:
         return None
 
     # MSE stores metadata like the original filename in a separate file,
@@ -259,7 +261,7 @@ def mse_unquarantine(f):
     # of files, match them up by name, and then associate that data here
     # for the final submission
 
-    return store_temp_file(outdata[0xf0:], "MSEDequarantineFile")
+    return store_temp_file(outdata[headerlen:], "MSEDequarantineFile")
 
 # Never before published; reversed & developed by Accuvant, Inc.
 # We don't need most of the header fields but include them here
