@@ -1321,6 +1321,7 @@ def get_vt_consensus(namelist):
         "application",
         "risktool",
         "multi",
+        "ransom",
     ]
 
     finaltoks = defaultdict(int)
