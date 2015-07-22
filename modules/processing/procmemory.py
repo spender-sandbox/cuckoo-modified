@@ -119,7 +119,6 @@ class ProcessMemory(Processing):
                         # Dyre
                         if match["name"] == "DyreCfgInjectsList":
                             output = list()
-                            final = ""
                             buf = ""
                             recline = False
                             for ystring in match["strings"]:
@@ -133,14 +132,12 @@ class ProcessMemory(Processing):
                                         recline = False
                                         if buf not in output:
                                             output.append(buf)
-                                            final += buf
 
                             match["strings"] = ["".join(output)]
                             match["meta"]["description"] += " (Observed %d unique inject elements)" % len(output)
 
                         elif match["name"] == "DyreCfgRedirectList":
                             output = list()
-                            final = ""
                             buf = ""
                             recline = False
                             for ystring in match["strings"]:
@@ -154,7 +151,6 @@ class ProcessMemory(Processing):
                                         recline = False
                                         if buf not in output:
                                             output.append(buf)
-                                            final += buf
 
                             match["strings"] = ["".join(output)]
                             match["meta"]["description"] += " (Observed %d unique redirect elements)" % len(output)
@@ -166,14 +162,14 @@ class ProcessMemory(Processing):
                             for ystring in match["strings"]:
                                 for line in ystring.splitlines():
                                     if line.startswith("#BEGIN DARKCOMET"):
-                                        final = ""
+                                        buf = ""
                                         recline = True
                                     if recline:
-                                        final += line.strip() + "\n"
+                                        buf += line.strip() + "\n"
                                     if line.startswith("#EOF DARKCOMET"):
                                         recline = False
-                                        if final not in output:
-                                            output.append(final)
+                                        if buf not in output:
+                                            output.append(buf)
 
                             match["strings"] = ["".join(output)]
 
