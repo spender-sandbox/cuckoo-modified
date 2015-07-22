@@ -29,3 +29,16 @@ rule DyreCfgInjectsList
     condition:
         $buf
 }
+
+rule DyreCfgRedirectList
+{
+    meta:
+        author = "KillerInstinct"
+        description = "Configuration element for Dyre redirects list"
+
+    strings:
+        $buf = /\<rpcgroup\>.*\<\/rpcgroup\>/s
+
+    condition:
+        $buf
+}

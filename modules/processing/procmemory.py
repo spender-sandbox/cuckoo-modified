@@ -113,6 +113,70 @@ class ProcessMemory(Processing):
                     address_space=self.parse_dump(dmp_path)
                 )
 
+                # Deduplicate configs
+                if proc["yara"]:
+                    for match in proc["yara"]:
+                        # Dyre
+                        if match["name"] == "DyreCfgInjectsList":
+                            output = list()
+                            final = ""
+                            buf = ""
+                            recline = False
+                            for ystring in match["strings"]:
+                                for line in ystring.splitlines():
+                                    if line.startswith("<litem>"):
+                                        buf = ""
+                                        recline = True
+                                    if recline:
+                                        buf += line.strip() + "\n"
+                                    if line.startswith("</litem>"):
+                                        recline = False
+                                        if buf not in output:
+                                            output.append(buf)
+                                            final += buf
+
+                            match["strings"] = ["".join(output)]
+                            match["meta"]["description"] += " (Observed %d unique inject elements)" % len(output)
+
+                        elif match["name"] == "DyreCfgRedirectList":
+                            output = list()
+                            final = ""
+                            buf = ""
+                            recline = False
+                            for ystring in match["strings"]:
+                                for line in ystring.splitlines():
+                                    if line.startswith("<rpcgroup>"):
+                                        buf = ""
+                                        recline = True
+                                    if recline:
+                                        buf += line.strip() + "\n"
+                                    if line.startswith("</rpcgroup>"):
+                                        recline = False
+                                        if buf not in output:
+                                            output.append(buf)
+                                            final += buf
+
+                            match["strings"] = ["".join(output)]
+                            match["meta"]["description"] += " (Observed %d unique redirect elements)" % len(output)
+
+                        # DarkComet
+                        elif match["name"] == "DarkCometConfig":
+                            output = list()
+                            recline = False
+                            for ystring in match["strings"]:
+                                for line in ystring.splitlines():
+                                    if line.startswith("#BEGIN DARKCOMET"):
+                                        final = ""
+                                        recline = True
+                                    if recline:
+                                        final += line.strip() + "\n"
+                                    if line.startswith("#EOF DARKCOMET"):
+                                        recline = False
+                                        if final not in output:
+                                            output.append(final)
+
+                            match["strings"] = ["".join(output)]
+
                 results.append(proc)
 
         return results
