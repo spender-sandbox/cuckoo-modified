@@ -1,4 +1,6 @@
 # Copyright (C) 2015 eSentire, Inc (jacob.gajek@esentire.com).
+# This file is part of Cuckoo Sandbox - http://www.cuckoosandbox.org
+# See the file 'docs/LICENSE' for copying permission.
 
 import requests
 import logging
