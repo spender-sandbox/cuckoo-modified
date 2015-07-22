@@ -72,9 +72,11 @@ function go_to_api_call(pid, call_id) {
 }
 function load_filtered_chunk(pid, category) {
     var apilist = document.getElementById("apifilter_"+pid);
-    var encodedlist = encodeURI(apilist.value);
-    if (!encodedlist)
-        encodedlist = "none";      
+    if (apilist.value == ""){
+        var encodedlist = encodeURI("!null")
+    } else {
+        var encodedlist = encodeURI(apilist.value);
+    }
     $("#process_"+pid+" div.calltable").load("/analysis/filtered/{{analysis.info.id}}/"+pid+"/"+category+"/"+encodedlist+"/", function(data, status, xhr){
         if (status == "error") {
             $("#process_"+pid+" div.calltable").html("Error loading data. Please reload the page and if the error persists contact us.");

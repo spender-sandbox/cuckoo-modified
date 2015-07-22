@@ -252,8 +252,6 @@ def filtered_chunk(request, task_id, pid, category, apilist):
 
         exclude = False
         apilist = apilist.strip()
-        if apilist == "none":
-            apilist = ""
         if len(apilist) and apilist[0] == '!':
             exclude = True
         apilist = apilist.lstrip('!')
