@@ -222,7 +222,7 @@ def mse_ksa():
     return sbox
 
 
-def mse_rc4_decrypt(sbox, data):
+def rc4_decrypt(sbox, data):
     out = bytearray(len(data))
     i = 0
     j = 0
@@ -246,7 +246,7 @@ def mse_unquarantine(f):
         return None
 
     sbox = mse_ksa()
-    outdata = mse_rc4_decrypt(sbox, data)
+    outdata = rc4_decrypt(sbox, data)
 
     headerlen = 0x28 + struct.unpack("<I", outdata[8:12])[0]
 
@@ -262,6 +262,38 @@ def mse_unquarantine(f):
     # for the final submission
 
     return store_temp_file(outdata[headerlen:], "MSEDequarantineFile")
+
+# Never before published; reversed & developed by Accuvant, Inc.
+# Simple RC4 based on an MD5 of a hardcoded string in mbamcore.dll
+# Quarantine files are split into data and metadata, so like MSE we
+# can't recover the original filename with the data file alone.
+# The original binary is in the .quar file and the metadata in the .data file
+# Both files use the same key.  The original filename can be obtained from
+# the decrypted metadata file from the line beginning with "ObjectName:"
+
+def mbam_ksa():
+    # hardcoded key obtained from mbamcore.dll
+    m = hashlib.md5()
+    m.update("XBXM8362QIXD9+637HCB02/VN0JF6Z3)cB9UFZMdF3I.*c.,c5SbO7)WNZ8CY1(XMUDb")
+    key = bytearray(m.digest())
+    sbox = range(256)
+    j = 0
+    for i in range(256):
+        j = (j + sbox[i] + key[i % len(key)]) % 256
+        tmp = sbox[i]
+        sbox[i] = sbox[j]
+        sbox[j] = tmp
+
+    return sbox
+
+def mbam_unquarantine(f):
+    with open(f, "rb") as quarfile:
+        data = bytearray(quarfile.read())
+
+    sbox = mbam_ksa()
+    outdata = rc4_decrypt(sbox, data)
+
+    return store_temp_file(outdata, "MBAMDequarantineFile")
 
 # Never before published in an accurate form; reversed & developed by Accuvant, Inc.
 # http://forensicswiki.org/wiki/Kaspersky_Quarantine_File was close, but missed the
@@ -440,7 +472,16 @@ def unquarantine(f):
     realbase, ext = os.path.splitext(base)
 
     if ext.lower() == ".bup" or olefile.isOleFile(f):
-        return mcafee_unquarantine(f)
+        try:
+            return mcafee_unquarantine(f)
+        except:
+            pass
+
+    if ext.lower() == ".quar":
+        try:
+            return mbam_unquarantine(f)
+        except:
+            pass
 
     try:
         quarfile = kav_unquarantine(f)
