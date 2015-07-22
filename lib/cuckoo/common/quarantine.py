@@ -4,6 +4,7 @@
 
 import os
 import struct
+import hashlib
 from binascii import crc32
 
 import lib.cuckoo.common.office.olefile as olefile
