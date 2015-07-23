@@ -1051,7 +1051,7 @@ class Memory(Processing):
         self.key = "memory"
 
         results = {}
-        if "machine" not in self.task or not self.task["machine"]:
+        if "machine" not in self.task or not self.task["machine"] or not self.task["memory"]:
             return results
 
         task_machine = self.task["machine"]["name"]
