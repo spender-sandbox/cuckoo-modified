@@ -33,6 +33,15 @@
     <Content Include="conf\reporting.conf" />
     <Content Include="conf\virtualbox.conf" />
     <Content Include="conf\vmware.conf" />
+    <Content Include="data\yara\binaries\embedded.yar" />
+    <Content Include="data\yara\binaries\shellcodes.yar" />
+    <Content Include="data\yara\binaries\vmdetect.yar" />
+    <Content Include="data\yara\memory\.gitignore" />
+    <Content Include="data\yara\memory\darkcomet.yar" />
+    <Content Include="data\yara\memory\dridex.yar" />
+    <Content Include="data\yara\memory\dyre.yar" />
+    <Content Include="data\yara\memory\kazybot.yar" />
+    <Content Include="data\yara\urls\.gitignore" />
     <Content Include="docs\AUTHORS" />
     <Content Include="docs\book\src\customization\auxiliary.rst" />
     <Content Include="docs\book\src\customization\index.rst" />
@@ -482,6 +491,10 @@
     <Folder Include="data\html\js" />
     <Folder Include="data\html\sections" />
     <Folder Include="data\peutils" />
+    <Folder Include="data\yara\" />
+    <Folder Include="data\yara\binaries\" />
+    <Folder Include="data\yara\memory\" />
+    <Folder Include="data\yara\urls\" />
     <Folder Include="docs\" />
     <Folder Include="docs\book\" />
     <Folder Include="docs\book\src" />
