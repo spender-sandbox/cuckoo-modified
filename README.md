@@ -10,7 +10,7 @@ It offers a number of advantages over the upstream Cuckoo:
 + Ability to follow APC injection and stealth explorer injection
 + Pretty-printed API flags
 + Per-analysis Tor support
-+ Over 60 new signature modules
++ Over 110 new signature modules (over 70 developed solely by Accuvant)
 + Anti-anti-sandbox and anti-anti-VM techniques built-in
 + More stable hooking
 + Ability to restore removed hooks
