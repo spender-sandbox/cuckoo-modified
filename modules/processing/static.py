@@ -90,11 +90,17 @@ def _get_filetype(data):
 class PortableExecutable:
     """PE analysis."""
 
-    def __init__(self, file_path):
+    def __init__(self, file_path, results):
         """@param file_path: file path."""
         self.file_path = file_path
         self.pe = None
+        self.results = results
 
+    def add_statistic(name, field, value):
+        if name not in self.results["statistics"]["processing"]:
+            self.results["statistics"]["processing"][name] = { }
+
+        self.results["statistics"]["processing"][name][field] = value
 
     def _get_peid_signatures(self):
         """Gets PEID signatures.
@@ -782,7 +788,7 @@ class Static(Processing):
         if self.task["category"] == "file":
             thetype = File(self.file_path).get_type()
             if HAVE_PEFILE and ("PE32" in thetype or "MS-DOS executable" in thetype):
-                static = PortableExecutable(self.file_path).run()
+                static = PortableExecutable(self.file_path, self.results).run()
             elif "PDF" in thetype:
                 static = PDF(self.file_path).run()
             elif "Word 2007" in thetype or "Excel 2007" in thetype or "PowerPoint 2007" in thetype:
