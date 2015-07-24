@@ -42,6 +42,7 @@ $(function() {
             <li><a href="#comments" data-toggle="tab">Comments</a></li>
         {% endif %}
     {% endif %}
+    <li><a href="#statistics" data-toggle="tab">Statistics</a></li>
     <li><a href="#admin" data-toggle="tab">Admin</a></li>
 </ul>
 <div class="tab-content">
@@ -87,6 +88,9 @@ $(function() {
         {% include "analysis/comments/index.html" %}
     </div>
     {% endif %}
+    <div class="tab-pane fade" id="statistics">
+        {% include "analysis/statistics/index.html" %}
+    </div>
     <div class="tab-pane fade" id="admin">
         {% include "analysis/admin/index.html" %}
     </div>

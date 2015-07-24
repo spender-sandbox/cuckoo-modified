@@ -1,0 +1,37 @@
+{% if analysis.statistics %}
+<h4>Processing</h4><br />
+    <div class="well well-small">
+        <ul class="list-group">
+            {% for key, value in analysis.statistics.processing %}
+            <li class="list-group-item">
+                <span class="badge">{{value}}</span>
+                {{key}}
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+<h4>Signatures</h4><br />
+    <div class="well well-small">
+        <ul class="list-group">
+            {% for key, value in analysis.statistics.signatures %}
+            <li class="list-group-item">
+                <span class="badge">{{value}}</span>
+                {{key}}
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+<h4>Reporting</h4><br />
+    <div class="well well-small">
+        <ul class="list-group">
+            {% for key, value in analysis.statistics.reporting %}
+            <li class="list-group-item">
+                <span class="badge">{{value}}</span>
+                {{key}}
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+{% else %}
+    <div class="alert alert-info">No statistics found.</div>
+{% endif %}
