@@ -33,7 +33,13 @@ $(function() {
     {% endif %}
     {% if analysis.procmemory %}<li><a href="#procmemory" data-toggle="tab">Process Memory</a></li>{% endif %}
     {% if analysis.memory %}<li><a href="#memory" data-toggle="tab">Memory Analysis</a></li>{% endif %}
-    {% if config.malheur %}<li><a href="#similar" data-toggle="tab">Similar</a></li>{% endif %}
+    {% if config.malheur %}
+    {% if similar|length %}
+        <li><a href="#similar" data-toggle="tab">Similar ({{similar|length}})</a></li>
+    {% else %}
+        <li><a href="#similar" data-toggle="tab">Similar</a></li>
+    {% endif %}
+    {% endif %}
     <li><a href="#reports" data-toggle="tab">Reports</a></li>
     {% if settings.COMMENTS %}
         {% if analysis.info.comments|length %}
