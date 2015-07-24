@@ -50,7 +50,7 @@ for cfile in ["reporting", "processing"]:
             enabledconf[item] = False
 
 
-def get_analysis_info(id=-1, task=None):
+def get_analysis_info(db, id=-1, task=None):
     if not task:
         task = db.view_task(id)
     if not task:
@@ -58,7 +58,7 @@ def get_analysis_info(id=-1, task=None):
 
     new = task.to_dict()
 
-    rtmp = results_db.analysis.find_one({"info.id": int(new["id"])},{"virustotal_summary": 1, "malscore": 1, "malfamily": 1, "suri_tls_cnt": 1, "suri_alert_cnt": 1, "suri_http_cnt": 1, "suri_file_cnt": 1, "mlist_cnt": 1},sort=[("_id", pymongo.DESCENDING)])
+    rtmp = results_db.analysis.find_one({"info.id": int(new["id"])},{"info": 1, "virustotal_summary": 1, "malscore": 1, "malfamily": 1, "suri_tls_cnt": 1, "suri_alert_cnt": 1, "suri_http_cnt": 1, "suri_file_cnt": 1, "mlist_cnt": 1},sort=[("_id", pymongo.DESCENDING)])
     if rtmp:
         if rtmp["info"]["category"] == "file":
             if new["sample_id"]:
@@ -128,7 +128,7 @@ def index(request, page=1):
 
     if tasks_files:
         for task in tasks_files:
-            new = get_analysis_info(task=task)
+            new = get_analysis_info(db, task=task)
             if new["id"] == first_file:
                 paging["show_file_next"] = "hide"
             if page <= 1:
@@ -143,7 +143,7 @@ def index(request, page=1):
 
     if tasks_urls:
         for task in tasks_urls:
-            new = get_analysis_info(task=task)
+            new = get_analysis_info(db, task=task)
             if new["id"] == first_url:
                 paging["show_url_next"] = "hide"
             if page <= 1:
@@ -323,6 +323,8 @@ def search_behavior(request, task_id):
 
 @require_safe
 def report(request, task_id):
+    db = Database()
+
     report = results_db.analysis.find_one({"info.id": int(task_id)}, sort=[("_id", pymongo.DESCENDING)])
     if not report:
         return render_to_response("error.html",
@@ -367,7 +369,7 @@ def report(request, task_id):
             if ourclassname:
                 similar = classes[ourclassname]
                 for sim in similar:
-                    siminfo = get_analysis_info(id=int(sim["id"]))
+                    siminfo = get_analysis_info(db, id=int(sim["id"]))
                     if siminfo:
                         similarinfo.append(siminfo)
         except:
@@ -579,7 +581,7 @@ def search(request):
         db = Database()
         analyses = []
         for result in records:
-            new = get_analysis_info(id=int(result["info"]["id"]))
+            new = get_analysis_info(db, id=int(result["info"]["id"]))
             if not new:
                 continue
             analyses.append(new)
