@@ -50,7 +50,7 @@ for cfile in ["reporting", "processing"]:
             enabledconf[item] = False
 
 
-def get_analysis_info(id, task=None):
+def get_analysis_info(id=-1, task=None):
     if not task:
         task = db.view_task(id)
     if not task:
@@ -367,7 +367,7 @@ def report(request, task_id):
             if ourclassname:
                 similar = classes[ourclassname]
                 for sim in similar:
-                    siminfo = get_analysis_info(int(sim["id"]))
+                    siminfo = get_analysis_info(id=int(sim["id"]))
                     if siminfo:
                         similarinfo.append(siminfo)
         except:
@@ -579,7 +579,7 @@ def search(request):
         db = Database()
         analyses = []
         for result in records:
-            new = get_analysis_info(result["info"]["id"])
+            new = get_analysis_info(id=int(result["info"]["id"]))
             if not new:
                 continue
             analyses.append(new)
