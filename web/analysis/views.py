@@ -37,6 +37,7 @@ fs = GridFS(results_db)
 
 TASK_LIMIT = 25
 
+
 # Used for displaying enabled config options in Django UI
 enabledconf = dict()
 for cfile in ["reporting", "processing"]:
@@ -47,6 +48,49 @@ for cfile in ["reporting", "processing"]:
             enabledconf[item] = True
         else:
             enabledconf[item] = False
+
+
+def get_analysis_info(id, task=None):
+    if not task:
+        task = db.view_task(id)
+    if not task:
+        return None
+
+    new = task.to_dict()
+
+    rtmp = results_db.analysis.find_one({"info.id": int(new["id"])},{"virustotal_summary": 1, "malscore": 1, "malfamily": 1, "suri_tls_cnt": 1, "suri_alert_cnt": 1, "suri_http_cnt": 1, "suri_file_cnt": 1, "mlist_cnt": 1},sort=[("_id", pymongo.DESCENDING)])
+    if rtmp:
+        if rtmp["info"]["category"] == "file":
+            if new["sample_id"]:
+                sample = db.view_sample(new["sample_id"])
+                if sample:
+                    new["sample"] = sample.to_dict()
+            filename = os.path.basename(new["target"])
+            new.update({"filename": filename})
+
+        if rtmp.has_key("virustotal_summary") and rtmp["virustotal_summary"]:
+            new["virustotal_summary"] = rtmp["virustotal_summary"]
+        if rtmp.has_key("suri_tls_cnt") and rtmp["suri_tls_cnt"]:
+            new["suri_tls_cnt"] = rtmp["suri_tls_cnt"]
+        if rtmp.has_key("suri_alert_cnt") and rtmp["suri_alert_cnt"]:
+            new["suri_alert_cnt"] = rtmp["suri_alert_cnt"]
+        if rtmp.has_key("suri_file_cnt") and rtmp["suri_file_cnt"]:
+            new["suri_file_cnt"] = rtmp["suri_file_cnt"]
+        if rtmp.has_key("suri_http_cnt") and rtmp["suri_http_cnt"]:
+            new["suri_http_cnt"] = rtmp["suri_http_cnt"]
+        if rtmp.has_key("mlist_cnt") and rtmp["mlist_cnt"]:
+            new["mlist_cnt"] = rtmp["mlist_cnt"]
+        if rtmp.has_key("malscore"):
+            new["malscore"] = rtmp["malscore"]
+        if rtmp.has_key("malfamily") and rtmp["malfamily"]:
+            new["malfamily"] = rtmp["malfamily"]
+
+        if settings.MOLOCH_ENABLED:
+            if settings.MOLOCH_BASE[-1] != "/":
+                settings.MOLOCH_BASE = settings.MOLOCH_BASE + "/"
+            new["moloch_url"] = settings.MOLOCH_BASE + "?date=-1&expression=tags" + quote("\x3d\x3d\x22%s\x3a%s\x22" % (settings.MOLOCH_NODE,new["id"]),safe='')
+
+    return new
 
 @require_safe
 def index(request, page=1):
@@ -84,47 +128,22 @@ def index(request, page=1):
 
     if tasks_files:
         for task in tasks_files:
-            new = task.to_dict()
+            new = get_analysis_info(task=task)
             if new["id"] == first_file:
                 paging["show_file_next"] = "hide"
             if page <= 1:
                 paging["show_file_prev"] = "hide"
-            new["sample"] = db.view_sample(new["sample_id"]).to_dict()
-
-            filename = os.path.basename(new["target"])
-            new.update({"filename": filename})
 
             if db.view_errors(task.id):
                 new["errors"] = True
 
-            rtmp = results_db.analysis.find_one({"info.id": int(new["id"])},{"virustotal_summary": 1, "malscore": 1, "malfamily": 1, "suri_tls_cnt": 1, "suri_alert_cnt": 1, "suri_http_cnt": 1, "suri_file_cnt": 1},sort=[("_id", pymongo.DESCENDING)])
-            if rtmp:
-                if rtmp.has_key("virustotal_summary") and rtmp["virustotal_summary"]:
-                    new["virustotal_summary"] = rtmp["virustotal_summary"]
-                if rtmp.has_key("suri_tls_cnt") and rtmp["suri_tls_cnt"]:
-                    new["suri_tls_cnt"] = rtmp["suri_tls_cnt"]
-                if rtmp.has_key("suri_alert_cnt") and rtmp["suri_alert_cnt"]:
-                    new["suri_alert_cnt"] = rtmp["suri_alert_cnt"]
-                if rtmp.has_key("suri_file_cnt") and rtmp["suri_file_cnt"]:
-                    new["suri_file_cnt"] = rtmp["suri_file_cnt"]
-                if rtmp.has_key("suri_http_cnt") and rtmp["suri_http_cnt"]:
-                    new["suri_http_cnt"] = rtmp["suri_http_cnt"]
-                if rtmp.has_key("malscore"):
-                    new["malscore"] = rtmp["malscore"]
-                if rtmp.has_key("malfamily"):
-                    new["malfamily"] = rtmp["malfamily"]
-
-            if settings.MOLOCH_ENABLED:
-                if settings.MOLOCH_BASE[-1] != "/":
-                    settings.MOLOCH_BASE = settings.MOLOCH_BASE + "/"
-                new["moloch_url"] = settings.MOLOCH_BASE + "?date=-1&expression=tags" + quote("\x3d\x3d\x22%s\x3a%s\x22" % (settings.MOLOCH_NODE,new["id"]),safe='')
             analyses_files.append(new)
     else:
         paging["show_file_next"] = "hide"
 
     if tasks_urls:
         for task in tasks_urls:
-            new = task.to_dict()
+            new = get_analysis_info(task=task)
             if new["id"] == first_url:
                 paging["show_url_next"] = "hide"
             if page <= 1:
@@ -132,28 +151,6 @@ def index(request, page=1):
 
             if db.view_errors(task.id):
                 new["errors"] = True
-
-            rtmp = results_db.analysis.find_one({"info.id": int(new["id"])},{"virustotal_summary": 1, "malscore": 1, "malfamily": 1, "suri_tls_cnt": 1, "suri_alert_cnt": 1, "suri_http_cnt": 1, "suri_file_cnt": 1},sort=[("_id", pymongo.DESCENDING)])
-            if rtmp:
-                if rtmp.has_key("virustotal_summary") and rtmp["virustotal_summary"]:
-                    new["virustotal_summary"] = rtmp["virustotal_summary"]
-                if rtmp.has_key("suri_tls_cnt") and rtmp["suri_tls_cnt"]:
-                    new["suri_tls_cnt"] = rtmp["suri_tls_cnt"]
-                if rtmp.has_key("suri_alert_cnt") and rtmp["suri_alert_cnt"]:
-                    new["suri_alert_cnt"] = rtmp["suri_alert_cnt"]
-                if rtmp.has_key("suri_file_cnt") and rtmp["suri_file_cnt"]:
-                    new["suri_file_cnt"] = rtmp["suri_file_cnt"]
-                if rtmp.has_key("suri_http_cnt") and rtmp["suri_http_cnt"]:
-                    new["suri_http_cnt"] = rtmp["suri_http_cnt"]
-                if rtmp.has_key("malscore"):
-                    new["malscore"] = rtmp["malscore"]
-                if rtmp.has_key("malfamily"):
-                    new["malfamily"] = rtmp["malfamily"]
-
-            if settings.MOLOCH_ENABLED:
-                if settings.MOLOCH_BASE[-1] != "/":
-                    settings.MOLOCH_BASE = settings.MOLOCH_BASE + "/"
-                new["moloch_url"] = settings.MOLOCH_BASE + "?date=-1&expression=tags" + quote("\x3d\x3d\x22%s\x3a%s\x22" % (settings.MOLOCH_NODE,new["id"]),safe='')
 
             analyses_urls.append(new)
     else:
@@ -344,6 +341,7 @@ def report(request, task_id):
         iplookups = dict()
 
     similar = []
+    similarinfo = []
     if enabledconf["malheur"]:
         malheur_file = os.path.join(CUCKOO_ROOT, "storage", "malheur", "malheur.txt")
         classes = dict()
@@ -368,6 +366,10 @@ def report(request, task_id):
                             classes[classname].append(addval)
             if ourclassname:
                 similar = classes[ourclassname]
+                for sim in similar:
+                    siminfo = get_analysis_info(int(sim["id"]))
+                    if siminfo:
+                        similarinfo.append(siminfo)
         except:
             pass
 
@@ -375,7 +377,7 @@ def report(request, task_id):
                              {"analysis": report,
                               "domainlookups": domainlookups,
                               "iplookups": iplookups,
-                              "similar": similar,
+                              "similar": similarinfo,
                               "settings": settings,
                               "config": enabledconf},
                              context_instance=RequestContext(request))
@@ -577,44 +579,9 @@ def search(request):
         db = Database()
         analyses = []
         for result in records:
-            new = db.view_task(result["info"]["id"])
-
+            new = get_analysis_info(result["info"]["id"])
             if not new:
                 continue
-
-            new = new.to_dict()
-
-            if result["info"]["category"] == "file":
-                if new["sample_id"]:
-                    sample = db.view_sample(new["sample_id"])
-                    if sample:
-                        new["sample"] = sample.to_dict()
-                filename = os.path.basename(new["target"])
-                new.update({"filename": filename})
-
-            rtmp = results_db.analysis.find_one({"info.id": int(new["id"])},{"virustotal_summary": 1, "malscore": 1, "malfamily": 1, "suri_tls_cnt": 1, "suri_alert_cnt": 1, "suri_http_cnt": 1, "suri_file_cnt": 1, "mlist_cnt": 1},sort=[("_id", pymongo.DESCENDING)])
-            if rtmp:
-                if rtmp.has_key("virustotal_summary") and rtmp["virustotal_summary"]:
-                    new["virustotal_summary"] = rtmp["virustotal_summary"]
-                if rtmp.has_key("suri_tls_cnt") and rtmp["suri_tls_cnt"]:
-                    new["suri_tls_cnt"] = rtmp["suri_tls_cnt"]
-                if rtmp.has_key("suri_alert_cnt") and rtmp["suri_alert_cnt"]:
-                    new["suri_alert_cnt"] = rtmp["suri_alert_cnt"]
-                if rtmp.has_key("suri_file_cnt") and rtmp["suri_file_cnt"]:
-                    new["suri_file_cnt"] = rtmp["suri_file_cnt"]
-                if rtmp.has_key("suri_http_cnt") and rtmp["suri_http_cnt"]:
-                    new["suri_http_cnt"] = rtmp["suri_http_cnt"]
-                if rtmp.has_key("mlist_cnt") and rtmp["mlist_cnt"]:
-                    new["mlist_cnt"] = rtmp["mlist_cnt"]
-                if rtmp.has_key("malscore"):
-                    new["malscore"] = rtmp["malscore"]
-                if rtmp.has_key("malfamily") and rtmp["malfamily"]:
-                    new["malfamily"] = rtmp["malfamily"]
-
-            if settings.MOLOCH_ENABLED:
-                if settings.MOLOCH_BASE[-1] != "/":
-                    settings.MOLOCH_BASE = settings.MOLOCH_BASE + "/"
-                new["moloch_url"] = settings.MOLOCH_BASE + "?date=-1&expression=tags" + quote("\x3d\x3d\x22%s\x3a%s\x22" % (settings.MOLOCH_NODE,new["id"]),safe='')
             analyses.append(new)
         return render_to_response("analysis/search.html",
                                   {"analyses": analyses,
