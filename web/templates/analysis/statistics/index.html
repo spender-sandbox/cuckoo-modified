@@ -2,33 +2,45 @@
 <h4>Processing</h4><br />
     <div class="well well-small">
         <ul class="list-group">
-            {% for key, value in analysis.statistics.processing %}
+            {% for key, value in analysis.statistics.processing.iteritems %}
+            {% for key2, value2 in value.iteritems %}
+            {% if value2 != "0.0" %}
             <li class="list-group-item">
-                <span class="badge">{{value}}</span>
+                <span class="badge">{{value2}}</span>
                 {{key}}
             </li>
+            {% endif %}
+            {% endfor %}
             {% endfor %}
         </ul>
     </div>
 <h4>Signatures</h4><br />
     <div class="well well-small">
         <ul class="list-group">
-            {% for key, value in analysis.statistics.signatures %}
+            {% for key, value in analysis.statistics.signatures.iteritems %}
+            {% for key2, value2 in value.iteritems %}
+            {% if value2 != "0.0" %}
             <li class="list-group-item">
-                <span class="badge">{{value}}</span>
+                <span class="badge">{{value2}}</span>
                 {{key}}
             </li>
+            {% endif %}
+            {% endfor %}
             {% endfor %}
         </ul>
     </div>
 <h4>Reporting</h4><br />
     <div class="well well-small">
         <ul class="list-group">
-            {% for key, value in analysis.statistics.reporting %}
+            {% for key, value in analysis.statistics.reporting.iteritems %}
+            {% for key2, value2 in value.iteritems %}
+            {% if value2 != "0.0" %}
             <li class="list-group-item">
-                <span class="badge">{{value}}</span>
+                <span class="badge">{{value2}}</span>
                 {{key}}
             </li>
+            {% endif %}
+            {% endfor %}
             {% endfor %}
         </ul>
     </div>
