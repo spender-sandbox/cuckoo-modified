@@ -32,6 +32,10 @@ def process(task_id, target=None, copy_path=None, report=False, auto=False):
     # module available. Its structure can be observed through the JSON
     # dump in the analysis' reports folder. (If jsondump is enabled.)
     results = { }
+    results["statistics"] = { }
+    results["statistics"]["processing"] = { }
+    results["statistics"]["signatures"] = { }
+    results["statistics"]["reporting"] = { }
     GetFeeds(results=results).run()
     RunProcessing(task_id=task_id, results=results).run()
     RunSignatures(task_id=task_id, results=results).run()
