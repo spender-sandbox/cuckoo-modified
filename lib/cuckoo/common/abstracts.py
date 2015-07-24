@@ -641,7 +641,7 @@ class Processing(object):
         self.pmemory_path = os.path.join(self.analysis_path, "memory")
         self.memory_path = os.path.join(self.analysis_path, "memory.dmp")
 
-    def add_statistic(name, field, value):
+    def add_statistic(self, name, field, value):
         if name not in self.results["statistics"]["processing"]:
             self.results["statistics"]["processing"][name] = { }
 
@@ -690,7 +690,7 @@ class Signature(object):
         self._current_call_raw_cache = None
         self._current_call_raw_dict = None
 
-    def add_statistic(name, field, value):
+    def add_statistic(self, name, field, value):
         if name not in self.results["statistics"]["signatures"]:
             self.results["statistics"]["signatures"][name] = { }
 

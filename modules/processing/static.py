@@ -96,7 +96,7 @@ class PortableExecutable:
         self.pe = None
         self.results = results
 
-    def add_statistic(name, field, value):
+    def add_statistic(self, name, field, value):
         if name not in self.results["statistics"]["processing"]:
             self.results["statistics"]["processing"][name] = { }
 
