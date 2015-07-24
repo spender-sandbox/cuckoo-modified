@@ -4,7 +4,7 @@
         <ul class="list-group">
             {% for key, value in analysis.statistics.processing.iteritems %}
             {% for key2, value2 in value.iteritems %}
-            {% if value2 != "0.0" %}
+            {% if value2 != "0.000" %}
             <li class="list-group-item">
                 <span class="badge">{{value2}}</span>
                 {{key}}
@@ -19,7 +19,7 @@
         <ul class="list-group">
             {% for key, value in analysis.statistics.signatures.iteritems %}
             {% for key2, value2 in value.iteritems %}
-            {% if value2 != "0.0" %}
+            {% if value2 != "0.000" %}
             <li class="list-group-item">
                 <span class="badge">{{value2}}</span>
                 {{key}}
@@ -34,7 +34,7 @@
         <ul class="list-group">
             {% for key, value in analysis.statistics.reporting.iteritems %}
             {% for key2, value2 in value.iteritems %}
-            {% if value2 != "0.0" %}
+            {% if value2 != "0.000" %}
             <li class="list-group-item">
                 <span class="badge">{{value2}}</span>
                 {{key}}
