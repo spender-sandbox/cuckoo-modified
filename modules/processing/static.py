@@ -10,6 +10,7 @@ import lib.cuckoo.common.decoders.njrat as njrat
 import logging
 import os
 import base64
+from datetime import datetime, timedelta
 
 from lib.cuckoo.common.icon import PEGroupIconDir
 from PIL import Image
@@ -485,7 +486,13 @@ class PortableExecutable:
             return None
 
         results = {}
+
+        pretime = datetime.now()
         results["peid_signatures"] = self._get_peid_signatures()
+        posttime = datetime.now()
+        timediff = posttime - pretime
+        self.add_statistic("peid", "time", "{0}.{1:03d}".format(timediff.seconds, timediff.microseconds / 1000))
+
         results["pe_imagebase"] = self._get_imagebase()
         results["pe_entrypoint"] = self._get_entrypoint()
         results["pe_osversion"] = self._get_osversion()
@@ -503,12 +510,17 @@ class PortableExecutable:
         results["digital_signers"] = self._get_digital_signers()
         results["imported_dll_count"] = len([x for x in results["pe_imports"] if x.get("dll")])
 
+        
+        pretime = datetime.now()
         darkcomet_config = darkcomet.extract_config(self.file_path, self.pe)
         if darkcomet_config:
             results["darkcomet_config"] = darkcomet_config
         njrat_config = njrat.extract_config(self.file_path)
         if njrat_config:
             results["njrat_config"] = njrat_config
+        posttime = datetime.now()
+        timediff = posttime - pretime
+        self.add_statistic("config_decoder", "time", "{0}.{1:03d}".format(timediff.seconds, timediff.microseconds / 1000))
 
         return results
 

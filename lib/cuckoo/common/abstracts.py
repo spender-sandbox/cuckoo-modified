@@ -641,6 +641,12 @@ class Processing(object):
         self.pmemory_path = os.path.join(self.analysis_path, "memory")
         self.memory_path = os.path.join(self.analysis_path, "memory.dmp")
 
+    def add_statistic(name, field, value):
+        if name not in self.results["statistics"]["processing"]:
+            self.results["statistics"]["processing"][name] = { }
+
+        self.results["statistics"]["processing"][name][field] = value
+
     def run(self):
         """Start processing.
         @raise NotImplementedError: this method is abstract.
@@ -683,6 +689,12 @@ class Signature(object):
         self._current_call_dict = None
         self._current_call_raw_cache = None
         self._current_call_raw_dict = None
+
+    def add_statistic(name, field, value):
+        if name not in self.results["statistics"]["signatures"]:
+            self.results["statistics"]["signatures"][name] = { }
+
+        self.results["statistics"]["signatures"][name][field] = value
 
     def _check_value(self, pattern, subject, regex=False, all=False, ignorecase=True):
         """Checks a pattern against a given subject.
