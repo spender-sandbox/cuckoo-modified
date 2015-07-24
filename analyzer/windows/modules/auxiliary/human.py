@@ -142,6 +142,11 @@ class Human(Auxiliary, Thread):
     def stop(self):
         self.do_run = False
 
+    def worker(self):
+        while self.do_run:
+            USER32.EnumWindows(EnumWindowsProc(foreach_window), 0)
+            KERNEL32.Sleep(1000)
+
     def run(self):
         try:
             seconds = 0
@@ -167,6 +172,9 @@ class Human(Auxiliary, Thread):
             nohuman = self.options.get("nohuman")
             if nohuman:
                 return True
+            t = Thread(target = self.worker)
+            t.daemon = True
+            t.start()
             officedoc = False
             if hasattr(self.config, "file_type"):
                 file_type = self.config.file_type
@@ -201,7 +209,6 @@ class Human(Auxiliary, Thread):
                         pass
                     USER32.SetForegroundWindow(other_hwnds[random.randint(0, len(other_hwnds)-1)])
 
-                USER32.EnumWindows(EnumWindowsProc(foreach_window), 0)
                 KERNEL32.Sleep(1000)
                 seconds += 1
         except Exception as e:
