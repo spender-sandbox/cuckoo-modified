@@ -1,7 +1,7 @@
 {% if analysis.statistics %}
-<h4>Processing</h4><br />
     <div class="row">
     <div class="well well-small col-md-6">
+        <h4>Processing</h4>
         <ul class="list-group">
             {% for key, value in analysis.statistics.processing.iteritems %}
             {% for key2, value2 in value.iteritems %}
@@ -16,9 +16,9 @@
         </ul>
     </div>
     </div>
-<h4>Signatures</h4><br />
     <div class="row">
     <div class="well well-small col-md-6">
+    <h4>Signatures</h4>
         <ul class="list-group">
             {% for key, value in analysis.statistics.signatures.iteritems %}
             {% for key2, value2 in value.iteritems %}
@@ -33,9 +33,9 @@
         </ul>
     </div>
     </div>
-<h4>Reporting</h4><br />
     <div class="row">
     <div class="well well-small col-md-6">
+        <h4>Reporting</h4>
         <ul class="list-group">
             {% for key, value in analysis.statistics.reporting.iteritems %}
             {% for key2, value2 in value.iteritems %}
