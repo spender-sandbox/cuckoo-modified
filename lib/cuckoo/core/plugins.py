@@ -399,7 +399,7 @@ class RunSignatures(object):
         # This will contain all the matched signatures.
         matched = []
 
-        runtimes = { } 
+        stats = { } 
 
         Database().set_statistics_time(self.task_id, SIGNATURES_STARTED)
         complete_list = list_plugins(group="signatures")
