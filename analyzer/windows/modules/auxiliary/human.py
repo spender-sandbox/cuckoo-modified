@@ -168,6 +168,7 @@ class Human(Auxiliary, Thread):
             memmove(lockbuf, cliprawstr, sizeof(cliprawstr))
             KERNEL32.GlobalUnlock(buf)
             USER32.SetClipboardData(CF_TEXT, buf)
+            USER32.CloseClipboard()
 
             nohuman = self.options.get("nohuman")
             if nohuman:
