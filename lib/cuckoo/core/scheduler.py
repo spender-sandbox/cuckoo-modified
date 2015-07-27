@@ -359,9 +359,9 @@ class AnalysisManager(Thread):
         # dump in the analysis' reports folder. (If jsondump is enabled.)
         results = { }
         results["statistics"] = { }
-        results["statistics"]["processing"] = { }
-        results["statistics"]["signatures"] = { }
-        results["statistics"]["reporting"] = { }
+        results["statistics"]["processing"] = list()
+        results["statistics"]["signatures"] = list()
+        results["statistics"]["reporting"] = list()
         GetFeeds(results=results).run()
         RunProcessing(task_id=self.task.id, results=results).run()
         RunSignatures(task_id=self.task.id, results=results).run()
