@@ -148,6 +148,7 @@ def pretty_print_retval(category, api_name, status, retval):
         return None
     return {
             0x00000103 : "NO_MORE_ITEMS",
+            0x00002af9 : "WSAHOST_NOT_FOUND",
             0x80000005 : "BUFFER_OVERFLOW",
             0x80000006 : "NO_MORE_FILES",
             0xc0000001 : "UNSUCCESSFUL",
