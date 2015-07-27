@@ -204,7 +204,7 @@ class RunProcessing(object):
             timediff = posttime - pretime
             self.results["statistics"]["processing"].append({
                 "name": current.__class__.__name__,
-                "time": float("%d.%d" % (timediff.seconds,
+                "time": float("%d.%03d" % (timediff.seconds,
                                          timediff.microseconds / 1000)),
                 })
 
@@ -388,7 +388,7 @@ class RunSignatures(object):
             timediff = posttime - pretime
             self.results["statistics"]["signatures"].append({
                 "name": current.name,
-                "time": float("%d.%d" % (timediff.seconds,
+                "time": float("%d.%03d" % (timediff.seconds,
                                          timediff.microseconds / 1000)),
                 })
 
@@ -501,7 +501,7 @@ class RunSignatures(object):
             if value:
                 self.results["statistics"]["signatures"].append({
                     "name": key,
-                    "time": float("%d.%d" % (timediff.seconds,
+                    "time": float("%d.%03d" % (timediff.seconds,
                                              timediff.microseconds / 1000)),
                     })
 
@@ -679,7 +679,7 @@ class RunReporting:
             timediff = posttime - pretime
             self.results["statistics"]["reporting"].append({
                 "name": current.__class__.__name__,
-                "time": float("%d.%d" % (timediff.seconds,
+                "time": float("%d.%03d" % (timediff.seconds,
                                          timediff.microseconds / 1000)),
                 })
 

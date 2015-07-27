@@ -497,7 +497,7 @@ class PortableExecutable:
         results["peid_signatures"] = self._get_peid_signatures()
         posttime = datetime.now()
         timediff = posttime - pretime
-        self.add_statistic("peid", "time", float("%d.%d" % (timediff.seconds, timediff.microseconds / 1000)))
+        self.add_statistic("peid", "time", float("%d.%03d" % (timediff.seconds, timediff.microseconds / 1000)))
 
         results["pe_imagebase"] = self._get_imagebase()
         results["pe_entrypoint"] = self._get_entrypoint()
@@ -526,7 +526,7 @@ class PortableExecutable:
             results["njrat_config"] = njrat_config
         posttime = datetime.now()
         timediff = posttime - pretime
-        self.add_statistic("config_decoder", "time", float("%d.%d" % (timediff.seconds, timediff.microseconds / 1000)))
+        self.add_statistic("config_decoder", "time", float("%d.%03d" % (timediff.seconds, timediff.microseconds / 1000)))
 
         return results
 
