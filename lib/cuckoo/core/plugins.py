@@ -202,7 +202,11 @@ class RunProcessing(object):
             data = current.run()
             posttime = datetime.now()
             timediff = posttime - pretime
-            self.results["statistics"]["processing"][current.__class__.__name__] = { "time" : "{0}.{1:03d}".format(timediff.seconds, timediff.microseconds / 1000) }
+            self.results["statistics"]["processing"].append({
+                "name": current.__class__.__name__,
+                "time": float("%d.%d" % (timediff.seconds,
+                                         timediff.microseconds / 1000)),
+                })
 
             log.debug("Executed processing module \"%s\" on analysis at "
                       "\"%s\"", current.__class__.__name__, self.analysis_path)
@@ -382,7 +386,12 @@ class RunSignatures(object):
             data = current.run()
             posttime = datetime.now()
             timediff = posttime - pretime
-            self.results["statistics"]["signatures"][current.name] = { "time" : "{0}.{1:03d}".format(timediff.seconds, timediff.microseconds / 1000) }
+            self.results["statistics"]["signatures"].append({
+                "name": current.name,
+                "time": float("%d.%d" % (timediff.seconds,
+                                         timediff.microseconds / 1000)),
+                })
+
             if data:
                 log.debug("Analysis matched signature \"%s\"", current.name)
                 # Return information on the matched signature.
@@ -490,8 +499,11 @@ class RunSignatures(object):
         # Add in statistics for evented signatures that took at least some time
         for key, value in stats.iteritems():
             if value:
-                self.results["statistics"]["signatures"][key] = { "time" : "{0}.{1:03d}".format(value.seconds, value.microseconds / 1000) }
-
+                self.results["statistics"]["signatures"].append({
+                    "name": key,
+                    "time": float("%d.%d" % (timediff.seconds,
+                                             timediff.microseconds / 1000)),
+                    })
 
         # Compat loop for old-style (non evented) signatures.
         if complete_list:
@@ -665,7 +677,11 @@ class RunReporting:
             current.run(self.results)
             posttime = datetime.now()
             timediff = posttime - pretime
-            self.results["statistics"]["reporting"][current.__class__.__name__] = { "time" : "{0}.{1:03d}".format(timediff.seconds, timediff.microseconds / 1000) }
+            self.results["statistics"]["reporting"].append({
+                "name": current.__class__.__name__,
+                "time": float("%d.%d" % (timediff.seconds,
+                                         timediff.microseconds / 1000)),
+                })
 
             log.debug("Executed reporting module \"%s\"", current.__class__.__name__)
         except CuckooDependencyError as e:
