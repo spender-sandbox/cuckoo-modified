@@ -22,7 +22,7 @@ def demux_zip(filename, options):
     try:
         # don't try to extract from office docs
         magic = File(filename).get_type()
-        if "Microsoft" in magic or "Java Jar" in magic:
+        if "Microsoft" in magic or "Java Jar" in magic or "Composite Document File" in magic:
             return retlist
 
         extracted = []
