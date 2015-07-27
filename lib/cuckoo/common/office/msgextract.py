@@ -76,7 +76,12 @@ class Attachment:
         ext = ext.lower()
         if ext == "" and len(basename) and basename[0] == ".":
             return None
-        extensions = ["", ".exe", ".dll", ".pdf", ".doc", ".ppt", ".pptx", ".docx", ".xls", ".msi", ".bin", ".scr", ".zip", ".htm", ".html"]
+        extensions = [
+            "", ".exe", ".dll", ".pdf", ".msi", ".bin", ".scr", ".zip", ".htm", ".html", 
+            ".doc", ".dot", ".docx", ".dotx", ".docm", ".dotm", ".docb", 
+            ".xls", ".xlt", ".xlm", ".xlsx", ".xltx", ".xlsm", ".xltm", ".xlsb", ".xla", ".xlam", ".xll", ".xlw",
+            ".ppt", ".pot", ".pps", ".pptx", ".pptm", ".potx", ".potm", ".ppam", ".ppsx", ".ppsm", ".sldx", ".sldm"
+        ]
         foundext = False
         for theext in extensions:
             if ext == theext:
