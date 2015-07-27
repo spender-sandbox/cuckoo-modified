@@ -16,6 +16,8 @@ log = logging.getLogger()
 
 sys.path.append(os.path.join(os.path.abspath(os.path.dirname(__file__)), ".."))
 
+from bson.objectid import ObjectId
+from gridfs import GridFS
 from lib.cuckoo.common.config import Config
 from lib.cuckoo.common.constants import CUCKOO_ROOT
 from lib.cuckoo.core.database import Database, TASK_REPORTED, TASK_COMPLETED
@@ -23,6 +25,8 @@ from lib.cuckoo.core.database import TASK_FAILED_PROCESSING
 from lib.cuckoo.core.plugins import GetFeeds, RunProcessing, RunSignatures
 from lib.cuckoo.core.plugins import RunReporting
 from lib.cuckoo.core.startup import init_modules
+from pymongo import MongoClient
+from pymongo.errors import ConnectionFailure
 
 def process(task_id, target=None, copy_path=None, report=False, auto=False):
     assert isinstance(task_id, int)
@@ -42,6 +46,38 @@ def process(task_id, target=None, copy_path=None, report=False, auto=False):
 
 
     if report:
+        mongoconf = Config("reporting").mongodb
+        if mongoconf["enabled"]:
+            host = mongoconf["host"]
+            port = mongoconf["port"]
+            db = mongoconf["db"]
+            conn = MongoClient(host, port)
+            mdata = conn[db]
+            fs = GridFS(mdata)
+            analyses = mdata.analysis.find({"info.id": int(task_id)})
+            if analyses.count() > 0:
+                log.debug("Deleting analysis data for Task %s" % task_id)
+                for analysis in analyses:
+                    if "file_id" in analysis["target"]:
+                        if mdata.analysis.find({"target.file_id": ObjectId(analysis["target"]["file_id"])}).count()>
+                            fs.delete(ObjectId(analysis["target"]["file_id"]))
+                    for shot in analysis["shots"]:
+                        if mdata.analysis.find({"shots": ObjectId(shot)}).count() == 1:
+                            fs.delete(ObjectId(shot))
+                    if "pcap_id" in analysis["network"] and mdata.analysis.find({"network.pcap_id": ObjectId(analys>
+                        fs.delete(ObjectId(analysis["network"]["pcap_id"]))
+                    if "sorted_pcap_id" in analysis["network"] and mdata.analysis.find({"network.sorted_pcap_id": O>
+                        fs.delete(ObjectId(analysis["network"]["sorted_pcap_id"]))
+                    for drop in analysis["dropped"]:
+                        if "object_id" in drop and mdata.analysis.find({"dropped.object_id": ObjectId(drop["object_>
+                            fs.delete(ObjectId(drop["object_id"]))
+                    for process in analysis["behavior"]["processes"]:
+                        for call in process["calls"]:
+                            mdata.calls.remove({"_id": ObjectId(call)})
+                    mdata.analysis.remove({"_id": ObjectId(analysis["_id"])})
+            conn.close()
+            log.debug("Deleted previous MongoDB data for Task %s" % task_id)
+
         RunReporting(task_id=task_id, results=results).run()
         Database().set_status(task_id, TASK_REPORTED)
 
