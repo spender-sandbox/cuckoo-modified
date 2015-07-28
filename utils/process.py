@@ -59,7 +59,7 @@ def process(task_id, target=None, copy_path=None, report=False, auto=False):
                 log.debug("Deleting analysis data for Task %s" % task_id)
                 for analysis in analyses:
                     if "file_id" in analysis["target"]:
-                        if mdata.analysis.find({"target.file_id": ObjectId(analysis["target"]["file_id"])}).count()>
+                        if mdata.analysis.find({"target.file_id": ObjectId(analysis["target"]["file_id"])}).count():
                             fs.delete(ObjectId(analysis["target"]["file_id"]))
                     for shot in analysis["shots"]:
                         if mdata.analysis.find({"shots": ObjectId(shot)}).count() == 1:
