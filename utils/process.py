@@ -59,17 +59,17 @@ def process(task_id, target=None, copy_path=None, report=False, auto=False):
                 log.debug("Deleting analysis data for Task %s" % task_id)
                 for analysis in analyses:
                     if "file_id" in analysis["target"]:
-                        if mdata.analysis.find({"target.file_id": ObjectId(analysis["target"]["file_id"])}).count()>
+                        if mdata.analysis.find({"target.file_id": ObjectId(analysis["target"]["file_id"])}).count():
                             fs.delete(ObjectId(analysis["target"]["file_id"]))
                     for shot in analysis["shots"]:
                         if mdata.analysis.find({"shots": ObjectId(shot)}).count() == 1:
                             fs.delete(ObjectId(shot))
-                    if "pcap_id" in analysis["network"] and mdata.analysis.find({"network.pcap_id": ObjectId(analys>
+                    if "pcap_id" in analysis["network"] and mdata.analysis.find({"network.pcap_id": ObjectId(analysis["network"]["pcap_id"])}).count() == 1:
                         fs.delete(ObjectId(analysis["network"]["pcap_id"]))
-                    if "sorted_pcap_id" in analysis["network"] and mdata.analysis.find({"network.sorted_pcap_id": O>
+                    if "sorted_pcap_id" in analysis["network"] and mdata.analysis.find({"network.sorted_pcap_id": ObjectId(analysis["network"]["sorted_pcap_id"])}).count() == 1:
                         fs.delete(ObjectId(analysis["network"]["sorted_pcap_id"]))
                     for drop in analysis["dropped"]:
-                        if "object_id" in drop and mdata.analysis.find({"dropped.object_id": ObjectId(drop["object_>
+                        if "object_id" in drop and mdata.analysis.find({"dropped.object_id": ObjectId(drop["object_id"])}).count() == 1:
                             fs.delete(ObjectId(drop["object_id"]))
                     for process in analysis["behavior"]["processes"]:
                         for call in process["calls"]:
