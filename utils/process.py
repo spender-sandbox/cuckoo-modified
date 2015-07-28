@@ -64,12 +64,12 @@ def process(task_id, target=None, copy_path=None, report=False, auto=False):
                     for shot in analysis["shots"]:
                         if mdata.analysis.find({"shots": ObjectId(shot)}).count() == 1:
                             fs.delete(ObjectId(shot))
-                    if "pcap_id" in analysis["network"] and mdata.analysis.find({"network.pcap_id": ObjectId(analys>
+                    if "pcap_id" in analysis["network"] and mdata.analysis.find({"network.pcap_id": ObjectId(analysis["network"]["pcap_id"])}).count() == 1:
                         fs.delete(ObjectId(analysis["network"]["pcap_id"]))
-                    if "sorted_pcap_id" in analysis["network"] and mdata.analysis.find({"network.sorted_pcap_id": O>
+                    if "sorted_pcap_id" in analysis["network"] and mdata.analysis.find({"network.sorted_pcap_id": ObjectId(analysis["network"]["sorted_pcap_id"])}).count() == 1:
                         fs.delete(ObjectId(analysis["network"]["sorted_pcap_id"]))
                     for drop in analysis["dropped"]:
-                        if "object_id" in drop and mdata.analysis.find({"dropped.object_id": ObjectId(drop["object_>
+                        if "object_id" in drop and mdata.analysis.find({"dropped.object_id": ObjectId(drop["object_id"])}).count() == 1:
                             fs.delete(ObjectId(drop["object_id"]))
                     for process in analysis["behavior"]["processes"]:
                         for call in process["calls"]:
