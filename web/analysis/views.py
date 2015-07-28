@@ -57,6 +57,10 @@ def get_analysis_info(db, id=-1, task=None):
         return None
 
     new = task.to_dict()
+    if new["category"] == "file":
+        new["sample"] = db.view_sample(new["sample_id"]).to_dict()
+        filename = os.path.basename(new["target"])
+        new.update({"filename": filename})
 
     rtmp = results_db.analysis.find_one({"info.id": int(new["id"])},{"info": 1, "virustotal_summary": 1, "malscore": 1, "malfamily": 1, "suri_tls_cnt": 1, "suri_alert_cnt": 1, "suri_http_cnt": 1, "suri_file_cnt": 1, "mlist_cnt": 1},sort=[("_id", pymongo.DESCENDING)])
     if rtmp:
