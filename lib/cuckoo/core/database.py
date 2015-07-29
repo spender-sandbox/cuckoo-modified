@@ -275,7 +275,7 @@ class Task(Base):
     id = Column(Integer(), primary_key=True)
     target = Column(Text(), nullable=False)
     category = Column(String(255), nullable=False)
-    timeout = Column(Integer(), server_default="0", nullable=False)ge
+    timeout = Column(Integer(), server_default="0", nullable=False)
     priority = Column(Integer(), server_default="1", nullable=False)
     custom = Column(String(255), nullable=True)
     machine = Column(String(255), nullable=True)
