@@ -336,6 +336,17 @@ class PipeHandler(Thread):
                 elif command.startswith("RESUME:"):
                     LASTINJECT_TIME = datetime.now()
 
+                # Handle attempted shutdowns/restarts -- flush logs for all monitored processes
+                # additional handling can be added later
+                elif commands.startswith("SHUTDOWN:"):
+                    PROCESS_LOCK.acquire()
+                    for process_id in PROCESS_LIST:
+                        event_name = TERMINATE_EVENT + str(process_id)
+                        event_handle = KERNEL32.OpenEventA(EVENT_MODIFY_STATE, False, event_name)
+                        if event_handle:
+                            KERNEL32.SetEvent(event_handle)
+                            KERNEL32.CloseHandle(event_handle)
+                    PROCESS_LOCK.release()
                 # Handle case of malware terminating a process -- notify the target
                 # ahead of time so that it can flush its log buffer
                 elif command.startswith("KILL:"):
