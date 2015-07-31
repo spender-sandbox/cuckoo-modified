@@ -338,7 +338,7 @@ class PipeHandler(Thread):
 
                 # Handle attempted shutdowns/restarts -- flush logs for all monitored processes
                 # additional handling can be added later
-                elif commands.startswith("SHUTDOWN:"):
+                elif command.startswith("SHUTDOWN:"):
                     PROCESS_LOCK.acquire()
                     for process_id in PROCESS_LIST:
                         event_name = TERMINATE_EVENT + str(process_id)
