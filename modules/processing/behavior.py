@@ -486,13 +486,6 @@ class Summary:
                 filename = None
             if filename and filename not in self.files:
                 self.files.append(filename)
-            path = filename.strip()
-            params = self.get_argument(call, "Parameters", strip=True)
-            cmdline = None
-            if path:
-                cmdline = path + " " + params
-            if cmdline and cmdline not in self.executed_commands:
-                self.executed_commands.append(cmdline)
         elif call["api"] == "NtSetInformationFile":
             filename = self.get_argument(call, "HandleName")
             infoclass = int(self.get_argument(call, "FileInformationClass"), 10)
@@ -535,6 +528,14 @@ class Summary:
             if combined not in self.resolved_apis:
                 self.resolved_apis.append(combined)
 
+        elif call["api"] == "ShellExecuteExW":
+            path = self.get_argument(call, "FilePath", strip=True)
+            params = self.get_argument(call, "Parameters", strip=True)
+            cmdline = None
+            if path:
+                cmdline = path + " " + params
+            if cmdline and cmdline not in self.executed_commands:
+                self.executed_commands.append(cmdline)
         elif call["api"].startswith("NtCreateProcess"):
             cmdline = self.get_argument(call, "FileName")
             if cmdline and cmdline not in self.executed_commands:
