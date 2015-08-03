@@ -89,13 +89,15 @@ class Pcap:
         self.irc_requests = []
         # Dictionary containing all the results of this processing.
         self.results = {}
+        # Config
+        self.config = Config()
 
     def _dns_gethostbyname(self, name):
         """Get host by name wrapper.
         @param name: hostname.
         @return: IP address or blank
         """
-        if Config().processing.resolve_dns:
+        if self.config.processing.resolve_dns:
             ip = resolve(name)
         else:
             ip = ""
@@ -108,37 +110,33 @@ class Pcap:
                  a private network block.
         """
         networks = [
-            "0.0.0.0/8",
-            "10.0.0.0/8",
-            "100.64.0.0/10",
-            "127.0.0.0/8",
-            "169.254.0.0/16",
-            "172.16.0.0/12",
-            "192.0.0.0/24",
-            "192.0.2.0/24",
-            "192.88.99.0/24",
-            "192.168.0.0/16",
-            "198.18.0.0/15",
-            "198.51.100.0/24",
-            "203.0.113.0/24",
-            "240.0.0.0/4",
-            "255.255.255.255/32",
-            "224.0.0.0/4"
+            ("0.0.0.0", 8),
+            ("10.0.0.0", 8),
+            ("100.64.0.0", 10),
+            ("127.0.0.0", 8),
+            ("169.254.0.0", 16),
+            ("172.16.0.0", 12),
+            ("192.0.0.0", 24),
+            ("192.0.2.0", 24),
+            ("192.88.99.0", 24),
+            ("192.168.0.0", 16),
+            ("198.18.0.0", 15),
+            ("198.51.100.0", 24),
+            ("203.0.113.0", 24),
+            ("240.0.0.0", 4),
+            ("255.255.255.255", 32),
+            ("224.0.0.0", 4)
         ]
 
-        for network in networks:
-            try:
-                ipaddr = struct.unpack(">I", socket.inet_aton(ip))[0]
-
-                netaddr, bits = network.split("/")
-
+        try:
+            ipaddr = struct.unpack(">I", socket.inet_aton(ip))[0]
+            for netaddr, bits in networks:
                 network_low = struct.unpack(">I", socket.inet_aton(netaddr))[0]
-                network_high = network_low | (1 << (32 - int(bits))) - 1
-
+                network_high = network_low | (1 << (32 - bits)) - 1
                 if ipaddr <= network_high and ipaddr >= network_low:
                     return True
-            except:
-                continue
+        except:
+            pass
 
         return False
 
@@ -234,7 +232,7 @@ class Pcap:
         if self._check_icmp(data):
             # If ICMP packets are coming from the host, it probably isn't
             # relevant traffic, hence we can skip from reporting it.
-            if conn["src"] == Config().resultserver.ip:
+            if conn["src"] == self.config.resultserver.ip:
                 return
 
             entry = {}
