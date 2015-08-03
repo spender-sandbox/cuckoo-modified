@@ -258,7 +258,7 @@ class AnalysisManager(Thread):
 
         # At this point we can tell the ResultServer about it.
         try:
-            Database().recruit_machine(self.task.id, self.machine.id)
+            self.db.recruit_machine(self.task.id, self.machine.id)
             ResultServer().add_task(self.task, self.machine)
         except Exception as e:
             machinery.release(self.machine.label)
