@@ -220,7 +220,6 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="utils\dist.py" />
-    <Compile Include="utils\health_statistics.py" />
     <Compile Include="utils\process.py" />
     <Compile Include="utils\listdump.py" />
     <Compile Include="utils\stats.py" />
@@ -366,9 +365,6 @@
     <Compile Include="web\dashboard\urls.py" />
     <Compile Include="web\dashboard\views.py" />
     <Compile Include="web\dashboard\__init__.py" />
-    <Compile Include="web\statistics\urls.py" />
-    <Compile Include="web\statistics\views.py" />
-    <Compile Include="web\statistics\__init__.py" />
     <Compile Include="web\submission\urls.py" />
     <Compile Include="web\submission\views.py" />
     <Compile Include="web\submission\__init__.py" />
@@ -547,7 +543,6 @@
     <Folder Include="web\static\graphic" />
     <Folder Include="web\static\img" />
     <Folder Include="web\static\js" />
-    <Folder Include="web\statistics\" />
     <Folder Include="web\submission" />
     <Folder Include="web\templates" />
     <Folder Include="web\templates\analysis" />

@@ -21,11 +21,6 @@ from lib.cuckoo.common.exceptions import CuckooOperationalError
 from lib.cuckoo.common.exceptions import CuckooProcessingError
 from lib.cuckoo.common.exceptions import CuckooReportError
 from lib.cuckoo.common.exceptions import CuckooDependencyError
-from lib.cuckoo.core.database import PROCESSING_STARTED, PROCESSING_FINISHED, SIGNATURES_STARTED, SIGNATURES_FINISHED
-from lib.cuckoo.core.database import REPORTING_STARTED, REPORTING_FINISHED
-from lib.cuckoo.core.database import DROPPED_FILES, RUNNING_PROCESSES, API_CALLS, ACCESSED_DOMAINS, SIGNATURES_TOTAL
-from lib.cuckoo.core.database import SIGNATURES_ALERT, FILES_WRITTEN, REGISTRY_KEYS_MODIFIED
-from lib.cuckoo.core.database import TASK_ISSUE_CRASH, TASK_ISSUE_ANTI, TASK_TIMEDOUT
 
 try:
     import re2 as re
@@ -227,7 +222,7 @@ class RunProcessing(object):
         """Run all processing modules and all signatures.
         @return: processing results.
         """
-        Database().set_statistics_time(self.task_id, PROCESSING_STARTED)
+
         # Order modules using the user-defined sequence number.
         # If none is specified for the modules, they are selected in
         # alphabetical order.
@@ -246,33 +241,6 @@ class RunProcessing(object):
                     self.results.update(result)
         else:
             log.info("No processing modules loaded")
-
-        Database().set_statistics_time(self.task_id, PROCESSING_FINISHED)
-
-        if "behavior" in self.results and "enhanced" in self.results["behavior"]:
-            regwrite = 0
-            filewrite = 0
-            for entry in self.results["behavior"]["enhanced"]:
-                if entry["object"] == "registry" and entry["event"] == "write":
-                    regwrite += 1
-                if entry["object"] == "file" and entry["event"] == "write":
-                    filewrite += 1
-            Database().set_statistics_counter(self.task_id, FILES_WRITTEN, filewrite)
-            Database().set_statistics_counter(self.task_id, REGISTRY_KEYS_MODIFIED, regwrite)
-
-        if "behavior" in self.results and "summary" in self.results["behavior"] and "files" in self.results["behavior"]["summary"]:
-            Database().set_statistics_counter(self.task_id, DROPPED_FILES, len(self.results["behavior"]["summary"]["files"]))
-
-        if "behavior" in self.results and "processes" in self.results["behavior"]:
-            Database().set_statistics_counter(self.task_id, RUNNING_PROCESSES, len(self.results["behavior"]["processes"]))
-            api_calls = 0
-            for process in self.results["behavior"]["processes"]:
-                for call in process["calls"]:
-                    api_calls += 1
-            Database().set_statistics_counter(self.task_id, API_CALLS, api_calls)
-
-        if "network" in self.results and "domains" in self.results["network"]:
-            Database().set_statistics_counter(self.task_id, ACCESSED_DOMAINS, len(self.results["network"]["domains"]))
 
         return self.results
 
@@ -408,7 +376,6 @@ class RunSignatures(object):
 
         stats = { } 
 
-        Database().set_statistics_time(self.task_id, SIGNATURES_STARTED)
         complete_list = list_plugins(group="signatures")
         evented_list = [sig(self.results)
                         for sig in complete_list
@@ -590,30 +557,6 @@ class RunSignatures(object):
 
         self.results["malfamily"] = family
 
-        # Doing signature statistics
-        alert = 0
-        normal = 0
-        crash = 0
-        anti = 0
-        for sig in self.results["signatures"]:
-            if sig["alert"]:
-                alert += 1
-            if sig["name"] in ["exec_crash"]:
-                crash += 1
-            if sig["name"] in ["antidbg_devices", "antidbg_windows", "antiemu_wine", "antisandbox_mouse_hook",
-                               "antivm_generic_bios", "antivm_generic_disk", "antivm_generic_ide",
-                               "antivm_generic_scsi", "antivm_vbox_acpi", "antivm_vbox_devices", "antivm_vbox_files",
-                               "antivm_vbox_keys", "antivm_vbox_libs"]:
-                anti += 1
-            normal += 1
-        Database().set_statistics_counter(self.task_id, SIGNATURES_TOTAL, normal)
-        Database().set_statistics_counter(self.task_id, SIGNATURES_ALERT, alert)
-        Database().set_statistics_counter(self.task_id, TASK_ISSUE_CRASH, crash)
-        Database().set_statistics_counter(self.task_id, TASK_ISSUE_ANTI, anti)
-        if "info" in self.results and "timeout" in self.results["info"]:
-            Database().set_statistics_counter(self.task_id, TASK_TIMEDOUT, self.results["info"]["timeout"])
-        Database().set_statistics_time(self.task_id, SIGNATURES_FINISHED)
-
 class RunReporting:
     """Reporting Engine.
 
@@ -698,7 +641,6 @@ class RunReporting:
         # all the available ones. It can be used in the case where a
         # module requires another one to be already executed beforehand.
 
-        Database().set_statistics_time(self.task_id, REPORTING_STARTED)
         reporting_list = list_plugins(group="reporting")
 
         # Return if no reporting modules are loaded.
@@ -710,8 +652,6 @@ class RunReporting:
                 self.process(module)
         else:
             log.info("No reporting modules loaded")
-
-        Database().set_statistics_time(self.task_id, REPORTING_FINISHED)
 
 class GetFeeds(object):
     """Feed Download and Parsing Engine
