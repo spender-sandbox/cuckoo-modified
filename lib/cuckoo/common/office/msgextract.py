@@ -13,7 +13,7 @@ __version__ = '0.2'
 
 # --- LICENSE -----------------------------------------------------------------
 #
-#    Copyright 2013 Matthew Walker, 2015 Accuvant, Inc. (bspengler@accuvant.com)
+#    Copyright 2013 Matthew Walker, 2015 Optiv, Inc. (brad.spengler@optiv.com)
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by

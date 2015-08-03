@@ -1,4 +1,4 @@
-This is a heavily modified version of [Cuckoo Sandbox](http://www.cuckoosandbox.org) provided under the GPL by Accuvant, Inc.
+This is a heavily modified version of [Cuckoo Sandbox](http://www.cuckoosandbox.org) provided under the GPL by Optiv, Inc.
 
 It offers a number of advantages over the upstream Cuckoo:
 + Fully-normalized file and registry names
@@ -10,7 +10,7 @@ It offers a number of advantages over the upstream Cuckoo:
 + Ability to follow APC injection and stealth explorer injection
 + Pretty-printed API flags
 + Per-analysis Tor support
-+ Over 110 new signature modules (over 70 developed solely by Accuvant)
++ Over 110 new signature modules (over 70 developed solely by Optiv)
 + Anti-anti-sandbox and anti-anti-VM techniques built-in
 + More stable hooking
 + Ability to restore removed hooks
@@ -27,4 +27,4 @@ For more information on the initial set of changes, see:
 http://www.accuvant.com/blog/improving-reliability-of-sandbox-results
 An updated blog post covering more recent changes is forthcoming.
 
-If you want to contribute to development, submit pull requests or email bspengler@accuvant.com.
+If you want to contribute to development, submit pull requests or email brad.spengler@optiv.com.
