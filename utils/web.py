@@ -168,10 +168,6 @@ def browse_page(page_id=1, new_limit=-1):
 def server_static(filename):
     return static_file(filename, root=os.path.join(CUCKOO_ROOT, "data", "html"))
 
-@route("/statistics_image/<filename:path>")
-def server_generated_statistics(filename):
-    return static_file(filename, root=os.path.join(CUCKOO_ROOT, "data", "html", "statistics"))
-
 @route("/submit", method="POST")
 def submit():
     context = {}

@@ -45,7 +45,6 @@ The following libraries are not strictly required, but their installation is rec
     * `Volatility`_ (Optional): used for forensic analysis on memory (release >=2.4)
     * `MAEC Python bindings`_ (Optional): used for MAEC reporting (use a release >=4.1.0.11, but <5.x).
     * `Chardet`_ (Optional): used for detecting string encoding.
-    * `pygal`_ (Optional): for using statistics in ``web.py``
     * `clamd`_ (Optional): for scanning artifacts with ClamAV (release >= 0.3.3)
     * `m2crypto`_ (Optional): for extracting PE digital certificate information
     * `django-ratelimit`_ (Optional): required if using the Django web interface
