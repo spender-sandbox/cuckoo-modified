@@ -247,8 +247,8 @@ class RunProcessing(object):
 class RunSignatures(object):
     """Run Signatures."""
 
-    def __init__(self, task_id, results):
-        self.task_id = task_id
+    def __init__(self, task, results):
+        self.task = task
         self.results = results
 
     def _load_overlay(self):
@@ -568,7 +568,6 @@ class RunReporting:
     def __init__(self, task, results):
         """@param analysis_path: analysis folder path."""
         self.task = task
-        self.task_id = task_id
         # remove unwanted/duplicate information from reporting
         for process in results["behavior"]["processes"]:
             process["calls"].begin_reporting()
