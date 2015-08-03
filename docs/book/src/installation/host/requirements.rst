@@ -15,9 +15,22 @@ Install Python on Ubuntu::
 
     $ sudo apt-get install python
 
-If you want to use the Django-based web interface, you'll have to install MongoDB too::
+If you want to use the Django-based web interface, you'll have to install MongoDB or ElasticSearch.
+
+MongoDB::
 
     $ sudo apt-get install mongodb
+
+ElasticSearch::
+
+    $ add-apt-repository ppa:webupd8team/java
+    $ wget -qO - https://packages.elasticsearch.org/GPG-KEY-elasticsearch | sudo apt-key add -
+    $ add-apt-repository "deb http://packages.elasticsearch.org/elasticsearch/1.4/debian stable main"
+    $ apt-get update
+    $ apt-get install oracle-java8-installer elasticsearch
+    $ apt-get install elasticsearch
+    $ update-rc.d elasticsearch defaults 95 10
+    $ /etc/init.d/elasticsearch start
 
 In order to properly function, Cuckoo requires SQLAlchemy and Python BSON to be installed.
 
@@ -37,6 +50,7 @@ The following libraries are not strictly required, but their installation is rec
     * `Magic`_ (Optional): for identifying files' formats (otherwise use "file" command line utility)
     * `Pydeep`_ (Optional): for calculating ssdeep fuzzy hash of files.
     * `Pymongo`_ (Optional): for storing the results in a MongoDB database.
+    * `elasticsearch`_ (Optional): For storing and querying data into ElasticSearch
     * `Yara`_ and Yara Python (Optional): for matching Yara signatures (release >=3.0).
     * `Libvirt`_ (Optional): for using the KVM machine manager.
     * `Bottlepy`_ (Optional): for using the ``api.py`` or ``web.py`` utility (release >=0.10).
@@ -49,8 +63,8 @@ The following libraries are not strictly required, but their installation is rec
     * `m2crypto`_ (Optional): for extracting PE digital certificate information
     * `django-ratelimit`_ (Optional): required if using the Django web interface
     * `weasyprint`_ (Optional): required for PDF reporting method
-	* `pype32`_ (Optional): needed for some RAT decoders
-	* `rarfile`_ (Optional): needed for automatic extraction of RAR files on submission
+  * `pype32`_ (Optional): needed for some RAT decoders
+  * `rarfile`_ (Optional): needed for automatic extraction of RAR files on submission
 
 Some of them are already packaged in Debian/Ubuntu and can be installed with the following command::
 
@@ -174,3 +188,4 @@ You can get it from the `official repository`_.
 See the volatility documentation for detailed instructions on how to install it.
 
 .. _official repository: https://github.com/volatilityfoundation
+
