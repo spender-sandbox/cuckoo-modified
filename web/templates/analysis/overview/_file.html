@@ -64,7 +64,11 @@
             </tr>
             <tr>
                 <th></th>
-                <td><a class="btn btn-primary btn-small" href="{% url "analysis.views.file" "sample" analysis.target.file_id %}">Download</a></td>
+                {% if config.mongodb %}
+                <td><a class="btn btn-primary btn-small" href="{% url "analysis.views.mongo_file" "sample" analysis.target.file_id %}">Download</a></td>
+                {% elif config.elasticsearchdb %}
+                <td><a class="btn btn-primary btn-small" href="{% url "analysis.views.elastic_file" "sample" analysis.info.id analysis.target.file.sha256 %}">Download</a></td>
+                {% endif %}
             </tr>
         </table>
     </div>

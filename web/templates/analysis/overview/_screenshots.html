@@ -3,9 +3,15 @@
     {% if analysis.shots %}
         <div>
         {% for shot in analysis.shots %}
-            <a data-lightbox="screenshot" href="{% url "analysis.views.file" "screenshot" shot %}">
-                <img class="opaque" src="{% url "analysis.views.file" "screenshot" shot %}" style="height: 120px;" />
+        {% if config.mongodb %}
+            <a data-lightbox="screenshot" href="{% url "analysis.views.mongo_file" "screenshot" shot %}">
+                <img class="opaque" src="{% url "analysis.views.mongo_file" "screenshot" shot %}" style="height: 120px;" />
             </a>
+        {% elif config.elasticsearchdb %}
+            <a data-lightbox="screenshot" href="{% url "analysis.views.elastic_file" "screenshot" analysis.info.id shot %}">
+                <img class="opaque" src="{% url "analysis.views.elastic_file" "screenshot" analysis.info.id shot %}" style="height: 120px;" />
+            </a>
+        {% endif %}
         {% endfor %}
         </div>
     {% else %}
