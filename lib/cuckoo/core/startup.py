@@ -321,6 +321,46 @@ def cuckoo_clean():
         except:
             log.warning("Unable to drop MongoDB database: %s", mdb)
 
+    # Check if ElasticSearch is enabled and delete that data if it is.
+    if cfg.elasticsearch and cfg.elasticsearch.enabled:
+        from elasticsearch import Elasticsearch
+        try:
+            es = Elasticsearch(
+                     hosts = [{
+                         "host": cfg.elasticsearchdb.host,
+                         "port": cfg.elasticsearchdb.port,
+                     }],
+                     timeout = 60
+                 )
+        except:
+            log.warning("Unable to connect to ElasticSearch")
+
+        if es:
+            analyses = es.search(
+                           index="cuckoo-*",
+                           doc_type="analysis",
+                           q="*"
+                       )["hits"]["hits"]
+        if analyses:
+            for analysis in analyses:
+                esidx = analysis["_index"]
+                esid = analysis["_id"]
+                # Check if behavior exists
+                if analysis["_source"]["behavior"]:
+                    for process in analysis["_source"]["behavior"]["processes"]:
+                        for call in process["calls"]:
+                            es.delete(
+                                index=esidx,
+                                doc_type="calls",
+                                id=call,
+                            )
+                # Delete the analysis results
+                es.delete(
+                    index=esidx,
+                    doc_type="analysis",
+                    id=esid,
+                )
+
     # Paths to clean.
     paths = [
         os.path.join(CUCKOO_ROOT, "db"),

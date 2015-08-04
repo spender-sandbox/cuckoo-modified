@@ -16,8 +16,6 @@ log = logging.getLogger()
 
 sys.path.append(os.path.join(os.path.abspath(os.path.dirname(__file__)), ".."))
 
-from bson.objectid import ObjectId
-from gridfs import GridFS
 from lib.cuckoo.common.config import Config
 from lib.cuckoo.common.constants import CUCKOO_ROOT
 from lib.cuckoo.core.database import Database, TASK_REPORTED, TASK_COMPLETED
@@ -25,8 +23,17 @@ from lib.cuckoo.core.database import TASK_FAILED_PROCESSING
 from lib.cuckoo.core.plugins import GetFeeds, RunProcessing, RunSignatures
 from lib.cuckoo.core.plugins import RunReporting
 from lib.cuckoo.core.startup import init_modules
-from pymongo import MongoClient
-from pymongo.errors import ConnectionFailure
+
+repconf = Config("reporting")
+if repconf["mongodb"]["enabled"]:
+    from bson.objectid import ObjectId
+    from gridfs import GridFS
+    from pymongo import MongoClient
+    from pymongo.errors import ConnectionFailure
+
+if repconf["elasticsearchdb"]["enabled"]:
+    from elasticsearch import Elasticsearch
+    es = Elasticsearch()
 
 def process(target=None, copy_path=None, task=None, report=False, auto=False):
     # This is the results container. It's what will be used by all the
@@ -44,8 +51,7 @@ def process(target=None, copy_path=None, task=None, report=False, auto=False):
     RunSignatures(task=task, results=results).run()
 
     if report:
-        mongoconf = Config("reporting").mongodb
-        if mongoconf["enabled"]:
+        if repconf["mongodb"]["enabled"]:
             host = mongoconf["host"]
             port = mongoconf["port"]
             db = mongoconf["db"]
@@ -75,6 +81,32 @@ def process(target=None, copy_path=None, task=None, report=False, auto=False):
                     mdata.analysis.remove({"_id": ObjectId(analysis["_id"])})
             conn.close()
             log.debug("Deleted previous MongoDB data for Task %s" % task_id)
+
+        if repconf["elasticsearchdb"]["enabled"]:
+            analyses = es.search(
+                           index="cuckoo-*",
+                           doc_type="analysis",
+                           q="info.id: \"%s\"" % task_id
+                       )["hits"]["hits"]
+            if analyses:
+                for analysis in analyses:
+                    esidx = analysis["_index"]
+                    esid = analysis["_id"]
+                    # Check if behavior exists
+                    if analysis["_source"]["behavior"]:
+                        for process in analysis["_source"]["behavior"]["processes"]:
+                            for call in process["calls"]:
+                                es.delete(
+                                    index=esidx,
+                                    doc_type="calls",
+                                    id=call,
+                                )
+                    # Delete the analysis results
+                    es.delete(
+                        index=esidx,
+                        doc_type="analysis",
+                        id=esid,
+                    )
 
         RunReporting(task=task, results=results).run()
         Database().set_status(task_id, TASK_REPORTED)
