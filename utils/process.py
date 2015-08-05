@@ -42,7 +42,7 @@ def process(target=None, copy_path=None, task=None, report=False, auto=False):
     GetFeeds(results=results).run()
     RunProcessing(task=task, results=results).run()
     RunSignatures(task=task, results=results).run()
-
+    task_id = task["id"]
     if report:
         mongoconf = Config("reporting").mongodb
         if mongoconf["enabled"]:
