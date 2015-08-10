@@ -192,7 +192,7 @@ class Human(Auxiliary, Thread):
                     "Microsoft Office Word" in file_type or file_name.endswith((".doc", ".docx", ".rtf")):
                     officedoc = True
                 elif "Microsoft Office Excel" in file_type or "Microsoft Excel" in file_type or \
-                    file_name.endswith((".xls", ".xlsx")):
+                    file_name.endswith((".xls", ".xlsx", ".xlsm", ".xlsb")):
                     officedoc = True
                 elif "Microsoft PowerPoint" in file_type or \
                     file_name.endswith((".ppt", ".pptx", ".pps", ".ppsx", ".pptm", ".potm", ".potx", ".ppsm")):
