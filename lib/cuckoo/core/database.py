@@ -1133,45 +1133,6 @@ class Database(object):
             session.close()
 
     @classlock
-    def task_duration(self, stage="full", year=None, month=None, day=None):
-        """Get durations of tasks in the database
-
-        @param stage: processing stage to process for
-        @param year: year filter
-        @param month: month filter
-        @param day: day filter
-        @return: a list containing the durations
-        """
-
-        session = self.Session()
-        res = []
-        try:
-            alltasks = session.query(Task)
-            for i in alltasks:
-                if stage == "full":
-                    if i.completed_on and i.added_on:
-                        res.append(int((i.completed_on - i.added_on).total_seconds()))
-                elif stage == "analysis":
-                    if i.analysis_started_on and i.analysis_finished_on:
-                        res.append(int((i.analysis_finished_on - i.analysis_started_on).total_seconds()))
-                elif stage == "processing":
-                    if i.processing_finished_on and i.processing_started_on:
-                        res.append(int((i.processing_finished_on - i.processing_started_on).total_seconds()))
-                elif stage == "signatures":
-                    if i.signatures_started_on and i.signatures_finished_on:
-                        res.append(int((i.signatures_finished_on - i.signatures_started_on).total_seconds()))
-                elif stage == "reporting":
-                    if i.reporting_finished_on and i.reporting_started_on:
-                        res.append(int((i.reporting_finished_on - i.reporting_started_on).total_seconds()))
-
-        except SQLAlchemyError as e:
-            log.debug("Database error counting tasks: {0}".format(e))
-            return []
-        finally:
-            session.close()
-        return res
-
-    @classlock
     def view_task(self, task_id, details=False):
         """Retrieve information on a task.
         @param task_id: ID of the task to query.
