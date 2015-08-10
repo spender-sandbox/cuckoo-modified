@@ -40,12 +40,12 @@ if repconf.mongodb.enabled:
                  )[settings.MONGO_DB]
     fs = GridFS(results_db)
 
-if repconf.elasticsearch.enabled:
+if repconf.elasticsearchdb.enabled:
     from elasticsearch import Elasticsearch
     es = Elasticsearch(
          hosts = [{
-             "host": repconf.elasticsearch.host,
-             "port": repconf.elasticsearch.port,
+             "host": repconf.elasticsearchdb.host,
+             "port": repconf.elasticsearchdb.port,
          }],
          timeout = 60
      )
