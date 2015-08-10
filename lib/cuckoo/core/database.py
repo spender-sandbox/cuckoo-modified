@@ -349,12 +349,12 @@ class Database(object):
         @param schema_check: disable or enable the db schema version check
         """
         self._lock = SuperLock()
-        cfg = Config()
+        self.cfg = Config()
 
         if dsn:
             self._connect_database(dsn)
-        elif cfg.database.connection:
-            self._connect_database(cfg.database.connection)
+        elif self.cfg.database.connection:
+            self._connect_database(self.cfg.database.connection)
         else:
             db_file = os.path.join(CUCKOO_ROOT, "db", "cuckoo.db")
             if not os.path.exists(db_file):
@@ -370,8 +370,8 @@ class Database(object):
         # Disable SQL logging. Turn it on for debugging.
         self.engine.echo = False
         # Connection timeout.
-        if cfg.database.timeout:
-            self.engine.pool_timeout = cfg.database.timeout
+        if self.cfg.database.timeout:
+            self.engine.pool_timeout = self.cfg.database.timeout
         else:
             self.engine.pool_timeout = 60
         # Create schema.
@@ -895,9 +895,8 @@ class Database(object):
             else:
                 task.clock = clock
         elif isinstance(obj, File):
-            cfg = Config()
             try:
-                clocktime = datetime.now() + timedelta(days=cfg.cuckoo.daydelta)
+                clocktime = datetime.now() + timedelta(days=self.cfg.cuckoo.daydelta)
                 task.clock = clocktime
             except:
                 pass
