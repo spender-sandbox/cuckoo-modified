@@ -228,6 +228,9 @@
     <Compile Include="utils\__init__.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="web\api\urls.py" />
+    <Compile Include="web\api\views.py" />
+    <Compile Include="web\api\__init__.py" />
     <Compile Include="web\manage.py" />
     <Compile Include="analyzer\windows\analyzer.py" />
     <Compile Include="analyzer\windows\lib\__init__.py" />
@@ -536,6 +539,7 @@
     <Folder Include="web" />
     <Folder Include="web\analysis" />
     <Folder Include="web\analysis\templatetags" />
+    <Folder Include="web\api\" />
     <Folder Include="web\dashboard" />
     <Folder Include="web\static\" />
     <Folder Include="web\static\css" />

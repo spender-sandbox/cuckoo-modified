@@ -31,7 +31,7 @@ apiconf = Config("api")
 limiter = apiconf.api.get("ratelimit")
 repconf = Config("reporting")
 
-if repconf["mongodb"]["enabled"]:
+if repconf.mongodb.enabled:
     import pymongo
     from gridfs import GridFS
     results_db = pymongo.MongoClient(
@@ -40,12 +40,12 @@ if repconf["mongodb"]["enabled"]:
                  )[settings.MONGO_DB]
     fs = GridFS(results_db)
 
-if repconf["elasticsearch"]["enabled"]:
+if repconf.elasticsearch.enabled:
     from elasticsearch import Elasticsearch
     es = Elasticsearch(
          hosts = [{
-             "host": repconf["elasticsearch"]["host"],
-             "port": repconf["elasticsearch"]["port"],
+             "host": repconf.elasticsearch.host,
+             "port": repconf.elasticsearch.port,
          }],
          timeout = 60
      )
@@ -469,7 +469,7 @@ def ext_tasks_search(request):
 
     if option and dataarg:
         records = ""
-        if repconf["mongodb"]["enabled"]:
+        if repconf.mongodb.enabled:
             if option == "name":
                 records = results_db.analysis.find({"target.file.name": {"$regex": dataarg, "$options": "-i"}}).sort([["_id", -1]])
             elif option == "type":
@@ -533,7 +533,7 @@ def ext_tasks_search(request):
                         "error_value": "Invalid Option. '%s' is not a valid option." % option}
                 return jsonize(resp, response=True)
 
-        if repconf["elasticsearchdb"]["enabled"]:
+        if repconf.elasticsearchdb.enabled:
             if term == "name":
                 records = es.search(index="cuckoo-*", doctype="analysis", q="target.file.name: %s" % value)["hits"]["hits"]
             elif term == "type":

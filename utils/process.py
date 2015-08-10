@@ -25,13 +25,13 @@ from lib.cuckoo.core.plugins import RunReporting
 from lib.cuckoo.core.startup import init_modules
 
 repconf = Config("reporting")
-if repconf["mongodb"]["enabled"]:
+if repconf.mongodb.enabled:
     from bson.objectid import ObjectId
     from gridfs import GridFS
     from pymongo import MongoClient
     from pymongo.errors import ConnectionFailure
 
-if repconf["elasticsearchdb"]["enabled"]:
+if repconf.elasticsearchdb.enabled:
     from elasticsearch import Elasticsearch
     es = Elasticsearch()
 
@@ -51,7 +51,7 @@ def process(target=None, copy_path=None, task=None, report=False, auto=False):
     RunSignatures(task=task, results=results).run()
     task_id = task["id"]
     if report:
-        if repconf["mongodb"]["enabled"]:
+        if repconf.mongodb.enabled:
             host = mongoconf["host"]
             port = mongoconf["port"]
             db = mongoconf["db"]
@@ -82,7 +82,7 @@ def process(target=None, copy_path=None, task=None, report=False, auto=False):
             conn.close()
             log.debug("Deleted previous MongoDB data for Task %s" % task_id)
 
-        if repconf["elasticsearchdb"]["enabled"]:
+        if repconf.elasticsearchdb.enabled:
             analyses = es.search(
                            index="cuckoo-*",
                            doc_type="analysis",
