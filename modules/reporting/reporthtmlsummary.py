@@ -62,9 +62,9 @@ class ReportHTMLSummary(Report):
                 counter += 1
 
             shots.sort(key=lambda shot: shot["id"])
-            results["screenshots"] = shots
+            results["shots"] = shots
         else:
-            results["screenshots"] = []
+            results["shots"] = []
 
         env = Environment(autoescape=True)
         env.loader = FileSystemLoader(os.path.join(CUCKOO_ROOT,
