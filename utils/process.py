@@ -52,9 +52,9 @@ def process(target=None, copy_path=None, task=None, report=False, auto=False):
     task_id = task["id"]
     if report:
         if repconf.mongodb.enabled:
-            host = mongoconf["host"]
-            port = mongoconf["port"]
-            db = mongoconf["db"]
+            host = repconf["mongodb"]["host"]
+            port = repconf["mongodb"]["port"]
+            db = repconf["mongodb"]["db"]
             conn = MongoClient(host, port)
             mdata = conn[db]
             fs = GridFS(mdata)
