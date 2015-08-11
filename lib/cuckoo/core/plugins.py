@@ -466,8 +466,8 @@ class RunSignatures(object):
             if value:
                 self.results["statistics"]["signatures"].append({
                     "name": key,
-                    "time": float("%d.%03d" % (timediff.seconds,
-                                             timediff.microseconds / 1000)),
+                    "time": float("%d.%03d" % (value.seconds,
+                                             value.microseconds / 1000)),
                     })
 
         # Compat loop for old-style (non evented) signatures.
