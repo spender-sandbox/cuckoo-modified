@@ -480,6 +480,12 @@ class Summary:
                self.keys.append(name)
             if name and name not in self.read_keys:
                self.read_keys.append(name)
+        elif call["api"] == "SHGetFileInfoW":
+            filename = self.get_argument(call, "Path")
+            if filename and (len(filename) < 2 or filename[1] != ':'):
+                filename = None
+            if filename and filename not in self.files:
+                self.files.append(filename)
         elif call["api"] == "ShellExecuteExW":
             filename = self.get_argument(call, "FilePath")
             if len(filename) < 2 or filename[1] != ':':
