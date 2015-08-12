@@ -47,6 +47,18 @@
                                 <td><img src="data:image/jpeg;base64,{{analysis.static.pe_icon}}"/></td>
                             </tr>
                         {% endif %}
+                        {% if analysis.static.pe_icon_hash %}
+                            <tr>
+                                <th style="width: 15%;">Icon Exact Hash</th>
+                                <td>{{analysis.static.pe_icon_hash}}</td>
+                            </tr>
+                        {% endif %}
+                        {% if analysis.static.pe_icon_fuzzy %}
+                            <tr>
+                                <th style="width: 15%;">Icon Similarity Hash</th>
+                                <td>{{analysis.static.pe_icon_fuzzy}}</td>
+                            </tr>
+                        {% endif %}
                     </table>
                 </div>
             </div>

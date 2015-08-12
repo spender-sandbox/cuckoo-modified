@@ -10,6 +10,7 @@ import lib.cuckoo.common.decoders.njrat as njrat
 import logging
 import os
 import base64
+import hashlib
 from datetime import datetime, timedelta
 
 from lib.cuckoo.common.icon import PEGroupIconDir
@@ -342,12 +343,12 @@ class PortableExecutable:
 
         return resources
 
-    def _get_icon(self):
-        """Get icon in PNG format.
-        @return: image data in PNG format, encoded as base64
+    def _get_icon_info(self):
+        """Get icon in PNG format and information for searching for similar icons
+        @return: tuple of (image data in PNG format encoded as base64, md5 hash of image data, md5 hash of "simplified" image for fuzzy matching)
         """
         if not self.pe:
-            return None
+            return None, None, None
 
         try:
             rt_group_icon_idx = [entry.id for entry in self.pe.DIRECTORY_ENTRY_RESOURCE.entries].index(pefile.RESOURCE_TYPE['RT_GROUP_ICON'])
@@ -379,13 +380,26 @@ class PortableExecutable:
 
                     strio = StringIO()
                     output = StringIO()
+                    simplified = StringIO()
+
                     strio.write(icon)
                     strio.seek(0)
                     img = Image.open(strio)
                     img.save(output, format="PNG")
-                    return base64.b64encode(output.getvalue())
+
+                    img = img.resize((16,16), Image.ANTIALIAS)
+                    img = img.convert("RGB").convert("P", palette=Image.ADAPTIVE, colors=4)
+                    img.save(simplified, format="PNG", colors=4)
+
+                    m = hashlib.md5()
+                    m.update(output.getvalue())
+                    fullhash = m.hexdigest()
+                    m = hashlib.md5()
+                    m.update(simplified.getvalue())
+                    simphash = m.hexdigest()
+                    return base64.b64encode(output.getvalue()), fullhash, simphash
         except:
-            return None
+            return None, None, None
 
     def _get_versioninfo(self):
         """Get version info.
@@ -509,7 +523,7 @@ class PortableExecutable:
         results["pe_sections"] = self._get_sections()
         results["pe_overlay"] = self._get_overlay()
         results["pe_resources"] = self._get_resources()
-        results["pe_icon"] = self._get_icon()
+        results["pe_icon"], results["pe_icon_hash"], results["pe_icon_fuzzy"] = self._get_icon_info()
         results["pe_versioninfo"] = self._get_versioninfo()
         results["pe_imphash"] = self._get_imphash()
         results["pe_timestamp"] = self._get_timestamp()

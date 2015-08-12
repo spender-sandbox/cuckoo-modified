@@ -502,6 +502,10 @@ def ext_tasks_search(request):
                 records = results_db.analysis.find({"malfamily": {"$regex": value, "$options": "-i"}}).sort([["_id", -1]])
             elif option == "url":
                 records = results_db.analysis.find({"target.url": dataarg}).sort([["_id", -1]])
+            elif option == "iconhash":
+                records = results_db.analysis.find({"static.pe_icon_hash": dataarg}).sort([["_id", -1]])
+            elif option == "iconfuzzy":
+                records = results_db.analysis.find({"static.pe_icon_fuzzy": dataarg}).sort([["_id", -1]])
             elif option == "imphash":
                 records = results_db.analysis.find({"static.pe_imphash": dataarg}).sort([["_id", -1]])
             elif option == "surialert":
@@ -568,6 +572,10 @@ def ext_tasks_search(request):
                 records = es.search(index="cuckoo-*", doctype="analysis", q="target.url: %s" % value)["hits"]["hits"]
             elif term == "imphash":
                 records = es.search(index="cuckoo-*", doctype="analysis", q="static.pe_imphash: %s" % value)["hits"]["hits"]
+            elif term == "iconhash":
+                records = es.search(index="cuckoo-*", doctype="analysis", q="static.pe_icon_hash: %s" % value)["hits"]["hits"]
+            elif term == "iconfuzzy":
+                records = es.search(index="cuckoo-*", doctype="analysis", q="static.pe_icon_fuzzy: %s" % value)["hits"]["hits"]
             elif term == "surialert":
                 records = es.search(index="cuckoo-*", doctype="analysis", q="suricata.alerts.signature: %s" % value)["hits"]["hits"]
             elif term == "surihttp":
@@ -971,10 +979,14 @@ def tasks_iocs(request, task_id, detail=None):
         office = {}
         if "peid_signatures" in buf["static"] and buf["static"]["peid_signatures"]:
             pe["peid_signatures"] = buf["static"]["peid_signatures"]
-        if "pe_timstamp" in buf["static"] and buf["static"]["pe_timestamp"]:
+        if "pe_timestamp" in buf["static"] and buf["static"]["pe_timestamp"]:
             pe["pe_timestamp"] = buf["static"]["pe_timestamp"]
         if "pe_imphash" in buf["static"] and buf["static"]["pe_imphash"]:
             pe["pe_imphash"] = buf["static"]["pe_imphash"]
+        if "pe_icon_hash" in buf["static"] and buf["static"]["pe_icon_hash"]:
+            pe["pe_icon_hash"] = buf["static"]["pe_icon_hash"]
+        if "pe_icon_fuzzy" in buf["static"] and buf["static"]["pe_icon_fuzzy"]:
+            pe["pe_icon_fuzzy"] = buf["static"]["pe_icon_fuzzy"]
         if "Objects" in buf["static"] and buf["static"]["Objects"]:
             pdf["objects"] = len(buf["static"]["Objects"])
         if "Info" in buf["static"] and buf["static"]["Info"]:
