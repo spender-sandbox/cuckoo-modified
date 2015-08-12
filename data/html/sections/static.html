@@ -88,10 +88,12 @@
                             <col width="*" />
                         </colgroup>
                         {% for info in results.static.pe_versioninfo %}
+                            {% if info.name %}
                             <tr>
                                 <td><strong>{{info.name}}</strong>:</td>
                                 <td><span class="mono">{{info.value}}</span></td>
                             </tr>
+                            {% endif %}
                         {% endfor %}
                     </table>
                 </div>
