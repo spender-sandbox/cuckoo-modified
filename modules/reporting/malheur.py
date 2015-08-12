@@ -138,6 +138,8 @@ def mist_convert(results):
             lines.append("pe imphash|" + sanitize_generic(results["static"]["pe_imphash"]))
         if "pe_icon" in results["static"] and results["static"]["pe_icon"]:
             lines.append("pe icon|" + sanitize_generic(results["static"]["pe_icon"]))
+        if "pe_icon_fuzzy" in results["static"] and results["static"]["pe_icon_fuzzy"]:
+            lines.append("pe iconfuzzy|" + sanitize_generic(results["static"]["pe_icon_fuzzy"]))
         if "pe_versioninfo" in results["static"] and results["static"]["pe_versioninfo"]:
             for info in results["static"]["pe_versioninfo"]:
                 if info["value"]:
