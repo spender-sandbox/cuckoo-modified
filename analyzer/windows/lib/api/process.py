@@ -644,12 +644,16 @@ class Process:
         buf = infd.read(1024*1024)
         try:
             while buf:
-                nf.send(buf, retry=False)
+                nf.send(buf, retry=True)
                 buf = infd.read(1024*1024)
-            nf.close()
         except:
+            infd.close()
+            nf.close()
             log.warning("Memory dump of process with pid %d failed", self.pid)
             return False
+
+        infd.close()
+        nf.close()
 
         log.info("Memory dump of process with pid %d completed", self.pid)
 
