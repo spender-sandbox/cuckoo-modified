@@ -7,6 +7,7 @@ import socket
 import struct
 import tempfile
 import logging
+import dns.resolver
 from collections import OrderedDict
 from urlparse import urlunparse
 
@@ -22,7 +23,6 @@ from lib.cuckoo.common.irc import ircMessage
 from lib.cuckoo.common.objects import File
 from lib.cuckoo.common.utils import convert_to_printable
 from lib.cuckoo.common.exceptions import CuckooProcessingError
-from dns.resolver import query
 from dns.reversename import from_address
 
 try:
@@ -173,18 +173,29 @@ class Pcap:
 
     def _enrich_hosts(self, unique_hosts):
         enriched_hosts = []
+
+        if self.config.processing.reverse_dns:
+            d = dns.resolver.Resolver()
+            d.timeout = 5.0
+            d.lifetime = 5.0
+
         while unique_hosts:
             ip = unique_hosts.pop()
             inaddrarpa = ""
-            try:
-                inaddrarpa = query(from_address(ip), "PTR").rrset[0].to_text()
-            except:
-                pass
             hostname = ""
+            if self.config.processing.reverse_dns:
+                try:
+                    inaddrarpa = d.query(from_address(ip), "PTR").rrset[0].to_text()
+                except:
+                    pass
             for request in self.dns_requests.values():
                 for answer in request['answers']:
                     if answer["data"] == ip:
                         hostname = request["request"]
+                        break
+                if hostname:
+                    break
+
             enriched_hosts.append({"ip": ip, "country_name": self._get_cn(ip),
                                    "hostname": hostname, "inaddrarpa": inaddrarpa})
         return enriched_hosts
