@@ -171,6 +171,7 @@ def pretty_print_retval(category, api_name, status, retval):
             0xc000003a : "OBJECT_PATH_NOT_FOUND",
             0xc000003c : "DATA_OVERRUN",
             0xc0000043 : "SHARING_VIOLATION",
+            0xc0000045 : "INVALID_PAGE_PROTECTION",
             0xc000007a : "PROCEDURE_NOT_FOUND",
             0xc00000ba : "FILE_IS_A_DIRECTORY",
             0xc000010a : "PROCESS_IS_TERMINATING",
