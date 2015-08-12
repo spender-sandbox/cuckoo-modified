@@ -75,10 +75,12 @@
                             <col width="*" />
                         </colgroup>
                         {% for info in analysis.static.pe_versioninfo %}
+                        {% if info.name %}
                             <tr>
                                 <th>{{info.name}}</th>
                                 <td><span class="mono">{{info.value}}</span></td>
                             </tr>
+                        {% endif %}
                         {% endfor %}
                     </table>
                 </div>
