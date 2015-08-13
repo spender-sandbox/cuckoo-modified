@@ -167,9 +167,20 @@ class PortableExecutable:
 
         return imports
 
+    def _get_exported_dll_name(self):
+        """Gets exported DLL name, if any
+        @return: exported DLL name as string or None.
+        """
+        if not self.pe:
+            return None
+
+        if hasattr(self.pe, "DIRECTORY_ENTRY_EXPORT"):
+            return convert_to_printable(self.pe.get_string_at_rva(self.pe.DIRECTORY_ENTRY_EXPORT.struct.Name))
+        return None
+
     def _get_exported_symbols(self):
         """Gets exported symbols.
-        @return: exported symbols dict or None.
+        @return: list of dicts of exported symbols or None.
         """
         if not self.pe:
             return None
@@ -181,7 +192,7 @@ class PortableExecutable:
                 symbol = {}
                 symbol["address"] = hex(self.pe.OPTIONAL_HEADER.ImageBase +
                                         exported_symbol.address)
-                symbol["name"] = exported_symbol.name
+                symbol["name"] = convert_to_printable(exported_symbol.name)
                 symbol["ordinal"] = exported_symbol.ordinal
                 exports.append(symbol)
 
@@ -518,6 +529,7 @@ class PortableExecutable:
         results["pe_osversion"] = self._get_osversion()
         results["pe_pdbpath"] = self._get_pdb_path()
         results["pe_imports"] = self._get_imported_symbols()
+        results["pe_exported_dll_name"] = self._get_exported_dll_name()
         results["pe_exports"] = self._get_exported_symbols()
         results["pe_dirents"] = self._get_directory_entries()
         results["pe_sections"] = self._get_sections()

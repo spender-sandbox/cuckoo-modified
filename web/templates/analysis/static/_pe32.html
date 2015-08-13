@@ -59,7 +59,13 @@
                                 <td>{{analysis.static.pe_icon_fuzzy}}</td>
                             </tr>
                         {% endif %}
-                    </table>
+                        {% if analysis.static.pe_exported_dll_name %}
+                            <tr>
+                                <th style="width: 15%;">Exported DLL Name</th>
+                                <td>{{analysis.static.pe_exported_dll_name}}</td>
+                            </tr>
+                        {% endif %}
+                     </table>
                 </div>
             </div>
             <hr />
