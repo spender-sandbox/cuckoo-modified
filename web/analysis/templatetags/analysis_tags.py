@@ -29,3 +29,11 @@ def get_item(dictionary, key):
 @register.filter(name="dehex")
 def dehex(value):
     return re.sub(r"\\x[0-9a-f]{2}", "", value)
+
+@register.filter(name="stats_total")
+def stats_total(value):
+    total = float()
+    for item in value:
+       total += item["time"]
+
+    return total
