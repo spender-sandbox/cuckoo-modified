@@ -62,7 +62,7 @@ The following libraries are not strictly required, but their installation is rec
     * `clamd`_ (Optional): for scanning artifacts with ClamAV (release >= 0.3.3)
     * `m2crypto`_ (Optional): for extracting PE digital certificate information
     * `django-ratelimit`_ (Optional): required if using the Django web interface
-    * `weasyprint`_ (Optional): required for PDF reporting method
+    * `weasyprint`_ (Optional): can be used for PDF reporting method, but is significantly slower than wkhtmltopdf
     * `pype32`_ (Optional): needed for some RAT decoders
     * `rarfile`_ (Optional): needed for automatic extraction of RAR files on submission
     * `jsbeautifier`_ (Optional): needed for analysis of JavaScript in PDFs
@@ -74,6 +74,10 @@ Some of them are already packaged in Debian/Ubuntu and can be installed with the
 Except for *python-magic*, *python-dpkt* and *python-libvirt*, the others can be installed through ``pip`` too::
 
     $ sudo pip install jinja2 pymongo bottle pefile django chardet pygal m2crypto clamd django-ratelimit pycrypto weasyprint rarfile jsbeautifier
+
+For faster generation of PDF reports, you should install wkhtmltopdf instead of weasyprint.  To do this on Debian/Ubuntu, just use the following command::
+
+    $ sudo apt-get install wkhtmltopdf xvfb xfonts-100dpi
 
 To have MAEC support, you need to first install the Cybox and then the MAEC libraries::
 

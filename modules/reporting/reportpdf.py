@@ -5,6 +5,7 @@
 import os
 import logging
 
+from subprocess import call
 from lib.cuckoo.common.abstracts import Report
 from lib.cuckoo.common.exceptions import CuckooReportError
 
@@ -21,9 +22,13 @@ class ReportPDF(Report):
     order = 10
 
     def run(self, results):
+        if os.path.exists("/usr/bin/xvfb-run") and os.path.exists("/usr/bin/wkhtmltopdf"):
+            call(["/usr/bin/xvfb-run", "--auto-servernum", "--server-num", "1", "/usr/bin/wkhtmltopdf", "-q", os.path.join(self.reports_path, "summary-report.html"), os.path.join(self.reports_path, "report.pdf")])
+            return True
+
         if not HAVE_WEASYPRINT:
             raise CuckooReportError("Failed to generate PDF report: "
-                                    "Weasyprint Python library is not installed")
+                                    "Neither wkhtmltopdf nor Weasyprint Python library are installed")
 
         if not os.path.isfile(os.path.join(self.reports_path, "summary-report.html")):
             raise CuckooReportError("Unable to open summary HTML report to convert to PDF: "
