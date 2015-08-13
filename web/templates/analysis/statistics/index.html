@@ -1,7 +1,8 @@
 {% if analysis.statistics %}
+{% load analysis_tags %}
     <div class="row">
     <div class="well well-small col-md-6">
-        <h4>Processing</h4>
+      <h4>Processing&emsp;( {{ analysis.statistics.processing|stats_total }} seconds )</h4>
         <ul class="list-group">
             {% for stat in analysis.statistics.processing|dictsortreversed:"time" %}
             {% if stat.time %}
@@ -16,7 +17,7 @@
     </div>
     <div class="row">
     <div class="well well-small col-md-6">
-        <h4>Signatures</h4>
+        <h4>Signatures&emsp;( {{ analysis.statistics.signatures|stats_total }} seconds )</h4>
         <ul class="list-group">
             {% for stat in analysis.statistics.signatures|dictsortreversed:"time" %}
             {% if stat.time %}
@@ -31,7 +32,7 @@
     </div>
     <div class="row">
     <div class="well well-small col-md-6">
-        <h4>Reporting</h4>
+        <h4>Reporting&emsp;( {{ analysis.statistics.reporting|stats_total }} seconds )</h4>
         <ul class="list-group">
             {% for stat in analysis.statistics.reporting|dictsortreversed:"time" %}
             {% if stat.time %}
