@@ -430,6 +430,8 @@ class PortableExecutable:
                                     entry = {}
                                     entry["name"] = convert_to_printable(str_entry[0])
                                     entry["value"] = convert_to_printable(str_entry[1])
+                                    if entry["name"] == "Translation" and len(entry["value"]) == 10:
+                                        entry["value"] = "0x0" + entry["value"][2:5] + " 0x0" + entry["value"][7:10]
                                     infos.append(entry)
                         elif hasattr(entry, "Var"):
                             for var_entry in entry.Var:
@@ -437,6 +439,8 @@ class PortableExecutable:
                                     entry = {}
                                     entry["name"] = convert_to_printable(var_entry.entry.keys()[0])
                                     entry["value"] = convert_to_printable(var_entry.entry.values()[0])
+                                    if entry["name"] == "Translation" and len(entry["value"]) == 10:
+                                        entry["value"] = "0x0" + entry["value"][2:5] + " 0x0" + entry["value"][7:10]
                                     infos.append(entry)
                     except:
                         continue
