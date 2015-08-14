@@ -377,7 +377,7 @@ class PortableExecutable:
                                     resource["filetype"] = filetype
                                     resource["language"] = language
                                     resource["sublanguage"] = sublanguage
-                                    resource["entropy"] = _get_entropy(data)
+                                    resource["entropy"] = "{0:.02f}".format(float(_get_entropy(data)))
                                     resources.append(resource)
                 except:
                     continue
