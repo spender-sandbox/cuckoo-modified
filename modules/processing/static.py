@@ -421,7 +421,6 @@ class PortableExecutable:
 
                     strio = StringIO()
                     output = StringIO()
-                    simplified = StringIO()
 
                     strio.write(icon)
                     strio.seek(0)
@@ -433,13 +432,13 @@ class PortableExecutable:
                     lowval = img.getextrema()[0]
                     img = img.point(lambda i: 255 if i > lowval else 0)
                     img = img.convert("1")
-                    img.save(simplified, format="PNG")
+                    simplified = bytearray(img.getdata())
 
                     m = hashlib.md5()
                     m.update(output.getvalue())
                     fullhash = m.hexdigest()
                     m = hashlib.md5()
-                    m.update(simplified.getvalue())
+                    m.update(simplified)
                     simphash = m.hexdigest()
                     return base64.b64encode(output.getvalue()), fullhash, simphash
         except:
