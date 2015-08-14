@@ -182,6 +182,7 @@
                             <th>Size</th>
                             <th>Language</th>
                             <th>Sub-language</th>
+                            <th>Entropy</th>
                             <th>File type</th>
                         </tr>
                         {% for section in results.static.pe_resources %}
@@ -191,6 +192,7 @@
                                 <td>{{section.size}}</td>
                                 <td>{{section.language}}</td>
                                 <td>{{section.sublanguage}}</td>
+                                <td>{{section.entropy}}</td>
                                 <td>{{section.filetype}}</td>
                             </tr>
                         {% endfor %}

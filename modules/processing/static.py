@@ -9,6 +9,8 @@ import lib.cuckoo.common.decoders.darkcomet as darkcomet
 import lib.cuckoo.common.decoders.njrat as njrat
 import logging
 import os
+import math
+import array
 import base64
 import hashlib
 from datetime import datetime, timedelta
@@ -59,6 +61,34 @@ from lib.cuckoo.common.peepdf.PDFCore import PDFParser
 from lib.cuckoo.common.peepdf.JSAnalysis import analyseJS
 
 log = logging.getLogger(__name__)
+
+
+# Obtained from
+# https://github.com/erocarrera/pefile/blob/master/pefile.py
+# Copyright Ero Carrera and released under the MIT License:
+# https://github.com/erocarrera/pefile/blob/master/LICENSE
+
+def _get_entropy(data):
+    """ Computes the entropy value for the provided data
+    @param data: data to be analyzed.
+    @return: entropy value as float.
+    """
+    entropy = 0.0
+
+    if len(data) == 0:
+        return entropy
+
+    occurrences = array.array('L', [0]*256)
+
+    for x in data:
+        occurrences[ord(x)] += 1
+
+    for x in occurrences:
+        if x:
+            p_x = float(x) / len(data)
+            entropy -= p_x*math.log(p_x, 2)
+
+    return entropy
 
 # Partially taken from
 # http://malwarecookbook.googlecode.com/svn/trunk/3/8/pescanner.py
@@ -341,13 +371,13 @@ class PortableExecutable:
                                     filetype = _get_filetype(data)
                                     language = pefile.LANG.get(resource_lang.data.lang, None)
                                     sublanguage = pefile.get_sublang_name_for_lang(resource_lang.data.lang, resource_lang.data.sublang)
-
                                     resource["name"] = name
                                     resource["offset"] = "0x{0:08x}".format(resource_lang.data.struct.OffsetToData)
                                     resource["size"] = "0x{0:08x}".format(resource_lang.data.struct.Size)
                                     resource["filetype"] = filetype
                                     resource["language"] = language
                                     resource["sublanguage"] = sublanguage
+                                    resource["entropy"] = _get_entropy(data)
                                     resources.append(resource)
                 except:
                     continue
