@@ -53,7 +53,11 @@ if enabledconf["mongodb"]:
 
 if enabledconf["elasticsearchdb"]:
     from elasticsearch import Elasticsearch
-    es = Elasticsearch()
+    es = Elasticsearch(hosts = [{
+             "host": settings.ELASTIC_HOST,
+             "port": settings.ELASTIC_PORT,
+         }],
+         timeout = 60)
 
 def get_analysis_info(db, id=-1, task=None):
     if not task:
