@@ -49,9 +49,12 @@ class ReportHTMLSummary(Report):
                 output = StringIO.StringIO()
 
                 # resize the image to thumbnail size, as weasyprint can't handle resizing
-                img = Image.open(shot_path)
-                img = img.resize((150, 100), PIL.Image.ANTIALIAS)
-                img.save(output, format="JPEG")
+                try:
+                    img = Image.open(shot_path)
+                    img = img.resize((150, 100), PIL.Image.ANTIALIAS)
+                    img.save(output, format="JPEG")
+                except:
+                    pass
 
                 shot = {}
                 shot["id"] = os.path.splitext(File(shot_path).get_name())[0]
