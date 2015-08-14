@@ -428,9 +428,9 @@ class PortableExecutable:
                     img = Image.open(strio)
                     img.save(output, format="PNG")
 
-                    img = img.resize((16,16), Image.ANTIALIAS)
-                    img = img.convert("RGB").convert("P", palette=Image.ADAPTIVE, colors=4)
-                    img.save(simplified, format="PNG", colors=4)
+                    img = img.resize((8,8), Image.ANTIALIAS)
+                    img = img.convert("RGB").convert("P", palette=Image.ADAPTIVE, colors=2).convert("1")
+                    img.save(simplified, format="PNG", colors=2)
 
                     m = hashlib.md5()
                     m.update(output.getvalue())
