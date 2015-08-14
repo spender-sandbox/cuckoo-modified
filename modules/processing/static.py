@@ -427,7 +427,7 @@ class PortableExecutable:
                     img = Image.open(strio)
                     img.save(output, format="PNG")
 
-                    img = img.resize((8,8), Image.ANTIALIAS)
+                    img = img.resize((8,8), Image.BILINEAR)
                     img = img.convert("RGB").convert("P", palette=Image.ADAPTIVE, colors=2).convert("L")
                     lowval = img.getextrema()[0]
                     img = img.point(lambda i: 255 if i > lowval else 0)
