@@ -157,6 +157,7 @@ class Suricata(Processing):
                 if parsed["event_type"] == "alert":
                     if parsed["alert"]["signature_id"] not in sid_blacklist:
                         alog = dict()
+                        alog["sid"] = parsed["alert"]["signature_id"]
                         alog["srcport"] = parsed["src_port"]
                         alog["srcip"] = parsed["src_ip"]
                         alog["dstport"] = parsed["dest_port"]
