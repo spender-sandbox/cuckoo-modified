@@ -122,42 +122,39 @@ class Moloch(Report):
          
         if results.has_key('suricata'):
            if results["suricata"].has_key("alerts"):
-               afastre = re.compile(r".+\[1:(?P<sid>\d+):\d+\].+\{(?P<proto>UDP|TCP|ICMP|(PROTO:)?\d+)\}\s(?P<src>\d+\.\d+\.\d+\.\d+)(:(?P<sport>\d+))?\s.+\s(?P<dst>\d+\.\d+\.\d+\.\d+)(:(?P<dport>\d+))?")
                for alert in results["suricata"]["alerts"]:
-                   m = afastre.match(alert)
-                   if m:
-                       proto = m.group('proto')
-                       if proto:
-                           tmpdict = {}
-                           cproto = ""
-                           if proto == "UDP" or proto == "TCP" or proto == "6" or proto == "17":
-                               tmpdict['src'] = m.group('src')
-                               tmpdict['sport'] = int(m.group('sport'))
-                               tmpdict['dst'] = m.group('dst')
-                               tmpdict['dport'] = int(m.group('dport'))
-                               if proto == "UDP" or proto == "17":
-                                   tmpdict['cproto'] = "udp"
-                                   tmpdict['nproto'] = 17
-                               elif proto == "TCP" or proto == "6":
-                                   tmpdict['cproto'] = "tcp"
-                                   tmpdict['nproto'] = 6
-                               tmpdict['expression'] = "ip==%s && ip==%s && port==%s && port==%s && tags==\"%s:%s\" && tags=\"%s\"" % (tmpdict['src'],tmpdict['dst'],tmpdict['sport'],tmpdict['dport'],self.CUCKOO_INSTANCE_TAG,self.task_id,tmpdict['cproto'])
-                               tmpdict['hash'] = tmpdict['nproto'] + struct.unpack('!L',socket.inet_aton(tmpdict['src']))[0] + tmpdict['sport'] + struct.unpack('!L',socket.inet_aton(tmpdict['dst']))[0] + tmpdict['dport']
-                           elif proto == "ICMP" or proto == "1":
-                               tmpdict['src'] = m.group('src')
-                               tmpdict['dst'] = m.group('dst')
-                               tmpdict['cproto'] = "icmp"
-                               tmpdict['nproto'] = 1
-                               tmpdict['expression'] = "ip==%s && ip==%s && tags==\"%s:%s\" && tags=\"%s\"" % (tmpdict['src'],tmpdict['dst'],self.CUCKOO_INSTANCE_TAG,self.task_id,tmpdict['cproto'])
-                               tmpdict['hash'] = tmpdict['nproto'] + struct.unpack('!L',socket.inet_aton(tmpdict['src']))[0] + struct.unpack('!L',socket.inet_aton(tmpdict['dst']))[0]
+                   proto = alert['protocol']
+                   if proto:
+                       tmpdict = {}
+                       cproto = ""
+                       if proto == "UDP" or proto == "TCP" or proto == "6" or proto == "17":
+                           tmpdict['src'] = alert['srcip']
+                           tmpdict['sport'] = alert['srcport']
+                           tmpdict['dst'] = alert['dstip']
+                           tmpdict['dport'] = alert['dstport']
+                           if proto == "UDP" or proto == "17":
+                               tmpdict['cproto'] = "udp"
+                               tmpdict['nproto'] = 17
+                           elif proto == "TCP" or proto == "6":
+                               tmpdict['cproto'] = "tcp"
+                               tmpdict['nproto'] = 6
+                           tmpdict['expression'] = "ip==%s && ip==%s && protocols==%s && port==%s && port==%s && tags==\"%s:%s\"" % (tmpdict['src'],tmpdict['dst'],tmpdict['cproto'],tmpdict['sport'],tmpdict['dport'],self.CUCKOO_INSTANCE_TAG,self.task_id)
+                           tmpdict['hash'] = tmpdict['nproto'] + struct.unpack('!L',socket.inet_aton(tmpdict['src']))[0] + tmpdict['sport'] + struct.unpack('!L',socket.inet_aton(tmpdict['dst']))[0] + tmpdict['dport']
+                       elif proto == "ICMP" or proto == "1":
+                           tmpdict['src'] = alert['srcip']
+                           tmpdict['dst'] = alert['dstip']
+                           tmpdict['cproto'] = "icmp"
+                           tmpdict['nproto'] = 1
+                           tmpdict['expression'] = "ip==%s && ip==%s && protocols==%s && tags==\"%s:%s\"" % (tmpdict['src'],tmpdict['dst'],tmpdict['cproto'],self.CUCKOO_INSTANCE_TAG,self.task_id)
+                           tmpdict['hash'] = tmpdict['nproto'] + struct.unpack('!L',socket.inet_aton(tmpdict['src']))[0] + struct.unpack('!L',socket.inet_aton(tmpdict['dst']))[0]
 
-                           if self.alerthash.has_key(tmpdict['hash']):
-                               if m.group('sid') not in self.alerthash[tmpdict['hash']]['sids']:
-                                   self.alerthash[tmpdict['hash']]['sids'].append("sid:%s" % (m.group('sid')))
-                           else:
-                               self.alerthash[tmpdict['hash']] = copy.deepcopy(tmpdict)
-                               self.alerthash[tmpdict['hash']]['sids']=[]
-                               self.alerthash[tmpdict['hash']]['sids'].append("sid:%s" % (m.group('sid')))
+                       if self.alerthash.has_key(tmpdict['hash']):
+                           if alert['sid'] not in self.alerthash[tmpdict['hash']]['sids']:
+                               self.alerthash[tmpdict['hash']]['sids'].append("sid:%s" % (alert['sid']))
+                       else:
+                           self.alerthash[tmpdict['hash']] = copy.deepcopy(tmpdict)
+                           self.alerthash[tmpdict['hash']]['sids']=[]
+                           self.alerthash[tmpdict['hash']]['sids'].append("sid:%s" % (alert['sid']))
                for entry in self.alerthash:
                    tags = ','.join(map(str,self.alerthash[entry]['sids']))
                    if tags:
@@ -168,6 +165,6 @@ class Moloch(Report):
                    if  entry.has_key("file_info"):
                        if entry["file_info"]["clamav"]:
                            tags = "clamav:%s" % (entry["file_info"]["clamav"])
-                           expression = "ip==%s && ip==%s && port==%s && port==%s && tags==\"%s:%s\" && tags=\"tcp\"" % (entry["srcip"],entry["dstip"],entry["sp"],entry["dp"],self.CUCKOO_INSTANCE_TAG,self.task_id)
+                           expression = "ip==%s && ip==%s && port==%s && port==%s && tags==\"%s:%s\" && protocols==tcp" % (entry["srcip"],entry["dstip"],entry["sp"],entry["dp"],self.CUCKOO_INSTANCE_TAG,self.task_id)
                            self.update_tags(tags,expression)
         return {} 
