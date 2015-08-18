@@ -191,6 +191,8 @@ class RunProcessing(object):
         try:
             # Run the processing module and retrieve the generated data to be
             # appended to the general results container.
+            log.debug("Executing processing module \"%s\" on analysis at "
+                      "\"%s\"", current.__class__.__name__, self.analysis_path)
             pretime = datetime.now()
             data = current.run()
             posttime = datetime.now()
@@ -200,9 +202,6 @@ class RunProcessing(object):
                 "time": float("%d.%03d" % (timediff.seconds,
                                          timediff.microseconds / 1000)),
                 })
-
-            log.debug("Executed processing module \"%s\" on analysis at "
-                      "\"%s\"", current.__class__.__name__, self.analysis_path)
 
             # If succeeded, return they module's key name and the data to be
             # appended to it.
@@ -336,14 +335,14 @@ class RunSignatures(object):
                           "\"{0}\":".format(signature))
             return
 
-        log.debug("Running signature \"%s\"", current.name)
-
         # If the signature is disabled, skip it.
         if not current.enabled:
             return None
 
         if not self._check_signature_version(current):
             return None
+        
+        log.debug("Running signature \"%s\"", current.name)
 
         try:
             # Run the signature and if it gets matched, extract key information
@@ -613,6 +612,7 @@ class RunReporting:
         current.cfg = Config(cfg=current.conf_path)
 
         try:
+            log.debug("Executing reporting module \"%s\"", current.__class__.__name__)
             pretime = datetime.now()
             current.run(self.results)
             posttime = datetime.now()
@@ -623,7 +623,6 @@ class RunReporting:
                                          timediff.microseconds / 1000)),
                 })
 
-            log.debug("Executed reporting module \"%s\"", current.__class__.__name__)
         except CuckooDependencyError as e:
             log.warning("The reporting module \"%s\" has missing dependencies: %s", current.__class__.__name__, e)
         except CuckooReportError as e:
@@ -670,6 +669,7 @@ class GetFeeds(object):
 
         try:
             current = feed()
+            log.debug("Loading feed \"{0}\"".format(current.name))
         except:
             log.exception("Failed to load feed \"{0}\":".format(current.name))
             return
@@ -678,6 +678,7 @@ class GetFeeds(object):
             try:
                 current.modify()
                 current.run(modified=True)
+                log.debug("\"{0}\" has been updated".format(current.name))
             except NotImplementedError:
                 current.run(modified=False)
             except:
