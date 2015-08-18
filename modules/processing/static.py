@@ -442,7 +442,9 @@ class PortableExecutable:
                     simphash = m.hexdigest()
                     return base64.b64encode(output.getvalue()), fullhash, simphash
         except:
-            return None, None, None
+            pass
+
+        return None, None, None
 
     def _get_versioninfo(self):
         """Get version info.
