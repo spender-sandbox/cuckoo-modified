@@ -143,7 +143,7 @@ def pretty_print_retval(category, api_name, status, retval):
         return None
     val = None
     try:
-        val = long(retval, 16)
+        val = long(retval, 16) & 0xffffffff
     except ValueError:
         return None
     return {
