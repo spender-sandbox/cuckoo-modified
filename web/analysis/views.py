@@ -1022,7 +1022,7 @@ def comments(request, task_id):
         escape_map = {
             '&' : "&amp;",
             '\"' : "&quot;",
-            '\'' : "&qpos;",
+            '\'' : "&apos;",
             '<' : "&lt;",
             '>' : "&gt;",
             '\n' : "<br />",
