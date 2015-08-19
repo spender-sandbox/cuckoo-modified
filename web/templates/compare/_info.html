@@ -2,7 +2,6 @@
     <thead>
         <tr>
             <th>ID</th>
-            <th>Category</th>
             <th>Name</th>
             <th>MD5</th>
             <th>Machine</th>
@@ -13,7 +12,6 @@
     <tbody>
         <tr>
             <td>{{record.info.id}}</td>
-            <td>{{record.info.category|upper}}</td>
             <td>{{record.target.file.name}}</td>
             <td><a href="{% url "analysis.views.report" record.info.id %}">{{record.target.file.md5}}</a></td>
             <td>{{record.info.machine.name}}</td>
