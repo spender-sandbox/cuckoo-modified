@@ -386,7 +386,7 @@ class RunSignatures(object):
         for signature in complete_list + evented_list:
             self._apply_overlay(signature, overlay)
 
-        if evented_list:
+        if evented_list and "behavior" in self.results:
             log.debug("Running %u evented signatures", len(evented_list))
             for sig in evented_list:
                 stats[sig.name] = timedelta()
