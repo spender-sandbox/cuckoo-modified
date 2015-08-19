@@ -924,10 +924,13 @@ class VolatilityManager(object):
 
         self.voptions = Config("memory")
 
-        for pid in self.voptions.mask.pid_generic.split(","):
-            pid = pid.strip()
-            if pid:
-                self.mask_pid.append(int(pid))
+        if isinstance(self.voptions.mask.pid_generic, int):
+            self.mask_pid.append(self.voptions.mask.pid_generic)
+        else:
+            for pid in self.voptions.mask.pid_generic.split(","):
+                pid = pid.strip()
+                if pid:
+                    self.mask_pid.append(int(pid))
 
         self.no_filter = not self.voptions.mask.enabled
         if self.voptions.basic.guest_profile:
