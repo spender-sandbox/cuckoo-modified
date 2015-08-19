@@ -1,6 +1,5 @@
 import json
 import os
-import pymongo
 import re
 import socket
 import sys
@@ -14,7 +13,6 @@ from django.template import RequestContext
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_safe
 from ratelimit.decorators import ratelimit
-from gridfs import GridFS
 from StringIO import StringIO
 from zipfile import ZipFile, ZIP_STORED
 

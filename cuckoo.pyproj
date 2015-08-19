@@ -195,6 +195,7 @@
     <Compile Include="modules\feeds\bad_ssl_certs.py" />
     <Compile Include="modules\feeds\__init__.py" />
     <Compile Include="modules\reporting\elasticsearchdb.py" />
+    <Compile Include="modules\reporting\maec41.py" />
     <Compile Include="modules\reporting\malheur.py" />
     <Compile Include="modules\processing\suricata.py" />
     <Compile Include="modules\processing\cif.py" />
