@@ -23,6 +23,7 @@
     <Content Include="analyzer\windows\bin\loader_x64.exe" />
     <Content Include="analyzer\windows\dll\cuckoomon.dll" />
     <Content Include="analyzer\windows\dll\cuckoomon_x64.dll" />
+    <Content Include="conf\api.conf" />
     <Content Include="conf\auxiliary.conf" />
     <Content Include="conf\cuckoo.conf" />
     <Content Include="conf\esx.conf" />
@@ -33,6 +34,8 @@
     <Content Include="conf\reporting.conf" />
     <Content Include="conf\virtualbox.conf" />
     <Content Include="conf\vmware.conf" />
+    <Content Include="conf\vsphere.conf" />
+    <Content Include="conf\xenserver.conf" />
     <Content Include="data\yara\binaries\embedded.yar" />
     <Content Include="data\yara\binaries\shellcodes.yar" />
     <Content Include="data\yara\binaries\vmdetect.yar" />
