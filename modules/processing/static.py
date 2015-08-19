@@ -158,12 +158,12 @@ class PortableExecutable:
                 dbgdata = self.pe.__data__[dbgst.PointerToRawData:dbgst.PointerToRawData+dbgst.SizeOfData]
                 if dbgst.Type == 4: #MISC
                     datatype, length, uniflag = struct.unpack_from("IIB", dbgdata)
-                    return str(dbgdata[12:length]).rstrip('\0')
+                    return convert_to_printable(str(dbgdata[12:length]).rstrip('\0'))
                 elif dbgst.Type == 2: #CODEVIEW
                     if dbgdata[:4] == "RSDS":
-                        return str(dbgdata[24:]).rstrip('\0')
+                        return convert_to_printable(str(dbgdata[24:]).rstrip('\0'))
                     elif dbgdata[:4] == "NB10":
-                        return str(dbgdata[16:]).rstrip('\0')
+                        return convert_to_printable(str(dbgdata[16:]).rstrip('\0'))
         except:
             pass
 
