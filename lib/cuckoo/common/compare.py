@@ -58,7 +58,7 @@ def helper_percentages_storage(tid1, tid2):
         for pid, fpath in iter_task_process_logfiles(tid):
             ppl = ParseProcessLog(fpath)
             category_counts = behavior_categories_percent(ppl.calls)
-            
+
             counts[tid][pid] = category_counts
 
     return combine_behavior_percentages(counts)
@@ -88,6 +88,41 @@ def helper_percentages_mongo(results_db, tid1, tid2, ignore_categories=["misc"])
 
             for coid in pdoc["calls"]:
                 chunk = results_db.calls.find_one({"_id": coid}, {"calls.category": 1})
+                category_counts = behavior_categories_percent(chunk["calls"])
+                for cat, count in category_counts.items():
+                    if cat in ignore_categories: continue
+                    counts[tid][pid][cat] = counts[tid][pid].get(cat, 0) + count
+
+    return combine_behavior_percentages(counts)
+
+def helper_percentages_elastic(es_obj, tid1, tid2, ignore_categories=["misc"]):
+    counts = {}
+
+    for tid in [tid1, tid2]:
+        counts[tid] = {}
+        results = es_obj.search(
+                          index="cuckoo-*",
+                          doc_type="analysis",
+                          q="info.id: \"%s\"" % tid,
+                      )["hits"]["hits"]
+        if results:
+            pids_calls = results[-1]["_source"]
+        else:
+            pids_calls = None
+
+        if not pids_calls:
+            continue
+
+        for pdoc in pids_calls["behavior"]["processes"]:
+            pid = pdoc["process_id"]
+            counts[tid][pid] = {}
+
+            for coid in pdoc["calls"]:
+                chunk = es_obj.search(
+                                index="cuckoo-*",
+                                doc_type="calls",
+                                q="_id: \"%s\"" % coid,
+                            )["hits"]["hits"][-1]["_source"]
                 category_counts = behavior_categories_percent(chunk["calls"])
                 for cat, count in category_counts.items():
                     if cat in ignore_categories: continue

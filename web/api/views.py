@@ -925,6 +925,16 @@ def tasks_iocs(request, task_id, detail=None):
     buf = {}
     if repconf.mongodb.get("enabled") and not buf:
         buf = results_db.analysis.find_one({"info.id": int(task_id)})
+    if repconf.elasticsearchdb.get("enabled") and not buf:
+        tmp = es.search(
+                  index="cuckoo-*",
+                  doc_type="analysis",
+                  q="info.id: \"%s\"" % task_id
+               )["hits"]["hits"]
+        if tmp:
+            buf = tmp[-1]["_source"]
+        else:
+            buf = None
     if repconf.jsondump.get("enabled") and not buf:
         jfile = os.path.join(CUCKOO_ROOT, "storage", "analyses",
                              "%s" % task_id, "reports", "report.json")
