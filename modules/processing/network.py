@@ -373,7 +373,7 @@ class Pcap:
                 self.dns_answers.add(tuple(query["answers"]))
             else:
                 new_answers = set((i["type"], i["data"]) for i in query["answers"]) - self.dns_answers
-                self.dns_answers |= new_answers
+                self.dns_answers.update(new_answers)
                 self.dns_requests[reqtuple]["answers"] += [dict(type=i[0], data=i[1]) for i in new_answers]
 
         return True
