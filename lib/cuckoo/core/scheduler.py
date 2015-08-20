@@ -619,7 +619,7 @@ class Scheduler:
 
                         # Initialize and start the analysis manager.
                         analysis = AnalysisManager(task, errors)
-                    analysis.daemon = True
+                        analysis.daemon = True
                         analysis.start()
                         break
 
