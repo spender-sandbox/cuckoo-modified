@@ -24,7 +24,7 @@
             </tr>
             <tr>
                 <th>SHA256</th>
-                <td style="word-wrap: break-word;">{{analysis.target.file.sha256}}</tdstyle="word-wrap:>
+                <td style="word-wrap: break-word;">{{analysis.target.file.sha256}}</td>
             </tr>
             <tr>
                 <th>SHA512</th>
@@ -46,7 +46,7 @@
                 {% else %}
                     None matched
                 {% endif %}
-                </th>
+                </td>
             </tr>
             <tr>
                 <th>Yara</th>
@@ -64,11 +64,17 @@
             </tr>
             <tr>
                 <th></th>
-                {% if config.mongodb %}
-                <td><a class="btn btn-primary btn-small" href="{% url "analysis.views.mongo_file" "sample" analysis.target.file_id %}">Download</a></td>
-                {% elif config.elasticsearchdb %}
-                <td><a class="btn btn-primary btn-small" href="{% url "analysis.views.elastic_file" "sample" analysis.info.id analysis.target.file.sha256 %}">Download</a></td>
+                <td>
+                {% if analysis.target.file_id %}
+                    {% if config.mongodb %}
+                        <a class="btn btn-primary btn-small" href="{% url "analysis.views.mongo_file" "sample" analysis.target.file_id %}">Download</a>
+                    {% elif config.elasticsearchdb %}
+                        <a class="btn btn-primary btn-small" href="{% url "analysis.views.elastic_file" "sample" analysis.info.id analysis.target.file.sha256 %}">Download</a>
+                    {% endif %}
+                {% else %}
+                    Sample not found
                 {% endif %}
+                </td>
             </tr>
         </table>
     </div>
