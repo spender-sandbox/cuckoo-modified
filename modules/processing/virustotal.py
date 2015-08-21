@@ -68,6 +68,16 @@ class VirusTotal(Processing):
                 except Exception as e:
                     raise CuckooProcessingError("Failed to scrub url" % (e))
 
+            # normalize the URL the way VT appears to
+            if not resource.lower().startswith("http://") and not resource.lower().startswith("https://"):
+                resource = "http://" + resource
+            slashsplit = resource.split('/')
+            slashsplit[0] = slashsplit[0].lower()
+            slashsplit[2] = slashsplit[2].lower()
+            if len(slashsplit) == 3:
+                slashsplit.append("")
+            resource = "/".join(slashsplit)
+
             resource = hashlib.sha256(resource).hexdigest()
             url = VIRUSTOTAL_URL_URL
         else:
