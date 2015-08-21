@@ -5,6 +5,7 @@
 import os
 import json
 import requests
+import hashlib
 
 try:
     import re2 as re
@@ -66,6 +67,8 @@ class VirusTotal(Processing):
                    resource = re.sub(urlscrub_compiled_re,"",resource)
                 except Exception as e:
                     raise CuckooProcessingError("Failed to scrub url" % (e))
+
+            resource = hashlib.sha256(resource).hexdigest()
             url = VIRUSTOTAL_URL_URL
         else:
             # Not supported type, exit.
