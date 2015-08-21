@@ -508,7 +508,7 @@ class RunSignatures(object):
             if "families" in match and match["families"]:
                 family = match["families"][0].title()
                 break
-        if not family and "virustotal" in self.results and "results" in self.results["virustotal"] and self.results["virustotal"]["results"]:
+        if not family and self.results["info"]["category"] == "file" and "virustotal" in self.results and "results" in self.results["virustotal"] and self.results["virustotal"]["results"]:
             detectnames = []
             for res in self.results["virustotal"]["results"]:
                 if res["sig"]:
