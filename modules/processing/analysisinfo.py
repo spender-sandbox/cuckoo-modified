@@ -77,5 +77,6 @@ class AnalysisInfo(Processing):
             custom=self.task["custom"],
             machine=self.task["machine"],
             package=self.task["package"],
-            timeout=self.had_timeout()
+            timeout=self.had_timeout(),
+            options=self.task["options"]
         )
