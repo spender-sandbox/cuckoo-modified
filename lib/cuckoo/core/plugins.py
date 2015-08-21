@@ -523,9 +523,13 @@ class RunSignatures(object):
             for alert in self.results["suricata"]["alerts"]:
                 if "signature" in alert and alert["signature"]:
                     if alert["signature"].startswith("ET TROJAN") or alert["signature"].startswith("ETPRO TROJAN"):
-                        words = re.findall(r"[A-Za-z0-9\./]+", alert["signature"])
+                        words = re.findall(r"[A-Za-z0-9\.]+", alert["signature"])
                         famcheck = words[2]
-                        famchecklower = words[2].lower()
+                        famchecklower = famcheck.lower()
+                        if famchecklower == "win32":
+                            famcheck = words[3]
+                            famchecklower = famcheck.lower()
+
                         blacklist = [
                             "upx",
                             "executable",
@@ -549,8 +553,6 @@ class RunSignatures(object):
                                 isgood = False
                                 break
                         if isgood:
-                            if famchecklower.startswith("win32"):
-                                famcheck = famcheck[6:]
                             famcheck = famcheck.split(".")[0]
                             family = famcheck.title()
 
