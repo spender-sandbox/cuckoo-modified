@@ -4,6 +4,7 @@
 
 import os
 import logging
+import time
 
 from lib.cuckoo.common.abstracts import Processing
 from lib.cuckoo.common.config import Config
@@ -23,6 +24,7 @@ try:
     import volatility.obj as obj
     import volatility.exceptions as exc
     import volatility.plugins.filescan as filescan
+    import volatility.protos as protos
 
     HAVE_VOLATILITY = True
     rootlogger = logging.getLogger()
@@ -908,6 +910,52 @@ class VolatilityAPI(object):
 
         return dict(config={}, data=results)
 
+    def sockscan(self):
+        """Volatility sockscan plugin.
+        @see volatility/plugins/sockscan.py
+        """
+        log.debug("Executing Volatility sockscan plugin on {0}".format(self.memdump))
+
+        self.__config()
+        results = []
+
+        command = self.plugins["sockscan"](self.config)
+        for sock in command.calculate():
+            new = {
+                "offset": "{0:#010x}".format(sock.obj_offset),
+                "process_id": str(sock.Pid),
+                "address": str(sock.LocalIpAddress),
+                "port": str(sock.LocalPort),
+                "protocol": "{0} ({1})".format(sock.Protocol, protos.protos.get(sock.Protocol.v(), "-") ),
+                "create_time": time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(int(sock.CreateTime)))
+            }
+            results.append(new)
+
+        return dict(config={}, data=results)
+
+    def netscan(self):
+        """Volatility sockscan plugin.
+        @see volatility/plugins/netscan.py
+        """
+        log.debug("Executing Volatility netscan plugin on {0}".format(self.memdump))
+
+        self.__config()
+        results = []
+
+        for net_obj, proto, laddr, lport, raddr, rport, state in command.calculate():
+            new = {
+                "offset": "{0:#010x}".format(net_obj.obj_offset),
+                "process_id": str(net_obj.Owner.UniqueProcessId),
+                "local_address": str(laddr),
+                "local_port": str(lport),
+                "remote_address": str(raddr),
+                "remote_port": str(raddr),
+                "protocol": str(proto)
+            }
+            results.append(new)
+
+        return dict(config={}, data=results)
+
 class VolatilityManager(object):
     """Handle several volatility results."""
 
@@ -1003,6 +1051,11 @@ class VolatilityManager(object):
             results["modscan"] = vol.modscan()
         if self.voptions.yarascan.enabled:
             results["yarascan"] = vol.yarascan()
+        if self.voptions.sockscan.enabled and profile.lower().startswith("winxp"):
+            results["sockscan"] = vol.sockscan()
+        if self.voptions.netscan.enabled and (
+                profile.lower().startswith("win7") or profile.lower().startswith("vista")):
+            results["netscan"] = vol.netscan()
 
         self.find_taint(results)
         self.cleanup()
