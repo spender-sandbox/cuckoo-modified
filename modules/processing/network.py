@@ -208,7 +208,7 @@ class Pcap:
         if self._check_http(data):
             self._add_http(conn, data)
         # SMTP.
-        if conn["dport"] == 25:
+        if conn["dport"] == 25 or conn["dport"] == 587:
             self._reassemble_smtp(conn, data)
         # IRC.
         if conn["dport"] != 21 and self._check_irc(data):

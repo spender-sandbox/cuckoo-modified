@@ -8,7 +8,7 @@
     {% for req in analysis.network.smtp %}
     <tr>
         <td style="word-wrap: break-word;">{{req.dst}}</td>
-        <td style="word-wrap: break-word;">{{req.raw}}</td>
+        <td style="word-wrap: break-word;"><pre>{{req.raw}}</pre></td>
     </tr>
     {% endfor %}
 </table>
