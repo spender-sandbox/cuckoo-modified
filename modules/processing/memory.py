@@ -949,7 +949,7 @@ class VolatilityAPI(object):
                 "local_address": str(laddr),
                 "local_port": str(lport),
                 "remote_address": str(raddr),
-                "remote_port": str(raddr),
+                "remote_port": str(rport),
                 "protocol": str(proto)
             }
             results.append(new)
