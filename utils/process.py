@@ -128,12 +128,11 @@ def init_logging(auto=False, tid=0, debug=False):
     
     if auto:
         fh = logging.handlers.WatchedFileHandler(os.path.join(CUCKOO_ROOT, "log", "process.log"))
-        fh.setFormatter(formatter)
-        log.addHandler(fh)
     else:
         fh = logging.handlers.WatchedFileHandler(os.path.join(CUCKOO_ROOT, "log", "process-%s.log" % tid))
-        fh.setFormatter(formatter)
-        log.addHandler(fh)
+
+    fh.setFormatter(formatter)
+    log.addHandler(fh)
 
     if debug:
         log.setLevel(logging.DEBUG)
