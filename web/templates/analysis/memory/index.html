@@ -16,9 +16,7 @@
         <li><a href="#memory_ssdt" data-toggle="tab">SSDT</a></li>
         <li><a href="#memory_idt" data-toggle="tab">IDT</a></li>
         <li><a href="#memory_gdt" data-toggle="tab">GDT</a></li>
-        {% if analysis.memory.sockscan %}
-        <li><a href="#memory_sockets" data-toggle="tab">Sockets</a></li>
-        {% elif analysis.memory.netscan %}
+        {% if analysis.memory.sockscan or analysis.memory.netscan %}
         <li><a href="#memory_sockets" data-toggle="tab">Sockets</a></li>
         {% endif %}
     </ul>
