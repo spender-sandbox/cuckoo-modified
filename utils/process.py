@@ -11,7 +11,6 @@ import argparse
 import signal
 import multiprocessing
 
-logging.basicConfig(level=logging.INFO)
 log = logging.getLogger()
 
 sys.path.append(os.path.join(os.path.abspath(os.path.dirname(__file__)), ".."))
@@ -22,7 +21,7 @@ from lib.cuckoo.core.database import Database, TASK_REPORTED, TASK_COMPLETED
 from lib.cuckoo.core.database import TASK_FAILED_PROCESSING
 from lib.cuckoo.core.plugins import GetFeeds, RunProcessing, RunSignatures
 from lib.cuckoo.core.plugins import RunReporting
-from lib.cuckoo.core.startup import init_modules
+from lib.cuckoo.core.startup import init_modules, ConsoleHandler
 
 repconf = Config("reporting")
 if repconf.mongodb.enabled:
@@ -121,6 +120,27 @@ def process(target=None, copy_path=None, task=None, report=False, auto=False):
 def init_worker():
     signal.signal(signal.SIGINT, signal.SIG_IGN)
 
+def init_logging(auto=False, tid=0, debug=False):
+    formatter = logging.Formatter("%(asctime)s [%(name)s] %(levelname)s: %(message)s")
+    ch = ConsoleHandler()
+    ch.setFormatter(formatter)
+    log.addHandler(ch)
+    
+    if auto:
+        fh = logging.handlers.WatchedFileHandler(os.path.join(CUCKOO_ROOT, "log", "process.log"))
+    else:
+        fh = logging.handlers.WatchedFileHandler(os.path.join(CUCKOO_ROOT, "log", "process-%s.log" % tid))
+
+    fh.setFormatter(formatter)
+    log.addHandler(fh)
+
+    if debug:
+        log.setLevel(logging.DEBUG)
+    else:
+        log.setLevel(logging.INFO)
+
+    logging.getLogger("urllib3").setLevel(logging.WARNING)
+
 def autoprocess(parallel=1):
     maxcount = cfg.cuckoo.max_analysis_count
     count = 0
@@ -205,16 +225,13 @@ def main():
     parser.add_argument("-p", "--parallel", help="Number of parallel threads to use (auto mode only).", type=int, required=False, default=1)
     args = parser.parse_args()
 
-    if args.debug:
-        log.setLevel(logging.DEBUG)
-
-    logging.getLogger("urllib3").setLevel(logging.WARNING)
-
     init_modules()
 
     if args.id == "auto":
+        init_logging(auto=True, debug=args.debug)
         autoprocess(parallel=args.parallel)
     else:
+        init_logging(tid=args.id, debug=args.debug)
         task = Database().view_task(int(args.id))
         process(task=task.to_dict(), report=args.report)
 
