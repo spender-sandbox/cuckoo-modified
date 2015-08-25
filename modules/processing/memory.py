@@ -942,6 +942,7 @@ class VolatilityAPI(object):
         self.__config()
         results = []
 
+        command = self.plugins["netscan"](self.config)
         for net_obj, proto, laddr, lport, raddr, rport, state in command.calculate():
             new = {
                 "offset": "{0:#010x}".format(net_obj.obj_offset),
