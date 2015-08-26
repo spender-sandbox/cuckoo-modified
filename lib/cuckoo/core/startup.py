@@ -324,6 +324,7 @@ def cuckoo_clean():
     # Check if ElasticSearch is enabled and delete that data if it is.
     if cfg.elasticsearchdb and cfg.elasticsearchdb.enabled:
         from elasticsearch import Elasticsearch
+        delidx = cfg.elasticsearchdb.index + "-*"
         try:
             es = Elasticsearch(
                      hosts = [{
@@ -337,7 +338,7 @@ def cuckoo_clean():
 
         if es:
             analyses = es.search(
-                           index="cuckoo-*",
+                           index=delidx,
                            doc_type="analysis",
                            q="*"
                        )["hits"]["hits"]
