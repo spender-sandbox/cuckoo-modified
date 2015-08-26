@@ -833,7 +833,11 @@ def search(request):
         db = Database()
         analyses = []
         for result in records:
-            new = get_analysis_info(db, id=int(result["info"]["id"]))
+            new = None
+            if enabledconf["mongodb"]:
+                new = get_analysis_info(db, id=int(result["info"]["id"]))
+            if enabledconf["elasticsearchdb"]:
+                new = get_analysis_info(db, id=int(result["_source"]["info"]["id"]))
             if not new:
                 continue
             analyses.append(new)
