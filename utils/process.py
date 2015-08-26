@@ -32,7 +32,7 @@ if repconf.mongodb.enabled:
 
 if repconf.elasticsearchdb.enabled:
     from elasticsearch import Elasticsearch
-    baseidx = repconf.elasticsearch.index
+    baseidx = repconf.elasticsearchdb.index
     fullidx = baseidx + "-*"
     es = Elasticsearch(
          hosts = [{
