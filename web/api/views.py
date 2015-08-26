@@ -631,7 +631,10 @@ def ext_tasks_search(request):
         if records:
             ids = list()
             for results in records:
-                ids.append(results["info"]["id"])
+                if repconf.mongodb.enabled:
+                    ids.append(results["info"]["id"])
+                if repconf.elasticsearchdb.enabled:
+                    ids.append(results["_source"]["info"]["id"])
             resp = {"error": False, "data": ids}
         else:
             resp = {"error": True,
