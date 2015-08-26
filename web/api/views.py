@@ -41,6 +41,8 @@ if repconf.mongodb.enabled:
 
 if repconf.elasticsearchdb.enabled:
     from elasticsearch import Elasticsearch
+    baseidx = repconf.elasticsearchdb.index
+    fullidx = baseidx + "-*"
     es = Elasticsearch(
          hosts = [{
              "host": repconf.elasticsearchdb.host,
@@ -560,67 +562,67 @@ def ext_tasks_search(request):
 
         if repconf.elasticsearchdb.enabled:
             if term == "name":
-                records = es.search(index="cuckoo-*", doctype="analysis", q="target.file.name: %s" % value)["hits"]["hits"]
+                records = es.search(index=fullidx, doc_type="analysis", q="target.file.name: %s" % value)["hits"]["hits"]
             elif term == "type":
-                records = es.search(index="cuckoo-*", doctype="analysis", q="target.file.type: %s" % value)["hits"]["hits"]
+                records = es.search(index=fullidx, doc_type="analysis", q="target.file.type: %s" % value)["hits"]["hits"]
             elif term == "string":
-                records = es.search(index="cuckoo-*", doctype="analysis", q="strings: %s" % value)["hits"]["hits"]
+                records = es.search(index=fullidx, doc_type="analysis", q="strings: %s" % value)["hits"]["hits"]
             elif term == "ssdeep":
-                records = es.search(index="cuckoo-*", doctype="analysis", q="target.file.ssdeep: %s" % value)["hits"]["hits"]
+                records = es.search(index=fullidx, doc_type="analysis", q="target.file.ssdeep: %s" % value)["hits"]["hits"]
             elif term == "crc32":
-                records = es.search(index="cuckoo-*", doctype="analysis", q="target.file.crc32: %s" % value)["hits"]["hits"]
+                records = es.search(index=fullidx, doc_type="analysis", q="target.file.crc32: %s" % value)["hits"]["hits"]
             elif term == "file":
-                records = es.search(index="cuckoo-*", doctype="analysis", q="behavior.summary.files: %s" % value)["hits"]["hits"]
+                records = es.search(index=fullidx, doc_type="analysis", q="behavior.summary.files: %s" % value)["hits"]["hits"]
             elif term == "command":
-                records = es.search(index="cuckoo-*", doctype="analysis", q="behavior.summary.executed_commands: %s" % value)["hits"]["hits"]
+                records = es.search(index=fullidx, doc_type="analysis", q="behavior.summary.executed_commands: %s" % value)["hits"]["hits"]
             elif term == "resolvedapi":
-                records = es.search(index="cuckoo-*", doctype="analysis", q="behavior.summary.resolved_apis: %s" % value)["hits"]["hits"]
+                records = es.search(index=fullidx, doc_type="analysis", q="behavior.summary.resolved_apis: %s" % value)["hits"]["hits"]
             elif term == "key":
-                records = es.search(index="cuckoo-*", doctype="analysis", q="behavior.summary.keys: %s" % value)["hits"]["hits"]
+                records = es.search(index=fullidx, doc_type="analysis", q="behavior.summary.keys: %s" % value)["hits"]["hits"]
             elif term == "mutex":
-                records = es.search(index="cuckoo-*", doctype="analysis", q="behavior.summary.mutex: %s" % value)["hits"]["hits"]
+                records = es.search(index=fullidx, doc_type="analysis", q="behavior.summary.mutex: %s" % value)["hits"]["hits"]
             elif term == "domain":
-                records = es.search(index="cuckoo-*", doctype="analysis", q="network.domains.domain: %s" % value)["hits"]["hits"]
+                records = es.search(index=fullidx, doc_type="analysis", q="network.domains.domain: %s" % value)["hits"]["hits"]
             elif term == "ip":
-                records = es.search(index="cuckoo-*", doctype="analysis", q="network.hosts.ip: %s" % value)["hits"]["hits"]
+                records = es.search(index=fullidx, doc_type="analysis", q="network.hosts.ip: %s" % value)["hits"]["hits"]
             elif term == "signature":
-                records = es.search(index="cuckoo-*", doctype="analysis", q="signatures.description: %s" % value)["hits"]["hits"]
+                records = es.search(index=fullidx, doc_type="analysis", q="signatures.description: %s" % value)["hits"]["hits"]
             elif term == "signame":
-                records = es.search(index="cuckoo-*", doctype="analysis", q="signatures.name: %s" % value)["hits"]["hits"]
+                records = es.search(index=fullidx, doc_type="analysis", q="signatures.name: %s" % value)["hits"]["hits"]
             elif term == "malfamily":
-                records = es.search(index="cuckoo-*", doctype="analysis", q="malfamily: %s" % value)["hits"]["hits"]
+                records = es.search(index=fullidx, doc_type="analysis", q="malfamily: %s" % value)["hits"]["hits"]
             elif term == "url":
-                records = es.search(index="cuckoo-*", doctype="analysis", q="target.url: %s" % value)["hits"]["hits"]
+                records = es.search(index=fullidx, doc_type="analysis", q="target.url: %s" % value)["hits"]["hits"]
             elif term == "imphash":
-                records = es.search(index="cuckoo-*", doctype="analysis", q="static.pe_imphash: %s" % value)["hits"]["hits"]
+                records = es.search(index=fullidx, doc_type="analysis", q="static.pe_imphash: %s" % value)["hits"]["hits"]
             elif term == "iconhash":
-                records = es.search(index="cuckoo-*", doctype="analysis", q="static.pe_icon_hash: %s" % value)["hits"]["hits"]
+                records = es.search(index=fullidx, doc_type="analysis", q="static.pe_icon_hash: %s" % value)["hits"]["hits"]
             elif term == "iconfuzzy":
-                records = es.search(index="cuckoo-*", doctype="analysis", q="static.pe_icon_fuzzy: %s" % value)["hits"]["hits"]
+                records = es.search(index=fullidx, doc_type="analysis", q="static.pe_icon_fuzzy: %s" % value)["hits"]["hits"]
             elif term == "surialert":
-                records = es.search(index="cuckoo-*", doctype="analysis", q="suricata.alerts.signature: %s" % value)["hits"]["hits"]
+                records = es.search(index=fullidx, doc_type="analysis", q="suricata.alerts.signature: %s" % value)["hits"]["hits"]
             elif term == "surihttp":
-                records = es.search(index="cuckoo-*", doctype="analysis", q="suricata.http: %s" % value)["hits"]["hits"]
+                records = es.search(index=fullidx, doc_type="analysis", q="suricata.http: %s" % value)["hits"]["hits"]
             elif term == "suritls":
-                records = es.search(index="cuckoo-*", doctype="analysis", q="suricata.tls: %s" % value)["hits"]["hits"]
+                records = es.search(index=fullidx, doc_type="analysis", q="suricata.tls: %s" % value)["hits"]["hits"]
             elif term == "clamav":
-                records = es.search(index="cuckoo-*", doctype="analysis", q="target.file.clamav: %s" % value)["hits"]["hits"]
+                records = es.search(index=fullidx, doc_type="analysis", q="target.file.clamav: %s" % value)["hits"]["hits"]
             elif term == "yaraname":
-                records = es.search(index="cuckoo-*", doctype="analysis", q="target.file.yara.name: %s" % value)["hits"]["hits"]
+                records = es.search(index=fullidx, doc_type="analysis", q="target.file.yara.name: %s" % value)["hits"]["hits"]
             elif term == "procmemyara":
-                records = es.search(index="cuckoo-*", doctype="analysis", q="procmemory.yara.name: %s" % value)["hits"]["hits"]
+                records = es.search(index=fullidx, doc_type="analysis", q="procmemory.yara.name: %s" % value)["hits"]["hits"]
             elif term == "virustotal":
-                records = es.search(index="cuckoo-*", doctype="analysis", q="virustotal.results.sig: %s" % value)["hits"]["hits"]
+                records = es.search(index=fullidx, doc_type="analysis", q="virustotal.results.sig: %s" % value)["hits"]["hits"]
             elif term == "comment":
-                records = es.search(index="cuckoo-*", doctype="analysis", q="info.comments.Data: %s" % value)["hits"]["hits"]
+                records = es.search(index=fullidx, doc_type="analysis", q="info.comments.Data: %s" % value)["hits"]["hits"]
             elif term == "md5":
-                records = es.search(index="cuckoo-*", doctype="analysis", q="target.file.md5: %s" % value)["hits"]["hits"]
+                records = es.search(index=fullidx, doc_type="analysis", q="target.file.md5: %s" % value)["hits"]["hits"]
             elif term == "sha1":
-                records = es.search(index="cuckoo-*", doctype="analysis", q="target.file.sha1: %s" % value)["hits"]["hits"]
+                records = es.search(index=fullidx, doc_type="analysis", q="target.file.sha1: %s" % value)["hits"]["hits"]
             elif term == "sha256":
-                records = es.search(index="cuckoo-*", doctype="analysis", q="target.file.sha256: %s" % value)["hits"]["hits"]
+                records = es.search(index=fullidx, doc_type="analysis", q="target.file.sha256: %s" % value)["hits"]["hits"]
             elif term == "sha512":
-                records = es.search(index="cuckoo-*", doctype="analysis", q="target.file.sha512: %s" % value)["hits"]["hits"]
+                records = es.search(index=fullidx, doc_type="analysis", q="target.file.sha512: %s" % value)["hits"]["hits"]
             else:
                 resp = {"error": True,
                         "error_value": "Invalid Option. '%s' is not a valid option." % option}
@@ -948,7 +950,7 @@ def tasks_iocs(request, task_id, detail=None):
         buf = results_db.analysis.find_one({"info.id": int(task_id)})
     if repconf.elasticsearchdb.get("enabled") and not buf:
         tmp = es.search(
-                  index="cuckoo-*",
+                  index=fullidx,
                   doc_type="analysis",
                   q="info.id: \"%s\"" % task_id
                )["hits"]["hits"]

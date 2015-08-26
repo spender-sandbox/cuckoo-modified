@@ -32,7 +32,15 @@ if repconf.mongodb.enabled:
 
 if repconf.elasticsearchdb.enabled:
     from elasticsearch import Elasticsearch
-    es = Elasticsearch()
+    baseidx = repconf.elasticsearch.index
+    fullidx = baseidx + "-*"
+    es = Elasticsearch(
+         hosts = [{
+             "host": repconf.elasticsearchdb.host,
+             "port": repconf.elasticsearchdb.port,
+         }],
+         timeout = 60
+     )
 
 def process(target=None, copy_path=None, task=None, report=False, auto=False):
     # This is the results container. It's what will be used by all the
@@ -83,7 +91,7 @@ def process(target=None, copy_path=None, task=None, report=False, auto=False):
 
         if repconf.elasticsearchdb.enabled:
             analyses = es.search(
-                           index="cuckoo-*",
+                           index=fullidx,
                            doc_type="analysis",
                            q="info.id: \"%s\"" % task_id
                        )["hits"]["hits"]

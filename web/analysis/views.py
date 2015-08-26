@@ -32,7 +32,6 @@ import modules.processing.network as network
 
 TASK_LIMIT = 25
 
-
 # Used for displaying enabled config options in Django UI
 enabledconf = dict()
 for cfile in ["reporting", "processing"]:
@@ -53,6 +52,8 @@ if enabledconf["mongodb"]:
 
 if enabledconf["elasticsearchdb"]:
     from elasticsearch import Elasticsearch
+    baseidx = Config("reporting").elasticsearchdb.index
+    fullidx = baseidx + "-*"
     es = Elasticsearch(hosts = [{
              "host": settings.ELASTIC_HOST,
              "port": settings.ELASTIC_PORT,
@@ -83,7 +84,7 @@ def get_analysis_info(db, id=-1, task=None):
 
     if enabledconf["elasticsearchdb"]:
         rtmp = es.search(
-                   index="cuckoo-*",
+                   index=fullidx,
                    doc_type="analysis",
                    q="info.id: \"%s\"" % str(new["id"])
                )["hits"]["hits"]
@@ -223,7 +224,7 @@ def chunk(request, task_id, pid, pagenum):
 
         if enabledconf["elasticsearchdb"]:
             record = es.search(
-                        index="cuckoo-*",
+                        index=fullidx,
                         doc_type="analysis",
                         q="behavior.processes.process_id: \"%s\" and info.id:"\
                           "\"%s\"" % (pid, task_id)
@@ -250,7 +251,7 @@ def chunk(request, task_id, pid, pagenum):
 
         if enabledconf["elasticsearchdb"]:
             chunk = es.search(
-                        index="cuckoo-*",
+                        index=fullidx,
                         doc_type="calls",
                         q="_id: \"%s\"" % objectid,
                     )["hits"]["hits"][0]["_source"]
@@ -280,7 +281,7 @@ def filtered_chunk(request, task_id, pid, category, apilist):
         if enabledconf["elasticsearchdb"]:
             print "info.id: \"%s\" and behavior.processes.process_id: \"%s\"" % (task_id, pid)
             record = es.search(
-                         index="cuckoo-*",
+                         index=fullidx,
                          doc_type="analysis",
                          q="info.id: \"%s\" and behavior.processes.process_id: \"%s\"" % (task_id, pid),
                      )['hits']['hits'][0]['_source']
@@ -314,7 +315,7 @@ def filtered_chunk(request, task_id, pid, category, apilist):
                 chunk = results_db.calls.find_one({"_id": call})
             if enabledconf["elasticsearchdb"]:
                 chunk = es.search(
-                            index="cuckoo-*",
+                            index=fullidx,
                             doc_type="calls",
                             q="_id: \"%s\"" % call,
                         )['hits']['hits'][0]['_source']
@@ -353,7 +354,7 @@ def search_behavior(request, task_id):
             )
         if enabledconf["elasticsearchdb"]:
             esquery = es.search(
-                          index="cuckoo-*",
+                          index=fullidx,
                           doc_type="analysis",
                           q="info.id: \"%s\"" % task_id,
                       )["hits"]["hits"][0]
@@ -415,7 +416,7 @@ def report(request, task_id):
                  )
     if enabledconf["elasticsearchdb"]:
         query = es.search(
-                    index="cuckoo-*",
+                    index=fullidx,
                     doc_type="analysis",
                     q="info.id : \"%s\"" % task_id
                  )["hits"]["hits"][0]
@@ -579,7 +580,7 @@ def procdump(request, object_id, task_id, process_id, start, end):
         file_item = fs.get(ObjectId(object_id))
     if enabledconf["elasticsearchdb"]:
         analysis = es.search(
-                   index="cuckoo-*",
+                   index=fullidx,
                    doc_type="analysis",
                    q="info.id: \"%s\"" % task_id
                    )["hits"]["hits"][0]["_source"]
@@ -739,55 +740,55 @@ def search(request):
                                               context_instance=RequestContext(request))
             if enabledconf["elasticsearchdb"]:
                 if term == "name":
-                    records = es.search(index="cuckoo-*", doctype="analysis", q="target.file.name: %s" % value)["hits"]["hits"]
+                    records = es.search(index=fullidx, doc_type="analysis", q="target.file.name: %s" % value)["hits"]["hits"]
                 elif term == "type":
-                    records = es.search(index="cuckoo-*", doctype="analysis", q="target.file.type: %s" % value)["hits"]["hits"]
+                    records = es.search(index=fullidx, doc_type="analysis", q="target.file.type: %s" % value)["hits"]["hits"]
                 elif term == "string":
-                    records = es.search(index="cuckoo-*", doctype="analysis", q="strings: %s" % value)["hits"]["hits"]
+                    records = es.search(index=fullidx, doc_type="analysis", q="strings: %s" % value)["hits"]["hits"]
                 elif term == "ssdeep":
-                    records = es.search(index="cuckoo-*", doctype="analysis", q="target.file.ssdeep: %s" % value)["hits"]["hits"]
+                    records = es.search(index=fullidx, doc_type="analysis", q="target.file.ssdeep: %s" % value)["hits"]["hits"]
                 elif term == "crc32":
-                    records = es.search(index="cuckoo-*", doctype="analysis", q="target.file.crc32: %s" % value)["hits"]["hits"]
+                    records = es.search(index=fullidx, doc_type="analysis", q="target.file.crc32: %s" % value)["hits"]["hits"]
                 elif term == "file":
-                    records = es.search(index="cuckoo-*", doctype="analysis", q="behavior.summary.files: %s" % value)["hits"]["hits"]
+                    records = es.search(index=fullidx, doc_type="analysis", q="behavior.summary.files: %s" % value)["hits"]["hits"]
                 elif term == "command":
-                    records = es.search(index="cuckoo-*", doctype="analysis", q="behavior.summary.executed_commands: %s" % value)["hits"]["hits"]
+                    records = es.search(index=fullidx, doc_type="analysis", q="behavior.summary.executed_commands: %s" % value)["hits"]["hits"]
                 elif term == "resolvedapi":
-                    records = es.search(index="cuckoo-*", doctype="analysis", q="behavior.summary.resolved_apis: %s" % value)["hits"]["hits"]
+                    records = es.search(index=fullidx, doc_type="analysis", q="behavior.summary.resolved_apis: %s" % value)["hits"]["hits"]
                 elif term == "key":
-                    records = es.search(index="cuckoo-*", doctype="analysis", q="behavior.summary.keys: %s" % value)["hits"]["hits"]
+                    records = es.search(index=fullidx, doc_type="analysis", q="behavior.summary.keys: %s" % value)["hits"]["hits"]
                 elif term == "mutex":
-                    records = es.search(index="cuckoo-*", doctype="analysis", q="behavior.summary.mutex: %s" % value)["hits"]["hits"]
+                    records = es.search(index=fullidx, doc_type="analysis", q="behavior.summary.mutex: %s" % value)["hits"]["hits"]
                 elif term == "domain":
-                    records = es.search(index="cuckoo-*", doctype="analysis", q="network.domains.domain: %s" % value)["hits"]["hits"]
+                    records = es.search(index=fullidx, doc_type="analysis", q="network.domains.domain: %s" % value)["hits"]["hits"]
                 elif term == "ip":
-                    records = es.search(index="cuckoo-*", doctype="analysis", q="network.hosts.ip: %s" % value)["hits"]["hits"]
+                    records = es.search(index=fullidx, doc_type="analysis", q="network.hosts.ip: %s" % value)["hits"]["hits"]
                 elif term == "signature":
-                    records = es.search(index="cuckoo-*", doctype="analysis", q="signatures.description: %s" % value)["hits"]["hits"]
+                    records = es.search(index=fullidx, doc_type="analysis", q="signatures.description: %s" % value)["hits"]["hits"]
                 elif term == "signame":
-                    records = es.search(index="cuckoo-*", doctype="analysis", q="signatures.name: %s" % value)["hits"]["hits"]
+                    records = es.search(index=fullidx, doc_type="analysis", q="signatures.name: %s" % value)["hits"]["hits"]
                 elif term == "malfamily":
-                    records = es.search(index="cuckoo-*", doctype="analysis", q="malfamily: %s" % value)["hits"]["hits"]
+                    records = es.search(index=fullidx, doc_type="analysis", q="malfamily: %s" % value)["hits"]["hits"]
                 elif term == "url":
-                    records = es.search(index="cuckoo-*", doctype="analysis", q="target.url: %s" % value)["hits"]["hits"]
+                    records = es.search(index=fullidx, doc_type="analysis", q="target.url: %s" % value)["hits"]["hits"]
                 elif term == "imphash":
-                    records = es.search(index="cuckoo-*", doctype="analysis", q="static.pe_imphash: %s" % value)["hits"]["hits"]
+                    records = es.search(index=fullidx, doc_type="analysis", q="static.pe_imphash: %s" % value)["hits"]["hits"]
                 elif term == "surialert":
-                    records = es.search(index="cuckoo-*", doctype="analysis", q="suricata.alerts.signature: %s" % value)["hits"]["hits"]
+                    records = es.search(index=fullidx, doc_type="analysis", q="suricata.alerts.signature: %s" % value)["hits"]["hits"]
                 elif term == "surihttp":
-                    records = es.search(index="cuckoo-*", doctype="analysis", q="suricata.http: %s" % value)["hits"]["hits"]
+                    records = es.search(index=fullidx, doc_type="analysis", q="suricata.http: %s" % value)["hits"]["hits"]
                 elif term == "suritls":
-                    records = es.search(index="cuckoo-*", doctype="analysis", q="suricata.tls: %s" % value)["hits"]["hits"]
+                    records = es.search(index=fullidx, doc_type="analysis", q="suricata.tls: %s" % value)["hits"]["hits"]
                 elif term == "clamav":
-                    records = es.search(index="cuckoo-*", doctype="analysis", q="target.file.clamav: %s" % value)["hits"]["hits"]
+                    records = es.search(index=fullidx, doc_type="analysis", q="target.file.clamav: %s" % value)["hits"]["hits"]
                 elif term == "yaraname":
-                    records = es.search(index="cuckoo-*", doctype="analysis", q="target.file.yara.name: %s" % value)["hits"]["hits"]
+                    records = es.search(index=fullidx, doc_type="analysis", q="target.file.yara.name: %s" % value)["hits"]["hits"]
                 elif term == "procmemyara":
-                    records = es.search(index="cuckoo-*", doctype="analysis", q="procmemory.yara.name: %s" % value)["hits"]["hits"]
+                    records = es.search(index=fullidx, doc_type="analysis", q="procmemory.yara.name: %s" % value)["hits"]["hits"]
                 elif term == "virustotal":
-                    records = es.search(index="cuckoo-*", doctype="analysis", q="virustotal.results.sig: %s" % value)["hits"]["hits"]
+                    records = es.search(index=fullidx, doc_type="analysis", q="virustotal.results.sig: %s" % value)["hits"]["hits"]
                 elif term == "comment":
-                    records = es.search(index="cuckoo-*", doctype="analysis", q="info.comments.Data: %s" % value)["hits"]["hits"]
+                    records = es.search(index=fullidx, doc_type="analysis", q="info.comments.Data: %s" % value)["hits"]["hits"]
                 else:
                     return render_to_response("analysis/search.html",
                                               {"analyses": None,
@@ -814,13 +815,13 @@ def search(request):
                                               context_instance=RequestContext(request))
             if enabledconf["elasticsearchdb"]:
                 if re.match(r"^([a-fA-F\d]{32})$", value):
-                    records = es.search(index="cuckoo-*", doctype="analysis", q="target.file.md5: %s" % value)["hits"]["hits"]
+                    records = es.search(index=fullidx, doc_type="analysis", q="target.file.md5: %s" % value)["hits"]["hits"]
                 elif re.match(r"^([a-fA-F\d]{40})$", value):
-                    records = es.search(index="cuckoo-*", doctype="analysis", q="target.file.sha1: %s" % value)["hits"]["hits"]
+                    records = es.search(index=fullidx, doc_type="analysis", q="target.file.sha1: %s" % value)["hits"]["hits"]
                 elif re.match(r"^([a-fA-F\d]{64})$", value):
-                    records = es.search(index="cuckoo-*", doctype="analysis", q="target.file.sha256: %s" % value)["hits"]["hits"]
+                    records = es.search(index=fullidx, doc_type="analysis", q="target.file.sha256: %s" % value)["hits"]["hits"]
                 elif re.match(r"^([a-fA-F\d]{128})$", value):
-                    records = es.search(index="cuckoo-*", doctype="analysis", q="target.file.sha512: %s" % value)["hits"]["hits"]
+                    records = es.search(index=fullidx, doc_type="analysis", q="target.file.sha512: %s" % value)["hits"]["hits"]
                 else:
                     return render_to_response("analysis/search.html",
                                               {"analyses": None,
@@ -899,7 +900,7 @@ def remove(request, task_id):
                                       context_instance=RequestContext(request))
     if enabledconf["elasticsearchdb"]:
         analyses = es.search(
-                       index="cuckoo-*",
+                       index=fullidx,
                        doc_type="analysis",
                        q="info.id: \"%s\"" % task_id
                    )["hits"]["hits"]
@@ -947,7 +948,7 @@ def pcapstream(request, task_id, conntuple):
 
     if enabledconf["elasticsearchdb"]:
         conndata = es.search(
-                    index="cuckoo-*",
+                    index=fullidx,
                     doc_type="analysis",
                     q="info.id : \"%s\"" % task_id
                  )["hits"]["hits"][0]["_source"]
@@ -1006,7 +1007,7 @@ def comments(request, task_id):
             report = results_db.analysis.find_one({"info.id": int(task_id)}, sort=[("_id", pymongo.DESCENDING)])
         if enabledconf["elasticsearchdb"]:
             query = es.search(
-                        index="cuckoo-*",
+                        index=fullidx,
                         doc_type="analysis",
                         q="info.id : \"%s\"" % task_id
                     )["hits"]["hits"][0]
