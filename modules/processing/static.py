@@ -1,4 +1,4 @@
-# Copyright (C) 2010-2015 Cuckoo Foundation, Optiv, Inc. (brad.spengler@optiv.com)
+﻿# Copyright (C) 2010-2015 Cuckoo Foundation, Optiv, Inc. (brad.spengler@optiv.com)
 # This file is part of Cuckoo Sandbox - http://www.cuckoosandbox.org
 # See the file 'docs/LICENSE' for copying permission.
 
@@ -19,6 +19,7 @@ from lib.cuckoo.common.icon import PEGroupIconDir
 from PIL import Image
 from StringIO import StringIO
 from datetime import datetime, date, time
+from subprocess import Popen, PIPE
 
 try:
     import magic
@@ -118,7 +119,115 @@ def _get_filetype(data):
 
     return file_type
 
-class PortableExecutable:
+class DotNETExecutable(object):
+    """.NET analysis"""
+
+    def __init__(self, file_path, results):
+        self.file_path = file_path
+        self.results = results
+
+    def _get_custom_attrs(self):
+        try:
+            ret = []
+            output = Popen(["/usr/bin/monodis", "--customattr", file_path], stdout=PIPE).stdout.read().split("\n")
+            for line in output[1:]:
+                splitline = line.split(" ")
+                typeval = splitline[1].rstrip(":")
+                nameval = splitline[6].split("::")[0]
+                if "(string)" not in splitline[6]:
+                    continue
+                rem = " ".join(splitline[7:])
+                startidx = rem.find("[\"")
+                if startidx < 0:
+                    continue
+                endidx = rem.rfind("\"]")
+                # also ignore empty strings
+                if endidx <= 2:
+                    continue
+                valueval = rem[startidx+2:endidx-2]
+                item = dict()
+                item["type"] = convert_to_printable(typeval)
+                item["name"] = convert_to_printable(nameval)
+                item["value"] = convert_to_printable(valueval)
+                ret.append(item)
+            return ret
+        except:
+            return None
+
+    def _get_assembly_refs(self):
+        try:
+            ret = []
+            output = Popen(["/usr/bin/monodis", "--assemblyref", file_path], stdout=PIPE).stdout.read().split("\n")
+            for idx in range(len(output)):
+                splitline = output[idx].split("Version=")
+                if len(splitline) < 2:
+                    continue
+                verval = splitline[1]
+                splitline = output[idx+1].split("Name=")
+                if len(spitline) < 2:
+                    continue
+                nameval = splitline[1]
+                item = dict()
+                item["name"] = convert_to_printable(nameval)
+                item["version"] = convert_to_printable(verval)
+                ret.append(item)
+            return ret
+
+        except:
+            return None
+
+    def _get_assembly_info(self):
+        try:
+            ret = dict()
+            output = Popen(["/usr/bin/monodis", "--assembly", file_path], stdout=PIPE).stdout.read().split("\n")
+            for line in output:
+                if line.startswith("Name:"):
+                    ret["name"] = line[5:].strip()
+                if line.startswith("Version:"):
+                    ret["version"] = line[8:].strip()
+            return ret
+        except:
+            return None
+
+    def _get_type_refs(self):
+        try:
+            ret = []
+            output = Popen(["/usr/bin/monodis", "--typeref", file_path], stdout=PIPE).stdout.read().split("\n")
+            for line in output[1:]:
+                restline = ''.join(line.split(":")[1:])
+                restsplit = restline.split("]")
+                asmname = restsplit[0][2:]
+                typename = ''.join(restsplit[1:])
+                item = dict()
+                item["assembly"] = asmname
+                item["typename"] = typename
+                ret.append(item)
+            return ret
+
+        except:
+            return None
+
+    def run(self):
+        """Run analysis.
+        @return: analysis results dict or None.
+        """
+        if not os.path.exists(self.file_path):
+            return None
+
+        results = { }
+
+        pretime = datetime.now()
+        results["dotnet_typerefs"] = self._get_type_refs()
+        results["dotnet_assemblyrefs"] = self._get_assembly_refs()
+        results["dotnet_assemblyinfo"] = self._get_assembly_info()
+        results["dotnet_customattrs"] = self._get_custom_attrs()
+        posttime = datetime.now()
+        timediff = posttime - pretime
+        self.add_statistic("static_dotnet", "time", float("%d.%03d" % (timediff.seconds, timediff.microseconds / 1000)))
+
+        return results
+
+class PortableExecutable(object):
     """PE analysis."""
 
     def __init__(self, file_path, results):
@@ -594,7 +703,7 @@ class PortableExecutable:
 
         return results
 
-class PDF:
+class PDF(object):
     """PDF Analysis."""
     def __init__(self, file_path):
         self.file_path = file_path
@@ -702,7 +811,7 @@ class PDF:
         results = self._parse(self.file_path)
         return results
 
-class Office():
+class Office(object):
     """Office Document Static Analysis"""
     def __init__(self, file_path):
         self.file_path = file_path
@@ -853,6 +962,8 @@ class Static(Processing):
             thetype = File(self.file_path).get_type()
             if HAVE_PEFILE and ("PE32" in thetype or "MS-DOS executable" in thetype):
                 static = PortableExecutable(self.file_path, self.results).run()
+                if static and "Mono" in thetype:
+                    static.update(DotNETExecutable(self.file_path, self.results).run())
             elif "PDF" in thetype:
                 static = PDF(self.file_path).run()
             elif "Word 2007" in thetype or "Excel 2007" in thetype or "PowerPoint 2007" in thetype:

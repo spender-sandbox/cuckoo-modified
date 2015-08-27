@@ -66,10 +66,11 @@ The following libraries are not strictly required, but their installation is rec
     * `pype32`_ (Optional): needed for some RAT decoders
     * `rarfile`_ (Optional): needed for automatic extraction of RAR files on submission
     * `jsbeautifier`_ (Optional): needed for analysis of JavaScript in PDFs
+    * `mono-utils`_(Optional): needed for .NET static analysis
 
 Some of them are already packaged in Debian/Ubuntu and can be installed with the following command::
 
-    $ sudo apt-get install python-dpkt python-jinja2 python-magic python-pymongo python-gridfs python-libvirt python-bottle python-pefile python-chardet swig libssl-dev clamav-daemon python-geoip geoip-database
+    $ sudo apt-get install python-dpkt python-jinja2 python-magic python-pymongo python-gridfs python-libvirt python-bottle python-pefile python-chardet swig libssl-dev clamav-daemon python-geoip geoip-database mono-utils
 
 Except for *python-magic*, *python-dpkt* and *python-libvirt*, the others can be installed through ``pip`` too::
 
