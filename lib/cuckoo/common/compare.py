@@ -95,13 +95,13 @@ def helper_percentages_mongo(results_db, tid1, tid2, ignore_categories=["misc"])
 
     return combine_behavior_percentages(counts)
 
-def helper_percentages_elastic(es_obj, tid1, tid2, ignore_categories=["misc"]):
+def helper_percentages_elastic(es_obj, tid1, tid2, idx, ignore_categories=["misc"]):
     counts = {}
 
     for tid in [tid1, tid2]:
         counts[tid] = {}
         results = es_obj.search(
-                          index="cuckoo-*",
+                          index=idx,
                           doc_type="analysis",
                           q="info.id: \"%s\"" % tid,
                       )["hits"]["hits"]
@@ -119,7 +119,7 @@ def helper_percentages_elastic(es_obj, tid1, tid2, ignore_categories=["misc"]):
 
             for coid in pdoc["calls"]:
                 chunk = es_obj.search(
-                                index="cuckoo-*",
+                                index=idx,
                                 doc_type="calls",
                                 q="_id: \"%s\"" % coid,
                             )["hits"]["hits"][-1]["_source"]

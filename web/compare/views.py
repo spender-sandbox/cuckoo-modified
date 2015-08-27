@@ -28,6 +28,8 @@ if enabledconf["mongodb"]:
 
 if enabledconf["elasticsearchdb"]:
     from elasticsearch import Elasticsearch
+    baseidx = Config("reporting").elasticsearchdb.index
+    fullidx = baseidx + "-*"
     es = Elasticsearch(
              hosts = [{
                  "host": settings.ELASTIC_HOST,
@@ -42,7 +44,7 @@ def left(request, left_id):
         left = results_db.analysis.find_one({"info.id": int(left_id)}, {"target": 1, "info": 1})
     if enabledconf["elasticsearchdb"]:
         hits = es.search(
-                   index="cuckoo-*",
+                   index=fullidx,
                    doc_type="analysis",
                    q="info.id: \"%s\"" % left_id
                 )["hits"]["hits"]
@@ -69,7 +71,7 @@ def left(request, left_id):
     if enabledconf["elasticsearchdb"]:
         records = list()
         results = es.search(
-                      index="cuckoo-*",
+                      index=fullidx,
                       doc_type="analysis",
                       q="target.file.md5: \"%s\" NOT info.id: \"%s\"" % (
                             left["target"]["file"]["md5"], left_id)
@@ -87,7 +89,7 @@ def hash(request, left_id, right_hash):
         left = results_db.analysis.find_one({"info.id": int(left_id)}, {"target": 1, "info": 1})
     if enabledconf["elasticsearchdb"]:
         hits = es.search(
-                   index="cuckoo-*",
+                   index=fullidx,
                    doc_type="analysis",
                    q="info.id: \"%s\"" % left_id
                )["hits"]["hits"]
@@ -114,7 +116,7 @@ def hash(request, left_id, right_hash):
     if enabledconf["elasticsearchdb"]:
         records = list()
         results = es.search(
-                      index="cuckoo-*",
+                      index=fullidx,
                       doc_type="analysis",
                       q="target.file.md5: \"%s\" NOT info.id: \"%s\"" % (
                             right_hash, left_id)
@@ -136,16 +138,16 @@ def both(request, left_id, right_id):
         counts = compare.helper_percentages_mongo(results_db, left_id, right_id)
     if enabledconf["elasticsearchdb"]:
         left = es.search(
-                   index="cuckoo-*",
+                   index=fullidx,
                    doc_type="analysis",
                    q="info.id: \"%s\"" % left_id
                )["hits"]["hits"][-1]["_source"]
         right = es.search(
-                    index="cuckoo-*",
+                    index=fullidx,
                     doc_type="analysis",
                     q="info.id: \"%s\"" % right_id
                 )["hits"]["hits"][-1]["_source"]
-        counts = compare.helper_percentages_elastic(es, left_id, right_id)
+        counts = compare.helper_percentages_elastic(es, left_id, right_id, fullidx)
 
     return render_to_response("compare/both.html",
                               {"left": left, "right": right, "left_counts": counts[left_id],
