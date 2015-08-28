@@ -206,10 +206,11 @@ class DotNETExecutable(object):
                 restsplit = restline.split("]")
                 asmname = restsplit[0][2:]
                 typename = ''.join(restsplit[1:])
-                item = dict()
-                item["assembly"] = convert_to_printable(asmname)
-                item["typename"] = convert_to_printable(typename)
-                ret.append(item)
+                if asmname and typename:
+                    item = dict()
+                    item["assembly"] = convert_to_printable(asmname)
+                    item["typename"] = convert_to_printable(typename)
+                    ret.append(item)
             return sorted(ret)
 
         except:
