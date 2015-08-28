@@ -17,6 +17,18 @@
                                 <td>{{analysis.static.pe_entrypoint}}</td>
                             </tr>
                         {% endif %}
+                        {% if analysis.static.pe_reported_checksum %}
+                            <tr>
+                                <th style="width: 15%;">Reported Checksum</th>
+                                <td>{{analysis.static.pe_reported_checksum}}</td>
+                            </tr>
+                        {% endif %}
+                        {% if analysis.static.pe_actual_checksum %}
+                            <tr>
+                                <th style="width: 15%;">Actual Checksum</th>
+                                <td>{{analysis.static.pe_actual_checksum}}</td>
+                            </tr>
+                        {% endif %}
                         {% if analysis.static.pe_osversion %}
                             <tr>
                                 <th style="width: 15%;">Minimum OS Version</th>

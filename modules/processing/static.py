@@ -453,6 +453,24 @@ class PortableExecutable(object):
 
         return "0x{0:08x}".format(self.pe.OPTIONAL_HEADER.ImageBase + self.pe.OPTIONAL_HEADER.AddressOfEntryPoint)
 
+    def _get_reported_checksum(self):
+        """Get checksum from optional header
+        @return: checksum or None.
+        """
+        if not self.pe:
+            return None
+
+        return "0x{0:08x}".format(self.pe.OPTIONAL_HEADER.CheckSum)
+
+    def _get_actual_checksum(self):
+        """Get calculated checksum of PE
+        @return: checksum or None.
+        """
+        if not self.pe:
+            return None
+
+        return "0x{0:08x}".format(self.pe.generate_checksum())
+
     def _get_osversion(self):
         """Get minimum required OS version for PE to execute
         @return: minimum OS version or None.
@@ -682,6 +700,8 @@ class PortableExecutable(object):
 
         results["pe_imagebase"] = self._get_imagebase()
         results["pe_entrypoint"] = self._get_entrypoint()
+        results["pe_reported_checksum"] = self._get_reported_checksum()
+        results["pe_actual_checksum"] = self._get_actual_checksum()
         results["pe_osversion"] = self._get_osversion()
         results["pe_pdbpath"] = self._get_pdb_path()
         results["pe_imports"] = self._get_imported_symbols()
