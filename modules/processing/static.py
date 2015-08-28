@@ -137,7 +137,9 @@ class DotNETExecutable(object):
             ret = []
             output = Popen(["/usr/bin/monodis", "--customattr", self.file_path], stdout=PIPE).stdout.read().split("\n")
             for line in output[1:]:
-                splitline = line.split(" ")
+                splitline = line.split()
+                if not splitline:
+                    continue
                 typeval = splitline[1].rstrip(":")
                 nameval = splitline[6].split("::")[0]
                 if "(string)" not in splitline[6]:
@@ -170,7 +172,7 @@ class DotNETExecutable(object):
                     continue
                 verval = splitline[1]
                 splitline = output[idx+1].split("Name=")
-                if len(spitline) < 2:
+                if len(splitline) < 2:
                     continue
                 nameval = splitline[1]
                 item = dict()
@@ -188,9 +190,9 @@ class DotNETExecutable(object):
             output = Popen(["/usr/bin/monodis", "--assembly", self.file_path], stdout=PIPE).stdout.read().split("\n")
             for line in output:
                 if line.startswith("Name:"):
-                    ret["name"] = line[5:].strip()
+                    ret["name"] = convert_to_printable(line[5:].strip())
                 if line.startswith("Version:"):
-                    ret["version"] = line[8:].strip()
+                    ret["version"] = convert_to_printable(line[8:].strip())
             return ret
         except:
             return None
@@ -205,8 +207,8 @@ class DotNETExecutable(object):
                 asmname = restsplit[0][2:]
                 typename = ''.join(restsplit[1:])
                 item = dict()
-                item["assembly"] = asmname
-                item["typename"] = typename
+                item["assembly"] = convert_to_printable(asmname)
+                item["typename"] = convert_to_printable(typename)
                 ret.append(item)
             return ret
 
