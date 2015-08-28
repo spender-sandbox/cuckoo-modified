@@ -820,7 +820,6 @@ class PDF(object):
                     obj_data["Data"] = ret_data
                     retobjects.append(obj_data)
                     object_counter += 1
-
                 else:
                     obj_data["File Type"] = "Encoded"
                     obj_data["Data"] = "Encoded"
