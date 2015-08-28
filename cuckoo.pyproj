@@ -384,6 +384,7 @@
     <Content Include="web\templates\analysis\behavior\_search_results.html" />
     <Content Include="web\templates\analysis\comments\index.html" />
     <Content Include="web\templates\analysis\network\_smtp.html" />
+    <Content Include="web\templates\analysis\static\_dotnet.html" />
     <Content Include="web\templates\analysis\statistics\index.html" />
     <Content Include="web\templates\analysis\similar\index.html" />
     <Content Include="web\templates\analysis\network\_cif.html" />
