@@ -210,7 +210,7 @@ class DotNETExecutable(object):
                 item["assembly"] = convert_to_printable(asmname)
                 item["typename"] = convert_to_printable(typename)
                 ret.append(item)
-            return ret
+            return sorted(ret)
 
         except:
             return None
