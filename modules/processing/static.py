@@ -126,6 +126,12 @@ class DotNETExecutable(object):
         self.file_path = file_path
         self.results = results
 
+    def add_statistic(self, name, field, value):
+        self.results["statistics"]["processing"].append({
+            "name": name,
+            field: value,
+        })
+
     def _get_custom_attrs(self):
         try:
             ret = []
