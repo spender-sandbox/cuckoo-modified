@@ -135,7 +135,7 @@ class DotNETExecutable(object):
     def _get_custom_attrs(self):
         try:
             ret = []
-            output = Popen(["/usr/bin/monodis", "--customattr", file_path], stdout=PIPE).stdout.read().split("\n")
+            output = Popen(["/usr/bin/monodis", "--customattr", self.file_path], stdout=PIPE).stdout.read().split("\n")
             for line in output[1:]:
                 splitline = line.split(" ")
                 typeval = splitline[1].rstrip(":")
@@ -163,7 +163,7 @@ class DotNETExecutable(object):
     def _get_assembly_refs(self):
         try:
             ret = []
-            output = Popen(["/usr/bin/monodis", "--assemblyref", file_path], stdout=PIPE).stdout.read().split("\n")
+            output = Popen(["/usr/bin/monodis", "--assemblyref", self.file_path], stdout=PIPE).stdout.read().split("\n")
             for idx in range(len(output)):
                 splitline = output[idx].split("Version=")
                 if len(splitline) < 2:
@@ -185,7 +185,7 @@ class DotNETExecutable(object):
     def _get_assembly_info(self):
         try:
             ret = dict()
-            output = Popen(["/usr/bin/monodis", "--assembly", file_path], stdout=PIPE).stdout.read().split("\n")
+            output = Popen(["/usr/bin/monodis", "--assembly", self.file_path], stdout=PIPE).stdout.read().split("\n")
             for line in output:
                 if line.startswith("Name:"):
                     ret["name"] = line[5:].strip()
@@ -198,7 +198,7 @@ class DotNETExecutable(object):
     def _get_type_refs(self):
         try:
             ret = []
-            output = Popen(["/usr/bin/monodis", "--typeref", file_path], stdout=PIPE).stdout.read().split("\n")
+            output = Popen(["/usr/bin/monodis", "--typeref", self.file_path], stdout=PIPE).stdout.read().split("\n")
             for line in output[1:]:
                 restline = ''.join(line.split(":")[1:])
                 restsplit = restline.split("]")
