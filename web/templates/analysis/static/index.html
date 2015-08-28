@@ -1,7 +1,7 @@
 <div class="tabbable tabs">
     <ul class="nav nav-pills" style="margin-bottom: 0;">
         <li class="active"><a href="#static_analysis_tab" data-toggle="tab">Static Analysis</a></li>
-        {% if analysis.info.category == "file" and analysis.static and ("PE32" in analysis.target.file.type or "MS-DOS executable" in analysis.target.file.type) and "Mono" in analysis.target.file.type %}
+        {% if analysis.info.category == "file" and analysis.static and "PE32" in analysis.target.file.type and "Mono" in analysis.target.file.type %}
         <li><a href="#static_dotnet_tab" data-toggle="tab">.NET Static Analysis</a></li>
         {% endif %}
         {% if analysis.info.category == "file" and analysis.static %}
@@ -52,7 +52,7 @@
                 No static analysis available.
             {% endif %}
         </div>
-        {% if analysis.info.category == "file" and analysis.static and ("PE32" in analysis.target.file.type or "MS-DOS executable" in analysis.target.file.type) and "Mono" in analysis.target.file.type %}
+        {% if analysis.info.category == "file" and analysis.static and "PE32" in analysis.target.file.type and "Mono" in analysis.target.file.type %}
         <div class="tab-pane fade" id="static_dotnet_tab">
             {% include "analysis/static/_dotnet.html" %}
         </div>
