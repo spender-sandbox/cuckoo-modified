@@ -1,4 +1,4 @@
-# Copyright (C) 2010-2015 Cuckoo Foundation.
+﻿# Copyright (C) 2010-2015 Cuckoo Foundation.
 # This file is part of Cuckoo Sandbox - http://www.cuckoosandbox.org
 # See the file 'docs/LICENSE' for copying permission.
 
@@ -18,3 +18,7 @@ PATHS = {"root"   : ROOT,
 PIPE = "\\\\.\\PIPE\\" + random_string(6, 10)
 SHUTDOWN_MUTEX = "Global\\" + random_string(6, 10)
 TERMINATE_EVENT = "Global\\" + random_string(6, 10)
+CUCKOOMON32_NAME = "dll\\" + random_string(6, 8) + ".dll"
+CUCKOOMON64_NAME = "dll\\" + random_string(6, 8) + ".dll"
+LOADER32_NAME = "bin\\" + random_string(7, 7) + ".exe"
+LOADER64_NAME = "bin\\" + random_string(8, 8) + ".exe"

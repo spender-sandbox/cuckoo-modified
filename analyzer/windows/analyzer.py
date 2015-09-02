@@ -1,4 +1,4 @@
-# Copyright (C) 2010-2015 Cuckoo Foundation, Optiv, Inc. (brad.spengler@optiv.com)
+﻿# Copyright (C) 2010-2015 Cuckoo Foundation, Optiv, Inc. (brad.spengler@optiv.com)
 # This file is part of Cuckoo Sandbox - http://www.cuckoosandbox.org
 # See the file 'docs/LICENSE' for copying permission.
 
@@ -17,10 +17,12 @@ from ctypes import create_unicode_buffer, create_string_buffer, POINTER
 from ctypes import c_wchar_p, byref, c_int, sizeof, cast, c_void_p, c_ulong
 from threading import Lock, Thread
 from datetime import datetime, timedelta
+from shutil import copy
 
 from lib.api.process import Process
 from lib.common.abstracts import Package, Auxiliary
 from lib.common.constants import PATHS, PIPE, SHUTDOWN_MUTEX, TERMINATE_EVENT
+from lib.common.constants import CUCKOOMON32_NAME, CUCKOOMON64_NAME, LOADER32_NAME, LOADER64_NAME
 from lib.common.defines import KERNEL32, NTDLL
 from lib.common.defines import ERROR_MORE_DATA, ERROR_PIPE_CONNECTED
 from lib.common.defines import PIPE_ACCESS_DUPLEX, PIPE_TYPE_MESSAGE
@@ -579,6 +581,12 @@ class Analyzer:
         # Get SeDebugPrivilege for the Python process. It will be needed in
         # order to perform the injections.
         grant_debug_privilege()
+
+        # randomize cuckoomon DLL and loader executable names
+        copy("dll\\cuckoomon.dll", CUCKOOMON32_NAME)
+        copy("dll\\cuckoomon_x64.dll", CUCKOOMON64_NAME)
+        copy("bin\\loader.exe", LOADER32_NAME)
+        copy("bin\\loader_x64.exe", LOADER64_NAME)
 
         # Create the folders used for storing the results.
         create_folders()
