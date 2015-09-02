@@ -1,4 +1,4 @@
-# Copyright (C) 2010-2015 Cuckoo Foundation.
+﻿# Copyright (C) 2010-2015 Cuckoo Foundation.
 # This file is part of Cuckoo Sandbox - http://www.cuckoosandbox.org
 # See the file 'docs/LICENSE' for copying permission.
 
@@ -893,7 +893,7 @@ def remove(request, task_id):
                     if "object_id" in drop and results_db.analysis.find({"dropped.object_id": ObjectId(drop["object_id"])}).count() == 1:
                         fs.delete(ObjectId(drop["object_id"]))
                 # Delete calls.
-                for process in analysis["behavior"]["processes"]:
+                for process in analysis.get("behavior", {}).get("processes", []):
                     for call in process["calls"]:
                         results_db.calls.remove({"_id": ObjectId(call)})
                 # Delete analysis data.

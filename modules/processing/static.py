@@ -126,12 +126,20 @@ class DotNETExecutable(object):
         self.file_path = file_path
         self.results = results
 
+    def add_statistic(self, name, field, value):
+        self.results["statistics"]["processing"].append({
+            "name": name,
+            field: value,
+        })
+
     def _get_custom_attrs(self):
         try:
             ret = []
-            output = Popen(["/usr/bin/monodis", "--customattr", file_path], stdout=PIPE).stdout.read().split("\n")
+            output = Popen(["/usr/bin/monodis", "--customattr", self.file_path], stdout=PIPE).stdout.read().split("\n")
             for line in output[1:]:
-                splitline = line.split(" ")
+                splitline = line.split()
+                if not splitline:
+                    continue
                 typeval = splitline[1].rstrip(":")
                 nameval = splitline[6].split("::")[0]
                 if "(string)" not in splitline[6]:
@@ -157,14 +165,14 @@ class DotNETExecutable(object):
     def _get_assembly_refs(self):
         try:
             ret = []
-            output = Popen(["/usr/bin/monodis", "--assemblyref", file_path], stdout=PIPE).stdout.read().split("\n")
+            output = Popen(["/usr/bin/monodis", "--assemblyref", self.file_path], stdout=PIPE).stdout.read().split("\n")
             for idx in range(len(output)):
                 splitline = output[idx].split("Version=")
                 if len(splitline) < 2:
                     continue
                 verval = splitline[1]
                 splitline = output[idx+1].split("Name=")
-                if len(spitline) < 2:
+                if len(splitline) < 2:
                     continue
                 nameval = splitline[1]
                 item = dict()
@@ -179,12 +187,12 @@ class DotNETExecutable(object):
     def _get_assembly_info(self):
         try:
             ret = dict()
-            output = Popen(["/usr/bin/monodis", "--assembly", file_path], stdout=PIPE).stdout.read().split("\n")
+            output = Popen(["/usr/bin/monodis", "--assembly", self.file_path], stdout=PIPE).stdout.read().split("\n")
             for line in output:
                 if line.startswith("Name:"):
-                    ret["name"] = line[5:].strip()
+                    ret["name"] = convert_to_printable(line[5:].strip())
                 if line.startswith("Version:"):
-                    ret["version"] = line[8:].strip()
+                    ret["version"] = convert_to_printable(line[8:].strip())
             return ret
         except:
             return None
@@ -192,17 +200,18 @@ class DotNETExecutable(object):
     def _get_type_refs(self):
         try:
             ret = []
-            output = Popen(["/usr/bin/monodis", "--typeref", file_path], stdout=PIPE).stdout.read().split("\n")
+            output = Popen(["/usr/bin/monodis", "--typeref", self.file_path], stdout=PIPE).stdout.read().split("\n")
             for line in output[1:]:
                 restline = ''.join(line.split(":")[1:])
                 restsplit = restline.split("]")
                 asmname = restsplit[0][2:]
                 typename = ''.join(restsplit[1:])
-                item = dict()
-                item["assembly"] = asmname
-                item["typename"] = typename
-                ret.append(item)
-            return ret
+                if asmname and typename:
+                    item = dict()
+                    item["assembly"] = convert_to_printable(asmname)
+                    item["typename"] = convert_to_printable(typename)
+                    ret.append(item)
+            return sorted(ret)
 
         except:
             return None
@@ -444,6 +453,24 @@ class PortableExecutable(object):
 
         return "0x{0:08x}".format(self.pe.OPTIONAL_HEADER.ImageBase + self.pe.OPTIONAL_HEADER.AddressOfEntryPoint)
 
+    def _get_reported_checksum(self):
+        """Get checksum from optional header
+        @return: checksum or None.
+        """
+        if not self.pe:
+            return None
+
+        return "0x{0:08x}".format(self.pe.OPTIONAL_HEADER.CheckSum)
+
+    def _get_actual_checksum(self):
+        """Get calculated checksum of PE
+        @return: checksum or None.
+        """
+        if not self.pe:
+            return None
+
+        return "0x{0:08x}".format(self.pe.generate_checksum())
+
     def _get_osversion(self):
         """Get minimum required OS version for PE to execute
         @return: minimum OS version or None.
@@ -673,6 +700,8 @@ class PortableExecutable(object):
 
         results["pe_imagebase"] = self._get_imagebase()
         results["pe_entrypoint"] = self._get_entrypoint()
+        results["pe_reported_checksum"] = self._get_reported_checksum()
+        results["pe_actual_checksum"] = self._get_actual_checksum()
         results["pe_osversion"] = self._get_osversion()
         results["pe_pdbpath"] = self._get_pdb_path()
         results["pe_imports"] = self._get_imported_symbols()
@@ -791,7 +820,6 @@ class PDF(object):
                     obj_data["Data"] = ret_data
                     retobjects.append(obj_data)
                     object_counter += 1
-
                 else:
                     obj_data["File Type"] = "Encoded"
                     obj_data["Data"] = "Encoded"
