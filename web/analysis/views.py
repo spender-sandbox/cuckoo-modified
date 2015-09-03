@@ -241,20 +241,19 @@ def chunk(request, task_id, pid, pagenum):
         if not process:
             raise PermissionDenied
 
-        try:
+        if pagenum >= 0 and pagenum < len(process["calls"]):
             objectid = process["calls"][pagenum]
-        except:
-            raise PermissionDenied
+            if enabledconf["mongodb"]:
+                chunk = results_db.calls.find_one({"_id": ObjectId(objectid)})
 
-        if enabledconf["mongodb"]:
-            chunk = results_db.calls.find_one({"_id": ObjectId(objectid)})
-
-        if enabledconf["elasticsearchdb"]:
-            chunk = es.search(
-                        index=fullidx,
-                        doc_type="calls",
-                        q="_id: \"%s\"" % objectid,
-                    )["hits"]["hits"][0]["_source"]
+            if enabledconf["elasticsearchdb"]:
+                chunk = es.search(
+                            index=fullidx,
+                            doc_type="calls",
+                            q="_id: \"%s\"" % objectid,
+                        )["hits"]["hits"][0]["_source"]
+        else:
+            chunk = dict(calls=[])
 
         return render_to_response("analysis/behavior/_chunk.html",
                                   {"chunk": chunk},
