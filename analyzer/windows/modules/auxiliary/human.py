@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+﻿#!/usr/bin/env python
 # Copyright (C) 2010-2015 Cuckoo Foundation, Optiv, Inc. (brad.spengler@optiv.com)
 # This file is part of Cuckoo Sandbox - http://www.cuckoosandbox.org
 # See the file 'docs/LICENSE' for copying permission.
@@ -55,6 +55,7 @@ def foreach_child(hwnd, lparam):
 
     # List of buttons labels to not click.
     dontclick = [
+        "check online for a solution",
         "don't run",
         "do not ask again until the next update is available",
     ]
