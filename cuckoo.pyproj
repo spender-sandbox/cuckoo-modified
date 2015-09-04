@@ -228,6 +228,9 @@
     <Compile Include="utils\listdump.py" />
     <Compile Include="utils\stats.py" />
     <Compile Include="utils\submit.py" />
+    <Compile Include="utils\tcpdumpwrapper.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="utils\web.py" />
     <Compile Include="utils\__init__.py">
       <SubType>Code</SubType>

@@ -1,4 +1,4 @@
-# Copyright (C) 2010-2015 Cuckoo Foundation, Optiv, Inc. (brad.spengler@optiv.com)
+﻿# Copyright (C) 2010-2015 Cuckoo Foundation, Optiv, Inc. (brad.spengler@optiv.com)
 # This file is part of Cuckoo Sandbox - http://www.cuckoosandbox.org
 # See the file 'docs/LICENSE' for copying permission.
 
@@ -14,6 +14,7 @@ from ctypes import byref, c_ulong, create_string_buffer, c_int, sizeof
 from shutil import copy
 
 from lib.common.constants import PIPE, PATHS, SHUTDOWN_MUTEX, TERMINATE_EVENT
+from lib.common.constants import CUCKOOMON32_NAME, CUCKOOMON64_NAME, LOADER32_NAME, LOADER64_NAME
 from lib.common.defines import ULONG_PTR
 from lib.common.defines import KERNEL32, NTDLL, SYSTEM_INFO, STILL_ACTIVE
 from lib.common.defines import THREAD_ALL_ACCESS, PROCESS_ALL_ACCESS, TH32CS_SNAPPROCESS
@@ -38,19 +39,6 @@ log = logging.getLogger(__name__)
 
 def is_os_64bit():
     return platform.machine().endswith('64')
-
-def randomize_bin(bin_path, ext):
-    """Randomize binary name.
-    @return: new binary path.
-    """
-    new_bin_name = random_string(6)
-    new_bin_path = os.path.join(os.getcwd(), ext, "{0}.{1}".format(new_bin_name, ext))
-
-    try:
-        copy(bin_path, new_bin_path)
-        return new_bin_path
-    except:
-        return bin_path
 
 def get_referrer_url(interest):
     """Get a Google referrer URL
@@ -529,11 +517,13 @@ class Process:
         is_64bit = self.is_64bit()
         if not dll:
             if is_64bit:
-                dll = "cuckoomon_x64.dll"
+                dll = CUCKOOMON64_NAME
             else:
-                dll = "cuckoomon.dll"
+                dll = CUCKOOMON32_NAME
+        else:
+            os.path.join("dll", dll)
 
-        dll = randomize_bin(os.path.join("dll", dll), "dll")
+        dll = os.path.join(os.getcwd(), dll)
 
         if not dll or not os.path.exists(dll):
             log.warning("No valid DLL specified to be injected in process "
@@ -582,13 +572,13 @@ class Process:
         orig_bin_name = ""
         bit_str = ""
         if is_64bit:
-            orig_bin_name = "loader_x64.exe"
+            orig_bin_name = LOADER64_NAME
             bit_str = "64-bit"
         else:
-            orig_bin_name = "loader.exe"
+            orig_bin_name = LOADER32_NAME
             bit_str = "32-bit"
 
-        bin_name = randomize_bin(os.path.join("bin", orig_bin_name), "exe")
+        bin_name = os.path.join(os.getcwd(), orig_bin_name)
 
         if os.path.exists(bin_name):
             ret = subprocess.call([bin_name, "inject", str(self.pid), str(thread_id), dll])
@@ -622,11 +612,13 @@ class Process:
         file_path = os.path.join(PATHS["memory"], "{0}.dmp".format(self.pid))
 
         if self.is_64bit():
-            bin_name = "bin/loader_x64.exe"
+            orig_bin_name = LOADER64_NAME
             bit_str = "64-bit"
         else:
-            bin_name = "bin/loader.exe"
+            orig_bin_name = LOADER32_NAME
             bit_str = "32-bit"
+
+        bin_name = os.path.join(os.getcwd(), orig_bin_name)
 
         if os.path.exists(bin_name):
             ret = subprocess.call([bin_name, "dump", str(self.pid), file_path])

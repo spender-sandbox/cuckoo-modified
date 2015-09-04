@@ -1,4 +1,4 @@
-# Copyright (C) 2010-2015 Cuckoo Foundation.
+﻿# Copyright (C) 2010-2015 Cuckoo Foundation.
 # This file is part of Cuckoo Sandbox - http://www.cuckoosandbox.org
 # See the file 'docs/LICENSE' for copying permission.
 
@@ -47,7 +47,7 @@ class Sniffer(Auxiliary):
             return
 
         mode = os.stat(tcpdump)[stat.ST_MODE]
-        if (mode & stat.S_ISUID) == 0 and os.geteuid() > 0:
+        if self.options.get("suid_check", True) and (mode & stat.S_ISUID) == 0 and os.geteuid() > 0:
             # now do a weak file capability check
             has_caps = False
             try:
@@ -91,7 +91,7 @@ class Sniffer(Auxiliary):
                       "src", "port", resultserver_port, ")"])
 
         if bpf:
-            pargs.extend(["and", bpf])
+            pargs.extend(["and", "(", bpf, ")"])
 
         try:
             self.proc = subprocess.Popen(pargs, stdout=subprocess.PIPE,
