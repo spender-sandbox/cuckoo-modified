@@ -60,6 +60,8 @@ from lib.cuckoo.common.utils import convert_to_printable
 from lib.cuckoo.common.pdftools.pdfid import PDFiD, PDFiD2JSON
 from lib.cuckoo.common.peepdf.PDFCore import PDFParser
 from lib.cuckoo.common.peepdf.JSAnalysis import analyseJS
+if HAVE_PYV8:
+    from lib.cuckoo.common.peepdf.JSAnalysis import Global
 
 log = logging.getLogger(__name__)
 
@@ -823,7 +825,9 @@ class PDF(object):
                     decoded_stream = details.decodedStream
                     if HAVE_PYV8:
                         try:
-                            jsdata = analyseJS(decoded_stream.strip())[0][0]
+                            with PyV8.JSLocker():
+                                ctx = PyV8.JSContext(Global())
+                                jsdata = analyseJS(decoded_stream.strip(), ctx)[0][0]
                         except Exception,e:
                             continue
                         if jsdata == None:
@@ -857,11 +861,11 @@ class PDF(object):
             result["JSStreams"] = retobjects
 
         if "creator" in metadata:
-            result["Info"]["Creator"] = self._clean_string(metadata["creator"])
+            result["Info"]["Creator"] = convert_to_printable(self._clean_string(metadata["creator"]))
         if "producer" in metadata:
-            result["Info"]["Producer"] = self._clean_string(metadata["producer"])
+            result["Info"]["Producer"] = convert_to_printable(self._clean_string(metadata["producer"]))
         if "author" in metadata:
-            result["Info"]["Author"] = self._clean_string(metadata["author"])
+            result["Info"]["Author"] = convert_to_printable(self._clean_string(metadata["author"]))
 
         return result
 

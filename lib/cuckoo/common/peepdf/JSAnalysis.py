@@ -76,8 +76,6 @@ def analyseJS(code, context = None, manualAnalysis = False):
         JSCode.append(code)
     
         if code != None and JS_MODULE and not manualAnalysis:
-            if context == None:
-                context = PyV8.JSContext(Global())
             context.enter()
             # Hooking the eval function
             context.eval('eval=evalOverride')
@@ -98,7 +96,7 @@ def analyseJS(code, context = None, manualAnalysis = False):
                     open('jserror.log','ab').write(error + newLine)
                     errors.append(error)
                     break
-            
+            context.leave()
             if code != '':
                 escapedVars = re.findall('(\w*?)\s*?=\s*?(unescape\((.*?)\))', code, re.DOTALL)
                 for var in escapedVars:
