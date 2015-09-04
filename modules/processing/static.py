@@ -801,7 +801,7 @@ class PDF(object):
         metadata = dict()
 
         for i in range(len(pdf.body)):
-            body = pdf.body[count]
+            body = pdf.body[i]
             metatmp = pdf.getBasicMetadata(i)
             if metatmp:
                 metadata = metatmp
