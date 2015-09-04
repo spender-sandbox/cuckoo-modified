@@ -13,8 +13,8 @@ import math
 import array
 import base64
 import hashlib
-from datetime import datetime, timedelta
 
+from datetime import datetime, timedelta
 from lib.cuckoo.common.icon import PEGroupIconDir
 from PIL import Image
 from StringIO import StringIO
@@ -738,6 +738,28 @@ class PDF(object):
         self.file_path = file_path
         self.pdf = None
 
+    def _clean_string(self, value):
+        # handle BOM for typical english unicode while avoiding some
+        # invalid BOM seen in malicious PDFs (like using the utf16le BOM
+        # for an ascii string)
+        if value.startswith("\xfe\xff"):
+            clean = True
+            for x in value[2::2]:
+                if ord(x):
+                    clean = False
+                    break
+            if clean:
+                return value[3::2]
+        elif value.startswith("\xff\xfe"):
+            clean = True
+            for x in value[3::2]:
+                if ord(x):
+                    clean = False
+                    break
+            if clean:
+                return value[2::2]
+        return value
+
     def _parse(self, filepath):
         """Parses the PDF for static information. Uses PyV8 from peepdf to
         extract JavaScript from PDF objects.
@@ -756,28 +778,34 @@ class PDF(object):
         info['Entropy Out Streams'] = pdfid_data['pdfid']['nonStreamEntropy']
         info['Count %% EOF'] = pdfid_data['pdfid']['countEof']
         info['Data After EOF'] = pdfid_data['pdfid']['countChatAfterLastEof']
+        # Note, PDFiD doesn't interpret some dates properly, specifically it doesn't
+        # seem to be able to properly represent time zones that involve fractions of
+        # an hour
         dates = pdfid_data['pdfid']['dates']['date']
 
-        # Get streams, counts and format.
-        streams = {}
-        for stream in pdfid_data['pdfid']['keywords']['keyword']:
-            streams[str(stream['name'])] = stream['count']
+        # Get keywords, counts and format.
+        keywords = {}
+        for keyword in pdfid_data['pdfid']['keywords']['keyword']:
+            keywords[str(keyword['name'])] = keyword['count']
 
         result = {}
         result["Info"] = info
         result["Dates"] = dates
-        result["Streams"] = streams
+        result["Keywords"] = keywords
 
         log.debug("About to parse with PDFParser")
         parser = PDFParser()
         ret, pdf = parser.parse(filepath, True, False)
         objects = []
         retobjects = []
-        count = 0
-        object_counter = 1
+        metadata = dict()
 
         for i in range(len(pdf.body)):
             body = pdf.body[count]
+            metatmp = pdf.getBasicMetadata(i)
+            if metatmp:
+                metadata = metatmp
+
             objects = body.objects
 
             for index in objects:
@@ -793,14 +821,13 @@ class PDF(object):
                 if details.type == 'stream':
                     encoded_stream = details.encodedStream
                     decoded_stream = details.decodedStream
-                    obj_data["File Type"] = _get_filetype(decoded_stream)[:100]
                     if HAVE_PYV8:
                         try:
                             jsdata = analyseJS(decoded_stream.strip())[0][0]
                         except Exception,e:
-                            jsdata = "PyV8 failed to parse the stream."
+                            continue
                         if jsdata == None:
-                            jsdata = "PyV8 did not detect JavaScript in the stream. (Possibly encrypted)"
+                            continue
 
                         # The following loop is required to "JSONify" the strings returned from PyV8.
                         # As PyV8 returns byte strings, we must parse out bytecode and
@@ -815,18 +842,27 @@ class PDF(object):
                                 tmp = jsdata[i]
                             ret_data += tmp
                     else:
-                        ret_data = "PyV8 not installed, unable to extract JavaScript."
+                        continue
 
                     obj_data["Data"] = ret_data
                     retobjects.append(obj_data)
-                    object_counter += 1
                 else:
-                    obj_data["File Type"] = "Encoded"
-                    obj_data["Data"] = "Encoded"
-                    retobjects.append(obj_data)
+                    # can be dictionaries, arrays, etc, don't bother displaying them
+                    # all for now
+                    pass
+                    #obj_data["File Type"] = "Encoded"
+                    #obj_data["Data"] = "Encoded"
+                    #retobjects.append(obj_data)
 
-            count += 1
-            result["Objects"] = retobjects
+            result["JSStreams"] = retobjects
+
+        if "creator" in metadata:
+            result["Info"]["Creator"] = self._clean_string(metadata["creator"])
+        if "producer" in metadata:
+            result["Info"]["Producer"] = self._clean_string(metadata["producer"])
+        if "author" in metadata:
+            result["Info"]["Author"] = self._clean_string(metadata["author"])
+
         return result
 
     def run(self):
