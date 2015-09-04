@@ -114,7 +114,15 @@
         </div>
         <hr />
         {% endif %}
-
+        {% if analysis.static.URLs %}
+        <div>
+            <h4>Javascript URLs</h4>
+            <div class="well mono">
+                {% for url in analysis.static.URLs %}
+                    {{url}}<br />
+                {% endfor %}
+            </div>
+        {% endif %}
         {% if analysis.static.JSStreams %}
         <div>
             <h4>Javascript Streams</h4>

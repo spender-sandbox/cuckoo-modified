@@ -798,6 +798,7 @@ class PDF(object):
         log.debug("About to parse with PDFParser")
         parser = PDFParser()
         ret, pdf = parser.parse(filepath, True, False)
+        urlset = set()
         objects = []
         retobjects = []
         metadata = dict()
@@ -824,14 +825,21 @@ class PDF(object):
                     encoded_stream = details.encodedStream
                     decoded_stream = details.decodedStream
                     if HAVE_PYV8:
+                        jsdata = None
                         try:
                             with PyV8.JSLocker():
                                 ctx = PyV8.JSContext(Global())
-                                jsdata = analyseJS(decoded_stream.strip(), ctx)[0][0]
+                                jslist, unescapedbytes, urlsfound, errors, ctxdummy = analyseJS(decoded_stream.strip(), ctx)
+                                jsdata = jslist[0]
                         except Exception,e:
+                            continue
+                        if len(errors):
                             continue
                         if jsdata == None:
                             continue
+
+                        for url in urlsfound:
+                            urlset.add(url)
 
                         # The following loop is required to "JSONify" the strings returned from PyV8.
                         # As PyV8 returns byte strings, we must parse out bytecode and
@@ -866,6 +874,9 @@ class PDF(object):
             result["Info"]["Producer"] = convert_to_printable(self._clean_string(metadata["producer"]))
         if "author" in metadata:
             result["Info"]["Author"] = convert_to_printable(self._clean_string(metadata["author"]))
+
+        if len(urlset):
+            result["URLs"] = list(urlset)
 
         return result
 
