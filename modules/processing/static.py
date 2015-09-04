@@ -60,8 +60,6 @@ from lib.cuckoo.common.utils import convert_to_printable
 from lib.cuckoo.common.pdftools.pdfid import PDFiD, PDFiD2JSON
 from lib.cuckoo.common.peepdf.PDFCore import PDFParser
 from lib.cuckoo.common.peepdf.JSAnalysis import analyseJS
-if HAVE_PYV8:
-    from lib.cuckoo.common.peepdf.JSAnalysis import Global
 
 log = logging.getLogger(__name__)
 
@@ -827,10 +825,8 @@ class PDF(object):
                     if HAVE_PYV8:
                         jsdata = None
                         try:
-                            with PyV8.JSLocker():
-                                ctx = PyV8.JSContext(Global())
-                                jslist, unescapedbytes, urlsfound, errors, ctxdummy = analyseJS(decoded_stream.strip(), ctx)
-                                jsdata = jslist[0]
+                            jslist, unescapedbytes, urlsfound, errors, ctxdummy = analyseJS(decoded_stream.strip())
+                            jsdata = jslist[0]
                         except Exception,e:
                             continue
                         if len(errors):

@@ -76,27 +76,31 @@ def analyseJS(code, context = None, manualAnalysis = False):
         JSCode.append(code)
     
         if code != None and JS_MODULE and not manualAnalysis:
-            context.enter()
-            # Hooking the eval function
-            context.eval('eval=evalOverride')
-            #context.eval(preDefinedCode)
-            while True:
-                originalCode = code
-                try:
-                    context.eval(code)
-                    evalCode = context.eval('evalCode')
-                    evalCode = jsbeautifier.beautify(evalCode)
-                    if evalCode != '' and evalCode != code:
-                        code = evalCode
-                        JSCode.append(code)
-                    else:
+            if context == None:
+                with PyV8.JSLocker():
+                    context = PyV8.JSContext(Global())
+            with PyV8.JSLocker():
+                context.enter()
+                # Hooking the eval function
+                context.eval('eval=evalOverride')
+                #context.eval(preDefinedCode)
+                while True:
+                    originalCode = code
+                    try:
+                        context.eval(code)
+                        evalCode = context.eval('evalCode')
+                        evalCode = jsbeautifier.beautify(evalCode)
+                        if evalCode != '' and evalCode != code:
+                            code = evalCode
+                            JSCode.append(code)
+                        else:
+                            break
+                    except:
+                        error = str(sys.exc_info()[1])
+                        open('jserror.log','ab').write(error + newLine)
+                        errors.append(error)
                         break
-                except:
-                    error = str(sys.exc_info()[1])
-                    open('jserror.log','ab').write(error + newLine)
-                    errors.append(error)
-                    break
-            context.leave()
+                context.leave()
             if code != '':
                 escapedVars = re.findall('(\w*?)\s*?=\s*?(unescape\((.*?)\))', code, re.DOTALL)
                 for var in escapedVars:
