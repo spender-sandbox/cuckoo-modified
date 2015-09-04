@@ -57,10 +57,10 @@
                         <th>File Size</th>
                         <td><span class="mono">{{analysis.target.file.size}} bytes</span></td>
                     </tr>
-                    {% if analysis.static.Streams|getkey:"/Page" %}
+                    {% if analysis.static.Keywords|getkey:"/Page" %}
                     <tr>
                         <th>Number of Pages</th>
-                        <td><span class="mono">{{analysis.static.Streams|getkey:"/Page"}}</span></td>
+                        <td><span class="mono">{{analysis.static.Keywords|getkey:"/Page"}}</span></td>
                     </tr>
                     {% endif %}
                 </table>
