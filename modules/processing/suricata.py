@@ -1,4 +1,4 @@
-# Copyright (C) 2010-2012 Cuckoo Sandbox Developers.
+﻿# Copyright (C) 2010-2012 Cuckoo Sandbox Developers.
 # This file is part of Cuckoo Sandbox - http://www.cuckoosandbox.org
 # See the file 'docs/LICENSE' for copying permission.
 
@@ -101,6 +101,8 @@ class Suricata(Processing):
                         2210020,
                         # SURICATA STREAM 3way handshake with ack in wrong dir
                         2210000,
+                        # ET INFO InetSim Response from External Source Possible SinkHole
+                        2017363,
         ]
 
         if SURICATA_RUNMODE == "socket":
