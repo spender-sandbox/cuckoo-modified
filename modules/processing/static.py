@@ -828,9 +828,9 @@ class PDF(object):
 
         self._set_base_uri()
 
-        for i in range(len(pdf.body)):
-            body = pdf.body[i]
-            metatmp = pdf.getBasicMetadata(i)
+        for i in range(len(self.pdf.body)):
+            body = self.pdf.body[i]
+            metatmp = self.pdf.getBasicMetadata(i)
             if metatmp:
                 metadata = metatmp
 
