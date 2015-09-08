@@ -20,7 +20,7 @@
         <div class="tab-pane fade in active" id="static_analysis_tab">
             {% if "PE32" in analysis.target.file.type or "MS-DOS executable" in analysis.target.file.type %}
                 {% include "analysis/static/_pe32.html" %}
-            {% elif "PDF" in analysis.target.file.type %}
+            {% elif "PDF" in analysis.target.file.type or analysis.target.file.name|endswith:".pdf" %}
                 {% include "analysis/static/_pdf.html" %}
             {% elif "Composite Document File V2 Document" in analysis.target.file.type %}
                 {% include "analysis/static/_office.html" %}
@@ -31,19 +31,19 @@
             {% elif "Word 2007+" in analysis.target.file.type %}
                 {% include "analysis/static/_office.html" %}
             {% elif "Zip archive data" in analysis.target.file.type %}
-                {% if ".docx" in analysis.target.file.name %}
+                {% if analysis.target.file.name|endswith:".docx" %}
                     {% include "analysis/static/_office.html" %}
-                {% elif ".docm" in analysis.target.file.name %}
+                {% elif analysis.target.file.name|endswith:".docm" %}
                     {% include "analysis/static/_office.html" %}
-                {% elif ".doc" in analysis.target.file.name %}
+                {% elif analysis.target.file.name|endswith:".doc" %}
                     {% include "analysis/static/_office.html" %}
-                {% elif ".xls" in analysis.target.file.name %}
+                {% elif analysis.target.file.name|endswith:".xls" %}
                     {% include "analysis/static/_office.html" %}
-                {% elif ".xlsx" in analysis.target.file.name %}
+                {% elif analysis.target.file.name|endswith:".xlsx" %}
                     {% include "analysis/static/_office.html" %}
-                {% elif ".ppt" in analysis.target.file.name %}
+                {% elif analysis.target.file.name|endswith:".ppt" %}
                     {% include "analysis/static/_office.html" %}
-                {% elif ".pptx" in analysis.target.file.name %}
+                {% elif analysis.target.file.name|endswith:".pptx" %}
                     {% include "analysis/static/_office.html" %}
                 {% else %}
                     No static analysis available.
