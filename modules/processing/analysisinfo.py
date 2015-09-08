@@ -1,4 +1,4 @@
-# Copyright (C) 2010-2015 Cuckoo Foundation.
+﻿# Copyright (C) 2010-2015 Cuckoo Foundation.
 # This file is part of Cuckoo Sandbox - http://www.cuckoosandbox.org
 # See the file 'docs/LICENSE' for copying permission.
 
@@ -36,6 +36,37 @@ class AnalysisInfo(Processing):
                 if "INFO: Analysis timeout hit, terminating analysis" in analysis_log:
                     return True
         return False
+
+    def get_options(self,optstring):
+        """Get analysis options.
+        @return: options dict.
+        """
+        # The analysis package can be provided with some options in the
+        # following format:
+        #   option1=value1,option2=value2,option3=value3
+        #
+        # Here we parse such options and provide a dictionary that will be made
+        # accessible to the analysis package.
+        options = {}
+        if optstring:
+            try:
+                # Split the options by comma.
+                fields = optstring.split(",")
+            except ValueError as e:
+                pass
+            else:
+                for field in fields:
+                    # Split the name and the value of the option.
+                    try:
+                        key, value = field.split("=", 1)
+                    except ValueError as e:
+                        pass
+                    else:
+                        # If the parsing went good, we add the option to the
+                        # dictionary.
+                        options[key.strip()] = value.strip()
+
+        return options
 
     def run(self):
         """Run information gathering.
@@ -78,5 +109,5 @@ class AnalysisInfo(Processing):
             machine=self.task["machine"],
             package=self.task["package"],
             timeout=self.had_timeout(),
-            options=self.task["options"]
+            options=self.get_options(self.task["options"])
         )
