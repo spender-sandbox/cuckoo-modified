@@ -114,11 +114,20 @@
         </div>
         <hr />
         {% endif %}
-        {% if analysis.static.URLs %}
+        {% if analysis.static.Annot_URLs %}
+        <div>
+            <h4>Link Annotation URLs</h4>
+            <div class="well mono">
+                {% for url in analysis.static.Annot_URLs %}
+                    {{url}}<br />
+                {% endfor %}
+            </div>
+        {% endif %}
+        {% if analysis.static.JS_URLs %}
         <div>
             <h4>Javascript URLs</h4>
             <div class="well mono">
-                {% for url in analysis.static.URLs %}
+                {% for url in analysis.static.JS_URLs %}
                     {{url}}<br />
                 {% endfor %}
             </div>

@@ -737,6 +737,7 @@ class PDF(object):
     def __init__(self, file_path):
         self.file_path = file_path
         self.pdf = None
+        self.base_uri = ""
 
     def _clean_string(self, value):
         # handle BOM for typical english unicode while avoiding some
@@ -759,6 +760,29 @@ class PDF(object):
             if clean:
                 return value[2::2]
         return value
+
+    def _get_obj_val(self, version, obj):
+        try:
+            if obj.type == "reference":
+                return self.pdf.body[version].getObject(obj.id)
+        except:
+            pass
+        return obj
+
+    def _set_base_uri(self):
+        try:
+            for version in range(self.pdf.updates+1):
+                trailer, streamTrailer = self.pdf.trailer[version]
+                if trailer != None:
+                    elem = trailer.dict.getElementByName("/Root")
+                    elem = self._get_obj_val(version, elem)
+                    elem = elem.getElementByName("/URI")
+                    elem = self._get_obj_val(version, elem)
+                    elem = elem.getElementByName("/Base")
+                    elem = self._get_obj_val(version, elem)
+                    self.base_uri = elem.getValue()
+        except:
+            pass
 
     def _parse(self, filepath):
         """Parses the PDF for static information. Uses PyV8 from peepdf to
@@ -795,11 +819,14 @@ class PDF(object):
 
         log.debug("About to parse with PDFParser")
         parser = PDFParser()
-        ret, pdf = parser.parse(filepath, True, False)
+        ret, self.pdf = parser.parse(filepath, forceMode=True, looseMode=True, manualAnalysis=False)
         urlset = set()
+        annoturiset = set()
         objects = []
         retobjects = []
         metadata = dict()
+
+        self._set_base_uri()
 
         for i in range(len(pdf.body)):
             body = pdf.body[i]
@@ -843,17 +870,33 @@ class PDF(object):
                         # as this would mess up the new line representation which is used for
                         # beautifying the javascript code for Django's web interface.
                         ret_data = ""
-                        for i in xrange(len(jsdata)):
-                            if ord(jsdata[i]) > 127:
-                                tmp = "\\x" + str(jsdata[i].encode("hex"))
+                        for x in xrange(len(jsdata)):
+                            if ord(jsdata[x]) > 127:
+                                tmp = "\\x" + str(jsdata[x].encode("hex"))
                             else:
-                                tmp = jsdata[i]
+                                tmp = jsdata[x]
                             ret_data += tmp
                     else:
                         continue
 
                     obj_data["Data"] = ret_data
                     retobjects.append(obj_data)
+                elif details.type == "dictionary" and details.hasElement("/A"):
+                    # verify it to be a link type annotation
+                    subtype_elem = details.getElementByName("/Subtype")
+                    type_elem = details.getElementByName("/Type")
+                    if not subtype_elem or not type_elem:
+                        continue
+                    subtype_elem = self._get_obj_val(i, subtype_elem)
+                    type_elem = self._get_obj_val(i, type_elem)
+                    if subtype_elem.getValue() != "/Link" or type_elem.getValue() != "/Annot":
+                        continue
+                    a_elem = details.getElementByName("/A")
+                    a_elem = self._get_obj_val(i, a_elem)
+                    if a_elem.type == "dictionary" and a_elem.hasElement("/URI"):
+                        uri_elem = a_elem.getElementByName("/URI")
+                        uri_elem = self._get_obj_val(i, uri_elem)
+                        annoturiset.add(self.base_uri + uri_elem.getValue())
                 else:
                     # can be dictionaries, arrays, etc, don't bother displaying them
                     # all for now
@@ -872,7 +915,9 @@ class PDF(object):
             result["Info"]["Author"] = convert_to_printable(self._clean_string(metadata["author"]))
 
         if len(urlset):
-            result["URLs"] = list(urlset)
+            result["JS_URLs"] = list(urlset)
+        if len(annoturiset):
+            result["Annot_URLs"] = list(annoturiset)
 
         return result
 
