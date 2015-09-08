@@ -1084,13 +1084,13 @@ class Static(Processing):
                 static = PortableExecutable(self.file_path, self.results).run()
                 if static and "Mono" in thetype:
                     static.update(DotNETExecutable(self.file_path, self.results).run())
-            elif "PDF" in thetype or self.task.target.endswith(".pdf"):
+            elif "PDF" in thetype or self.task["target"].endswith(".pdf"):
                 static = PDF(self.file_path).run()
             elif "Word 2007" in thetype or "Excel 2007" in thetype or "PowerPoint 2007" in thetype:
                 static = Office(self.file_path).run()
             elif "Composite Document File" in thetype:
                 static = Office(self.file_path).run()
-            elif self.task.target.endswith((".doc", ".docx", ".rtf", ".xls", ".xlsx", ".ppt", ".pptx", ".pps", ".ppsx", ".pptm", ".potm", ".potx", ".ppsm")):
+            elif self.task["target"].endswith((".doc", ".docx", ".rtf", ".xls", ".xlsx", ".ppt", ".pptx", ".pps", ".ppsx", ".pptm", ".potm", ".potx", ".ppsm")):
                 static = Office(self.file_path).run()
             # It's possible to fool libmagic into thinking our 2007+ file is a
             # zip. So until we have static analysis for zip files, we can use
