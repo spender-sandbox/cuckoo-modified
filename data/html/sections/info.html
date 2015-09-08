@@ -50,3 +50,29 @@
         </table>
     </section>
 {% endif %}
+
+<section id="malscore">
+    <table class="table table-striped table-bordered">
+        <thead>
+            <tr>
+                <th style="text-align: center;">MalScore</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>
+                    <h2 style="text-align:center; margin: 0px;"><span>{{results.malscore}}</span></h2>
+                     {% if results.malfamily %}
+                    <h5 style="text-align:center; margin: 15px 0px 2px 0px;">{{results.malfamily}}</h5>
+                    {% elif results.malscore > 6.0 %}
+                    <h5 style="text-align:center; margin: 15px 0px 2px 0px;">Malicious</h5>
+                    {% elif results.malscore > 2.0 %}
+                    <h5 style="text-align:center; margin: 15px 0px 2px 0px;">Suspicious</h5>
+                    {% else %}
+                    <h5 style="text-align:center; margin: 15px 0px 2px 0px;">Benign</h5>
+                    {% endif %}
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</section>
