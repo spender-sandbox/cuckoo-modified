@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+﻿#!/usr/bin/env python
 
 __description__ = 'Tool to test a PDF file'
 __author__ = 'Didier Stevens'
@@ -202,6 +202,8 @@ class cPDFDate:
                     return None
 
 def fEntropy(countByte, countTotal):
+    if countTotal == 0:
+        return 0.0
     x = float(countByte) / countTotal
     if x > 0:
         return - x * math.log(x, 2)
