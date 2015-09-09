@@ -431,11 +431,12 @@ class PipeHandler(Thread):
                                                thread_id=thread_id,
                                                suspended=suspended)
 
+                                filepath = proc.get_filepath()
                                 # if it's a URL analysis, provide the URL to all processes as
                                 # the "interest" -- this will allow cuckoomon to see in the
                                 # child browser process that a URL analysis is occurring
                                 if self.config.category == "file" or NUM_INJECTED > 1:
-                                    interest = proc.get_filepath()
+                                    interest = filepath
                                 else:
                                     interest = self.config.target
 
