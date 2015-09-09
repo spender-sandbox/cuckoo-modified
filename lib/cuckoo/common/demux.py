@@ -1,4 +1,4 @@
-# Copyright (C) 2015 Optiv, Inc. (brad.spengler@optiv.com)
+﻿# Copyright (C) 2015 Optiv, Inc. (brad.spengler@optiv.com)
 # This file is part of Cuckoo Sandbox - http://www.cuckoosandbox.org
 # See the file 'docs/LICENSE' for copying permission.
 
@@ -23,6 +23,8 @@ def demux_zip(filename, options):
         # don't try to extract from office docs
         magic = File(filename).get_type()
         if "Microsoft" in magic or "Java Jar" in magic or "Composite Document File" in magic:
+            return retlist
+        if "PE32" in magic or "MS-DOS executable" in magic:
             return retlist
 
         extracted = []
