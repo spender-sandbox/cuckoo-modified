@@ -53,6 +53,7 @@ DEFAULT_DLL = None
 SERVICES_PID = None
 MONITORED_SERVICES = False
 LASTINJECT_TIME = None
+NUM_INJECTED = 0
 
 PID = os.getpid()
 PPID = Process(pid=PID).get_parent_pid()
@@ -222,6 +223,7 @@ class PipeHandler(Thread):
         """
         global MONITORED_SERVICES
         global LASTINJECT_TIME
+        global NUM_INJECTED
         try:
             data = ""
             response = "OK"
@@ -380,6 +382,7 @@ class PipeHandler(Thread):
                     if process_id not in PROCESS_LIST:
                         add_pids(process_id)
                     PROCESS_LOCK.release()
+                    NUM_INJECTED += 1
                     log.info("Cuckoomon successfully loaded in process with pid %u.", process_id)
 
                 # In case of PID, the client is trying to notify the creation of
@@ -431,7 +434,7 @@ class PipeHandler(Thread):
                                 # if it's a URL analysis, provide the URL to all processes as
                                 # the "interest" -- this will allow cuckoomon to see in the
                                 # child browser process that a URL analysis is occurring
-                                if self.config.category == "file":
+                                if self.config.category == "file" or NUM_INJECTED > 1:
                                     interest = proc.get_filepath()
                                 else:
                                     interest = self.config.target
