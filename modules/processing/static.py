@@ -469,7 +469,12 @@ class PortableExecutable(object):
         if not self.pe:
             return None
 
-        return "0x{0:08x}".format(self.pe.generate_checksum())
+        retstr = None
+        try:
+            retstr = "0x{0:08x}".format(self.pe.generate_checksum())
+        except:
+            log.warning("Detected outdated version of pefile.  Please update to the latest version at https://github.com/erocarrera/pefile")
+        return retstr
 
     def _get_osversion(self):
         """Get minimum required OS version for PE to execute
