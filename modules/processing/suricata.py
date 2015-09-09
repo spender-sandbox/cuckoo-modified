@@ -83,24 +83,6 @@ class Suricata(Processing):
         sid_blacklist = [
                         # SURICATA FRAG IPv6 Fragmentation overlap
                         2200074,
-                        # SURICATA STREAM 3way handshake async wrong sequence
-                        2210001,
-                        # SURICATA STREAM ESTABLISHED retransmission packet before last ack
-                        2210021,
-                        # SURICATA STREAM 4way handshake SYNACK with wrong SYN
-                        2210012,
-                        # SURICATA STREAM ESTABLISHED SYNACK to server
-                        2210025,
-                        # SURICATA STREAM ESTABLISHED invalid ack
-                        2210029,
-                        # SURICATA STREAM TIMEWAIT ACK with wrong seq
-                        2210042,
-                        # SURICATA STREAM Packet with invalid ack
-                        2210045,
-                        # SURICATA STREAM ESTABLISHED packet out of window
-                        2210020,
-                        # SURICATA STREAM 3way handshake with ack in wrong dir
-                        2210000,
                         # ET INFO InetSim Response from External Source Possible SinkHole
                         2017363,
         ]
@@ -169,7 +151,9 @@ class Suricata(Processing):
             for line in data.splitlines():
                 parsed = json.loads(line)
                 if parsed["event_type"] == "alert":
-                    if parsed["alert"]["signature_id"] not in sid_blacklist:
+                    if (parsed["alert"]["signature_id"] not in sid_blacklist
+                        and not parsed["alert"]["signature"].startswith(
+                            "SURICATA STREAM")):
                         alog = dict()
                         alog["sid"] = parsed["alert"]["signature_id"]
                         alog["srcport"] = parsed["src_port"]
