@@ -1,4 +1,4 @@
-import json
+﻿import json
 import os
 import re
 import socket
@@ -968,7 +968,7 @@ def tasks_iocs(request, task_id, detail=None):
             buf = json.load(jdata)
     if not buf:
         resp = {"error": True,
-                "error_value": "Unable to retrieve report to parse for IOC's"}
+                "error_value": "Unable to retrieve report to parse for IOCs"}
         return jsonize(resp, response=True)
 
     data = {}

@@ -224,7 +224,7 @@ curl {{ config.api.url }}/api/tasks/get/report/[task id]/[format]/
 Note: Format can be json/maec/metadata/all.</pre></td>
             </tr>
             <tr>
-                <td>Task IOC's</td>
+                <td>Task IOCs</td>
                 {% if config.taskiocs.enabled %}
                 <td><span class="label label-success">Yes</span></td>
                 {% else %}
@@ -232,7 +232,7 @@ Note: Format can be json/maec/metadata/all.</pre></td>
                 {% endif %}
                 <td><ul><li>RPS: {{ config.taskiocs.rps }}</li>
                         <li>RPM: {{ config.taskiocs.rpm }}</li></ul></td>
-                <td>View objects of the task report that may contain potential IOC's. Return object will be JSON.</td>
+                <td>View objects of the task report that may contain potential IOCs. Return object will be JSON.</td>
                 <td><a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion" href="#taskiocs">Example</a></td>
             </tr>
             <tr class="collapse" id="taskiocs">
