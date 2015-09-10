@@ -1,4 +1,4 @@
-# Copyright (C) 2010-2015 Cuckoo Foundation, Optiv, Inc. (brad.spengler@optiv.com)
+﻿# Copyright (C) 2010-2015 Cuckoo Foundation, Optiv, Inc. (brad.spengler@optiv.com)
 # This file is part of Cuckoo Sandbox - http://www.cuckoosandbox.org
 # See the file 'docs/LICENSE' for copying permission.
 
@@ -1389,6 +1389,7 @@ def get_vt_consensus(namelist):
         "multi",
         "ransom",
         "autoit",
+        "java",
     ]
 
     finaltoks = defaultdict(int)
