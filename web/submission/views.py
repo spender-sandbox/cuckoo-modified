@@ -10,7 +10,7 @@ import tempfile
 import random
 
 from django.conf import settings
-from django.shortcuts import render_to_response
+from django.shortcuts import redirect, render_to_response
 from django.template import RequestContext
 
 sys.path.append(settings.CUCKOO_PATH)
@@ -295,7 +295,7 @@ def status(request, task_id):
 
     completed = False
     if task.status == "reported":
-        completed = True
+        return redirect('analysis.views.report', task_id=task_id)
 
     status = task.status
     if status == "completed":
