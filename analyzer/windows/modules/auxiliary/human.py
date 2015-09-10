@@ -80,6 +80,13 @@ def foreach_child(hwnd, lparam):
             USER32.keybd_event(0x0d, 0x1c, 2, 0)
             return False
 
+        # we don't want to bother clicking any non-visible child elements, as they
+        # generally won't respond and will cause us to fixate on them for the
+        # rest of the analysis, preventing progress with visible elements
+
+        if not USER32.IsWindowVisible(hwnd):
+            return True
+
         # Check if the button is set as "clickable" and click it.
         for button in buttons:
             if button in textval.lower():
