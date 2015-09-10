@@ -986,7 +986,10 @@ class Office(object):
         """
 
         results = dict()
-        vba = VBA_Parser(filepath)
+        try:
+            vba = VBA_Parser(filepath)
+        except:
+            return results
         results["Metadata"] = dict()
         # The bulk of the metadata checks are in the OLE Structures
         # So don't check if we're dealing with XML.
