@@ -1,4 +1,4 @@
-# Copyright (C) 2010-2015 Cuckoo Foundation.
+﻿# Copyright (C) 2010-2015 Cuckoo Foundation.
 # This file is part of Cuckoo Sandbox - http://www.cuckoosandbox.org
 # See the file 'docs/LICENSE' for copying permission.
 
@@ -20,7 +20,7 @@ def upload_to_host(file_path, dump_path, duplicate):
             infd = open(file_path, "rb")
             buf = infd.read(BUFSIZE)
             while buf:
-                nc.send(buf, retry=False)
+                nc.send(buf, retry=True)
                 buf = infd.read(BUFSIZE)
     except Exception as e:
         log.error("Exception uploading file {0} to host: {1}".format(unicode(file_path).encode("utf-8", "replace"), e))
@@ -59,7 +59,7 @@ class NetlogConnection(object):
         except socket.error as e:
             if retry:
                 self.connect()
-                self.send(data, retry=False)
+                self.send(data, retry=True)
             else:
                 raise
         except Exception as e:
