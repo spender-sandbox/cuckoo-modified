@@ -1,4 +1,4 @@
-# Copyright (C) 2010-2015 Cuckoo Foundation.
+﻿# Copyright (C) 2010-2015 Cuckoo Foundation.
 # This file is part of Cuckoo Sandbox - http://www.cuckoosandbox.org
 # See the file 'docs/LICENSE' for copying permission.
 
@@ -302,7 +302,15 @@ class File:
             return results
 
         try:
-            rules = yara.compile(rulepath)
+            try:
+                filepath = ""
+                if self.guest_paths:
+                    filepath = self.guest_paths[0]
+                elif self.file_name:
+                    filepath = self.file_name
+                rules = yara.compile(rulepath, externals={"filepath":filepath})
+            except:
+                rules = yara.compile(rulepath)
             matches = rules.match(self.file_path)
 
             if getattr(yara, "__version__", None) == "1.7.7":
