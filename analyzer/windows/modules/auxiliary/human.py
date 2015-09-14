@@ -58,6 +58,7 @@ def foreach_child(hwnd, lparam):
         "check online for a solution",
         "don't run",
         "do not ask again until the next update is available",
+        "cancel",
     ]
 
     classname = create_unicode_buffer(128)
