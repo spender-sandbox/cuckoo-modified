@@ -264,5 +264,5 @@ class Suricata(Processing):
             cmd = "cd %s && %s a -p%s -y files.zip %s %s" % (self.logs_path,Z7_PATH,FILES_ZIP_PASS,SURICATA_FILE_LOG,SURICATA_FILES_DIR)
             ret,stdout,stderr = self.cmd_wrapper(cmd)
             if ret != 0:
-                log.warning("Suricata: Failed to create Zip File %s" % (SURICATA_FILES_DIR_FULL_PATH))
+                log.warning("Suricata: Failed to create %s/files.zip" % (self.logs_path))
         return suricata
