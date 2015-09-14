@@ -305,11 +305,11 @@ class File:
             try:
                 filepath = ""
                 filename = ""
+                if self.file_name:
+                    filepath = self.file_name
+                    filename = self.file_name
                 if self.guest_paths:
                     filepath = self.guest_paths[0]
-                elif self.file_name:
-                    filepath = self.file_name
-                filename = self.file_name
                 rules = yara.compile(rulepath, externals={"filepath":filepath, "filename":filename})
             except:
                 rules = yara.compile(rulepath)
