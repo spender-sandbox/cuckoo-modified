@@ -1,4 +1,4 @@
-# Copyright (C) 2010-2015 Cuckoo Foundation.
+﻿# Copyright (C) 2010-2015 Cuckoo Foundation.
 # This file is part of Cuckoo Sandbox - http://www.cuckoosandbox.org
 # See the file 'docs/LICENSE' for copying permission.
 
@@ -14,6 +14,8 @@ class Config:
             for name, raw_value in config.items(section):
                 if name == "file_name":
                     value = config.get(section, name)
+                    if len(value) >= 2 and value[0] == "'" and value[-1] == "'":
+                        value = value[1:-1]
                 else:
                     try:
                         value = config.getboolean(section, name)

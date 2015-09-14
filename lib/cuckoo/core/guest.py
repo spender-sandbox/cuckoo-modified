@@ -1,4 +1,4 @@
-# Copyright (C) 2010-2015 Cuckoo Foundation.
+﻿# Copyright (C) 2010-2015 Cuckoo Foundation.
 # This file is part of Cuckoo Sandbox - http://www.cuckoosandbox.org
 # See the file 'docs/LICENSE' for copying permission.
 
@@ -125,7 +125,7 @@ class GuestManager:
 
         # TODO: deal with unicode URLs.
         if options["category"] == "file":
-            options["file_name"] = sanitize_filename(options["file_name"])
+            options["file_name"] = "'" + sanitize_filename(options["file_name"]) + "'"
 
         # If the analysis timeout is higher than the critical timeout,
         # automatically increase the critical timeout by one minute.
@@ -165,7 +165,8 @@ class GuestManager:
                 data = xmlrpclib.Binary(file_data)
 
                 try:
-                    self.server.add_malware(data, options["file_name"])
+                    # strip off the added surrounding quotes
+                    self.server.add_malware(data, options["file_name"][1:-1])
                 except Exception as e:
                     raise CuckooGuestError("{0}: unable to upload malware to "
                                            "analysis machine: {1}".format(self.id, e))
