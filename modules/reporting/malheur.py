@@ -93,6 +93,8 @@ def mist_convert(results):
             lines.append("service start|" + sanitize_generic(entry))
     if "signatures" in results:
         for entry in results["signatures"]:
+            if entry["name"] == "antivirus_virustotal":
+                continue
             sigline = "sig " + entry["name"] + "|"
             notadded = False
             if entry["data"]:
@@ -129,24 +131,6 @@ def mist_convert(results):
     if "dropped" in results:
         for dropped in results["dropped"]:
             lines.append("file drop|" + "%08x" % (int(dropped["size"]) & 0xfffffc00) + " " + sanitize_generic(dropped["type"]))
-
-    if "static" in results:
-        if "digital_signers" in results["static"] and results["static"]["digital_signers"]:
-            for info in results["static"]["digital_signers"]:
-                lines.append("pe sign|" + sanitize_generic(info["cn"]) + " " + sanitize_generic(info["md5_fingerprint"]))
-        if "pe_imphash" in results["static"] and results["static"]["pe_imphash"]:
-            lines.append("pe imphash|" + sanitize_generic(results["static"]["pe_imphash"]))
-        if "pe_icon" in results["static"] and results["static"]["pe_icon"]:
-            lines.append("pe icon|" + sanitize_generic(results["static"]["pe_icon"]))
-        if "pe_icon_fuzzy" in results["static"] and results["static"]["pe_icon_fuzzy"]:
-            lines.append("pe iconfuzzy|" + sanitize_generic(results["static"]["pe_icon_fuzzy"]))
-        if "pe_versioninfo" in results["static"] and results["static"]["pe_versioninfo"]:
-            for info in results["static"]["pe_versioninfo"]:
-                if info["value"]:
-                    lines.append("pe ver|" + sanitize_generic(info["name"]) + " " + sanitize_generic(info["value"]))
-        if "pe_sections" in results["static"] and results["static"]["pe_sections"]:
-            for section in results["static"]["pe_sections"]:
-                lines.append("pe section|" + sanitize_generic(section["name"]) + " " + "%02x" % int(float(section["entropy"])))
 
     if len(lines) <= 4:
         return ""
