@@ -214,6 +214,9 @@ class GuestManager:
                     error = "unknown error"
 
                 raise CuckooGuestError("Analysis failed: {0}".format(error))
+            elif status == CUCKOO_GUEST_INIT:
+                # means the system must have bluescreened or restarted and now we're getting the initial agent.py request again
+                raise CuckooGuestError("Analysis failed: system restarted unexpectedly")
             else:
                 log.debug("%s: analysis not completed yet (status=%s)",
                           self.id, status)
