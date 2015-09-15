@@ -1,4 +1,4 @@
-# Copyright (C) 2015 Optiv, Inc. (brad.spengler@optiv.com)
+﻿# Copyright (C) 2015 Optiv, Inc. (brad.spengler@optiv.com)
 # This file is part of Cuckoo Sandbox - http://www.cuckoosandbox.org
 # See the file 'docs/LICENSE' for copying permission.
 
@@ -179,7 +179,7 @@ class Malheur(Report):
 
         path, dirs, files = os.walk(reportsdir).next()
         try:
-            subprocess.call(["malheur", "--input.format", "mist", "--input.mist_level", "2", "--cluster.reject_num", "2", "-o", outputfile, "cluster", reportsdir])
+            subprocess.call(["malheur", "--generic.input_format", "mist", "--cluster.reject_num", "2", "-o", outputfile, "cluster", reportsdir])
 
             # replace previous classification state with new results atomically
             os.rename(outputfile, outputfile[:-33])
