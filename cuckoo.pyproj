@@ -28,6 +28,7 @@
     <Content Include="conf\cuckoo.conf" />
     <Content Include="conf\esx.conf" />
     <Content Include="conf\kvm.conf" />
+    <Content Include="conf\malheur.conf" />
     <Content Include="conf\memory.conf" />
     <Content Include="conf\physical.conf" />
     <Content Include="conf\processing.conf" />

@@ -161,6 +161,7 @@ class Malheur(Report):
         @return: Nothing.  Results of this processing are obtained at an arbitrary future time.
         """
         basedir = os.path.join(CUCKOO_ROOT, "storage", "malheur")
+        cfgpath = os.path.join(CUCKOO_ROOT, "conf", "malheur.conf")
         reportsdir = os.path.join(basedir, "reports")
         task_id = str(results["info"]["id"])
         outputfile = os.path.join(basedir, "malheur.txt." + hashlib.md5(str(random.random())).hexdigest())
@@ -179,7 +180,7 @@ class Malheur(Report):
 
         path, dirs, files = os.walk(reportsdir).next()
         try:
-            subprocess.call(["malheur", "--generic.input_format", "mist", "--cluster.reject_num", "2", "-o", outputfile, "cluster", reportsdir])
+            subprocess.call(["malheur", "-c", cfgpath, "-o", outputfile, "cluster", reportsdir])
 
             # replace previous classification state with new results atomically
             os.rename(outputfile, outputfile[:-33])
