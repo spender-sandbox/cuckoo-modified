@@ -1,4 +1,4 @@
-# Copyright (C) 2010-2015 Cuckoo Foundation.
+﻿# Copyright (C) 2010-2015 Cuckoo Foundation.
 # This file is part of Cuckoo Sandbox - http://www.cuckoosandbox.org
 # See the file 'docs/LICENSE' for copying permission.
 
@@ -99,41 +99,6 @@ def create_structure():
         create_folders(root=CUCKOO_ROOT, folders=folders)
     except CuckooOperationalError as e:
         raise CuckooStartupError(e)
-
-def check_version():
-    """Checks version of Cuckoo."""
-    cfg = Config()
-
-    if not cfg.cuckoo.version_check:
-        return
-
-    print(" Checking for updates...")
-
-    url = "http://api.cuckoosandbox.org/checkversion.php"
-    data = urllib.urlencode({"version": CUCKOO_VERSION})
-
-    try:
-        request = urllib2.Request(url, data)
-        response = urllib2.urlopen(request)
-    except (urllib2.URLError, urllib2.HTTPError):
-        print(red(" Failed! ") + "Unable to establish connection.\n")
-        return
-
-    try:
-        response_data = json.loads(response.read())
-    except ValueError:
-        print(red(" Failed! ") + "Invalid response.\n")
-        return
-
-    if not response_data["error"]:
-        if response_data["response"] == "NEW_VERSION":
-            msg = "Cuckoo Sandbox version {0} is available " \
-                  "now.\n".format(response_data["current"])
-            print(red(" Outdated! ") + msg)
-        else:
-            print(green(" Good! ") + "You have the latest version "
-                                     "available.\n")
-
 
 class DatabaseHandler(logging.Handler):
     """Logging to database handler.

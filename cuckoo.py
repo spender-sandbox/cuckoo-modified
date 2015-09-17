@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+﻿#!/usr/bin/env python
 # Copyright (C) 2010-2015 Cuckoo Foundation.
 # This file is part of Cuckoo Sandbox - http://www.cuckoosandbox.org
 # See the file 'docs/LICENSE' for copying permission.
@@ -16,7 +16,7 @@ try:
     from lib.cuckoo.common.exceptions import CuckooDependencyError
     from lib.cuckoo.core.database import Database
     from lib.cuckoo.core.startup import check_working_directory, check_configs, check_signatures, cuckoo_clean
-    from lib.cuckoo.core.startup import check_version, create_structure
+    from lib.cuckoo.core.startup import create_structure
     from lib.cuckoo.core.startup import init_logging, init_modules, init_console_logging
     from lib.cuckoo.core.startup import init_tasks, init_yara
     from lib.cuckoo.core.scheduler import Scheduler
@@ -38,7 +38,6 @@ def cuckoo_init(quiet=False, debug=False, artwork=False, test=False):
     check_working_directory()
     check_configs()
     check_signatures()
-    check_version()
     create_structure()
 
     if artwork:
