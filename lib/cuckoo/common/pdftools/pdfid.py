@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python
+#!/usr/bin/env python
 
 __description__ = 'Tool to test a PDF file'
 __author__ = 'Didier Stevens'
