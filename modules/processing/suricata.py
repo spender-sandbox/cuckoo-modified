@@ -224,6 +224,9 @@ class Suricata(Processing):
                 except:
                     log.warning("failed to load JSON from file log")
                     continue
+                # Some log entries do not have an id
+                if "id" not in d:
+                    continue
                 src_file = "%s/file.%s" % (SURICATA_FILES_DIR_FULL_PATH,d["id"])
                 if os.path.exists(src_file):
                     if SURICATA_FILE_COPY_MAGIC_RE and SURICATA_FILE_COPY_DST_DIR and os.path.exists(SURICATA_FILE_COPY_DST_DIR):
