@@ -255,6 +255,8 @@ class Suricata(Processing):
                         else:
                             file_info["data"] = convert_to_printable(filedata)
                     d["file_info"]=file_info
+                if "/" in d["filename"]:
+                    d["filename"] = d["filename"].split("/")[-1]
                 suricata["files"].append(d)
         else:
             log.warning("Suricata: Failed to find file log at %s" % (SURICATA_FILE_LOG_FULL_PATH))
