@@ -254,7 +254,7 @@ class Suricata(Processing):
                             file_info["data"] = convert_to_printable(filedata[:SURICATA_FILE_BUFFER] + " <truncated>")
                         else:
                             file_info["data"] = convert_to_printable(filedata)
-                    d["file_info"]=file_info
+                    d["file_info"] = file_info
                 if "/" in d["filename"]:
                     d["filename"] = d["filename"].split("/")[-1]
                 suricata["files"].append(d)
