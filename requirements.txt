@@ -4,6 +4,7 @@ pymongo
 bottle
 pefile
 django
+django-ratelimit
 chardet
 nose
 jsbeautifier
