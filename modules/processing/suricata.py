@@ -224,8 +224,11 @@ class Suricata(Processing):
                 except:
                     log.warning("failed to load JSON from file log")
                     continue
-                if d["stored"]==True:
-                    src_file = "%s/file.%s" % (SURICATA_FILES_DIR_FULL_PATH,d["id"])
+                # Some log entries do not have an id
+                if "id" not in d:
+                    continue
+                src_file = "%s/file.%s" % (SURICATA_FILES_DIR_FULL_PATH,d["id"])
+                if os.path.exists(src_file):
                     if SURICATA_FILE_COPY_MAGIC_RE and SURICATA_FILE_COPY_DST_DIR and os.path.exists(SURICATA_FILE_COPY_DST_DIR):
                         try:
                             m = re.search(SURICATA_FILE_COPY_MAGIC_RE,d["magic"])
@@ -254,7 +257,9 @@ class Suricata(Processing):
                             file_info["data"] = convert_to_printable(filedata[:SURICATA_FILE_BUFFER] + " <truncated>")
                         else:
                             file_info["data"] = convert_to_printable(filedata)
-                    d["file_info"]=file_info
+                    d["file_info"] = file_info
+                if "/" in d["filename"]:
+                    d["filename"] = d["filename"].split("/")[-1]
                 suricata["files"].append(d)
         else:
             log.warning("Suricata: Failed to find file log at %s" % (SURICATA_FILE_LOG_FULL_PATH))
