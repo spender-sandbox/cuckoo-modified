@@ -1106,6 +1106,7 @@ class Memory(Processing):
         @return: volatility results dict.
         """
         self.key = "memory"
+        self.voptions = Config("memory")
 
         results = {}
         if "machine" not in self.task or not self.task["machine"] or not self.task["memory"]:
@@ -1121,6 +1122,11 @@ class Memory(Processing):
                     results = vol.run(manager=machine_manager, vm=task_machine)
                 except Exception:
                     log.exception("Generic error executing volatility")
+                    if self.voptions.basic.delete_memdump_on_exception:
+                        try:
+                            os.remove(self.memory_path)
+                        except OSError:
+                            log.error("Unable to delete memory dump file at path \"%s\" ", self.memory_path)
             else:
                 log.error("Memory dump not found: to run volatility you have to enable memory_dump")
         else:
