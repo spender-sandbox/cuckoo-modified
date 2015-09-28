@@ -263,15 +263,10 @@
         {% endif %}
         {% endif %}
 
-        {% if results.strings %}
+        {% if results.strings and not summary_report %}
             <div>
-                {% if summary_report %}
-                <h4>Strings</h4>
-                <div id="strings">
-                {% else %}
                 <h4><a href="javascript:showHide('strings');">Strings</a></h4>
                 <div id="strings" style="display: none;">
-                {% endif %}
                     {% for str in results.strings %}
                         <div><span class="mono">{{str}}</span></div>
                     {% endfor %}
