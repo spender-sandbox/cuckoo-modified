@@ -8,7 +8,7 @@ rule DarkCometConfig
         description = "Configuration for DarkComet"
 
     strings:
-        $buf = /#BEGIN\sDARKCOMET[A-Za-z0-9\r\n\s\-\=\_\{\}\.:]*\#EOF\sDARKCOMET\sDATA\s--/s
+        $buf = /#BEGIN\sDARKCOMET[A-Za-z0-9\r\n\s\-\=\_\{\}\.:\\\/]*\#EOF\sDARKCOMET\sDATA\s--/s
 
     condition:
         $buf
