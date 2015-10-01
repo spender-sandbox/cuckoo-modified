@@ -20,8 +20,9 @@ sys.path.append(settings.CUCKOO_PATH)
 
 from lib.cuckoo.common.config import Config
 from lib.cuckoo.common.constants import CUCKOO_ROOT, CUCKOO_VERSION
-from lib.cuckoo.common.utils import store_temp_file, delete_folder
 from lib.cuckoo.common.quarantine import unquarantine
+from lib.cuckoo.common.utils import store_temp_file, delete_folder
+from lib.cuckoo.common.utils import convert_to_printable
 from lib.cuckoo.core.database import Database, Task
 from lib.cuckoo.core.database import TASK_RUNNING, TASK_REPORTED
 
@@ -282,7 +283,7 @@ def tasks_create_file(request):
                                       )
                 if task_ids_new:
                     task_ids.extend(task_ids_new)
-                    
+
         if len(task_ids) > 0:
             resp["task_ids"] = task_ids
             callback = apiconf.filecreate.get("status")
@@ -710,6 +711,9 @@ def tasks_list(request, offset=None, limit=None):
             sample = db.view_sample(row.sample_id)
             task["sample"] = sample.to_dict()
 
+        if task["target"]:
+            task["target"] = convert_to_printable(task["target"])
+
         resp["data"].append(task)
     return jsonize(resp, response=True)
 
@@ -979,9 +983,12 @@ def tasks_iocs(request, task_id, detail=None):
     data["malscore"] = buf["malscore"]
     data["info"] = buf["info"]
     del data["info"]["custom"]
-    del data["info"]["machine"]["manager"]
-    del data["info"]["machine"]["label"]
-    del data["info"]["machine"]["id"]
+    # The machines key won't exist in cases where an x64 binary is submitted
+    # when there are no x64 machines.
+    if "machine" in data["info"]:
+        del data["info"]["machine"]["manager"]
+        del data["info"]["machine"]["label"]
+        del data["info"]["machine"]["id"]
     data["signatures"] = []
     # Grab sigs
     for sig in buf["signatures"]:
@@ -1000,17 +1007,18 @@ def tasks_iocs(request, task_id, detail=None):
     data["network"] = {}
     if "network" in buf.keys():
         data["network"]["traffic"] = {}
-        data["network"]["traffic"]["tcp"] = len(buf["network"]["tcp"])
-        data["network"]["traffic"]["udp"] = len(buf["network"]["udp"])
-        data["network"]["traffic"]["irc"] = len(buf["network"]["irc"])
-        data["network"]["traffic"]["dns"] = len(buf["network"]["dns"])
-        data["network"]["traffic"]["http"] = len(buf["network"]["http"])
-        data["network"]["traffic"]["smtp"] = len(buf["network"]["smtp"])
-        data["network"]["hosts"] = buf["network"]["hosts"]
+        for netitem in ["tcp", "udp", "irc", "dns", "smtp", "hosts"]:
+            if netitem in buf["network"]:
+                data["network"][netitem] = len(buf["network"][netitem])
+            else:
+                data["network"][netitem] = 0
+        data["network"]["traffic"]["http_count"] = len(buf["network"]["http"])
+        data["network"]["traffic"]["http"] = buf["network"]["http"]
     data["network"]["ids"] = {}
     if "suricata" in buf.keys():
         data["network"]["ids"]["totalalerts"] = len(buf["suricata"]["alerts"])
         data["network"]["ids"]["alerts"] = buf["suricata"]["alerts"]
+        data["network"]["ids"]["http"] = buf["suricata"]["http"]
         data["network"]["ids"]["totalfiles"] = len(buf["suricata"]["files"])
         data["network"]["ids"]["files"] = list()
         for surifile in buf["suricata"]["files"]:
