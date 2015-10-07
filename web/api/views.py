@@ -1081,6 +1081,10 @@ def tasks_iocs(request, task_id, detail=None):
         resp = {"error": False, "data": data}
         return jsonize(resp, response=True)
 
+    if "static" in buf:
+        if "pe_versioninfo" in buf["static"] and buf["static"]["pe_versioninfo"]:
+            data["static"]["pe"]["pe_versioninfo"] = buf["static"]["pe_versioninfo"]
+
     if "behavior" in buf and "summary" in buf["behavior"]:
         if "read_files" in buf["behavior"]["summary"]:
             data["files"]["read"] = buf["behavior"]["summary"]["read_files"]
