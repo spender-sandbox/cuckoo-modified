@@ -278,6 +278,11 @@ class MongoDB(Report):
                 report["suri_file_cnt"] = len(results["suricata"]["files"])
             if results["suricata"].has_key("http") and len(results["suricata"]["http"]) > 0:
                 report["suri_http_cnt"] = len(results["suricata"]["http"])
+        
+        # Create an index based on the info.id dict key. Increases overall scalability
+        # with large amounts of data.
+        # Note: Silently ignores the creation if the index already exists.
+        self.db.analysis.create_index("info.id", background=True)
         # Store the report and retrieve its object id.
         try:
             self.db.analysis.save(report)
