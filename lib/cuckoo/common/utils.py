@@ -151,6 +151,8 @@ def pretty_print_retval(category, api_name, status, retval):
             0x00002af9 : "WSAHOST_NOT_FOUND",
             0x80000005 : "BUFFER_OVERFLOW",
             0x80000006 : "NO_MORE_FILES",
+            0x8000000a : "HANDLES_CLOSED",
+            0x8000001a : "NO_MORE_ENTRIES",
             0xc0000001 : "UNSUCCESSFUL",
             0xc0000002 : "NOT_IMPLEMENTED",
             0xc0000004 : "INFO_LENGTH_MISMATCH",

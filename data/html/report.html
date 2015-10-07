@@ -9,11 +9,11 @@
     {% endif %}
     {% include "sections/signatures.html" %}
     {% include "sections/screenshots.html" %}
+    {% include "sections/network.html" %}
     {% if results.info.category == "file" %}
         {% include "sections/static.html" %}
     {% endif %}
     {% include "sections/dropped.html" %}
-    {% include "sections/network.html" %}
     {% include "sections/behavior.html" %}
     {% include "sections/volatility.html" %} 
 {% endblock %}
