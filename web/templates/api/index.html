@@ -63,6 +63,7 @@ Note: machine is optional.</pre></td>
             </tr>
             <tr class="collapse" id="fileview">
               <td colspan="5"><pre>curl {{ config.api.url }}/api/files/view/md5/[md5 hash]/
+curl {{ config.api.url }}/api/files/view/sha1/[sha1 hash]/
 curl {{ config.api.url }}/api/files/view/sha256/[sha256 hash]/
 curl {{ config.api.url }}/api/files/view/id/[sample id]/</pre></td>
             </tr>
@@ -80,6 +81,7 @@ curl {{ config.api.url }}/api/files/view/id/[sample id]/</pre></td>
             </tr>
             <tr class="collapse" id="tasksearch">
               <td colspan="5"><pre>curl {{ config.api.url }}/api/tasks/search/md5/[md5 hash]/
+curl {{ config.api.url }}/api/tasks/search/sha1/[sha1 hash]/
 curl {{ config.api.url }}/api/tasks/search/sha256/[sha256 hash]/</pre></td>
             </tr>
             <tr>
@@ -340,12 +342,13 @@ curl {{ config.api.url }}/api/tasks/get/procmemory/[task id]/[pid]/</pre></td>
                 {% endif %}
                 <td><ul><li>RPS: {{ config.sampledl.rps }}</li>
                         <li>RPM: {{ config.sampledl.rpm }}</li></ul></td>
-                <td>Download a sample from a Task by Task ID/MD5/SHA256. Return object will be octet-stream. (.bin)</td>
+                <td>Download a sample from a Task by Task ID/MD5/SHA1/SHA256. Return object will be octet-stream. (.bin)</td>
                 <td><a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion" href="#sampledl">Example</a></td>
             </tr>
             <tr class="collapse" id="sampledl">
               <td colspan="5"><pre>curl {{ config.api.url }}/api/files/get/task/[task id]/
 curl {{ config.api.url }}/api/files/get/md5/[md5 hash]/
+curl {{ config.api.url }}/api/files/get/sha1/[sha1 hash]/
 curl {{ config.api.url }}/api/files/get/sha256/[sha256 hash]/</pre></td>
             </tr>
             <tr>

@@ -280,15 +280,19 @@ def tasks_report(task_id, report_format="json"):
 
 @route("/files/view/md5/<md5>", method="GET")
 @route("/v1/files/view/md5/<md5>", method="GET")
+@route("/files/view/sha1/<md5>", method="GET")
+@route("/v1/files/view/sha1/<md5>", method="GET")
 @route("/files/view/sha256/<sha256>", method="GET")
 @route("/v1/files/view/sha256/<sha256>", method="GET")
 @route("/files/view/id/<sample_id:int>", method="GET")
 @route("/v1/files/view/id/<sample_id:int>", method="GET")
-def files_view(md5=None, sha256=None, sample_id=None):
+def files_view(md5=None, sha1=None, sha256=None, sample_id=None):
     response = {}
 
     if md5:
         sample = db.find_sample(md5=md5)
+    elif sha1:
+        sample = db.find_sample(sha1=sha1)
     elif sha256:
         sample = db.find_sample(sha256=sha256)
     elif sample_id:

@@ -1196,15 +1196,19 @@ class Database(object):
         return sample
 
     @classlock
-    def find_sample(self, md5=None, sha256=None):
-        """Search samples by MD5.
+    def find_sample(self, md5=None, sha1=None, sha256=None):
+        """Search samples by MD5, SHA1, or SHA256.
         @param md5: md5 string
+        @param sha1: sha1 string
+        @param sha256: sha256 string
         @return: matches list
         """
         session = self.Session()
         try:
             if md5:
                 sample = session.query(Sample).filter_by(md5=md5).first()
+            elif sha1:
+                sample = session.query(Sample).filter_by(sha1=sha1).first()
             elif sha256:
                 sample = session.query(Sample).filter_by(sha256=sha256).first()
         except SQLAlchemyError as e:

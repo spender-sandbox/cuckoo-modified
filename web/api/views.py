@@ -382,7 +382,7 @@ if apiconf.fileview.get("enabled"):
     rateblock = True
 @ratelimit(key="ip", rate=raterps, block=rateblock)
 @ratelimit(key="ip", rate=raterpm, block=rateblock)
-def files_view(request, md5=None, sha256=None, sample_id=None):
+def files_view(request, md5=None, sha1=None, sha256=None, sample_id=None):
     if request.method != "GET":
         resp = {"error": True, "error_value": "Method not allowed"}
         return jsonize(resp, response=True)
@@ -393,7 +393,7 @@ def files_view(request, md5=None, sha256=None, sample_id=None):
         return jsonize(resp, response=True)
 
     resp = {}
-    if md5 or sha256 or sample_id:
+    if md5 or sha1 or sha256 or sample_id:
         resp["error"] = False
         if md5:
             if not apiconf.fileview.get("md5"):
@@ -402,17 +402,24 @@ def files_view(request, md5=None, sha256=None, sample_id=None):
                 return jsonize(resp, response=True)
 
             sample = db.find_sample(md5=md5)
-        if sha256:
+        elif sha1:
+            if not apiconf.fileview.get("sha1"):
+                resp = {"error": True,
+                        "error_value": "File View by SHA1 is Disabled"}
+                return jsonize(resp, response=True)
+
+            sample = db.find_sample(sha1=sha1)
+        elif sha256:
             if not apiconf.fileview.get("sha256"):
                 resp = {"error": True,
-                        "error_value": "File View by MD5 is Disabled"}
+                        "error_value": "File View by SHA256 is Disabled"}
                 return jsonize(resp, response=True)
 
             sample = db.find_sample(sha256=sha256)
-        if sample_id:
+        elif sample_id:
             if not apiconf.fileview.get("id"):
                 resp = {"error": True,
-                        "error_value": "File View by MD5 is Disabled"}
+                        "error_value": "File View by ID is Disabled"}
                 return jsonize(resp, response=True)
 
             sample = db.view_sample(sample_id)
@@ -429,7 +436,7 @@ if apiconf.tasksearch.get("enabled"):
     rateblock = True
 @ratelimit(key="ip", rate=raterps, block=rateblock)
 @ratelimit(key="ip", rate=raterpm, block=rateblock)
-def tasks_search(request, md5=None, sha256=None):
+def tasks_search(request, md5=None, sha1=None, sha256=None):
     resp = {}
     if request.method != "GET":
         resp = {"error": True, "error_value": "Method not allowed"}
@@ -440,7 +447,7 @@ def tasks_search(request, md5=None, sha256=None):
                 "error_value": "Task Search API is Disabled"}
         return jsonize(resp, response=True)
 
-    if md5 or sha256:
+    if md5 or sha1 or sha256:
         resp["error"] = False
         if md5:
             if not apiconf.tasksearch.get("md5"):
@@ -449,7 +456,14 @@ def tasks_search(request, md5=None, sha256=None):
                 return jsonize(resp, response=True)
 
             sample = db.find_sample(md5=md5)
-        if sha256:
+        elif sha1:
+            if not apiconf.tasksearch.get("sha1"):
+                resp = {"error": True,
+                        "error_value": "Task Search by SHA1 is Disabled"}
+                return jsonize(resp, response=True)
+
+            sample = db.find_sample(sha1=sha1)
+        elif sha256:
             if not apiconf.tasksearch.get("sha256"):
                 resp = {"error": True,
                         "error_value": "Task Search by SHA256 is Disabled"}
@@ -1434,14 +1448,16 @@ def get_files(request, stype, value):
 
     if stype == "md5":
         file_hash = db.find_sample(md5=value).to_dict()["sha256"]
-    if stype == "task":
+    elif stype == "sha1":
+        file_hash = db.find_sample(sha1=value).to_dict()["sha256"]
+    elif stype == "task":
         check = validate_task(value)
         if check["error"]:
             return jsonize(check, response=True)
 
         sid = db.view_task(value).to_dict()["sample_id"]
         file_hash = db.view_sample(sid).to_dict()["sha256"]
-    if stype == "sha256":
+    elif stype == "sha256":
         file_hash = value
     sample = os.path.join(CUCKOO_ROOT, "storage", "binaries", file_hash)
     if os.path.exists(sample):
