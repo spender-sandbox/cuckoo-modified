@@ -75,7 +75,8 @@
             {% else %}
             <h4><a href="javascript:showHide('tcp');">TCP Connections</a></h4>
             <div id="tcp" style="display: none;">
-                    <table class="table table-striped table-bordered">
+           {% endif %}
+                     <table class="table table-striped table-bordered">
                         <tr>
                             <th>IP Address</th>
                             <th>Port</th>
@@ -99,7 +100,8 @@
             {% else %}
             <h4><a href="javascript:showHide('udp');">UDP Connections</a></h4>
             <div id="udp" style="display: none;">
-                    <table class="table table-striped table-bordered">
+            {% endif %}
+                     <table class="table table-striped table-bordered">
                         <tr>
                             <th>IP Address</th>
                             <th>Port</th>
@@ -123,7 +125,8 @@
             {% else %}
             <h4><a href="javascript:showHide('http');">HTTP Requests</a></h4>
             <div id="http" style="display: none;">
-                <table class="table table-striped table-bordered">
+            {% endif %}
+                 <table class="table table-striped table-bordered">
                     <tr>
                         <th>URL</th>
                         <th>Data</th>
@@ -147,7 +150,8 @@
             {% else %}
             <h4><a href="javascript:showHide('smtp');">SMTP Requests</a></h4>
             <div id="smtp" style="display: none;">
-                <table class="table table-striped table-bordered">
+            {% endif %}
+                 <table class="table table-striped table-bordered">
                     <tr>
                         <th>Destination</th>
                         <th>Data</th>
@@ -171,7 +175,8 @@
             {% else %}
             <h4><a href="javascript:showHide('irc');">IRC Requests</a></h4>
             <div id="irc" style="display: none;">
-                <table class="table table-striped table-bordered">
+            {% endif %}
+                 <table class="table table-striped table-bordered">
                     <tr>
                         <th>Command</th>
                         <th>Params</th>
@@ -197,6 +202,7 @@
             {% else %}
             <h4><a href="javascript:showHide('icmp');">ICMP Requests</a></h4>
             <div id="icmp" style="display: none;">
+            {% endif %}
                 <table class="table table-striped table-bordered">
                     <tr>
                        <th>Source</th>
