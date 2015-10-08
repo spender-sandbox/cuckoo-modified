@@ -1021,13 +1021,14 @@ def tasks_iocs(request, task_id, detail=None):
     data["network"] = {}
     if "network" in buf.keys():
         data["network"]["traffic"] = {}
-        for netitem in ["tcp", "udp", "irc", "dns", "smtp", "hosts"]:
+        for netitem in ["tcp", "udp", "irc", "http", "dns", "smtp", "hosts", "domains"]:
             if netitem in buf["network"]:
-                data["network"][netitem] = len(buf["network"][netitem])
+                data["network"]["traffic"][netitem + "_count"] = len(buf["network"][netitem])
             else:
-                data["network"][netitem] = 0
-        data["network"]["traffic"]["http_count"] = len(buf["network"]["http"])
+                data["network"]["traffic"][netitem + "_count"] = 0
         data["network"]["traffic"]["http"] = buf["network"]["http"]
+        data["network"]["traffic"]["hosts"] = buf["network"]["hosts"]
+        data["network"]["traffic"]["domains"] = buf["network"]["domains"]
     data["network"]["ids"] = {}
     if "suricata" in buf.keys():
         data["network"]["ids"]["totalalerts"] = len(buf["suricata"]["alerts"])
