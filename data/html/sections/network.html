@@ -57,7 +57,10 @@
                         <td><span class="mono">{{dns.request}}</span></td>
                         <td>
                             {% for a in dns.answers %}
-                                <span class="mono">{{a.type}} {{a.data|replace("\n","<br>\n")}}</span>
+                                <span class="mono">{{a.type}} {{a.data}}</span>
+                                {%  if not loop.last %}
+                                <br>
+                                {% endif %}
                             {% endfor %}
                         </td>
                     </tr>
