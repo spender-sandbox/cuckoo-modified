@@ -17,6 +17,7 @@ from lib.cuckoo.common.objects import File
 try:
     from jinja2.environment import Environment
     from jinja2.loaders import FileSystemLoader
+    from jinja2 import UndefinedError, TemplateNotFound, TemplateSyntaxError, TemplateAssertionError
     HAVE_JINJA2 = True
 except ImportError:
     HAVE_JINJA2 = False
@@ -72,12 +73,19 @@ class ReportHTMLSummary(Report):
         env = Environment(autoescape=True)
         env.loader = FileSystemLoader(os.path.join(CUCKOO_ROOT,
                                                    "data", "html"))
-
         try:
             tpl = env.get_template("report.html")
-            html = tpl.render({"results": results, "summary_report" : True })
-        except Exception as e:
-            raise CuckooReportError("Failed to generate summary HTML report: %s" % e)
+            html = tpl.render({"results": results, "summary_report": True})
+        except UndefinedError as e:
+            raise CuckooReportError("Failed to generate summary HTML report: {} ".format(e))
+        except TemplateNotFound as e:
+            raise CuckooReportError("Failed to generate summary HTML report: {} {} ".format(e, e.name))
+        except TemplateSyntaxError as e:
+            raise CuckooReportError("Failed to generate summary HTML report: {} on {}, line {} ".format(e, e.name,
+                                                                                                        e.lineno))
+        except TemplateAssertionError as e:
+            raise CuckooReportError("Failed to generate summary HTML report: {} in {}, line {} ".format(e, e.name,
+                                                                                                        e.lineno))
         
         try:
             with codecs.open(os.path.join(self.reports_path, "summary-report.html"), "w", encoding="utf-8") as report:

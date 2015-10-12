@@ -20,7 +20,7 @@
                         </tr>
                         {% for host in results.network.hosts %}
                        <tr>
-                            {% if host.ip|slice:":7" != "192.168" %}
+                            {% if host.ip[:7] != "192.168" %}
                                 {% if "hostname" in host and host.hostname == "" %}
                                     <td><span class="mono">Y</span></td>
                                 {% elif "hostname" in host %}
@@ -56,8 +56,8 @@
                     <tr>
                         <td><span class="mono">{{dns.request}}</span></td>
                         <td>
-                            {% for a in dns.awnsers %}
-                                <span class="mono">{{a.type}} {{a.data}}</span>
+                            {% for a in dns.answers %}
+                                <span class="mono">{{a.type}} {{a.data|replace("\n","<br>\n")}}</span>
                             {% endfor %}
                         </td>
                     </tr>
