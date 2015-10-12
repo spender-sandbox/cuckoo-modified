@@ -79,12 +79,12 @@ class ReportHTMLSummary(Report):
         except UndefinedError as e:
             raise CuckooReportError("Failed to generate summary HTML report: {} ".format(e))
         except TemplateNotFound as e:
-            raise CuckooReportError("Failed to generate summary HTML report: {} - () ".format(e, e.name))
+            raise CuckooReportError("Failed to generate summary HTML report: {} {} ".format(e, e.name))
         except TemplateSyntaxError as e:
-            raise CuckooReportError("Failed to generate summary HTML report: {} - (), line {} ".format(e, e.name,
+            raise CuckooReportError("Failed to generate summary HTML report: {} on {}, line {} ".format(e, e.name,
                                                                                                      e.lineno))
         except TemplateAssertionError as e:
-            raise CuckooReportError("Failed to generate summary HTML report: {} - (), line {} ".format(e, e.name,
+            raise CuckooReportError("Failed to generate summary HTML report: {} in {}, line {} ".format(e, e.name,
                                                                                                      e.lineno))
         
         try:
