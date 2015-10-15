@@ -181,6 +181,7 @@ def pretty_print_retval(category, api_name, status, retval):
             0xc0000135 : "DLL_NOT_FOUND",
             0xc0000139 : "ENTRYPOINT_NOT_FOUND",
             0xc0000142 : "DLL_INIT_FAILED",
+            0xc000014b : "PIPE_BROKEN",
             0xc0000225 : "NOT_FOUND"
     }.get(val, None)
 
