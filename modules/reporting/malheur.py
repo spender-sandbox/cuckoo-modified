@@ -1,4 +1,4 @@
-# Copyright (C) 2015 Accuvant, Inc. (bspengler@accuvant.com)
+# Copyright (C) 2015 Optiv, Inc. (brad.spengler@optiv.com)
 # This file is part of Cuckoo Sandbox - http://www.cuckoosandbox.org
 # See the file 'docs/LICENSE' for copying permission.
 
@@ -93,6 +93,8 @@ def mist_convert(results):
             lines.append("service start|" + sanitize_generic(entry))
     if "signatures" in results:
         for entry in results["signatures"]:
+            if entry["name"] == "antivirus_virustotal":
+                continue
             sigline = "sig " + entry["name"] + "|"
             notadded = False
             if entry["data"]:
@@ -130,22 +132,6 @@ def mist_convert(results):
         for dropped in results["dropped"]:
             lines.append("file drop|" + "%08x" % (int(dropped["size"]) & 0xfffffc00) + " " + sanitize_generic(dropped["type"]))
 
-    if "static" in results:
-        if "digital_signers" in results["static"] and results["static"]["digital_signers"]:
-            for info in results["static"]["digital_signers"]:
-                lines.append("pe sign|" + sanitize_generic(info["cn"]) + " " + sanitize_generic(info["md5_fingerprint"]))
-        if "pe_imphash" in results["static"] and results["static"]["pe_imphash"]:
-            lines.append("pe imphash|" + sanitize_generic(results["static"]["pe_imphash"]))
-        if "pe_icon" in results["static"] and results["static"]["pe_icon"]:
-            lines.append("pe icon|" + sanitize_generic(results["static"]["pe_icon"]))
-        if "pe_versioninfo" in results["static"] and results["static"]["pe_versioninfo"]:
-            for info in results["static"]["pe_versioninfo"]:
-                if info["value"]:
-                    lines.append("pe ver|" + sanitize_generic(info["name"]) + " " + sanitize_generic(info["value"]))
-        if "pe_sections" in results["static"] and results["static"]["pe_sections"]:
-            for section in results["static"]["pe_sections"]:
-                lines.append("pe section|" + sanitize_generic(section["name"]) + " " + "%02x" % int(float(section["entropy"])))
-
     if len(lines) <= 4:
         return ""
 
@@ -159,6 +145,7 @@ class Malheur(Report):
         @return: Nothing.  Results of this processing are obtained at an arbitrary future time.
         """
         basedir = os.path.join(CUCKOO_ROOT, "storage", "malheur")
+        cfgpath = os.path.join(CUCKOO_ROOT, "conf", "malheur.conf")
         reportsdir = os.path.join(basedir, "reports")
         task_id = str(results["info"]["id"])
         outputfile = os.path.join(basedir, "malheur.txt." + hashlib.md5(str(random.random())).hexdigest())
@@ -177,7 +164,7 @@ class Malheur(Report):
 
         path, dirs, files = os.walk(reportsdir).next()
         try:
-            subprocess.call(["malheur", "--input.format", "mist", "--input.mist_level", "2", "--cluster.reject_num", "2", "-o", outputfile, "cluster", reportsdir])
+            subprocess.call(["malheur", "-c", cfgpath, "-o", outputfile, "cluster", reportsdir])
 
             # replace previous classification state with new results atomically
             os.rename(outputfile, outputfile[:-33])

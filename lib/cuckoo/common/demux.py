@@ -1,4 +1,4 @@
-# Copyright (C) 2015 Accuvant, Inc. (bspengler@accuvant.com)
+# Copyright (C) 2015 Optiv, Inc. (brad.spengler@optiv.com)
 # This file is part of Cuckoo Sandbox - http://www.cuckoosandbox.org
 # See the file 'docs/LICENSE' for copying permission.
 
@@ -22,7 +22,9 @@ def demux_zip(filename, options):
     try:
         # don't try to extract from office docs
         magic = File(filename).get_type()
-        if "Microsoft" in magic or "Java Jar" in magic:
+        if "Microsoft" in magic or "Java Jar" in magic or "Composite Document File" in magic:
+            return retlist
+        if "PE32" in magic or "MS-DOS executable" in magic:
             return retlist
 
         extracted = []
@@ -51,7 +53,12 @@ def demux_zip(filename, options):
                 ext = ext.lower()
                 if ext == "" and len(basename) and basename[0] == ".":
                     continue
-                extensions = ["", ".exe", ".dll", ".pdf", ".doc", ".ppt", ".pptx", ".docx", ".xls", ".msi", ".bin", ".scr"]
+                extensions = [
+                    "", ".exe", ".dll", ".jar", ".pdf", ".msi", ".bin", ".scr", ".zip", ".htm", ".html", 
+                    ".doc", ".dot", ".docx", ".dotx", ".docm", ".dotm", ".docb", 
+                    ".xls", ".xlt", ".xlm", ".xlsx", ".xltx", ".xlsm", ".xltm", ".xlsb", ".xla", ".xlam", ".xll", ".xlw",
+                    ".ppt", ".pot", ".pps", ".pptx", ".pptm", ".potx", ".potm", ".ppam", ".ppsx", ".ppsm", ".sldx", ".sldm"
+                ]
                 for theext in extensions:
                     if ext == theext:
                         extracted.append(info.filename)
@@ -115,7 +122,12 @@ def demux_rar(filename, options):
                 ext = ext.lower()
                 if ext == "" and len(basename) and basename[0] == ".":
                     continue
-                extensions = ["", ".exe", ".dll", ".pdf", ".doc", ".ppt", ".pptx", ".docx", ".xls", ".msi", ".bin", ".scr"]
+                extensions = [
+                    "", ".exe", ".dll", ".jar", ".pdf", ".msi", ".bin", ".scr", ".zip", ".htm", ".html", 
+                    ".doc", ".dot", ".docx", ".dotx", ".docm", ".dotm", ".docb", 
+                    ".xls", ".xlt", ".xlm", ".xlsx", ".xltx", ".xlsm", ".xltm", ".xlsb", ".xla", ".xlam", ".xll", ".xlw",
+                    ".ppt", ".pot", ".pps", ".pptx", ".pptm", ".potx", ".potm", ".ppam", ".ppsx", ".ppsm", ".sldx", ".sldm"
+                ]
                 for theext in extensions:
                     if ext == theext:
                         extracted.append(info.filename)

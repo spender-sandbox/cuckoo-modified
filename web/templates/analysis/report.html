@@ -19,11 +19,13 @@ $(function() {
 </script>
 <div class="row">
     <div class="col-md-6"><p style="margin-bottom: 10px;"><img src="{{ STATIC_URL }}graphic/cuckoo.png" /></p></div>
+    {% if analysis.info.category == "file" and analysis.target %}
     <div class="col-md-6" style="text-align: right;"><a class="btn btn-primary" href="{% url "compare.views.left" analysis.info.id %}">Compare this analysis to...</a></div>
+    {% endif %}
 </div>
 <ul class="nav nav-tabs">
     <li class="active"><a href="#overview" data-toggle="tab">Quick Overview</a></li>
-    {% if analysis.static %}<li><a href="#static" data-toggle="tab">Static Analysis</a></li>{% endif %}
+    {% if analysis.info.category == "file" or config.virustotal %}<li><a href="#static" data-toggle="tab">Static Analysis</a></li>{% endif %}
     {% if analysis.behavior.processes %}<li><a href="#behavior" data-toggle="tab" id="graph_hook">Behavioral Analysis</a></li>{% endif %}
     <li><a href="#network" data-toggle="tab">Network Analysis</a></li>
     {% if analysis.dropped|length %}
@@ -33,7 +35,13 @@ $(function() {
     {% endif %}
     {% if analysis.procmemory %}<li><a href="#procmemory" data-toggle="tab">Process Memory</a></li>{% endif %}
     {% if analysis.memory %}<li><a href="#memory" data-toggle="tab">Memory Analysis</a></li>{% endif %}
-    {% if config.malheur %}<li><a href="#similar" data-toggle="tab">Similar</a></li>{% endif %}
+    {% if config.malheur %}
+    {% if similar|length %}
+        <li><a href="#similar" data-toggle="tab">Similar ({{similar|length}})</a></li>
+    {% else %}
+        <li><a href="#similar" data-toggle="tab">Similar</a></li>
+    {% endif %}
+    {% endif %}
     <li><a href="#reports" data-toggle="tab">Reports</a></li>
     {% if settings.COMMENTS %}
         {% if analysis.info.comments|length %}
@@ -42,13 +50,14 @@ $(function() {
             <li><a href="#comments" data-toggle="tab">Comments</a></li>
         {% endif %}
     {% endif %}
+    <li><a href="#statistics" data-toggle="tab">Statistics</a></li>
     <li><a href="#admin" data-toggle="tab">Admin</a></li>
 </ul>
 <div class="tab-content">
     <div class="tab-pane fade in active" id="overview">
         {% include "analysis/overview/index.html" %}
     </div>
-    {% if analysis.static %}
+    {% if analysis.static or analysis.strings or analysis.virustotal %}
     <div class="tab-pane fade" id="static">
         {% include "analysis/static/index.html" %}
     </div>
@@ -87,6 +96,9 @@ $(function() {
         {% include "analysis/comments/index.html" %}
     </div>
     {% endif %}
+    <div class="tab-pane fade" id="statistics">
+        {% include "analysis/statistics/index.html" %}
+    </div>
     <div class="tab-pane fade" id="admin">
         {% include "analysis/admin/index.html" %}
     </div>

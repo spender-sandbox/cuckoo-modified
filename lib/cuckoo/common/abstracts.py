@@ -1,4 +1,4 @@
-# Copyright (C) 2010-2015 Cuckoo Foundation, Accuvant, Inc. (bspengler@accuvant.com).
+# Copyright (C) 2010-2015 Cuckoo Foundation, Optiv, Inc. (brad.spengler@optiv.com).
 # This file is part of Cuckoo Sandbox - http://www.cuckoosandbox.org
 # See the file 'docs/LICENSE' for copying permission.
 
@@ -150,7 +150,7 @@ class Machinery(object):
                                     resultserver_port=port)
             except (AttributeError, CuckooOperationalError) as e:
                 log.warning("Configuration details about machine %s "
-                            "are missing: %s", machine_id, e)
+                            "are missing: %s", machine_id.strip(), e)
                 continue
 
     def _initialize_check(self):
@@ -641,6 +641,12 @@ class Processing(object):
         self.pmemory_path = os.path.join(self.analysis_path, "memory")
         self.memory_path = os.path.join(self.analysis_path, "memory.dmp")
 
+    def add_statistic(self, name, field, value):
+        if name not in self.results["statistics"]["processing"]:
+            self.results["statistics"]["processing"][name] = { }
+
+        self.results["statistics"]["processing"][name][field] = value
+
     def run(self):
         """Start processing.
         @raise NotImplementedError: this method is abstract.
@@ -683,6 +689,12 @@ class Signature(object):
         self._current_call_dict = None
         self._current_call_raw_cache = None
         self._current_call_raw_dict = None
+
+    def add_statistic(self, name, field, value):
+        if name not in self.results["statistics"]["signatures"]:
+            self.results["statistics"]["signatures"][name] = { }
+
+        self.results["statistics"]["signatures"][name][field] = value
 
     def _check_value(self, pattern, subject, regex=False, all=False, ignorecase=True):
         """Checks a pattern against a given subject.
@@ -880,6 +892,24 @@ class Signature(object):
                                  regex=regex,
                                  all=all,
                                  ignorecase=False)
+
+    def check_started_service(self, pattern, regex=False, all=False):
+        """Checks for a service being started.
+        @param pattern: string or expression to check for.
+        @param regex: boolean representing if the pattern is a regular
+                      expression or not and therefore should be compiled.
+        @param all: boolean representing if all results should be returned
+                      in a set or not
+        @return: depending on the value of param 'all', either a set of
+                      matched items or the first matched item
+        """
+        subject = self.results["behavior"]["summary"]["started_services"]
+        return self._check_value(pattern=pattern,
+                                 subject=subject,
+                                 regex=regex,
+                                 all=all,
+                                 ignorecase=True)
+
 
     def check_executed_command(self, pattern, regex=False, all=False, ignorecase=True):
         """Checks for a command being executed.

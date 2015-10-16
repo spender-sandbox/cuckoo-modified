@@ -1,4 +1,4 @@
-# Copyright (C) 2010-2015 Cuckoo Foundation, Accuvant, Inc. (bspengler@accuvant.com)
+# Copyright (C) 2010-2015 Cuckoo Foundation, Optiv, Inc. (brad.spengler@optiv.com)
 # This file is part of Cuckoo Sandbox - http://www.cuckoosandbox.org
 # See the file 'docs/LICENSE' for copying permission.
 
@@ -143,13 +143,16 @@ def pretty_print_retval(category, api_name, status, retval):
         return None
     val = None
     try:
-        val = long(retval, 16)
+        val = long(retval, 16) & 0xffffffff
     except ValueError:
         return None
     return {
             0x00000103 : "NO_MORE_ITEMS",
+            0x00002af9 : "WSAHOST_NOT_FOUND",
             0x80000005 : "BUFFER_OVERFLOW",
             0x80000006 : "NO_MORE_FILES",
+            0x8000000a : "HANDLES_CLOSED",
+            0x8000001a : "NO_MORE_ENTRIES",
             0xc0000001 : "UNSUCCESSFUL",
             0xc0000002 : "NOT_IMPLEMENTED",
             0xc0000004 : "INFO_LENGTH_MISMATCH",
@@ -170,12 +173,16 @@ def pretty_print_retval(category, api_name, status, retval):
             0xc000003a : "OBJECT_PATH_NOT_FOUND",
             0xc000003c : "DATA_OVERRUN",
             0xc0000043 : "SHARING_VIOLATION",
+            0xc0000045 : "INVALID_PAGE_PROTECTION",
+            0xc000007a : "PROCEDURE_NOT_FOUND",
+            0xc00000ac : "PIPE_NOT_AVAILABLE",
             0xc00000ba : "FILE_IS_A_DIRECTORY",
             0xc000010a : "PROCESS_IS_TERMINATING",
             0xc0000121 : "CANNOT_DELETE",
             0xc0000135 : "DLL_NOT_FOUND",
             0xc0000139 : "ENTRYPOINT_NOT_FOUND",
             0xc0000142 : "DLL_INIT_FAILED",
+            0xc000014b : "PIPE_BROKEN",
             0xc0000225 : "NOT_FOUND"
     }.get(val, None)
 
@@ -1011,6 +1018,69 @@ def pretty_print_arg(category, api_name, arg_name, arg_val):
         if val:
             res.append("0x{0:08x}".format(val))
         return "|".join(res)
+    elif api_name == "CoInternetSetFeatureEnabled" and arg_name == "FeatureEntry":
+        val = int(arg_val, 10)
+        return {
+              0 : "FEATURE_OBJECT_CACHING",
+              1 : "FEATURE_ZONE_ELEVATION",
+              2 : "FEATURE_MIME_HANDLING",
+              3 : "FEATURE_MIME_SNIFFING",
+              4 : "FEATURE_WINDOW_RESTRICTIONS",
+              5 : "FEATURE_WEBOC_POPUPMANAGEMENT",
+              6 : "FEATURE_BEHAVIORS",
+              7 : "FEATURE_DISABLE_MK_PROTOCOL",
+              8 : "FEATURE_LOCALMACHINE_LOCKDOWN",
+              9 : "FEATURE_SECURITYBAND",
+              10 : "FEATURE_RESTRICT_ACTIVEXINSTALL",
+              11 : "FEATURE_VALIDATE_NAVIGATE_URL",
+              12 : "FEATURE_RESTRICT_FILEDOWNLOAD",
+              13 : "FEATURE_ADDON_MANAGEMENT",
+              14 : "FEATURE_PROTOCOL_LOCKDOWN",
+              15 : "FEATURE_HTTP_USERNAME_PASSWORD_DISABLE",
+              16 : "FEATURE_SAFE_BINDTOOBJECT",
+              17 : "FEATURE_UNC_SAVEDFILECHECK",
+              18 : "FEATURE_GET_URL_DOM_FILEPATH_UNENCODED",
+              19 : "FEATURE_TABBED_BROWSING",
+              20 : "FEATURE_SSLUX",
+              21 : "FEATURE_DISABLE_NAVIGATION_SOUNDS",
+              22 : "FEATURE_DISABLE_LEGACY_COMPRESSION",
+              23 : "FEATURE_FORCE_ADDR_AND_STATUS",
+              24 : "FEATURE_XMLHTTP",
+              25 : "FEATURE_DISABLE_TELNET_PROTOCOL",
+              26 : "FEATURE_FEEDS",
+              27 : "FEATURE_BLOCK_INPUT_PROMPTS"
+        }.get(val, None)
+    elif api_name == "CoInternetSetFeatureEnabled" and arg_name == "Flags":
+        val = int(arg_val, 16)
+        res = []
+        if val & 0x00000001:
+            res.append("SET_FEATURE_ON_THREAD")
+            val &= ~0x00000001
+        if val & 0x00000002:
+            res.append("SET_FEATURE_ON_PROCESS")
+            val &= ~0x00000002
+        if val & 0x00000004:
+            res.append("SET_FEATURE_IN_REGISTRY")
+            val &= ~0x00000004
+        if val & 0x00000008:
+            res.append("SET_FEATURE_ON_THREAD_LOCALMACHINE")
+            val &= ~0x00000008
+        if val & 0x00000010:
+            res.append("SET_FEATURE_ON_THREAD_INTRANET")
+            val &= ~0x00000010
+        if val & 0x00000020:
+            res.append("SET_FEATURE_ON_THREAD_TRUSTED")
+            val &= ~0x00000020
+        if val & 0x00000040:
+            res.append("SET_FEATURE_ON_THREAD_INTERNET")
+            val &= ~0x00000040
+        if val & 0x00000080:
+            res.append("SET_FEATURE_ON_THREAD_RESTRICTED")
+            val &= ~0x00000080
+        if val:
+            res.append("0x{0:08x}".format(val))
+        return "|".join(res)
+
     elif api_name == "InternetSetOptionA" and arg_name == "Option":
         val = int(arg_val, 16)
         return {
@@ -1322,6 +1392,8 @@ def get_vt_consensus(namelist):
         "risktool",
         "multi",
         "ransom",
+        "autoit",
+        "java",
     ]
 
     finaltoks = defaultdict(int)

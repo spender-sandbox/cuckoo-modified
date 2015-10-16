@@ -21,6 +21,10 @@ log = logging.getLogger(__name__)
 class Zip(Package):
     """Zip analysis package."""
 
+    PATHS = [
+        ("SystemRoot", "system32", "cmd.exe"),
+    ]
+
     def extract_zip(self, zip_path, extract_path, password, recursion_depth):
         """Extracts a nested ZIP file.
         @param zip_path: ZIP path
@@ -105,5 +109,11 @@ class Zip(Package):
             else:
                 raise CuckooPackageError("Empty ZIP archive")
 
+
         file_path = os.path.join(root, file_name)
-        return self.execute(file_path, self.options.get("arguments"), file_path)
+        if file_name.lower().endswith(".lnk"):
+            cmd_path = self.get_path("cmd.exe")
+            cmd_args = "/c start /wait \"\" \"{0}\"".format(file_path)
+            return self.execute(cmd_path, cmd_args, file_path)
+        else:
+            return self.execute(file_path, self.options.get("arguments"), file_path)

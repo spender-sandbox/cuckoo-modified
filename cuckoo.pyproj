@@ -23,16 +23,29 @@
     <Content Include="analyzer\windows\bin\loader_x64.exe" />
     <Content Include="analyzer\windows\dll\cuckoomon.dll" />
     <Content Include="analyzer\windows\dll\cuckoomon_x64.dll" />
+    <Content Include="conf\api.conf" />
     <Content Include="conf\auxiliary.conf" />
     <Content Include="conf\cuckoo.conf" />
     <Content Include="conf\esx.conf" />
     <Content Include="conf\kvm.conf" />
+    <Content Include="conf\malheur.conf" />
     <Content Include="conf\memory.conf" />
     <Content Include="conf\physical.conf" />
     <Content Include="conf\processing.conf" />
     <Content Include="conf\reporting.conf" />
     <Content Include="conf\virtualbox.conf" />
     <Content Include="conf\vmware.conf" />
+    <Content Include="conf\vsphere.conf" />
+    <Content Include="conf\xenserver.conf" />
+    <Content Include="data\yara\binaries\embedded.yar" />
+    <Content Include="data\yara\binaries\shellcodes.yar" />
+    <Content Include="data\yara\binaries\vmdetect.yar" />
+    <Content Include="data\yara\memory\.gitignore" />
+    <Content Include="data\yara\memory\darkcomet.yar" />
+    <Content Include="data\yara\memory\dridex.yar" />
+    <Content Include="data\yara\memory\dyre.yar" />
+    <Content Include="data\yara\memory\kazybot.yar" />
+    <Content Include="data\yara\urls\.gitignore" />
     <Content Include="docs\AUTHORS" />
     <Content Include="docs\book\src\customization\auxiliary.rst" />
     <Content Include="docs\book\src\customization\index.rst" />
@@ -182,6 +195,8 @@
     <Compile Include="modules\auxiliary\tor.py" />
     <Compile Include="modules\feeds\bad_ssl_certs.py" />
     <Compile Include="modules\feeds\__init__.py" />
+    <Compile Include="modules\reporting\elasticsearchdb.py" />
+    <Compile Include="modules\reporting\maec41.py" />
     <Compile Include="modules\reporting\malheur.py" />
     <Compile Include="modules\processing\suricata.py" />
     <Compile Include="modules\processing\cif.py" />
@@ -210,15 +225,23 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="utils\dist.py" />
-    <Compile Include="utils\health_statistics.py" />
     <Compile Include="utils\process.py" />
     <Compile Include="utils\listdump.py" />
     <Compile Include="utils\stats.py" />
     <Compile Include="utils\submit.py" />
+    <Compile Include="utils\tcpdumpwrapper.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="utils\web.py" />
     <Compile Include="utils\__init__.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="web\analysis\templatetags\generic_tags.py" />
+    <Compile Include="web\analysis\templatetags\key_tags.py" />
+    <Compile Include="web\analysis\templatetags\pdf_tags.py" />
+    <Compile Include="web\api\urls.py" />
+    <Compile Include="web\api\views.py" />
+    <Compile Include="web\api\__init__.py" />
     <Compile Include="web\manage.py" />
     <Compile Include="analyzer\windows\analyzer.py" />
     <Compile Include="analyzer\windows\lib\__init__.py" />
@@ -340,7 +363,6 @@
     <Compile Include="modules\processing\virustotal.py" />
     <Compile Include="modules\processing\__init__.py" />
     <Compile Include="modules\reporting\jsondump.py" />
-    <Compile Include="modules\reporting\maec40.py" />
     <Compile Include="modules\reporting\mmdef.py" />
     <Compile Include="modules\reporting\mongodb.py" />
     <Compile Include="modules\reporting\reporthtml.py" />
@@ -357,9 +379,6 @@
     <Compile Include="web\dashboard\urls.py" />
     <Compile Include="web\dashboard\views.py" />
     <Compile Include="web\dashboard\__init__.py" />
-    <Compile Include="web\statistics\urls.py" />
-    <Compile Include="web\statistics\views.py" />
-    <Compile Include="web\statistics\__init__.py" />
     <Compile Include="web\submission\urls.py" />
     <Compile Include="web\submission\views.py" />
     <Compile Include="web\submission\__init__.py" />
@@ -371,6 +390,9 @@
     <Content Include="web\templates\analysis\behavior\_search.html" />
     <Content Include="web\templates\analysis\behavior\_search_results.html" />
     <Content Include="web\templates\analysis\comments\index.html" />
+    <Content Include="web\templates\analysis\network\_smtp.html" />
+    <Content Include="web\templates\analysis\static\_dotnet.html" />
+    <Content Include="web\templates\analysis\statistics\index.html" />
     <Content Include="web\templates\analysis\similar\index.html" />
     <Content Include="web\templates\analysis\network\_cif.html" />
     <Content Include="web\templates\analysis\reports\index.html" />
@@ -392,6 +414,10 @@
     <Content Include="web\templates\submission\status.html" />
     <Content Include="web\templates\success_simple.html" />
     <Content Include="web\templates\success.html" />
+    <Compile Include="web\templates\analysis\templatetags\analysis_tags.py" />
+    <Compile Include="web\templates\analysis\templatetags\key_tags.py" />
+    <Compile Include="web\templates\analysis\templatetags\pdf_tags.py" />
+    <Compile Include="web\templates\analysis\templatetags\__init__.py" />
     <Compile Include="web\web\headers.py" />
     <Compile Include="web\web\local_settings.py" />
     <Compile Include="web\web\settings.py" />
@@ -482,6 +508,10 @@
     <Folder Include="data\html\js" />
     <Folder Include="data\html\sections" />
     <Folder Include="data\peutils" />
+    <Folder Include="data\yara\" />
+    <Folder Include="data\yara\binaries\" />
+    <Folder Include="data\yara\memory\" />
+    <Folder Include="data\yara\urls\" />
     <Folder Include="docs\" />
     <Folder Include="docs\book\" />
     <Folder Include="docs\book\src" />
@@ -526,6 +556,7 @@
     <Folder Include="web" />
     <Folder Include="web\analysis" />
     <Folder Include="web\analysis\templatetags" />
+    <Folder Include="web\api\" />
     <Folder Include="web\dashboard" />
     <Folder Include="web\static\" />
     <Folder Include="web\static\css" />
@@ -533,7 +564,6 @@
     <Folder Include="web\static\graphic" />
     <Folder Include="web\static\img" />
     <Folder Include="web\static\js" />
-    <Folder Include="web\statistics\" />
     <Folder Include="web\submission" />
     <Folder Include="web\templates" />
     <Folder Include="web\templates\analysis" />
@@ -541,6 +571,7 @@
     <Folder Include="web\templates\analysis\behavior" />
     <Folder Include="web\templates\analysis\comments\" />
     <Folder Include="web\templates\analysis\dropped" />
+    <Folder Include="web\templates\analysis\statistics\" />
     <Folder Include="web\templates\analysis\similar\" />
     <Folder Include="web\templates\analysis\reports\" />
     <Folder Include="web\templates\analysis\memory" />
@@ -548,6 +579,7 @@
     <Folder Include="web\templates\analysis\overview" />
     <Folder Include="web\templates\analysis\procmemory\" />
     <Folder Include="web\templates\analysis\static" />
+    <Folder Include="web\templates\analysis\templatetags\" />
     <Folder Include="web\templates\api\" />
     <Folder Include="web\templates\dashboard" />
     <Folder Include="web\templates\submission" />

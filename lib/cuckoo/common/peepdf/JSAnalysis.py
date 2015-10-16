@@ -1,4 +1,4 @@
-#
+﻿#
 #    peepdf is a tool to analyse and modify PDF files
 #    http://peepdf.eternal-todo.com
 #    By Jose Miguel Esparza <jesparza AT eternal-todo.com>
@@ -47,29 +47,6 @@ errorsFile = 'errors.txt'
 newLine = os.linesep         
 reJSscript = '<script[^>]*?contentType\s*?=\s*?[\'"]application/x-javascript[\'"][^>]*?>(.*?)</script>'
 preDefinedCode = 'var app = this;'
-def extractJS(code):
-    return code
-    JSCode = []
-    unescapedBytes = []
-
-    try:
-        code = unescapeHTMLEntities(code)
-        scriptElements = re.findall(reJSscript, code, re.DOTALL | re.IGNORECASE)
-        if scriptElements != []:
-            code = ''
-            for scriptElement in scriptElements:
-                code += scriptElement + '\n\n'
-        opts = jsbeautifier.default_options()
-        opts.escape_strings = True
-        code = jsbeautifier.beautify(code, opts)
-        JSCode.append(code)
-        ret = ""
-        for code in JSCode:
-            ret += code + "\n"
-    except:
-        ret = "Error extracting code."
-
-    return ret
 
 def analyseJS(code, context = None, manualAnalysis = False):
     '''
@@ -97,10 +74,12 @@ def analyseJS(code, context = None, manualAnalysis = False):
                 code += scriptElement + '\n\n'
         code = jsbeautifier.beautify(code)
         JSCode.append(code)
-        with PyV8.JSLocker():
-            if code != None and JS_MODULE and not manualAnalysis:
-                if context == None:
+    
+        if code != None and JS_MODULE and not manualAnalysis:
+            if context == None:
+                with PyV8.JSLocker():
                     context = PyV8.JSContext(Global())
+            with PyV8.JSLocker():
                 context.enter()
                 # Hooking the eval function
                 context.eval('eval=evalOverride')
@@ -121,34 +100,35 @@ def analyseJS(code, context = None, manualAnalysis = False):
                         open('jserror.log','ab').write(error + newLine)
                         errors.append(error)
                         break
-                if code != '':
-                    escapedVars = re.findall('(\w*?)\s*?=\s*?(unescape\((.*?)\))', code, re.DOTALL)
-                    for var in escapedVars:
-                        bytes = var[2]
-                        if bytes.find('+') != -1 or bytes.find('%') == -1:
-                            varContent = getVarContent(code, bytes)
-                            if len(varContent) > 150:
-                                ret = unescape(varContent)
-                                if ret[0] != -1:
-                                    bytes = ret[1]
-                                    urls = re.findall('https?://.*$', bytes, re.DOTALL)
-                                    if bytes not in unescapedBytes:
-                                       unescapedBytes.append(bytes)
-                                    for url in urls:
-                                       if url not in urlsFound:
-                                           urlsFound.append(url)
-                        else:
-                            bytes = bytes[1:-1]
-                            if len(bytes) > 150:
-                                ret = unescape(bytes)
-                                if ret[0] != -1:
-                                    bytes = ret[1]
-                                    urls = re.findall('https?://.*$', bytes, re.DOTALL)
-                                    if bytes not in unescapedBytes:
-                                        unescapedBytes.append(bytes)
-                                    for url in urls:
-                                       if url not in urlsFound:
-                                           urlsFound.append(url)
+                context.leave()
+            if code != '':
+                escapedVars = re.findall('(\w*?)\s*?=\s*?(unescape\((.*?)\))', code, re.DOTALL)
+                for var in escapedVars:
+                    bytes = var[2]
+                    if bytes.find('+') != -1 or bytes.find('%') == -1:
+                        varContent = getVarContent(code, bytes)
+                        if len(varContent) > 150:
+                            ret = unescape(varContent)
+                            if ret[0] != -1:
+                                bytes = ret[1]
+                                urls = re.findall('https?://.*$', bytes, re.DOTALL)
+                                if bytes not in unescapedBytes:
+                                   unescapedBytes.append(bytes)
+                                for url in urls:
+                                   if url not in urlsFound:
+                                       urlsFound.append(url)
+                    else:
+                        bytes = bytes[1:-1]
+                        if len(bytes) > 150:
+                            ret = unescape(bytes)
+                            if ret[0] != -1:
+                                bytes = ret[1]
+                                urls = re.findall('https?://.*$', bytes, re.DOTALL)
+                                if bytes not in unescapedBytes:
+                                   unescapedBytes.append(bytes)
+                                for url in urls:
+                                   if url not in urlsFound:
+                                       urlsFound.append(url)
     except:
         traceback.print_exc(file=open(errorsFile,'a'))
         errors.append('Unexpected error in the JSAnalysis module!!')

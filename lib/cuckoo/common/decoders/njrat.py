@@ -15,12 +15,11 @@ except ImportError:
 
 # Confirm if there is Net MetaData in the File 
 def getStream(pe):
-    counter = 0   
-    for dir in pe.ntHeaders.optionalHeader.dataDirectory:
-        if dir.name.value == "NET_METADATA_DIRECTORY":
+    rawConfig = None
+    for counter, dir in enumerate(pe.ntHeaders.optionalHeader.dataDirectory):
+        if dir.name.value == "NET_METADATA_DIRECTORY" and dir.rva.value and dir.size.value:
+            pe.fullLoad()
             rawConfig = findUSStream(pe, counter)
-        else:
-            counter += 1
     return rawConfig
 
 # I only want to extract the User Strings Section
@@ -42,7 +41,7 @@ def parseStrings(rawConfig):
         stringList.append(str(that.replace("\x00", "")))
         offset += int(length+1)
     return stringList
-			
+
 #Turn the strings in to a python Dict
 def parseConfig(stringList):
     dict = {}
@@ -124,12 +123,15 @@ def extract_config(file_path):
     data = open(file_path, "rb").read()
 
     try:
-        pe = pype32.PE(data=data) 
+        pe = pype32.PE(data=data, fastLoad=True) 
         rawConfig = getStream(pe)
-        # Get a list of strings
-        stringList = parseStrings(rawConfig)
-        #parse the string list
-        dict = parseConfig(stringList)
-        return dict
+        if rawConfig:
+            # Get a list of strings
+            stringList = parseStrings(rawConfig)
+            #parse the string list
+            dict = parseConfig(stringList)
+            return dict
     except:
-        return None
+        pass
+
+    return None

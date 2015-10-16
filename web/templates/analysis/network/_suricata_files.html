@@ -1,6 +1,8 @@
 {% if analysis.suricata.files|length > 0 %}
-   {% if analysis.suricata.suri_extracted_zip %}
-       <div class="alert alert-info center"><a class="btn btn-primary btn-small" href="{% url "analysis.views.file" "zip" analysis.suricata.suri_extracted_zip %}">Download Suri Extracted</a></div>
+    {% if analysis.suricata.suri_extracted_zip %}
+       <div class="alert alert-info center"><a class="btn btn-primary btn-small" href="{% url "analysis.views.mongo_file" "zip" analysis.suricata.suri_extracted_zip %}">Download Suri Extracted</a></div>
+    {% elif config.elasticsearchdb %}
+       <div class="alert alert-info center"><a class="btn btn-primary btn-small" href="{% url "analysis.views.elastic_file" "zip" analysis.info.id "files" %}">Download Suri Extracted</a></div>
     {% endif %}
     {% for file in analysis.suricata.files %}
         <div class="panel panel-default">
@@ -71,17 +73,21 @@
                     {% endif %}
                     </td>
                 </tr>
-                {% if file.object_id %}
+                {% if file.object_id or file.id %}
                 <tr>
                     <th></th>
-                    <td><a href="{% url "analysis.views.file" "suricata" file.object_id %}" class="btn btn-primary btn-small">Download</a>
+                    {% if config.mongodb %}
+                    <td><a href="{% url "analysis.views.mongo_file" "suricata" file.object_id %}" class="btn btn-primary btn-small">Download</a>
+                    {% elif config.elasticsearchdb %}
+                    <td><a href="{% url "analysis.views.elastic_file" "suricata" analysis.info.id file.id %}" class="btn btn-primary btn-small">Download</a>
+                    {% endif %}
                     {% if file.file_info.data %}
-                    &emsp;<a class="btn btn-primary btn-small" data-toggle="collapse" data-target="#{{file.object_id}}">Display Text</a>
+                    &emsp;<a class="btn btn-primary btn-small" data-toggle="collapse" data-target="#{{file.sp}}{{file.dp}}{{file.id}}">Display Text</a>
                     {% endif %}
                     </td>
                 </tr>
                 {% if file.file_info.data %}
-                <tr class="collapse" id="{{file.object_id}}">
+                <tr class="collapse" id="{{file.sp}}{{file.dp}}{{file.id}}">
                     <td colspan="2"><pre>{{file.file_info.data}}</pre></td>
                 </tr>
                 {% endif %}

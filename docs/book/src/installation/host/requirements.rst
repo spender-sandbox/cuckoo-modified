@@ -15,9 +15,22 @@ Install Python on Ubuntu::
 
     $ sudo apt-get install python
 
-If you want to use the Django-based web interface, you'll have to install MongoDB too::
+If you want to use the Django-based web interface, you'll have to install MongoDB or ElasticSearch.
+
+MongoDB::
 
     $ sudo apt-get install mongodb
+
+ElasticSearch::
+
+    $ add-apt-repository ppa:webupd8team/java
+    $ wget -qO - https://packages.elasticsearch.org/GPG-KEY-elasticsearch | sudo apt-key add -
+    $ add-apt-repository "deb http://packages.elasticsearch.org/elasticsearch/1.4/debian stable main"
+    $ apt-get update
+    $ apt-get install oracle-java8-installer elasticsearch
+    $ apt-get install elasticsearch
+    $ update-rc.d elasticsearch defaults 95 10
+    $ /etc/init.d/elasticsearch start
 
 In order to properly function, Cuckoo requires SQLAlchemy and Python BSON to be installed.
 
@@ -37,6 +50,7 @@ The following libraries are not strictly required, but their installation is rec
     * `Magic`_ (Optional): for identifying files' formats (otherwise use "file" command line utility)
     * `Pydeep`_ (Optional): for calculating ssdeep fuzzy hash of files.
     * `Pymongo`_ (Optional): for storing the results in a MongoDB database.
+    * `elasticsearch`_ (Optional): For storing and querying data into ElasticSearch
     * `Yara`_ and Yara Python (Optional): for matching Yara signatures (release >=3.0).
     * `Libvirt`_ (Optional): for using the KVM machine manager.
     * `Bottlepy`_ (Optional): for using the ``api.py`` or ``web.py`` utility (release >=0.10).
@@ -45,21 +59,26 @@ The following libraries are not strictly required, but their installation is rec
     * `Volatility`_ (Optional): used for forensic analysis on memory (release >=2.4)
     * `MAEC Python bindings`_ (Optional): used for MAEC reporting (use a release >=4.1.0.11, but <5.x).
     * `Chardet`_ (Optional): used for detecting string encoding.
-    * `pygal`_ (Optional): for using statistics in ``web.py``
     * `clamd`_ (Optional): for scanning artifacts with ClamAV (release >= 0.3.3)
     * `m2crypto`_ (Optional): for extracting PE digital certificate information
     * `django-ratelimit`_ (Optional): required if using the Django web interface
-    * `weasyprint`_ (Optional): required for PDF reporting method
-	* `pype32`_ (Optional): needed for some RAT decoders
-	* `rarfile`_ (Optional): needed for automatic extraction of RAR files on submission
+    * `weasyprint`_ (Optional): can be used for PDF reporting method, but is significantly slower than wkhtmltopdf
+    * `pype32`_ (Optional): needed for some RAT decoders
+    * `rarfile`_ (Optional): needed for automatic extraction of RAR files on submission
+    * `jsbeautifier`_ (Optional): needed for analysis of JavaScript in PDFs
+    * `mono-utils`_(Optional): needed for .NET static analysis
 
 Some of them are already packaged in Debian/Ubuntu and can be installed with the following command::
 
-    $ sudo apt-get install python-dpkt python-jinja2 python-magic python-pymongo python-gridfs python-libvirt python-bottle python-pefile python-chardet swig libssl-dev clamav-daemon python-geoip
+    $ sudo apt-get install python-dpkt python-jinja2 python-magic python-pymongo python-gridfs python-libvirt python-bottle python-pefile python-chardet swig libssl-dev clamav-daemon python-geoip geoip-database mono-utils
 
 Except for *python-magic*, *python-dpkt* and *python-libvirt*, the others can be installed through ``pip`` too::
 
-    $ sudo pip install jinja2 pymongo bottle pefile django chardet pygal m2crypto clamd django-ratelimit pycrypto weasyprint rarfile
+    $ sudo pip install jinja2 pymongo bottle pefile django chardet pygal m2crypto clamd django-ratelimit pycrypto weasyprint rarfile jsbeautifier
+
+For faster generation of PDF reports, you should install wkhtmltopdf instead of weasyprint.  To do this on Debian/Ubuntu, just use the following command::
+
+    $ sudo apt-get install wkhtmltopdf xvfb xfonts-100dpi
 
 To have MAEC support, you need to first install the Cybox and then the MAEC libraries::
 
@@ -92,6 +111,7 @@ If you want to use KVM it's packaged too and you can install it with the followi
 .. _weasyprint: http://www.weasyprint.org
 .. _pype32: https://github.com/crackinglandia/pype32
 .. _rarfile: https://pypi.python.org/pypi/rarfile
+.. _jsbeautifier: https://pypi.python.org/pypi/jsbeautifier
 
 If you want to use XenServer you'll have to install the *XenAPI* Python package::
 
@@ -175,3 +195,4 @@ You can get it from the `official repository`_.
 See the volatility documentation for detailed instructions on how to install it.
 
 .. _official repository: https://github.com/volatilityfoundation
+

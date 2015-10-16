@@ -13,7 +13,7 @@ __version__ = '0.2'
 
 # --- LICENSE -----------------------------------------------------------------
 #
-#    Copyright 2013 Matthew Walker, 2015 Accuvant, Inc. (bspengler@accuvant.com)
+#    Copyright 2013 Matthew Walker, 2015 Optiv, Inc. (brad.spengler@optiv.com)
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
@@ -76,7 +76,12 @@ class Attachment:
         ext = ext.lower()
         if ext == "" and len(basename) and basename[0] == ".":
             return None
-        extensions = ["", ".exe", ".dll", ".pdf", ".doc", ".ppt", ".pptx", ".docx", ".xls", ".msi", ".bin", ".scr", ".zip", ".htm", ".html"]
+        extensions = [
+            "", ".exe", ".dll", ".pdf", ".msi", ".bin", ".scr", ".zip", ".htm", ".html", 
+            ".doc", ".dot", ".docx", ".dotx", ".docm", ".dotm", ".docb", 
+            ".xls", ".xlt", ".xlm", ".xlsx", ".xltx", ".xlsm", ".xltm", ".xlsb", ".xla", ".xlam", ".xll", ".xlw",
+            ".ppt", ".pot", ".pps", ".pptx", ".pptm", ".potx", ".potm", ".ppam", ".ppsx", ".ppsm", ".sldx", ".sldm"
+        ]
         foundext = False
         for theext in extensions:
             if ext == theext:

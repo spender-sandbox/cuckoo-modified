@@ -7,6 +7,7 @@ import socket
 import struct
 import tempfile
 import logging
+import dns.resolver
 from collections import OrderedDict
 from urlparse import urlunparse
 
@@ -22,7 +23,6 @@ from lib.cuckoo.common.irc import ircMessage
 from lib.cuckoo.common.objects import File
 from lib.cuckoo.common.utils import convert_to_printable
 from lib.cuckoo.common.exceptions import CuckooProcessingError
-from dns.resolver import query
 from dns.reversename import from_address
 
 try:
@@ -89,13 +89,15 @@ class Pcap:
         self.irc_requests = []
         # Dictionary containing all the results of this processing.
         self.results = {}
+        # Config
+        self.config = Config()
 
     def _dns_gethostbyname(self, name):
         """Get host by name wrapper.
         @param name: hostname.
         @return: IP address or blank
         """
-        if Config().processing.resolve_dns:
+        if self.config.processing.resolve_dns:
             ip = resolve(name)
         else:
             ip = ""
@@ -108,37 +110,33 @@ class Pcap:
                  a private network block.
         """
         networks = [
-            "0.0.0.0/8",
-            "10.0.0.0/8",
-            "100.64.0.0/10",
-            "127.0.0.0/8",
-            "169.254.0.0/16",
-            "172.16.0.0/12",
-            "192.0.0.0/24",
-            "192.0.2.0/24",
-            "192.88.99.0/24",
-            "192.168.0.0/16",
-            "198.18.0.0/15",
-            "198.51.100.0/24",
-            "203.0.113.0/24",
-            "240.0.0.0/4",
-            "255.255.255.255/32",
-            "224.0.0.0/4"
+            ("0.0.0.0", 8),
+            ("10.0.0.0", 8),
+            ("100.64.0.0", 10),
+            ("127.0.0.0", 8),
+            ("169.254.0.0", 16),
+            ("172.16.0.0", 12),
+            ("192.0.0.0", 24),
+            ("192.0.2.0", 24),
+            ("192.88.99.0", 24),
+            ("192.168.0.0", 16),
+            ("198.18.0.0", 15),
+            ("198.51.100.0", 24),
+            ("203.0.113.0", 24),
+            ("240.0.0.0", 4),
+            ("255.255.255.255", 32),
+            ("224.0.0.0", 4)
         ]
 
-        for network in networks:
-            try:
-                ipaddr = struct.unpack(">I", socket.inet_aton(ip))[0]
-
-                netaddr, bits = network.split("/")
-
+        try:
+            ipaddr = struct.unpack(">I", socket.inet_aton(ip))[0]
+            for netaddr, bits in networks:
                 network_low = struct.unpack(">I", socket.inet_aton(netaddr))[0]
-                network_high = network_low | (1 << (32 - int(bits))) - 1
-
+                network_high = network_low | (1 << (32 - bits)) - 1
                 if ipaddr <= network_high and ipaddr >= network_low:
                     return True
-            except:
-                continue
+        except:
+            pass
 
         return False
 
@@ -175,18 +173,29 @@ class Pcap:
 
     def _enrich_hosts(self, unique_hosts):
         enriched_hosts = []
+
+        if self.config.processing.reverse_dns:
+            d = dns.resolver.Resolver()
+            d.timeout = 5.0
+            d.lifetime = 5.0
+
         while unique_hosts:
             ip = unique_hosts.pop()
             inaddrarpa = ""
-            try:
-                inaddrarpa = query(from_address(ip), "PTR").rrset[0].to_text()
-            except:
-                pass
             hostname = ""
+            if self.config.processing.reverse_dns:
+                try:
+                    inaddrarpa = d.query(from_address(ip), "PTR").rrset[0].to_text()
+                except:
+                    pass
             for request in self.dns_requests.values():
                 for answer in request['answers']:
                     if answer["data"] == ip:
                         hostname = request["request"]
+                        break
+                if hostname:
+                    break
+
             enriched_hosts.append({"ip": ip, "country_name": self._get_cn(ip),
                                    "hostname": hostname, "inaddrarpa": inaddrarpa})
         return enriched_hosts
@@ -199,7 +208,7 @@ class Pcap:
         if self._check_http(data):
             self._add_http(conn, data)
         # SMTP.
-        if conn["dport"] == 25:
+        if conn["dport"] == 25 or conn["dport"] == 587:
             self._reassemble_smtp(conn, data)
         # IRC.
         if conn["dport"] != 21 and self._check_irc(data):
@@ -234,7 +243,7 @@ class Pcap:
         if self._check_icmp(data):
             # If ICMP packets are coming from the host, it probably isn't
             # relevant traffic, hence we can skip from reporting it.
-            if conn["src"] == Config().resultserver.ip:
+            if conn["src"] == self.config.resultserver.ip:
                 return
 
             entry = {}
@@ -361,9 +370,9 @@ class Pcap:
             reqtuple = query["type"], query["request"]
             if reqtuple not in self.dns_requests:
                 self.dns_requests[reqtuple] = query
-            else:
-                new_answers = set((i["type"], i["data"]) for i in query["answers"]) - self.dns_answers
-                self.dns_requests[reqtuple]["answers"] += [dict(type=i[0], data=i[1]) for i in new_answers]
+            new_answers = set((i["type"], i["data"]) for i in query["answers"]) - self.dns_answers
+            self.dns_answers.update(new_answers)
+            self.dns_requests[reqtuple]["answers"] += [dict(type=i[0], data=i[1]) for i in new_answers]
 
         return True
 
@@ -475,7 +484,8 @@ class Pcap:
         for conn, data in self.smtp_flow.iteritems():
             # Detect new SMTP flow.
             if data.startswith(("EHLO", "HELO")):
-                self.smtp_requests.append({"dst": conn, "raw": data})
+                self.smtp_requests.append({"dst": conn, 
+                                           "raw": convert_to_printable(data)})
 
     def _check_irc(self, tcpdata):
         """

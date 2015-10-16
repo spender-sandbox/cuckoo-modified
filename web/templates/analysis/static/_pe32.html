@@ -17,6 +17,18 @@
                                 <td>{{analysis.static.pe_entrypoint}}</td>
                             </tr>
                         {% endif %}
+                        {% if analysis.static.pe_reported_checksum %}
+                            <tr>
+                                <th style="width: 15%;">Reported Checksum</th>
+                                <td>{{analysis.static.pe_reported_checksum}}</td>
+                            </tr>
+                        {% endif %}
+                        {% if analysis.static.pe_actual_checksum %}
+                            <tr>
+                                <th style="width: 15%;">Actual Checksum</th>
+                                <td>{{analysis.static.pe_actual_checksum}}</td>
+                            </tr>
+                        {% endif %}
                         {% if analysis.static.pe_osversion %}
                             <tr>
                                 <th style="width: 15%;">Minimum OS Version</th>
@@ -47,7 +59,25 @@
                                 <td><img src="data:image/jpeg;base64,{{analysis.static.pe_icon}}"/></td>
                             </tr>
                         {% endif %}
-                    </table>
+                        {% if analysis.static.pe_icon_hash %}
+                            <tr>
+                                <th style="width: 15%;">Icon Exact Hash</th>
+                                <td>{{analysis.static.pe_icon_hash}}</td>
+                            </tr>
+                        {% endif %}
+                        {% if analysis.static.pe_icon_fuzzy %}
+                            <tr>
+                                <th style="width: 15%;">Icon Similarity Hash</th>
+                                <td>{{analysis.static.pe_icon_fuzzy}}</td>
+                            </tr>
+                        {% endif %}
+                        {% if analysis.static.pe_exported_dll_name %}
+                            <tr>
+                                <th style="width: 15%;">Exported DLL Name</th>
+                                <td>{{analysis.static.pe_exported_dll_name}}</td>
+                            </tr>
+                        {% endif %}
+                     </table>
                 </div>
             </div>
             <hr />
@@ -63,10 +93,12 @@
                             <col width="*" />
                         </colgroup>
                         {% for info in analysis.static.pe_versioninfo %}
+                        {% if info.name %}
                             <tr>
                                 <th>{{info.name}}</th>
                                 <td><span class="mono">{{info.value}}</span></td>
                             </tr>
+                        {% endif %}
                         {% endfor %}
                     </table>
                 </div>
@@ -173,6 +205,7 @@
                         <th>Size</th>
                         <th>Language</th>
                         <th>Sub-language</th>
+                        <th>Entropy</th>
                         <th>File type</th>
                     </tr>
                     {% for section in analysis.static.pe_resources %}
@@ -182,6 +215,7 @@
                             <td>{{section.size}}</td>
                             <td>{{section.language}}</td>
                             <td>{{section.sublanguage}}</td>
+                            <td>{{section.entropy}}</td>
                             <td>{{section.filetype}}</td>
                         </tr>
                     {% endfor %}

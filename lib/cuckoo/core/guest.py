@@ -125,7 +125,7 @@ class GuestManager:
 
         # TODO: deal with unicode URLs.
         if options["category"] == "file":
-            options["file_name"] = sanitize_filename(options["file_name"])
+            options["file_name"] = "'" + sanitize_filename(options["file_name"]) + "'"
 
         # If the analysis timeout is higher than the critical timeout,
         # automatically increase the critical timeout by one minute.
@@ -165,7 +165,8 @@ class GuestManager:
                 data = xmlrpclib.Binary(file_data)
 
                 try:
-                    self.server.add_malware(data, options["file_name"])
+                    # strip off the added surrounding quotes
+                    self.server.add_malware(data, options["file_name"][1:-1])
                 except Exception as e:
                     raise CuckooGuestError("{0}: unable to upload malware to "
                                            "analysis machine: {1}".format(self.id, e))
@@ -213,6 +214,9 @@ class GuestManager:
                     error = "unknown error"
 
                 raise CuckooGuestError("Analysis failed: {0}".format(error))
+            elif status == CUCKOO_GUEST_INIT:
+                # means the system must have bluescreened or restarted and now we're getting the initial agent.py request again
+                raise CuckooGuestError("Analysis failed: system restarted unexpectedly")
             else:
                 log.debug("%s: analysis not completed yet (status=%s)",
                           self.id, status)

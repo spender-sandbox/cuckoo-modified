@@ -202,6 +202,8 @@ class cPDFDate:
                     return None
 
 def fEntropy(countByte, countTotal):
+    if countTotal == 0:
+        return 0.0
     x = float(countByte) / countTotal
     if x > 0:
         return - x * math.log(x, 2)

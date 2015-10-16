@@ -1,4 +1,4 @@
-# Copyright (C) 2010-2015 Cuckoo Foundation, Accuvant, Inc. (bspengler@accuvant.com)
+# Copyright (C) 2010-2015 Cuckoo Foundation, Optiv, Inc. (brad.spengler@optiv.com)
 # This file is part of Cuckoo Sandbox - http://www.cuckoosandbox.org
 # See the file 'docs/LICENSE' for copying permission.
 
@@ -480,12 +480,25 @@ class Summary:
                self.keys.append(name)
             if name and name not in self.read_keys:
                self.read_keys.append(name)
+        elif call["api"] == "SHGetFileInfoW":
+            filename = self.get_argument(call, "Path")
+            if filename and (len(filename) < 2 or filename[1] != ':'):
+                filename = None
+            if filename and filename not in self.files:
+                self.files.append(filename)
         elif call["api"] == "ShellExecuteExW":
             filename = self.get_argument(call, "FilePath")
             if len(filename) < 2 or filename[1] != ':':
                 filename = None
             if filename and filename not in self.files:
                 self.files.append(filename)
+            path = self.get_argument(call, "FilePath", strip=True)
+            params = self.get_argument(call, "Parameters", strip=True)
+            cmdline = None
+            if path:
+                cmdline = path + " " + params
+            if cmdline and cmdline not in self.executed_commands:
+                self.executed_commands.append(cmdline)
         elif call["api"] == "NtSetInformationFile":
             filename = self.get_argument(call, "HandleName")
             infoclass = int(self.get_argument(call, "FileInformationClass"), 10)
@@ -528,14 +541,6 @@ class Summary:
             if combined not in self.resolved_apis:
                 self.resolved_apis.append(combined)
 
-        elif call["api"] == "ShellExecuteExW":
-            path = self.get_argument(call, "FilePath", strip=True)
-            params = self.get_argument(call, "Parameters", strip=True)
-            cmdline = None
-            if path:
-                cmdline = path + " " + params
-            if cmdline and cmdline not in self.executed_commands:
-                self.executed_commands.append(cmdline)
         elif call["api"].startswith("NtCreateProcess"):
             cmdline = self.get_argument(call, "FileName")
             if cmdline and cmdline not in self.executed_commands:

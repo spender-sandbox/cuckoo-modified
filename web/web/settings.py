@@ -11,16 +11,23 @@ sys.path.append(CUCKOO_PATH)
 
 from lib.cuckoo.common.config import Config
 
-cfg = Config("reporting").mongodb
+cfg = Config("reporting")
 
-# Checks if mongo reporting is enabled in Cuckoo.
-if not cfg.get("enabled"):
-    raise Exception("Mongo reporting module is not enabled in cuckoo, aborting!")
+# Error handling for database backends
+if not cfg.mongodb.get("enabled") and not cfg.elasticsearchdb.get("enabled"):
+    raise Exception("No database backend reporting module is enabled! Please enabled ElasticSearch or MongoDB.")
+
+if cfg.mongodb.get("enabled") and cfg.elasticsearchdb.get("enabled"):
+    raise Exception("Both database backend reporting modules are enabled. Please only enabled ElasticSearch or MongoDB.")
 
 # Get connection options from reporting.conf.
-MONGO_HOST = cfg.get("host", "127.0.0.1")
-MONGO_PORT = cfg.get("port", 27017)
-MONGO_DB = cfg.get("db", "cuckoo")
+MONGO_HOST = cfg.mongodb.get("host", "127.0.0.1")
+MONGO_PORT = cfg.mongodb.get("port", 27017)
+MONGO_DB = cfg.mongodb.get("db", "cuckoo")
+
+ELASTIC_HOST = cfg.elasticsearchdb.get("host", "127.0.0.1")
+ELASTIC_PORT = cfg.elasticsearchdb.get("port", 9200)
+ELASTIC_INDEX = cfg.elasticsearchdb.get("index", "cuckoo")
 
 moloch_cfg = Config("reporting").moloch
 aux_cfg =  Config("auxiliary")

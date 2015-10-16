@@ -24,53 +24,34 @@ Yes you can. Since version 0.5 URLs are natively supported by Cuckoo.
 
 .. _tor_proxy:
 
-How can I make Cuckoo's packet captures compatible with Tor transparent proxying?
+How can I make Cuckoo's packet captures compatible with Tor transparent proxying and KVM?
 ---------------------------------
 
 Cuckoo attempts to start sniffing on an interface before its associated VM has
 been started.  Additionally, Tor's transparent proxying requires PREROUTING chain
 rules in the iptables nat table to redirect traffic to Tor's local transparent
 proxy port.  The former makes it infeasible to use Cuckoo to monitor the proper
-auto-generated libvirt vnet* interface, while the latter destroys Cuckoo's ability
-to obtain valid pcap results as all the destination IPs and ports have been rewritten
+auto-generated libvirt vnet* interface when using KVM, while the latter destroys Cuckoo's
+ability to obtain valid pcap results as all the destination IPs and ports have been rewritten
 prior to tcpdump's ability to see the packets.
 
-To solve this, create the following script and run it at system startup, modifying any
-fields in <> as appropriate::
+To solve this, we first need to modify the each of our KVM snapshots with::
 
-    #!/bin/sh
-    modprobe xt_TEE
-    ip tunnel add tun10 mode ipip ttl 64 remote 192.168.<X>.100 local 192.168.<X>.1
-    ip link set dev tun10 up
+    virsh snapshot-edit <domain name> <snapshot name>
 
-    iptables -t mangle -I PREROUTING -i <bridge interface> -s <VM static IP 1> -j TEE --oif tun10 --gateway 192.168.<X>.1
-    iptables -t mangle -I PREROUTING -i <bridge interface> -s <VM static IP 2> -j TEE --oif tun10 --gateway 192.168.<X>.1
-    iptables -t mangle -I POSTROUTING -d <VM static IP 1> -j TEE --oif tun10 --gateway 192.168.<X>.1
-    iptables -t mangle -I POSTROUTING -d <VM static IP 2> -j TEE --oif tun10 --gateway 192.168.<X>.1
+Where you see an interface entry for the network card, add the following line within it::
 
-Once this is done, make sure to modify conf/auxiliary.py and set interface to tun10.
-You may also need to install the xtables-addons-common and xtables-addons-dkms packages for
-this script to work on your system.
+    <target dev='<device name eg. vnet0/vnet1/vnet2>'/>
 
-Finally, you may need to fix a bug in the python dpkt pcap reader that causes an error
-on parsing pcaps obtained from Raw IP links.
+This will ensure our VMs use predictable names for the interface we need to sniff on to
+obtain unmangled packets.
 
-Find the affected python script (generally /usr/lib/pymodules/python2.7/dpkt/pcap.py)
-and look for the following code inside::
+To solve the problem of the not-yet-existing interface for sniffing, copy utils/tcpdumpwrapper.py to
+/usr/sbin and then modify the "tcpdump" option in auxiliary.conf to point to /usr/sbin/tcpdumpwrapper.py
+and add another option under the "sniffer" heading (after first checking to ensure /usr/sbin/tcpdump has
+the required suid or raised capability permissions::
 
-    self.dloff = dltoff[self.__fh.linktype]
-
-If it doesn't look like the below snippet, then replace the single line with the below
-snippet, taking care to preserve proper indentation::
-
-        if self.__fh.linktype in dltoff:
-            self.dloff = dltoff[self.__fh.linktype]
-        else:
-            self.dloff = 0
-
-Your Cuckoo instance with Tor transparent proxying should now produce proper network analysis
-information.
-
+    suid_check = False
 
 .. _general_volatility:
 

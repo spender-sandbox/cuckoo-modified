@@ -9,7 +9,8 @@ Install Python
 ==============
 
 Python is a strict requirement for the Cuckoo guest component (*analyzer*) in
-order to run properly.
+order to run properly.  Please note that only 32-bit versions of Python are
+supported at this time.
 
 You can download the proper Windows installer from the `official website`_.
 Also in this case Python 2.7 is preferred.

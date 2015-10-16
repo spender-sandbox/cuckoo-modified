@@ -7,6 +7,7 @@ import json
 import pkgutil
 import inspect
 import logging
+from datetime import datetime, timedelta
 from collections import defaultdict
 from distutils.version import StrictVersion
 
@@ -20,12 +21,6 @@ from lib.cuckoo.common.exceptions import CuckooOperationalError
 from lib.cuckoo.common.exceptions import CuckooProcessingError
 from lib.cuckoo.common.exceptions import CuckooReportError
 from lib.cuckoo.common.exceptions import CuckooDependencyError
-from lib.cuckoo.core.database import Database
-from lib.cuckoo.core.database import PROCESSING_STARTED, PROCESSING_FINISHED, SIGNATURES_STARTED, SIGNATURES_FINISHED
-from lib.cuckoo.core.database import REPORTING_STARTED, REPORTING_FINISHED
-from lib.cuckoo.core.database import DROPPED_FILES, RUNNING_PROCESSES, API_CALLS, ACCESSED_DOMAINS, SIGNATURES_TOTAL
-from lib.cuckoo.core.database import SIGNATURES_ALERT, FILES_WRITTEN, REGISTRY_KEYS_MODIFIED
-from lib.cuckoo.core.database import TASK_ISSUE_CRASH, TASK_ISSUE_ANTI, TASK_TIMEDOUT
 
 try:
     import re2 as re
@@ -150,11 +145,10 @@ class RunProcessing(object):
     is then passed over the reporting engine.
     """
 
-    def __init__(self, task_id, results):
-        """@param task_id: ID of the analyses to process."""
-        self.task = Database().view_task(task_id).to_dict()
-        self.task_id = task_id
-        self.analysis_path = os.path.join(CUCKOO_ROOT, "storage", "analyses", str(task_id))
+    def __init__(self, task, results):
+        """@param task: task dictionary of the analysis to process."""
+        self.task = task
+        self.analysis_path = os.path.join(CUCKOO_ROOT, "storage", "analyses", str(task["id"]))
         self.cfg = Config("processing")
         self.results = results
 
@@ -197,10 +191,17 @@ class RunProcessing(object):
         try:
             # Run the processing module and retrieve the generated data to be
             # appended to the general results container.
-            data = current.run()
-
-            log.debug("Executed processing module \"%s\" on analysis at "
+            log.debug("Executing processing module \"%s\" on analysis at "
                       "\"%s\"", current.__class__.__name__, self.analysis_path)
+            pretime = datetime.now()
+            data = current.run()
+            posttime = datetime.now()
+            timediff = posttime - pretime
+            self.results["statistics"]["processing"].append({
+                "name": current.__class__.__name__,
+                "time": float("%d.%03d" % (timediff.seconds,
+                                         timediff.microseconds / 1000)),
+                })
 
             # If succeeded, return they module's key name and the data to be
             # appended to it.
@@ -220,7 +221,7 @@ class RunProcessing(object):
         """Run all processing modules and all signatures.
         @return: processing results.
         """
-        Database().set_statistics_time(self.task_id, PROCESSING_STARTED)
+
         # Order modules using the user-defined sequence number.
         # If none is specified for the modules, they are selected in
         # alphabetical order.
@@ -240,40 +241,13 @@ class RunProcessing(object):
         else:
             log.info("No processing modules loaded")
 
-        Database().set_statistics_time(self.task_id, PROCESSING_FINISHED)
-
-        if "behavior" in self.results and "enhanced" in self.results["behavior"]:
-            regwrite = 0
-            filewrite = 0
-            for entry in self.results["behavior"]["enhanced"]:
-                if entry["object"] == "registry" and entry["event"] == "write":
-                    regwrite += 1
-                if entry["object"] == "file" and entry["event"] == "write":
-                    filewrite += 1
-            Database().set_statistics_counter(self.task_id, FILES_WRITTEN, filewrite)
-            Database().set_statistics_counter(self.task_id, REGISTRY_KEYS_MODIFIED, regwrite)
-
-        if "behavior" in self.results and "summary" in self.results["behavior"] and "files" in self.results["behavior"]["summary"]:
-            Database().set_statistics_counter(self.task_id, DROPPED_FILES, len(self.results["behavior"]["summary"]["files"]))
-
-        if "behavior" in self.results and "processes" in self.results["behavior"]:
-            Database().set_statistics_counter(self.task_id, RUNNING_PROCESSES, len(self.results["behavior"]["processes"]))
-            api_calls = 0
-            for process in self.results["behavior"]["processes"]:
-                for call in process["calls"]:
-                    api_calls += 1
-            Database().set_statistics_counter(self.task_id, API_CALLS, api_calls)
-
-        if "network" in self.results and "domains" in self.results["network"]:
-            Database().set_statistics_counter(self.task_id, ACCESSED_DOMAINS, len(self.results["network"]["domains"]))
-
         return self.results
 
 class RunSignatures(object):
     """Run Signatures."""
 
-    def __init__(self, task_id, results):
-        self.task_id = task_id
+    def __init__(self, task, results):
+        self.task = task
         self.results = results
 
     def _load_overlay(self):
@@ -361,19 +335,29 @@ class RunSignatures(object):
                           "\"{0}\":".format(signature))
             return
 
-        log.debug("Running signature \"%s\"", current.name)
-
         # If the signature is disabled, skip it.
         if not current.enabled:
             return None
 
         if not self._check_signature_version(current):
             return None
+        
+        log.debug("Running signature \"%s\"", current.name)
 
         try:
             # Run the signature and if it gets matched, extract key information
             # from it and append it to the results container.
-            if current.run():
+            pretime = datetime.now()
+            data = current.run()
+            posttime = datetime.now()
+            timediff = posttime - pretime
+            self.results["statistics"]["signatures"].append({
+                "name": current.name,
+                "time": float("%d.%03d" % (timediff.seconds,
+                                         timediff.microseconds / 1000)),
+                })
+
+            if data:
                 log.debug("Analysis matched signature \"%s\"", current.name)
                 # Return information on the matched signature.
                 return current.as_result()
@@ -389,7 +373,8 @@ class RunSignatures(object):
         # This will contain all the matched signatures.
         matched = []
 
-        Database().set_statistics_time(self.task_id, SIGNATURES_STARTED)
+        stats = { } 
+
         complete_list = list_plugins(group="signatures")
         evented_list = [sig(self.results)
                         for sig in complete_list
@@ -401,9 +386,10 @@ class RunSignatures(object):
         for signature in complete_list + evented_list:
             self._apply_overlay(signature, overlay)
 
-        if evented_list:
+        if evented_list and "behavior" in self.results:
             log.debug("Running %u evented signatures", len(evented_list))
             for sig in evented_list:
+                stats[sig.name] = timedelta()
                 if sig == evented_list[-1]:
                     log.debug("\t `-- %s", sig.name)
                 else:
@@ -424,7 +410,11 @@ class RunSignatures(object):
 
                         result = None
                         try:
+                            pretime = datetime.now()
                             result = sig.on_call(call, proc)
+                            posttime = datetime.now()
+                            timediff = posttime - pretime
+                            stats[sig.name] += timediff
                         except NotImplementedError:
                             result = False
                         except:
@@ -450,7 +440,11 @@ class RunSignatures(object):
             # Call the stop method on all remaining instances.
             for sig in evented_list:
                 try:
+                    pretime = datetime.now()
                     result = sig.on_complete()
+                    posttime = datetime.now()
+                    timediff = posttime - pretime
+                    stats[sig.name] += timediff
                 except NotImplementedError:
                     continue
                 except:
@@ -465,6 +459,15 @@ class RunSignatures(object):
 
         # Link this into the results already at this point, so non-evented signatures can use it
         self.results["signatures"] = matched
+
+        # Add in statistics for evented signatures that took at least some time
+        for key, value in stats.iteritems():
+            if value:
+                self.results["statistics"]["signatures"].append({
+                    "name": key,
+                    "time": float("%d.%03d" % (value.seconds,
+                                             value.microseconds / 1000)),
+                    })
 
         # Compat loop for old-style (non evented) signatures.
         if complete_list:
@@ -505,7 +508,7 @@ class RunSignatures(object):
             if "families" in match and match["families"]:
                 family = match["families"][0].title()
                 break
-        if not family and "virustotal" in self.results and "results" in self.results["virustotal"] and self.results["virustotal"]["results"]:
+        if not family and self.results["info"]["category"] == "file" and "virustotal" in self.results and "results" in self.results["virustotal"] and self.results["virustotal"]["results"]:
             detectnames = []
             for res in self.results["virustotal"]["results"]:
                 if res["sig"]:
@@ -520,9 +523,13 @@ class RunSignatures(object):
             for alert in self.results["suricata"]["alerts"]:
                 if "signature" in alert and alert["signature"]:
                     if alert["signature"].startswith("ET TROJAN") or alert["signature"].startswith("ETPRO TROJAN"):
-                        words = re.findall(r"[A-Za-z0-9\./]+", alert["signature"])
+                        words = re.findall(r"[A-Za-z0-9\.]+", alert["signature"])
                         famcheck = words[2]
-                        famchecklower = words[2].lower()
+                        famchecklower = famcheck.lower()
+                        if famchecklower == "win32":
+                            famcheck = words[3]
+                            famchecklower = famcheck.lower()
+
                         blacklist = [
                             "upx",
                             "executable",
@@ -546,36 +553,10 @@ class RunSignatures(object):
                                 isgood = False
                                 break
                         if isgood:
-                            if famchecklower.startswith("win32"):
-                                famcheck = famcheck[6:]
                             famcheck = famcheck.split(".")[0]
                             family = famcheck.title()
 
         self.results["malfamily"] = family
-
-        # Doing signature statistics
-        alert = 0
-        normal = 0
-        crash = 0
-        anti = 0
-        for sig in self.results["signatures"]:
-            if sig["alert"]:
-                alert += 1
-            if sig["name"] in ["exec_crash"]:
-                crash += 1
-            if sig["name"] in ["antidbg_devices", "antidbg_windows", "antiemu_wine", "antisandbox_mouse_hook",
-                               "antivm_generic_bios", "antivm_generic_disk", "antivm_generic_ide",
-                               "antivm_generic_scsi", "antivm_vbox_acpi", "antivm_vbox_devices", "antivm_vbox_files",
-                               "antivm_vbox_keys", "antivm_vbox_libs"]:
-                anti += 1
-            normal += 1
-        Database().set_statistics_counter(self.task_id, SIGNATURES_TOTAL, normal)
-        Database().set_statistics_counter(self.task_id, SIGNATURES_ALERT, alert)
-        Database().set_statistics_counter(self.task_id, TASK_ISSUE_CRASH, crash)
-        Database().set_statistics_counter(self.task_id, TASK_ISSUE_ANTI, anti)
-        if "info" in self.results and "timeout" in self.results["info"]:
-            Database().set_statistics_counter(self.task_id, TASK_TIMEDOUT, self.results["info"]["timeout"])
-        Database().set_statistics_time(self.task_id, SIGNATURES_FINISHED)
 
 class RunReporting:
     """Reporting Engine.
@@ -585,16 +566,15 @@ class RunReporting:
     Engine and pass it over to the reporting modules before executing them.
     """
 
-    def __init__(self, task_id, results):
+    def __init__(self, task, results):
         """@param analysis_path: analysis folder path."""
-        self.task = Database().view_task(task_id).to_dict()
-        self.task_id = task_id
+        self.task = task
         # remove unwanted/duplicate information from reporting
         for process in results["behavior"]["processes"]:
             process["calls"].begin_reporting()
 
         self.results = results
-        self.analysis_path = os.path.join(CUCKOO_ROOT, "storage", "analyses", str(task_id))
+        self.analysis_path = os.path.join(CUCKOO_ROOT, "storage", "analyses", str(task["id"]))
         self.cfg = Config("reporting")
 
     def process(self, module):
@@ -634,8 +614,17 @@ class RunReporting:
         current.cfg = Config(cfg=current.conf_path)
 
         try:
+            log.debug("Executing reporting module \"%s\"", current.__class__.__name__)
+            pretime = datetime.now()
             current.run(self.results)
-            log.debug("Executed reporting module \"%s\"", current.__class__.__name__)
+            posttime = datetime.now()
+            timediff = posttime - pretime
+            self.results["statistics"]["reporting"].append({
+                "name": current.__class__.__name__,
+                "time": float("%d.%03d" % (timediff.seconds,
+                                         timediff.microseconds / 1000)),
+                })
+
         except CuckooDependencyError as e:
             log.warning("The reporting module \"%s\" has missing dependencies: %s", current.__class__.__name__, e)
         except CuckooReportError as e:
@@ -652,7 +641,6 @@ class RunReporting:
         # all the available ones. It can be used in the case where a
         # module requires another one to be already executed beforehand.
 
-        Database().set_statistics_time(self.task_id, REPORTING_STARTED)
         reporting_list = list_plugins(group="reporting")
 
         # Return if no reporting modules are loaded.
@@ -664,8 +652,6 @@ class RunReporting:
                 self.process(module)
         else:
             log.info("No reporting modules loaded")
-
-        Database().set_statistics_time(self.task_id, REPORTING_FINISHED)
 
 class GetFeeds(object):
     """Feed Download and Parsing Engine
@@ -685,6 +671,7 @@ class GetFeeds(object):
 
         try:
             current = feed()
+            log.debug("Loading feed \"{0}\"".format(current.name))
         except:
             log.exception("Failed to load feed \"{0}\":".format(current.name))
             return
@@ -693,6 +680,7 @@ class GetFeeds(object):
             try:
                 current.modify()
                 current.run(modified=True)
+                log.debug("\"{0}\" has been updated".format(current.name))
             except NotImplementedError:
                 current.run(modified=False)
             except:

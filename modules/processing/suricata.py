@@ -81,14 +81,10 @@ class Suricata(Processing):
         # Useful for ignoring SIDs without disabling them. Ex: surpress an alert for
         # a SID which is a dependent of another. (Bad TCP data for HTTP(S) alert)
         sid_blacklist = [
+                        # SURICATA FRAG IPv6 Fragmentation overlap
                         2200074,
-                        2210001,
-                        2210021,
-                        2210012,
-                        2210025,
-                        2210029,
-                        2210042,
-                        2210045,
+                        # ET INFO InetSim Response from External Source Possible SinkHole
+                        2017363,
         ]
 
         if SURICATA_RUNMODE == "socket":
@@ -155,8 +151,11 @@ class Suricata(Processing):
             for line in data.splitlines():
                 parsed = json.loads(line)
                 if parsed["event_type"] == "alert":
-                    if parsed["alert"]["signature_id"] not in sid_blacklist:
+                    if (parsed["alert"]["signature_id"] not in sid_blacklist
+                        and not parsed["alert"]["signature"].startswith(
+                            "SURICATA STREAM")):
                         alog = dict()
+                        alog["sid"] = parsed["alert"]["signature_id"]
                         alog["srcport"] = parsed["src_port"]
                         alog["srcip"] = parsed["src_ip"]
                         alog["dstport"] = parsed["dest_port"]
@@ -187,7 +186,7 @@ class Suricata(Processing):
                     except:
                         hlog["hostname"] = "None"
                     try:
-                        hlog["status"] = parsed["http"]["status"]
+                        hlog["status"] = str(parsed["http"]["status"])
                     except:
                         hlog["status"] = "None"
                     hlog["method"] = parsed["http"]["http_method"]
@@ -225,8 +224,11 @@ class Suricata(Processing):
                 except:
                     log.warning("failed to load JSON from file log")
                     continue
-                if d["stored"]==True:
-                    src_file = "%s/file.%s" % (SURICATA_FILES_DIR_FULL_PATH,d["id"])
+                # Some log entries do not have an id
+                if "id" not in d:
+                    continue
+                src_file = "%s/file.%s" % (SURICATA_FILES_DIR_FULL_PATH,d["id"])
+                if os.path.exists(src_file):
                     if SURICATA_FILE_COPY_MAGIC_RE and SURICATA_FILE_COPY_DST_DIR and os.path.exists(SURICATA_FILE_COPY_DST_DIR):
                         try:
                             m = re.search(SURICATA_FILE_COPY_MAGIC_RE,d["magic"])
@@ -255,7 +257,9 @@ class Suricata(Processing):
                             file_info["data"] = convert_to_printable(filedata[:SURICATA_FILE_BUFFER] + " <truncated>")
                         else:
                             file_info["data"] = convert_to_printable(filedata)
-                    d["file_info"]=file_info
+                    d["file_info"] = file_info
+                if "/" in d["filename"]:
+                    d["filename"] = d["filename"].split("/")[-1]
                 suricata["files"].append(d)
         else:
             log.warning("Suricata: Failed to find file log at %s" % (SURICATA_FILE_LOG_FULL_PATH))
@@ -265,5 +269,5 @@ class Suricata(Processing):
             cmd = "cd %s && %s a -p%s -y files.zip %s %s" % (self.logs_path,Z7_PATH,FILES_ZIP_PASS,SURICATA_FILE_LOG,SURICATA_FILES_DIR)
             ret,stdout,stderr = self.cmd_wrapper(cmd)
             if ret != 0:
-                log.warning("Suricata: Failed to create Zip File" % (SURICATA_FILES_DIR_FULL_PATH))
+                log.warning("Suricata: Failed to create %s/files.zip" % (self.logs_path))
         return suricata

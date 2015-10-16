@@ -40,12 +40,12 @@
                 </tr>
                 <tr>
                     <th>Ssdeep</th>
-                    <td style="word-wrap: break-word;">{{file.ssdeep}}</tdstyle="word-wrap:>
+                    <td style="word-wrap: break-word;">{{file.ssdeep}}</td>
                 </tr>
                 <tr>
                 <tr>
                     <th>ClamAV</th>
-                    <td>{{file.clamav}}</th>
+                    <td>{{file.clamav}}</td>
                 </tr>
 
                     <th>Yara</th>
@@ -65,17 +65,28 @@
                     <th>VirusTotal</th>
                     <td><a href="https://www.virustotal.com/en/file/{{file.sha256}}/analysis/">Search for Analysis</a></td>
                 </tr>
-                {% if file.object_id %}
+                {% if file.object_id or file.dropdir %}
                 <tr>
                     <th></th>
-                    <td><a href="{% url "analysis.views.file" "dropped" file.object_id %}" class="btn btn-primary btn-small">Download</a>
+                    {% if config.mongodb %}
+                    <td><a href="{% url "analysis.views.mongo_file" "dropped" file.object_id %}" class="btn btn-primary btn-small">Download</a>
                         {% if file.data %}
                         &emsp;<a class="btn btn-primary btn-small" data-toggle="collapse" data-target="#{{file.object_id}}">Display Text</a>
                         {% endif %}
                     </td>
+                    {% elif config.elasticsearchdb %}
+                    <td><a href="{% url "analysis.views.elastic_file" "dropped" analysis.info.id file.dropdir %}" class="btn btn-primary btn-small">Download</a>
+                        {% if file.data %}
+                        &emsp;<a class="btn btn-primary btn-small" data-toggle="collapse" data-target="#{{file.dropdir}}">Display Text</a>
+                        {% endif %}
+                    {% endif %}
                 </tr>
                 {% if file.data %}
+                {% if config.mongodb %}
                 <tr class="collapse" id="{{file.object_id}}">
+                {% elif config.elasticsearchdb %}
+                <tr class="collapse" id="{{file.dropdir}}">
+                {% endif %}
                     <td colspan="2"><pre>{{file.data}}</pre></td>
                 </tr>
                 {% endif %}

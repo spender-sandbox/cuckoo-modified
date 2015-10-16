@@ -1,4 +1,4 @@
-# Copyright (C) 2015 KillerInstinct, Accuvant, Inc. (bspengler@accuvant.com)
+# Copyright (C) 2015 KillerInstinct, Optiv, Inc. (brad.spengler@optiv.com)
 # This file is part of Cuckoo Sandbox - http://www.cuckoosandbox.org
 # See the file 'docs/LICENSE' for copying permission.
 
@@ -21,7 +21,7 @@ def read_trend_tag(data, offset):
     code, length = struct.unpack("<BH", data[offset:offset+3])
     return code, bytes(data[offset+3:offset+3+length])
 
-# Never before published in an accurate form; reversed & developed by Accuvant, Inc.
+# Never before published in an accurate form; reversed & developed by Optiv, Inc.
 # 95% black box inference from quarantine samples, 5% information obtained from
 # avhostplugin.dll (mainly the format of the initial 0x1290/0xe68/0xd10 header,
 # which we'll mostly ignore for this quarantine extraction)
@@ -181,7 +181,7 @@ def sep_unquarantine(f):
 
     return store_temp_file(bindata, origname)
 
-# Never before published; reversed & developed by Accuvant, Inc.
+# Never before published; reversed & developed by Optiv, Inc.
 
 def mse_ksa():
     # hardcoded key obtained from mpengine.dll
@@ -264,7 +264,7 @@ def mse_unquarantine(f):
 
     return store_temp_file(outdata[headerlen:], "MSEDequarantineFile")
 
-# Never before published; reversed & developed by Accuvant, Inc.
+# Never before published; reversed & developed by Optiv, Inc.
 # Simple RC4 based on an MD5 of a hardcoded string in mbamcore.dll
 # Quarantine files are split into data and metadata, so like MSE we
 # can't recover the original filename with the data file alone.
@@ -296,7 +296,7 @@ def mbam_unquarantine(f):
 
     return store_temp_file(outdata, "MBAMDequarantineFile")
 
-# Never before published in an accurate form; reversed & developed by Accuvant, Inc.
+# Never before published in an accurate form; reversed & developed by Optiv, Inc.
 # http://forensicswiki.org/wiki/Kaspersky_Quarantine_File was close, but missed the
 # length/value encoding on metadata.  Mostly based on black-box reversing of the file
 # format, partially on reversing qb.ppl
@@ -343,7 +343,7 @@ def kav_unquarantine(file):
 
     return store_temp_file(data[headerlen:headerlen+origlen], origname)
 
-# Never before published; reversed & developed by Accuvant, Inc.
+# Never before published; reversed & developed by Optiv, Inc.
 # We don't need most of the header fields but include them here
 # for the sake of documentation
 

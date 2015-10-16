@@ -1,6 +1,10 @@
+{% load generic_tags %}
 <div class="tabbable tabs">
     <ul class="nav nav-pills" style="margin-bottom: 0;">
         <li class="active"><a href="#static_analysis_tab" data-toggle="tab">Static Analysis</a></li>
+        {% if analysis.info.category == "file" and analysis.static and "PE32" in analysis.target.file.type and "Mono" in analysis.target.file.type %}
+        <li><a href="#static_dotnet_tab" data-toggle="tab">.NET Static Analysis</a></li>
+        {% endif %}
         {% if analysis.info.category == "file" and analysis.static %}
         {% if analysis.static.njrat_config or analysis.static.darkcomet_config %}
         <li><a href="#static_ratconfig_tab" data-toggle="tab">RAT Configuration</a></li>
@@ -17,7 +21,7 @@
         <div class="tab-pane fade in active" id="static_analysis_tab">
             {% if "PE32" in analysis.target.file.type or "MS-DOS executable" in analysis.target.file.type %}
                 {% include "analysis/static/_pe32.html" %}
-            {% elif "PDF" in analysis.target.file.type %}
+            {% elif "PDF" in analysis.target.file.type or analysis.target.file.name|endswith:".pdf" %}
                 {% include "analysis/static/_pdf.html" %}
             {% elif "Composite Document File V2 Document" in analysis.target.file.type %}
                 {% include "analysis/static/_office.html" %}
@@ -28,19 +32,19 @@
             {% elif "Word 2007+" in analysis.target.file.type %}
                 {% include "analysis/static/_office.html" %}
             {% elif "Zip archive data" in analysis.target.file.type %}
-                {% if ".docx" in analysis.target.file.name %}
+                {% if analysis.target.file.name|endswith:".docx" %}
                     {% include "analysis/static/_office.html" %}
-                {% elif ".docm" in analysis.target.file.name %}
+                {% elif analysis.target.file.name|endswith:".docm" %}
                     {% include "analysis/static/_office.html" %}
-                {% elif ".doc" in analysis.target.file.name %}
+                {% elif analysis.target.file.name|endswith:".doc" %}
                     {% include "analysis/static/_office.html" %}
-                {% elif ".xls" in analysis.target.file.name %}
+                {% elif analysis.target.file.name|endswith:".xls" %}
                     {% include "analysis/static/_office.html" %}
-                {% elif ".xlsx" in analysis.target.file.name %}
+                {% elif analysis.target.file.name|endswith:".xlsx" %}
                     {% include "analysis/static/_office.html" %}
-                {% elif ".ppt" in analysis.target.file.name %}
+                {% elif analysis.target.file.name|endswith:".ppt" %}
                     {% include "analysis/static/_office.html" %}
-                {% elif ".pptx" in analysis.target.file.name %}
+                {% elif analysis.target.file.name|endswith:".pptx" %}
                     {% include "analysis/static/_office.html" %}
                 {% else %}
                     No static analysis available.
@@ -49,6 +53,11 @@
                 No static analysis available.
             {% endif %}
         </div>
+        {% if analysis.info.category == "file" and analysis.static and "PE32" in analysis.target.file.type and "Mono" in analysis.target.file.type %}
+        <div class="tab-pane fade" id="static_dotnet_tab">
+            {% include "analysis/static/_dotnet.html" %}
+        </div>
+        {% endif %}
         {% if analysis.info.category == "file" and analysis.static %}
         {% if analysis.static.njrat_config or analysis.static.darkcomet_config %}
         <div class="tab-pane fade" id="static_ratconfig_tab">

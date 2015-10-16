@@ -38,10 +38,16 @@
                             {% endif %}
                             </td>
                         </tr>
-                        {% if proc.procmem_id %}
+                        {% if config.mongodb and proc.procmem_id %}
                             <tr>
                                 <th>Full Dump</th>
-                                <td><a class="btn btn-primary btn-small" href="{% url "analysis.views.file" "memdump" proc.procmem_id %}">Download</a></td>
+                                <td><a class="btn btn-primary btn-small" href="{% url "analysis.views.mongo_file" "memdump" proc.procmem_id %}">Download</a></td>
+                            </tr>
+                        {% endif %}
+                        {% if config.elasticsearchdb and proc.file %}
+                            <tr>
+                                <th>Full Dump</th>
+                                <td><a class="btn btn-primary btn-small" href="{% url "analysis.views.elastic_file" "memdump" analysis.info.id proc.pid %}">Download</a></td>
                             </tr>
                         {% endif %}
                     </table>
@@ -71,7 +77,13 @@
                                     {% else %}
                                     <td><span class="label label-primary">No</span></td>
                                     {% endif %}
+                                    {% if proc.file %}
+                                    {% if config.mongodb %}
                                     <td><a class="btn btn-primary btn-small" href="{% url "analysis.views.procdump" proc.procmem_id analysis.info.id proc.pid memmap.start memmap.end %}">Download</a></td>
+                                    {% elif config.elasticsearchdb %}
+                                    <td><a class="btn btn-primary btn-small" href="{% url "analysis.views.procdump" proc.pid analysis.info.id proc.pid memmap.start memmap.end %}">Download</a></td>
+                                    {% endif %}
+                                    {% endif %}
                                 </tr>
                                 {% if memmap.chunks|length >= 2 %}
                                 {% for chunk in memmap.chunks %}
@@ -81,7 +93,11 @@
                                         <td>{{chunk.size}}</td>
                                         <td>{{chunk.prot}}</td>
                                         <td></td>
+                                        {% if config.mongodb %}
                                         <td><a class="btn btn-primary btn-small" href="{% url "analysis.views.procdump" proc.procmem_id analysis.info.id proc.pid chunk.start chunk.end %}">Download</a></td>
+                                        {% elif config.elasticsearchdb %}
+                                        <td><a class="btn btn-primary btn-small" href="{% url "analysis.views.procdump" proc.pid analysis.info.id proc.pid memmap.start memmap.end %}">Download</a></td>
+                                        {% endif %}
                                     </tr>
                                 {% endfor %}
                                 {% endif %}

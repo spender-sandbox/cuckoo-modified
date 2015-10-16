@@ -5,13 +5,12 @@
 <td style="word-wrap: break-word;">
     {% for argument in call.arguments %}
         <span class="gray">{{argument.name}}:</span>
-        <span class="mono">
-            {% if argument.pretty_value %}
-                {{argument.pretty_value}}
-            {% else %}
-                {{argument.value}}
-            {% endif %}
-        </span><br />
+        {% if argument.pretty_value %}
+            <span class="mono" title="{{argument.value}}">{{argument.pretty_value}}</span>
+        {% else %}
+            <span class="mono">{{argument.value}}</span>
+        {% endif %}
+        <br />
     {% endfor %}
 </td>
 <td>
@@ -22,9 +21,9 @@
     {% endif %}
 </td>
 {% if call.pretty_return %}
-    <td style="word-wrap: break-word"><span class="mono">{{call.pretty_return}}</span></td>
+    <td style="word-wrap: break-word"><span class="mono" title="{{call.return}}">{{call.pretty_return}}</span></td>
 {% else %}
-    <td><span class="mono">{{call.return}}</span></td>
+    <td style="word-wrap: break-word"><span class="mono">{{call.return}}</span></td>
 {% endif %}
 <td>
     {% if call.repeated > 0 %}

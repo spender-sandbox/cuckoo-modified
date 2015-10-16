@@ -1,4 +1,4 @@
-# Copyright (C) 2015 Accuvant, Inc. (bspengler@accuvant.com), Cuckoo Foundation
+# Copyright (C) 2015 Optiv, Inc. (brad.spengler@optiv.com), Cuckoo Foundation
 # This file is part of Cuckoo Sandbox - http://www.cuckoosandbox.org
 # See the file 'docs/LICENSE' for copying permission.
 

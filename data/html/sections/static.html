@@ -2,7 +2,8 @@
     <div class="section-title">
         <h4>Static Analysis</h4>
     </div>
-    {% if results.static %}
+    {% if results.static or results.strings %}
+        {% if results.static %}
         {% if results.static.pe_imagebase or results.static.pe_entrypoint or results.static.pe_osversion or results.static.pe_pdbpath or results.static.pe_timestamp or results.static.pe_imphash or results.static.pe_icon %}
             <div>
                 {% if summary_report %}
@@ -23,6 +24,18 @@
                             <tr>
                                 <th style="width: 15%;">Entry Point</th>
                                 <td>{{results.static.pe_entrypoint}}</td>
+                            </tr>
+                        {% endif %}
+                        {% if results.static.pe_reported_checksum %}
+                            <tr>
+                                <th style="width: 15%;">Reported Checksum</th>
+                                <td>{{results.static.pe_reported_checksum}}</td>
+                            </tr>
+                        {% endif %}
+                        {% if results.static.pe_actual_checksum %}
+                            <tr>
+                                <th style="width: 15%;">Actual Checksum</th>
+                                <td>{{results.static.pe_actual_checksum}}</td>
                             </tr>
                         {% endif %}
                         {% if results.static.pe_osversion %}
@@ -55,6 +68,24 @@
                                 <td><img src="data:image/jpeg;base64,{{results.static.pe_icon}}"/></td>
                             </tr>
                         {% endif %}
+                        {% if results.static.pe_icon_hash %}
+                            <tr>
+                                <th style="width: 15%;">Icon Exact Hash</th>
+                                <td>{{results.static.pe_icon_hash}}</td>
+                            </tr>
+                        {% endif %}
+                        {% if results.static.pe_icon_fuzzy %}
+                            <tr>
+                                <th style="width: 15%;">Icon Similarity Hash</th>
+                                <td>{{results.static.pe_icon_fuzzy}}</td>
+                            </tr>
+                        {% endif %}
+                        {% if results.static.pe_exported_dll_name %}
+                            <tr>
+                                <th style="width: 15%;">Exported DLL Name</th>
+                                <td>{{results.static.pe_exported_dll_name}}</td>
+                            </tr>
+                        {% endif %}
                     </table>
                 </div>
             </div>
@@ -76,10 +107,12 @@
                             <col width="*" />
                         </colgroup>
                         {% for info in results.static.pe_versioninfo %}
+                            {% if info.name %}
                             <tr>
                                 <td><strong>{{info.name}}</strong>:</td>
                                 <td><span class="mono">{{info.value}}</span></td>
                             </tr>
+                            {% endif %}
                         {% endfor %}
                     </table>
                 </div>
@@ -162,6 +195,7 @@
                             <th>Size</th>
                             <th>Language</th>
                             <th>Sub-language</th>
+                            <th>Entropy</th>
                             <th>File type</th>
                         </tr>
                         {% for section in results.static.pe_resources %}
@@ -171,6 +205,7 @@
                                 <td>{{section.size}}</td>
                                 <td>{{section.language}}</td>
                                 <td>{{section.sublanguage}}</td>
+                                <td>{{section.entropy}}</td>
                                 <td>{{section.filetype}}</td>
                             </tr>
                         {% endfor %}
@@ -226,16 +261,12 @@
                 </div>
             </div>
         {% endif %}
+        {% endif %}
 
-        {% if results.strings %}
+        {% if results.strings and not summary_report %}
             <div>
-                {% if summary_report %}
-                <h4>Strings</h4>
-                <div id="strings">
-                {% else %}
                 <h4><a href="javascript:showHide('strings');">Strings</a></h4>
                 <div id="strings" style="display: none;">
-                {% endif %}
                     {% for str in results.strings %}
                         <div><span class="mono">{{str}}</span></div>
                     {% endfor %}

@@ -9,9 +9,11 @@ as search across all the analysis results.
 Configuration
 =============
 
-The web interface pulls data from a Mongo database, so having the Mongo reporting
-module enabled in ``reporting.conf`` is mandatory for this interface.
-If that's not the case, the application won't start and it will raise an exception.
+The web interface pulls data from a Mongo database or from ElasticSearch, so having
+either the MongoDB or ElasticSearchDB reporting modules enabled in ``reporting.conf``
+is mandatory for this interface. If that's not the case, the application won't start
+and it will raise an exception. Also, currently Django only supports having one of
+the database modules enabled at a time.
 
 The interface can be configured by editing ``local_settings.py`` under ``web/web/``::
 

@@ -1,10 +1,11 @@
-# Copyright (C) 2010-2015 Cuckoo Foundation, Accuvant, Inc. (bspengler@accuvant.com)
+# Copyright (C) 2010-2015 Cuckoo Foundation, Optiv, Inc. (brad.spengler@optiv.com)
 # This file is part of Cuckoo Sandbox - http://www.cuckoosandbox.org
 # See the file 'docs/LICENSE' for copying permission.
 
 import os
 import json
 import requests
+import hashlib
 
 try:
     import re2 as re
@@ -66,6 +67,18 @@ class VirusTotal(Processing):
                    resource = re.sub(urlscrub_compiled_re,"",resource)
                 except Exception as e:
                     raise CuckooProcessingError("Failed to scrub url" % (e))
+
+            # normalize the URL the way VT appears to
+            if not resource.lower().startswith("http://") and not resource.lower().startswith("https://"):
+                resource = "http://" + resource
+            slashsplit = resource.split('/')
+            slashsplit[0] = slashsplit[0].lower()
+            slashsplit[2] = slashsplit[2].lower()
+            if len(slashsplit) == 3:
+                slashsplit.append("")
+            resource = "/".join(slashsplit)
+
+            resource = hashlib.sha256(resource).hexdigest()
             url = VIRUSTOTAL_URL_URL
         else:
             # Not supported type, exit.

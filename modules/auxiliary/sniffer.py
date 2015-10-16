@@ -20,7 +20,8 @@ class Sniffer(Auxiliary):
     def start(self):
         tcpdump = self.options.get("tcpdump", "/usr/sbin/tcpdump")
         bpf = self.options.get("bpf", "")
-        file_path = os.path.join(CUCKOO_ROOT, "storage", "analyses", str(self.task.id), "dump.pcap")
+        file_path = os.path.join(CUCKOO_ROOT, "storage", "analyses",
+                                 "%s" % self.task.id, "dump.pcap")
         host = self.machine.ip
         # Selects per-machine interface if available.
         if self.machine.interface:
@@ -46,7 +47,7 @@ class Sniffer(Auxiliary):
             return
 
         mode = os.stat(tcpdump)[stat.ST_MODE]
-        if (mode & stat.S_ISUID) == 0 and os.geteuid() > 0:
+        if self.options.get("suid_check", True) and (mode & stat.S_ISUID) == 0 and os.geteuid() > 0:
             # now do a weak file capability check
             has_caps = False
             try:
@@ -90,7 +91,7 @@ class Sniffer(Auxiliary):
                       "src", "port", resultserver_port, ")"])
 
         if bpf:
-            pargs.extend(["and", bpf])
+            pargs.extend(["and", "(", bpf, ")"])
 
         try:
             self.proc = subprocess.Popen(pargs, stdout=subprocess.PIPE,

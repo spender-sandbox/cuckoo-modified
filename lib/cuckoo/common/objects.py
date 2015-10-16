@@ -57,6 +57,9 @@ class URL:
 class File:
     """Basic file object class with all useful utilities."""
 
+    YARA_RULEPATH = \
+        os.path.join(CUCKOO_ROOT, "data", "yara", "index_binaries.yar")
+
     # static fields which indicate whether the user has been
     # notified about missing dependencies already
     notified_yara = False
@@ -250,47 +253,88 @@ class File:
 
         return file_type
 
-    def get_yara(self, rulepath=os.path.join(CUCKOO_ROOT, "data", "yara", "index_binaries.yar")):
+    def _yara_encode_string(self, s):
+        # Beware, spaghetti code ahead.
+        try:
+            new = s.encode("utf-8")
+        except UnicodeDecodeError:
+            s = s.lstrip("uU").encode("hex").upper()
+            s = " ".join(s[i:i+2] for i in range(0, len(s), 2))
+            new = "{ %s }" % s
+
+        return new
+
+    def _yara_matches_177(self, matches):
+        """Extract matches from the Yara output for version 1.7.7."""
+        ret = []
+        for _, rule_matches in matches.items():
+            for match in rule_matches:
+                strings = set()
+
+                for s in match["strings"]:
+                    strings.add(self._yara_encode_string(s["data"]))
+
+                ret.append({
+                    "name": match["rule"],
+                    "meta": match["meta"],
+                    "strings": list(strings),
+                })
+        return ret
+
+    def get_yara(self, rulepath=YARA_RULEPATH):
         """Get Yara signatures matches.
         @return: matched Yara signatures.
         """
-        matches = []
+        results = []
 
-        if HAVE_YARA:
-            if os.path.getsize(self.file_path) > 0:
-                if not os.path.exists(rulepath):
-                    log.warning("The specified rule file at %s doesn't exist, skip",
-                                rulepath)
-                    return
-
-                try:
-                    rules = yara.compile(rulepath, error_on_warning=False)
-
-                    for match in rules.match(self.file_path):
-                        strings = []
-                        for s in match.strings:
-                            # Beware, spaghetti code ahead.
-                            try:
-                                new = s[2].encode("utf-8")
-                            except UnicodeDecodeError:
-                                s = s[2].lstrip("uU").encode("hex").upper()
-                                s = " ".join(s[i:i+2] for i in range(0, len(s), 2))
-                                new = "{ %s }" % s
-
-                            if new not in strings:
-                                strings.append(new)
-
-                        matches.append({"name": match.rule,
-                                        "meta": match.meta,
-                                        "strings": strings})
-                except Exception as e:
-                    log.warning("Unable to match Yara signatures: %s", e)
-        else:
+        if not HAVE_YARA:
             if not File.notified_yara:
                 File.notified_yara = True
                 log.warning("Unable to import yara (please compile from sources)")
+            return results
 
-        return matches
+        if not os.path.exists(rulepath):
+            log.warning("The specified rule file at %s doesn't exist, skip",
+                        rulepath)
+            return results
+
+        if not os.path.getsize(self.file_path):
+            return results
+
+        try:
+            try:
+                filepath = ""
+                filename = ""
+                if self.file_name:
+                    filepath = self.file_name
+                    filename = self.file_name
+                if self.guest_paths:
+                    filepath = self.guest_paths[0]
+                rules = yara.compile(rulepath, externals={"filepath":filepath, "filename":filename})
+            except:
+                rules = yara.compile(rulepath)
+            matches = rules.match(self.file_path)
+
+            if getattr(yara, "__version__", None) == "1.7.7":
+                return self._yara_matches_177(matches)
+
+            results = []
+
+            for match in matches:
+                strings = set()
+                for s in match.strings:
+                    strings.add(self._yara_encode_string(s[2]))
+
+                results.append({
+                    "name": match.rule,
+                    "meta": match.meta,
+                    "strings": list(strings),
+                })
+
+        except Exception as e:
+            log.exception("Unable to match Yara signatures: %s", e)
+
+        return results
     def get_clamav(self):
         """Get ClamAV signatures matches.
         @return: matched ClamAV signatures.
@@ -332,4 +376,5 @@ class File:
         infos["type"] = self.get_type()
         infos["yara"] = self.get_yara()
         infos["clamav"] = self.get_clamav()
+
         return infos
