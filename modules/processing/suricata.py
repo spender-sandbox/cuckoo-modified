@@ -186,7 +186,7 @@ class Suricata(Processing):
                     except:
                         hlog["hostname"] = "None"
                     try:
-                        hlog["status"] = parsed["http"]["status"]
+                        hlog["status"] = str(parsed["http"]["status"])
                     except:
                         hlog["status"] = "None"
                     hlog["method"] = parsed["http"]["http_method"]
