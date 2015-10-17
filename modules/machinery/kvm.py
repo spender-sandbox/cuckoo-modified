@@ -19,7 +19,9 @@ class KVM(LibVirtMachinery):
             return elem
         elem = elem.find("target")
         if elem is None:
-            return elem.attrib["dev"]
+            return None
+
+        return elem.attrib["dev"]
 
     def start(self, label):
         super(LibVirtMachinery, self).start(label)
