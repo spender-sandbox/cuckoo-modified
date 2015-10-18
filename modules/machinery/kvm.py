@@ -14,7 +14,7 @@ class KVM(LibVirtMachinery):
     dsn = "qemu:///system"
 
     def _get_interface(self, label):
-        xml = ET(self._lookup(label).XMLDesc())
+        xml = ET.fromstring(self._lookup(label).XMLDesc())
         elem = xml.find("./devices/interface[@type='network']")
         if elem is None:
             return elem
@@ -25,8 +25,7 @@ class KVM(LibVirtMachinery):
         return elem.attrib["dev"]
 
     def start(self, label):
-        super(LibVirtMachinery, self).start(label)
-        # If per-machine interface is not set, find it on start
+        super(KVM, self).start(label)
         if not self.db.view_machine_by_label(label).interface:
             self.db.set_machine_interface(label, self._get_interface(label))
 

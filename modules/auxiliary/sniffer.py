@@ -16,8 +16,11 @@ from lib.cuckoo.core.resultserver import ResultServer
 
 log = logging.getLogger(__name__)
 
+
 class Sniffer(Auxiliary):
     def start(self):
+        # Get updated machine info
+        self.machine = self.db.view_machine_by_label(self.machine.label)
         tcpdump = self.options.get("tcpdump", "/usr/sbin/tcpdump")
         bpf = self.options.get("bpf", "")
         file_path = os.path.join(CUCKOO_ROOT, "storage", "analyses",

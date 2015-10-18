@@ -453,8 +453,8 @@ class AnalysisManager(threading.Thread):
                     latest_symlink_lock.release()
 
             log.info("Task #%d: analysis procedure completed", self.task.id)
-        except:
-            log.exception("Failure in AnalysisManager.run")
+        except Exception as e:
+            log.exception("Failure in AnalysisManager.run: %s" % e)
 
         active_analysis_count -= 1
 

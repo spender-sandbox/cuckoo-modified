@@ -515,11 +515,12 @@ class Database(object):
     def set_machine_interface(self, label, interface):
         session = self.Session()
         try:
-            machine = session.query(Machine).filter(Machine.label==label)
-            if not machine:
-                og.debug("Database error setting interface: {0} not found".format(label))
+            machine = session.query(Machine).filter_by(label=label).first()
+            if machine is None:
+                log.debug("Database error setting interface: {0} not found".format(label))
                 return None
             machine.interface = interface
+            session.commit()
 
         except SQLAlchemyError as e:
             log.debug("Database error setting interface: {0}".format(e))
