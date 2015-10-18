@@ -6,6 +6,7 @@ import xml.etree.ElementTree as ET
 
 from lib.cuckoo.common.abstracts import LibVirtMachinery
 
+
 class KVM(LibVirtMachinery):
     """Virtualization layer for KVM based on python-libvirt."""
 
@@ -26,8 +27,8 @@ class KVM(LibVirtMachinery):
     def start(self, label):
         super(LibVirtMachinery, self).start(label)
         # If per-machine interface is not set, find it on start
-        if self.interface is None:
-            self.interface = self._get_interface()
+        if not self.db.view_machine_by_label(label).interface:
+            self.db.set_machine_interface(label, self._get_interface(label))
 
 
 

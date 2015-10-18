@@ -512,6 +512,22 @@ class Database(object):
             session.close()
 
     @classlock
+    def set_machine_interface(self, label, interface):
+        session = self.Session()
+        try:
+            machine = session.query(Machine).filter(Machine.label==label)
+            if not machine:
+                og.debug("Database error setting interface: {0} not found".format(label))
+                return None
+            machine.interface = interface
+
+        except SQLAlchemyError as e:
+            log.debug("Database error setting interface: {0}".format(e))
+            session.rollback()
+        finally:
+            session.close()
+
+    @classlock
     def set_status(self, task_id, status):
         """Set task status.
         @param task_id: task identifier
