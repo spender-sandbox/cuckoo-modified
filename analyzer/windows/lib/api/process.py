@@ -559,6 +559,8 @@ class Process:
                 config.write("full-logs={0}\n".format(cfgoptions["full-logs"]))
             if "no-stealth" in cfgoptions:
                 config.write("no-stealth={0}\n".format(cfgoptions["no-stealth"]))
+            if "serial" in cfgoptions:
+                config.write("serial={0}\n".format(cfgoptions["serial"]))
             if "norefer" not in cfgoptions:
                 config.write("referrer={0}\n".format(get_referrer_url(interest)))
             if firstproc:
