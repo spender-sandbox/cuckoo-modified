@@ -115,8 +115,14 @@ def index(request):
                                                                  machine=entry, custom=custom, memory=memory, enforce_timeout=enforce_timeout, tags=tags, clock=clock)
                     task_ids.extend(task_ids_new)
         elif "quarantine" in request.FILES:
-            for sample in request.FILES.getlist("quarantine"):
-                if sample.size == 0:
+            samples = request.FILES.getlist("quarantine")
+            for sample in samples:
+                # Error if there was only one submitted sample and it's empty.
+                # But if there are multiple and one was empty, just ignore it.
+                if not sample.size:
+                    if len(samples) != 1:
+                        continue
+
                     return render_to_response("error.html",
                                               {"error": "You uploaded an empty quarantine file."},
                                               context_instance=RequestContext(request))
