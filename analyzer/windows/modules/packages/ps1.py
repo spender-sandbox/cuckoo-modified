@@ -9,12 +9,10 @@ from lib.common.abstracts import Package
 class PS1(Package):
     """PowerShell analysis package."""
     PATHS = [
-        ("SystemRoot", "system32", "WindowsPowerShell", "v1.0", "powershell.exe"),
-        ("SystemRoot", "system32", "WindowsPowerShell", "v2.0", "powershell.exe"),
-        ("SystemRoot", "system32", "WindowsPowerShell", "v3.0", "powershell.exe"),
+        ("SystemRoot", "system32", "WindowsPowerShell", "v*.0", "powershell.exe"),
     ]
 
     def start(self, path):
-        powershell = self.get_path("PowerShell")
+        powershell = self.get_path_glob("PowerShell")
         args = "-NoProfile -ExecutionPolicy unrestricted -File \"{0}\"".format(path)
         return self.execute(powershell, args, path)

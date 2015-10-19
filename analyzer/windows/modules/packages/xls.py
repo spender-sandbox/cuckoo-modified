@@ -9,12 +9,9 @@ class XLS(Package):
     """Excel analysis package."""
     PATHS = [
         ("ProgramFiles", "Microsoft Office", "EXCEL.EXE"),
-        ("ProgramFiles", "Microsoft Office", "Office11", "EXCEL.EXE"),
-        ("ProgramFiles", "Microsoft Office", "Office12", "EXCEL.EXE"),
-        ("ProgramFiles", "Microsoft Office", "Office14", "EXCEL.EXE"),
-        ("ProgramFiles", "Microsoft Office", "Office15", "EXCEL.EXE"),
+        ("ProgramFiles", "Microsoft Office", "Office*", "EXCEL.EXE"),
     ]
 
     def start(self, path):
-        excel = self.get_path("Microsoft Office Excel")
+        excel = self.get_path_glob("Microsoft Office Excel")
         return self.execute(excel, "\"%s\" /e" % path, path)

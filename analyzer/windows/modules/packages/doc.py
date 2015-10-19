@@ -8,13 +8,10 @@ class DOC(Package):
     """Word analysis package."""
     PATHS = [
         ("ProgramFiles", "Microsoft Office", "WINWORD.EXE"),
-        ("ProgramFiles", "Microsoft Office", "Office11", "WINWORD.EXE"),
-        ("ProgramFiles", "Microsoft Office", "Office12", "WINWORD.EXE"),
-        ("ProgramFiles", "Microsoft Office", "Office14", "WINWORD.EXE"),
-        ("ProgramFiles", "Microsoft Office", "Office15", "WINWORD.EXE"),
+        ("ProgramFiles", "Microsoft Office", "Office*", "WINWORD.EXE"),
         ("ProgramFiles", "Microsoft Office", "WORDVIEW.EXE"),
     ]
 
     def start(self, path):
-        word = self.get_path("Microsoft Office Word")
+        word = self.get_path_glob("Microsoft Office Word")
         return self.execute(word, "\"%s\" /q" % path, path)
