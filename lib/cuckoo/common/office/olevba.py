@@ -23,7 +23,7 @@ olevba is based on source code from officeparser by John William Davison
 https://github.com/unixfreak0037/officeparser
 """
 
-#=== LICENSE ==================================================================
+# === LICENSE ==================================================================
 
 # olevba is copyright (c) 2014-2015 Philippe Lagadec (http://www.decalage.info)
 # All rights reserved.
@@ -129,8 +129,6 @@ https://github.com/unixfreak0037/officeparser
 # 2015-03-22 v0.26 PL: - added suspicious keywords for sandboxing and
 #                        virtualisation detection
 # 2015-05-06 v0.27 PL: - added support for MHTML files with VBA macros
-#                        virtualisation detection
-# 2015-05-06 v0.27 PL: - added support for MHTML files with VBA macros
 #                        (issue #10 reported by Greg from SpamStopsHere)
 # 2015-05-24 v0.28 PL: - improved support for MHTML files with modified header
 #                        (issue #11 reported by Thomas Chopitea)
@@ -138,15 +136,33 @@ https://github.com/unixfreak0037/officeparser
 #                        various data offsets (issue #12)
 #                      - improved detection of MSO files, avoiding incorrect
 #                        parsing errors (issue #7)
+# 2015-05-29 v0.30 PL: - added suspicious keywords suggested by @ozhermit,
+#                        Davy Douhine (issue #9), issue #13
+# 2015-06-16 v0.31 PL: - added generic VBA expression deobfuscation (chr,asc,etc)
+# 2015-06-19       PL: - added options -a, -c, --each, --attr
+# 2015-06-21 v0.32 PL: - always display decoded strings which are printable
+#                      - fix VBA_Scanner.scan to return raw strings, not repr()
+# 2015-07-09 v0.40 PL: - removed usage of sys.stderr which causes issues
+# 2015-07-12       PL: - added Hex function decoding to VBA Parser
+# 2015-07-13       PL: - added Base64 function decoding to VBA Parser
+# 2015-09-06       PL: - improved VBA_Parser, refactored the main functions
+# 2015-09-13       PL: - moved main functions to a class VBA_Parser_CLI
+#                      - fixed issue when analysis was done twice
+# 2015-09-15       PL: - remove duplicate IOCs from results
+# 2015-09-16       PL: - join long VBA lines ending with underscore before scan
+#                      - disabled unused option --each
+# 2015-09-22 v0.41 PL: - added new option --reveal
+#                      - added suspicious strings for PowerShell.exe options
 
-__version__ = '0.24'
+__version__ = '0.41'
 
 #------------------------------------------------------------------------------
 # TODO:
+# + option --fast to disable VBA expressions parsing
 # + do not use logging, but a provided logger (null logger by default)
 # + setup logging (common with other oletools)
 # + add xor bruteforcing like bbharvest
-# + add chr() decoding
+# + options -a and -c should imply -d
 
 # TODO later:
 # + performance improvement: instead of searching each keyword separately,
@@ -185,13 +201,15 @@ import binascii
 import base64
 import traceback
 import zlib
-import email
+import email  # for MHTML parsing
+import string # for printable
 
 try:
     import re2 as re
 except ImportError:
     import re
 
+# import lxml or ElementTree for XML parsing:
 try:
     # lxml: best performance for XML processing
     import lxml.etree as ET
@@ -208,10 +226,7 @@ except ImportError:
                                + "see http://codespeak.net/lxml " \
                                + "or http://effbot.org/zone/element-index.htm"
 
-
 import olefile
-#from thirdparty.prettytable import prettytable
-#from thirdparty.xglob import xglob
 
 #--- CONSTANTS ----------------------------------------------------------------
 
@@ -224,6 +239,15 @@ TYPE_OLE = 'OLE'
 TYPE_OpenXML = 'OpenXML'
 TYPE_Word2003_XML = 'Word2003_XML'
 TYPE_MHTML = 'MHTML'
+
+# short tag to display file types in triage mode:
+TYPE2TAG = {
+    TYPE_OLE: 'OLE:',
+    TYPE_OpenXML: 'OpX:',
+    TYPE_Word2003_XML: 'XML:',
+    TYPE_MHTML: 'MHT:',
+}
+
 
 # MSO files ActiveMime header magic
 MSO_ACTIVEMIME_HEADER = 'ActiveMime'
@@ -268,29 +292,31 @@ SUSPICIOUS_KEYWORDS = {
     'May open a file':
         ('Open',),
     'May write to a file (if combined with Open)':
-        #TODO: regex to find Open+Write on same line
+    #TODO: regex to find Open+Write on same line
         ('Write', 'Put', 'Output', 'Print #'),
     'May read or write a binary file (if combined with Open)':
-        #TODO: regex to find Open+Binary on same line
+    #TODO: regex to find Open+Binary on same line
         ('Binary',),
     'May copy a file':
         ('FileCopy', 'CopyFile'),
-        #FileCopy: http://msdn.microsoft.com/en-us/library/office/gg264390%28v=office.15%29.aspx
-        #CopyFile: http://msdn.microsoft.com/en-us/library/office/gg264089%28v=office.15%29.aspx
+    #FileCopy: http://msdn.microsoft.com/en-us/library/office/gg264390%28v=office.15%29.aspx
+    #CopyFile: http://msdn.microsoft.com/en-us/library/office/gg264089%28v=office.15%29.aspx
     'May delete a file':
         ('Kill',),
     'May create a text file':
-        ('CreateTextFile','ADODB.Stream', 'WriteText', 'SaveToFile'),
-        #CreateTextFile: http://msdn.microsoft.com/en-us/library/office/gg264617%28v=office.15%29.aspx
-        #ADODB.Stream sample: http://pastebin.com/Z4TMyuq6
+        ('CreateTextFile', 'ADODB.Stream', 'WriteText', 'SaveToFile'),
+    #CreateTextFile: http://msdn.microsoft.com/en-us/library/office/gg264617%28v=office.15%29.aspx
+    #ADODB.Stream sample: http://pastebin.com/Z4TMyuq6
     'May run an executable file or a system command':
         ('Shell', 'vbNormal', 'vbNormalFocus', 'vbHide', 'vbMinimizedFocus', 'vbMaximizedFocus', 'vbNormalNoFocus',
          'vbMinimizedNoFocus', 'WScript.Shell', 'Run'),
-        #Shell: http://msdn.microsoft.com/en-us/library/office/gg278437%28v=office.15%29.aspx
-        #WScript.Shell+Run sample: http://pastebin.com/Z4TMyuq6
+    #Shell: http://msdn.microsoft.com/en-us/library/office/gg278437%28v=office.15%29.aspx
+    #WScript.Shell+Run sample: http://pastebin.com/Z4TMyuq6
     'May run PowerShell commands':
     #sample: https://malwr.com/analysis/M2NjZWNmMjA0YjVjNGVhYmJlZmFhNWY4NmQxZDllZTY/
-        ('PowerShell', ),
+    #also: https://bitbucket.org/decalage/oletools/issues/14/olevba-library-update-ioc
+    #TODO: add support for keywords starting with a non-alpha character, such as "-noexit"
+        ('PowerShell', 'noexit', 'ExecutionPolicy', 'noprofile'),
     'May hide the application':
         ('Application.Visible', 'ShowWindow', 'SW_HIDE'),
     'May create a directory':
@@ -298,7 +324,7 @@ SUSPICIOUS_KEYWORDS = {
     'May save the current workbook':
         ('ActiveWorkbook.SaveAs',),
     'May change which directory contains files to open at startup':
-        #TODO: confirm the actual effect
+    #TODO: confirm the actual effect
         ('Application.AltStartupPath',),
     'May create an OLE object':
         ('CreateObject',),
@@ -307,24 +333,30 @@ SUSPICIOUS_KEYWORDS = {
     'May enumerate application windows (if combined with Shell.Application object)':
         ('Windows', 'FindWindow'),
     'May run code from a DLL':
-        #TODO: regex to find declare+lib on same line
+    #TODO: regex to find declare+lib on same line
         ('Lib',),
+    'May inject code into another process':
+        ('CreateThread', 'VirtualAlloc', # (issue #9) suggested by Davy Douhine - used by MSF payload
+        ),
     'May download files from the Internet':
-        #TODO: regex to find urlmon+URLDownloadToFileA on same line
-        ('URLDownloadToFileA', 'Msxml2.XMLHTTP', 'Microsoft.XMLHTTP'),
+    #TODO: regex to find urlmon+URLDownloadToFileA on same line
+        ('URLDownloadToFileA', 'Msxml2.XMLHTTP', 'Microsoft.XMLHTTP',
+         'MSXML2.ServerXMLHTTP', # suggested in issue #13
+         'User-Agent', # sample from @ozhermit: http://pastebin.com/MPc3iV6z
+        ),
     'May download files from the Internet using PowerShell':
     #sample: https://malwr.com/analysis/M2NjZWNmMjA0YjVjNGVhYmJlZmFhNWY4NmQxZDllZTY/
         ('New-Object System.Net.WebClient', 'DownloadFile'),
     'May control another application by simulating user keystrokes':
         ('SendKeys', 'AppActivate'),
-        #SendKeys: http://msdn.microsoft.com/en-us/library/office/gg278655%28v=office.15%29.aspx
+    #SendKeys: http://msdn.microsoft.com/en-us/library/office/gg278655%28v=office.15%29.aspx
     'May attempt to obfuscate malicious function calls':
         ('CallByName',),
-        #CallByName: http://msdn.microsoft.com/en-us/library/office/gg278760%28v=office.15%29.aspx
+    #CallByName: http://msdn.microsoft.com/en-us/library/office/gg278760%28v=office.15%29.aspx
     'May attempt to obfuscate specific strings':
-        #TODO: regex to find several Chr*, not just one
+    #TODO: regex to find several Chr*, not just one
         ('Chr', 'ChrB', 'ChrW', 'StrReverse', 'Xor'),
-        #Chr: http://msdn.microsoft.com/en-us/library/office/gg264465%28v=office.15%29.aspx
+    #Chr: http://msdn.microsoft.com/en-us/library/office/gg264465%28v=office.15%29.aspx
     'May read or write registry keys':
     #sample: https://malwr.com/analysis/M2NjZWNmMjA0YjVjNGVhYmJlZmFhNWY4NmQxZDllZTY/
         ('RegOpenKeyExA', 'RegOpenKeyEx', 'RegCloseKey'),
@@ -337,7 +369,6 @@ SUSPICIOUS_KEYWORDS = {
     # sample: https://malwr.com/analysis/M2NjZWNmMjA0YjVjNGVhYmJlZmFhNWY4NmQxZDllZTY/
         (r'SYSTEM\ControlSet001\Services\Disk\Enum', 'VIRTUAL', 'VMWARE', 'VBOX'),
     'May detect Anubis Sandbox':
-    # sample: https://malwr.com/analysis/M2NjZWNmMjA0YjVjNGVhYmJlZmFhNWY4NmQxZDllZTY/
     # sample: https://malwr.com/analysis/M2NjZWNmMjA0YjVjNGVhYmJlZmFhNWY4NmQxZDllZTY/
     # NOTES: this sample also checks App.EXEName but that seems to be a bug, it works in VB6 but not in VBA
     # ref: http://www.syssec-project.eu/m/page-media/3/disarm-raid11.pdf
@@ -361,7 +392,6 @@ SUSPICIOUS_KEYWORDS = {
     'May detect WinJail Sandbox':
     # ref: http://www.cplusplus.com/forum/windows/96874/
         ('Afx:400000:0',),
-
 }
 
 # Regular Expression for a URL:
@@ -376,12 +406,12 @@ DNS_NAME = r'(?:[a-zA-Z0-9\-\.]+\.' + TLD + ')'
 #TODO: IPv6 - see https://www.debuggex.com/
 # A literal numeric IPv6 address may be given, but must be enclosed in [ ] e.g. [db8:0cec::99:123a]
 NUMBER_0_255 = r'(?:25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9][0-9]|[0-9])'
-IPv4 = r'(?:'+NUMBER_0_255+r'\.){3}'+NUMBER_0_255
+IPv4 = r'(?:' + NUMBER_0_255 + r'\.){3}' + NUMBER_0_255
 # IPv4 must come before the DNS name because it is more specific
 SERVER = r'(?:' + IPv4 + '|' + DNS_NAME + ')'
 PORT = r'(?:\:[0-9]{1,5})?'
 SERVER_PORT = SERVER + PORT
-URL_PATH = r'(?:/[a-zA-Z0-9\-\._\?\,\'/\\\+&%\$#\=~]*)?' # [^\.\,\)\(\s"]
+URL_PATH = r'(?:/[a-zA-Z0-9\-\._\?\,\'/\\\+&%\$#\=~]*)?'  # [^\.\,\)\(\s"]
 URL_RE = SCHEME + r'\://' + SERVER_PORT + URL_PATH
 re_url = re.compile(URL_RE)
 
@@ -391,14 +421,17 @@ re_url = re.compile(URL_RE)
 RE_PATTERNS = (
     ('URL', re.compile(URL_RE)),
     ('IPv4 address', re.compile(IPv4)),
-    ('E-mail address', re.compile(r'(?i)\b[A-Z0-9._%+-]+@'+SERVER+'\b')),
+    # TODO: add IPv6
+    ('E-mail address', re.compile(r'(?i)\b[A-Z0-9._%+-]+@' + SERVER + '\b')),
     # ('Domain name', re.compile(r'(?=^.{1,254}$)(^(?:(?!\d+\.|-)[a-zA-Z0-9_\-]{1,63}(?<!-)\.?)+(?:[a-zA-Z]{2,})$)')),
     # Executable file name with known extensions (except .com which is present in many URLs, and .application):
-    ("Executable file name", re.compile(r"(?i)\b\w+\.(EXE|PIF|GADGET|MSI|MSP|MSC|VBS|VBE|VB|JSE|JS|WSF|WSC|WSH|WS|BAT|CMD|DLL|SCR|HTA|CPL|CLASS|JAR|PS1XML|PS1|PS2XML|PS2|PSC1|PSC2|SCF|LNK|INF|REG)\b")),
+    ("Executable file name", re.compile(
+        r"(?i)\b\w+\.(EXE|PIF|GADGET|MSI|MSP|MSC|VBS|VBE|VB|JSE|JS|WSF|WSC|WSH|WS|BAT|CMD|DLL|SCR|HTA|CPL|CLASS|JAR|PS1XML|PS1|PS2XML|PS2|PSC1|PSC2|SCF|LNK|INF|REG)\b")),
     # Sources: http://www.howtogeek.com/137270/50-file-extensions-that-are-potentially-dangerous-on-windows/
-    #TODO: https://support.office.com/en-us/article/Blocked-attachments-in-Outlook-3811cddc-17c3-4279-a30c-060ba0207372#__attachment_file_types
+    # TODO: https://support.office.com/en-us/article/Blocked-attachments-in-Outlook-3811cddc-17c3-4279-a30c-060ba0207372#__attachment_file_types
+    # TODO: add win & unix file paths
     #('Hex string', re.compile(r'(?:[0-9A-Fa-f]{2}){4,}')),
-    )
+)
 
 # regex to detect strings encoded in hexadecimal
 re_hex_string = re.compile(r'(?:[0-9A-Fa-f]{2}){4,}')
@@ -406,7 +439,9 @@ re_hex_string = re.compile(r'(?:[0-9A-Fa-f]{2}){4,}')
 # regex to detect strings encoded in base64
 #re_base64_string = re.compile(r'"(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?"')
 # better version from balbuzard, less false positives:
-re_base64_string = re.compile(r'"(?:[A-Za-z0-9+/]{4}){1,}(?:[A-Za-z0-9+/]{2}[AEIMQUYcgkosw048]=|[A-Za-z0-9+/][AQgw]==)?"')
+# (plain version without double quotes, used also below in quoted_base64_string)
+BASE64_RE = r'(?:[A-Za-z0-9+/]{4}){1,}(?:[A-Za-z0-9+/]{2}[AEIMQUYcgkosw048]=|[A-Za-z0-9+/][AQgw]==)?'
+re_base64_string = re.compile('"' + BASE64_RE + '"')
 # white list of common strings matching the base64 regex, but which are not base64 strings (all lowercase):
 BASE64_WHITELIST = set(['thisdocument', 'thisworkbook', 'test', 'temp', 'http', 'open', 'exit'])
 
@@ -415,6 +450,204 @@ BASE64_WHITELIST = set(['thisdocument', 'thisworkbook', 'test', 'temp', 'http', 
 re_dridex_string = re.compile(r'"[0-9A-Za-z]{20,}"')
 # regex to check that it is not just a hex string:
 re_nothex_check = re.compile(r'[G-Zg-z]')
+
+
+# === PARTIAL VBA GRAMMAR ====================================================
+
+# REFERENCES:
+# - [MS-VBAL]: VBA Language Specification
+#   https://msdn.microsoft.com/en-us/library/dd361851.aspx
+# - pyparsing: http://pyparsing.wikispaces.com/
+
+# TODO: set whitespaces according to VBA
+# TODO: merge extended lines before parsing
+
+# VBA identifier chars (from MS-VBAL 3.3.5)
+vba_identifier_chars = alphanums + '_'
+
+class VbaExpressionString(str):
+    """
+    Class identical to str, used to distinguish plain strings from strings
+    obfuscated using VBA expressions (Chr, StrReverse, etc)
+    Usage: each VBA expression parse action should convert strings to
+    VbaExpressionString.
+    Then isinstance(s, VbaExpressionString) is True only for VBA expressions.
+     (see detect_vba_strings)
+    """
+    pass
+
+
+# --- NUMBER TOKENS ----------------------------------------------------------
+
+# 3.3.2 Number Tokens
+# INTEGER = integer-literal ["%" / "&" / "^"]
+# integer-literal = decimal-literal / octal-literal / hex-literal
+# decimal-literal = 1*decimal-digit
+# octal-literal = "&" [%x004F / %x006F] 1*octal-digit
+# ; & or &o or &O
+# hex-literal = "&" (%x0048 / %x0068) 1*hex-digit
+# ; &h or &H
+# octal-digit = "0" / "1" / "2" / "3" / "4" / "5" / "6" / "7"
+# decimal-digit = octal-digit / "8" / "9"
+# hex-digit = decimal-digit / %x0041-0046 / %x0061-0066 ;A-F / a-f
+
+# NOTE: here Combine() is required to avoid spaces between elements
+# NOTE: here WordStart is necessary to avoid matching a number preceded by
+#       letters or underscore (e.g. "VBT1" or "ABC_34"), when using scanString
+decimal_literal = Combine(WordStart(vba_identifier_chars) + Word(nums)
+                          + Suppress(Optional(Word('%&^', exact=1))))
+decimal_literal.setParseAction(lambda t: int(t[0]))
+
+octal_literal = Combine(Suppress(Literal('&') + Optional((CaselessLiteral('o')))) + Word(srange('[0-7]'))
+                + Suppress(Optional(Word('%&^', exact=1))))
+octal_literal.setParseAction(lambda t: int(t[0], base=8))
+
+hex_literal = Combine(Suppress(CaselessLiteral('&h')) + Word(srange('[0-9a-fA-F]'))
+                + Suppress(Optional(Word('%&^', exact=1))))
+hex_literal.setParseAction(lambda t: int(t[0], base=16))
+
+integer = decimal_literal | octal_literal | hex_literal
+
+
+# --- QUOTED STRINGS ---------------------------------------------------------
+
+# 3.3.4 String Tokens
+# STRING = double-quote *string-character (double-quote / line-continuation / LINE-END)
+# double-quote = %x0022 ; "
+# string-character = NO-LINE-CONTINUATION ((double-quote double-quote) termination-character)
+
+quoted_string = QuotedString('"', escQuote='""')
+quoted_string.setParseAction(lambda t: str(t[0]))
+
+
+#--- VBA Expressions ---------------------------------------------------------
+
+# See MS-VBAL 5.6 Expressions
+
+# need to pre-declare using Forward() because it is recursive
+# VBA string expression and integer expression
+vba_expr_str = Forward()
+vba_expr_int = Forward()
+
+# --- CHR --------------------------------------------------------------------
+
+# Chr, Chr$, ChrB, ChrW(int) => char
+vba_chr = Suppress(
+            Combine(WordStart(vba_identifier_chars) + CaselessLiteral('Chr')
+            + Optional(CaselessLiteral('B') | CaselessLiteral('W')) + Optional('$'))
+            + '(') + vba_expr_int + Suppress(')')
+vba_chr.setParseAction(lambda t: VbaExpressionString(chr(t[0])))
+
+
+# --- ASC --------------------------------------------------------------------
+
+# Asc(char) => int
+#TODO: see MS-VBAL 6.1.2.11.1.1 page 240 => AscB, AscW
+vba_asc = Suppress(CaselessKeyword('Asc') + '(') + vba_expr_str + Suppress(')')
+vba_asc.setParseAction(lambda t: ord(t[0]))
+
+
+# --- VAL --------------------------------------------------------------------
+
+# Val(string) => int
+# TODO: make sure the behavior of VBA's val is fully covered
+vba_val = Suppress(CaselessKeyword('Val') + '(') + vba_expr_str + Suppress(')')
+vba_val.setParseAction(lambda t: int(t[0].strip()))
+
+
+# --- StrReverse() --------------------------------------------------------------------
+
+# StrReverse(string) => string
+strReverse = Suppress(CaselessKeyword('StrReverse') + '(') + vba_expr_str + Suppress(')')
+strReverse.setParseAction(lambda t: VbaExpressionString(str(t[0])[::-1]))
+
+
+# --- ENVIRON() --------------------------------------------------------------------
+
+# Environ("name") => just translated to "%name%", that is enough for malware analysis
+environ = Suppress(CaselessKeyword('Environ') + '(') + vba_expr_str + Suppress(')')
+environ.setParseAction(lambda t: VbaExpressionString('%%%s%%' % t[0]))
+
+
+# --- IDENTIFIER -------------------------------------------------------------
+
+#TODO: see MS-VBAL 3.3.5 page 33
+# 3.3.5 Identifier Tokens
+# Latin-identifier = first-Latin-identifier-character *subsequent-Latin-identifier-character
+# first-Latin-identifier-character = (%x0041-005A / %x0061-007A) ; A-Z / a-z
+# subsequent-Latin-identifier-character = first-Latin-identifier-character / DIGIT / %x5F ; underscore
+latin_identifier = Word(initChars=alphas, bodyChars=alphanums + '_')
+
+# --- HEX FUNCTION -----------------------------------------------------------
+
+# match any custom function name with a hex string as argument:
+# TODO: accept vba_expr_str_item as argument, check if it is a hex or base64 string at runtime
+
+# quoted string of at least two hexadecimal numbers of two digits:
+quoted_hex_string = Suppress('"') + Combine(Word(hexnums, exact=2) * (2, None)) + Suppress('"')
+quoted_hex_string.setParseAction(lambda t: str(t[0]))
+
+hex_function_call = Suppress(latin_identifier) + Suppress('(') + \
+                    quoted_hex_string('hex_string') + Suppress(')')
+hex_function_call.setParseAction(lambda t: VbaExpressionString(binascii.a2b_hex(t.hex_string)))
+
+
+# --- BASE64 FUNCTION -----------------------------------------------------------
+
+# match any custom function name with a Base64 string as argument:
+# TODO: accept vba_expr_str_item as argument, check if it is a hex or base64 string at runtime
+
+# quoted string of at least two hexadecimal numbers of two digits:
+quoted_base64_string = Suppress('"') + Regex(BASE64_RE) + Suppress('"')
+quoted_base64_string.setParseAction(lambda t: str(t[0]))
+
+base64_function_call = Suppress(latin_identifier) + Suppress('(') + \
+                    quoted_base64_string('base64_string') + Suppress(')')
+base64_function_call.setParseAction(lambda t: VbaExpressionString(binascii.a2b_base64(t.base64_string)))
+
+
+# ---STRING EXPRESSION -------------------------------------------------------
+
+def concat_strings_list(tokens):
+    """
+    parse action to concatenate strings in a VBA expression with operators '+' or '&'
+    """
+    # extract argument from the tokens:
+    # expected to be a tuple containing a list of strings such as [a,'&',b,'&',c,...]
+    strings = tokens[0][::2]
+    return VbaExpressionString(''.join(strings))
+
+
+vba_expr_str_item = (vba_chr | strReverse | environ | quoted_string | hex_function_call | base64_function_call)
+
+vba_expr_str <<= infixNotation(vba_expr_str_item,
+    [
+        ("+", 2, opAssoc.LEFT, concat_strings_list),
+        ("&", 2, opAssoc.LEFT, concat_strings_list),
+    ])
+
+
+# ---STRING EXPRESSION -------------------------------------------------------
+
+def sum_ints_list(tokens):
+    """
+    parse action to sum integers in a VBA expression with operator '+'
+    """
+    # extract argument from the tokens:
+    # expected to be a tuple containing a list of integers such as [a,'&',b,'&',c,...]
+    integers = tokens[0][::2]
+    return sum(integers)
+
+
+vba_expr_int_item = (vba_asc | vba_val | integer)
+
+vba_expr_int <<= infixNotation(vba_expr_int_item,
+    [
+        ("+", 2, opAssoc.LEFT, sum_ints_list),
+    ])
+
+
+# see detect_vba_strings for the deobfuscation code using this grammar
 
 # === MSO/ActiveMime files parsing ===========================================
 
@@ -483,6 +716,22 @@ def mso_file_extract(data):
 
 #--- FUNCTIONS ----------------------------------------------------------------
 
+# set of printable characters, for is_printable
+_PRINTABLE_SET = set(string.printable)
+
+def is_printable(s):
+    """
+    returns True if string s only contains printable ASCII characters
+    (i.e. contained in string.printable)
+    This is similar to Python 3's str.isprintable, for Python 2.x.
+    :param s: str
+    :return: bool
+    """
+    # inspired from http://stackoverflow.com/questions/3636928/test-if-a-python-string-is-printable
+    # check if the set of chars from s is contained into the set of printable chars:
+    return set(s).issubset(_PRINTABLE_SET)
+
+
 def copytoken_help(decompressed_current, decompressed_chunk_start):
     """
     compute bit masks to decode a CopyToken according to MS-OVBA 2.4.1.3.19.1 CopyToken Help
@@ -500,7 +749,7 @@ def copytoken_help(decompressed_current, decompressed_chunk_start):
     return length_mask, offset_mask, bit_count, maximum_length
 
 
-def decompress_stream (compressed_container):
+def decompress_stream(compressed_container):
     """
     Decompress a stream according to MS-OVBA section 2.4.1
 
@@ -542,7 +791,8 @@ def decompress_stream (compressed_container):
         # 2.4.1.1.5
         compressed_chunk_start = compressed_current
         # chunk header = first 16 bits
-        compressed_chunk_header = struct.unpack("<H", compressed_container[compressed_chunk_start:compressed_chunk_start + 2])[0]
+        compressed_chunk_header = \
+            struct.unpack("<H", compressed_container[compressed_chunk_start:compressed_chunk_start + 2])[0]
         # chunk size = 12 first bits of header + 3
         chunk_size = (compressed_chunk_header & 0x0FFF) + 3
         # chunk signature = 3 next bits - should always be 0b011
@@ -596,13 +846,14 @@ def decompress_stream (compressed_container):
                     # MS-OVBA 2.4.1.3.17 Extract FlagBit
                     flag_bit = (flag_byte >> bit_index) & 1
                     #logging.debug('bit_index=%d: flag_bit=%d' % (bit_index, flag_bit))
-                    if flag_bit == 0: # LiteralToken
+                    if flag_bit == 0:  # LiteralToken
                         # copy one byte directly to output
                         decompressed_container += compressed_container[compressed_current]
                         compressed_current += 1
-                    else: # CopyToken
+                    else:  # CopyToken
                         # MS-OVBA 2.4.1.3.19.2 Unpack CopyToken
-                        copy_token = struct.unpack("<H", compressed_container[compressed_current:compressed_current + 2])[0]
+                        copy_token = \
+                            struct.unpack("<H", compressed_container[compressed_current:compressed_current + 2])[0]
                         #TODO: check this
                         length_mask, offset_mask, bit_count, maximum_length = copytoken_help(
                             len(decompressed_container), decompressed_chunk_start)
@@ -618,7 +869,7 @@ def decompress_stream (compressed_container):
     return decompressed_container
 
 
-def _extract_vba (ole, vba_root, project_path, dir_path):
+def _extract_vba(ole, vba_root, project_path, dir_path):
     """
     Extract VBA macros from an OleFileIO object.
     Internal function, do not call directly.
@@ -735,7 +986,8 @@ def _extract_vba (ole, vba_root, project_path, dir_path):
     check_value('PROJECTDOCSTRING_Id', 0x0005, PROJECTDOCSTRING_Id)
     PROJECTDOCSTRING_SizeOfDocString = struct.unpack("<L", dir_stream.read(4))[0]
     if PROJECTNAME_SizeOfProjectName > 2000:
-        logging.error("PROJECTDOCSTRING_SizeOfDocString value not in range: {0}".format(PROJECTDOCSTRING_SizeOfDocString))
+        logging.error(
+            "PROJECTDOCSTRING_SizeOfDocString value not in range: {0}".format(PROJECTDOCSTRING_SizeOfDocString))
     PROJECTDOCSTRING_DocString = dir_stream.read(PROJECTDOCSTRING_SizeOfDocString)
     PROJECTDOCSTRING_Reserved = struct.unpack("<H", dir_stream.read(2))[0]
     check_value('PROJECTDOCSTRING_Reserved', 0x0040, PROJECTDOCSTRING_Reserved)
@@ -749,7 +1001,8 @@ def _extract_vba (ole, vba_root, project_path, dir_path):
     check_value('PROJECTHELPFILEPATH_Id', 0x0006, PROJECTHELPFILEPATH_Id)
     PROJECTHELPFILEPATH_SizeOfHelpFile1 = struct.unpack("<L", dir_stream.read(4))[0]
     if PROJECTHELPFILEPATH_SizeOfHelpFile1 > 260:
-        logging.error("PROJECTHELPFILEPATH_SizeOfHelpFile1 value not in range: {0}".format(PROJECTHELPFILEPATH_SizeOfHelpFile1))
+        logging.error(
+            "PROJECTHELPFILEPATH_SizeOfHelpFile1 value not in range: {0}".format(PROJECTHELPFILEPATH_SizeOfHelpFile1))
     PROJECTHELPFILEPATH_HelpFile1 = dir_stream.read(PROJECTHELPFILEPATH_SizeOfHelpFile1)
     PROJECTHELPFILEPATH_Reserved = struct.unpack("<H", dir_stream.read(2))[0]
     check_value('PROJECTHELPFILEPATH_Reserved', 0x003D, PROJECTHELPFILEPATH_Reserved)
@@ -788,7 +1041,8 @@ def _extract_vba (ole, vba_root, project_path, dir_path):
     check_value('PROJECTCONSTANTS_Id', 0x000C, PROJECTCONSTANTS_Id)
     PROJECTCONSTANTS_SizeOfConstants = struct.unpack("<L", dir_stream.read(4))[0]
     if PROJECTCONSTANTS_SizeOfConstants > 1015:
-        logging.error("PROJECTCONSTANTS_SizeOfConstants value not in range: {0}".format(PROJECTCONSTANTS_SizeOfConstants))
+        logging.error(
+            "PROJECTCONSTANTS_SizeOfConstants value not in range: {0}".format(PROJECTCONSTANTS_SizeOfConstants))
     PROJECTCONSTANTS_Constants = dir_stream.read(PROJECTCONSTANTS_SizeOfConstants)
     PROJECTCONSTANTS_Reserved = struct.unpack("<H", dir_stream.read(2))[0]
     check_value('PROJECTCONSTANTS_Reserved', 0x003C, PROJECTCONSTANTS_Reserved)
@@ -826,23 +1080,26 @@ def _extract_vba (ole, vba_root, project_path, dir_path):
         if check == 0x002F:
             # REFERENCECONTROL
             REFERENCECONTROL_Id = check
-            REFERENCECONTROL_SizeTwiddled = struct.unpack("<L", dir_stream.read(4))[0] # ignore
+            REFERENCECONTROL_SizeTwiddled = struct.unpack("<L", dir_stream.read(4))[0]  # ignore
             REFERENCECONTROL_SizeOfLibidTwiddled = struct.unpack("<L", dir_stream.read(4))[0]
             REFERENCECONTROL_LibidTwiddled = dir_stream.read(REFERENCECONTROL_SizeOfLibidTwiddled)
-            REFERENCECONTROL_Reserved1 = struct.unpack("<L", dir_stream.read(4))[0] # ignore
+            REFERENCECONTROL_Reserved1 = struct.unpack("<L", dir_stream.read(4))[0]  # ignore
             check_value('REFERENCECONTROL_Reserved1', 0x0000, REFERENCECONTROL_Reserved1)
-            REFERENCECONTROL_Reserved2 = struct.unpack("<H", dir_stream.read(2))[0] # ignore
+            REFERENCECONTROL_Reserved2 = struct.unpack("<H", dir_stream.read(2))[0]  # ignore
             check_value('REFERENCECONTROL_Reserved2', 0x0000, REFERENCECONTROL_Reserved2)
             # optional field
             check2 = struct.unpack("<H", dir_stream.read(2))[0]
             if check2 == 0x0016:
                 REFERENCECONTROL_NameRecordExtended_Id = check
                 REFERENCECONTROL_NameRecordExtended_SizeofName = struct.unpack("<L", dir_stream.read(4))[0]
-                REFERENCECONTROL_NameRecordExtended_Name = dir_stream.read(REFERENCECONTROL_NameRecordExtended_SizeofName)
+                REFERENCECONTROL_NameRecordExtended_Name = dir_stream.read(
+                    REFERENCECONTROL_NameRecordExtended_SizeofName)
                 REFERENCECONTROL_NameRecordExtended_Reserved = struct.unpack("<H", dir_stream.read(2))[0]
-                check_value('REFERENCECONTROL_NameRecordExtended_Reserved', 0x003E, REFERENCECONTROL_NameRecordExtended_Reserved)
+                check_value('REFERENCECONTROL_NameRecordExtended_Reserved', 0x003E,
+                            REFERENCECONTROL_NameRecordExtended_Reserved)
                 REFERENCECONTROL_NameRecordExtended_SizeOfNameUnicode = struct.unpack("<L", dir_stream.read(4))[0]
-                REFERENCECONTROL_NameRecordExtended_NameUnicode = dir_stream.read(REFERENCECONTROL_NameRecordExtended_SizeOfNameUnicode)
+                REFERENCECONTROL_NameRecordExtended_NameUnicode = dir_stream.read(
+                    REFERENCECONTROL_NameRecordExtended_SizeOfNameUnicode)
                 REFERENCECONTROL_Reserved3 = struct.unpack("<H", dir_stream.read(2))[0]
             else:
                 REFERENCECONTROL_Reserved3 = check2
@@ -884,7 +1141,7 @@ def _extract_vba (ole, vba_root, project_path, dir_path):
         logging.error('invalid or unknown check Id {0:04X}'.format(check))
         sys.exit(0)
 
-    PROJECTMODULES_Id = check #struct.unpack("<H", dir_stream.read(2))[0]
+    PROJECTMODULES_Id = check  #struct.unpack("<H", dir_stream.read(2))[0]
     check_value('PROJECTMODULES_Id', 0x000F, PROJECTMODULES_Id)
     PROJECTMODULES_Size = struct.unpack("<L", dir_stream.read(4))[0]
     check_value('PROJECTMODULES_Size', 0x0002, PROJECTMODULES_Size)
@@ -964,7 +1221,7 @@ def _extract_vba (ole, vba_root, project_path, dir_path):
             MODULEPRIVATE_Reserved = struct.unpack("<L", dir_stream.read(4))[0]
             check_value('MODULEPRIVATE_Reserved', 0x0000, MODULEPRIVATE_Reserved)
             section_id = struct.unpack("<H", dir_stream.read(2))[0]
-        if section_id == 0x002B: # TERMINATOR
+        if section_id == 0x002B:  # TERMINATOR
             MODULE_Reserved = struct.unpack("<L", dir_stream.read(4))[0]
             check_value('MODULE_Reserved', 0x0000, MODULE_Reserved)
             section_id = None
@@ -1003,6 +1260,21 @@ def _extract_vba (ole, vba_root, project_path, dir_path):
         else:
             logging.warning("module stream {0} has code data length 0".format(MODULESTREAMNAME_StreamName))
     return
+
+
+def vba_collapse_long_lines(vba_code):
+    """
+    Parse a VBA module code to detect continuation line characters (underscore) and
+    collapse split lines. Continuation line characters are replaced by spaces.
+
+    :param vba_code: str, VBA module code
+    :return: str, VBA module code with long lines collapsed
+    """
+    # TODO: use a regex instead, to allow whitespaces after the underscore?
+    vba_code = vba_code.replace(' _\r\n', ' ')
+    vba_code = vba_code.replace(' _\r', ' ')
+    vba_code = vba_code.replace(' _\n', ' ')
+    return vba_code
 
 
 def filter_vba(vba_code):
@@ -1050,9 +1322,9 @@ def detect_autoexec(vba_code, obfuscation=None):
         for keyword in keywords:
             #TODO: if keyword is already a compiled regex, use it as-is
             # search using regex to detect word boundaries:
-            if re.search(r'(?i)\b'+keyword+r'\b', vba_code):
-            #if keyword.lower() in vba_code:
-                results.append((keyword, description+obf_text))
+            if re.search(r'(?i)\b' + keyword + r'\b', vba_code):
+                #if keyword.lower() in vba_code:
+                results.append((keyword, description + obf_text))
     return results
 
 
@@ -1074,9 +1346,9 @@ def detect_suspicious(vba_code, obfuscation=None):
     for description, keywords in SUSPICIOUS_KEYWORDS.items():
         for keyword in keywords:
             # search using regex to detect word boundaries:
-            if re.search(r'(?i)\b'+keyword+r'\b', vba_code):
-            #if keyword.lower() in vba_code:
-                results.append((keyword, description+obf_text))
+            if re.search(r'(?i)\b' + keyword + r'\b', vba_code):
+                #if keyword.lower() in vba_code:
+                results.append((keyword, description + obf_text))
     return results
 
 
@@ -1097,7 +1369,7 @@ def detect_patterns(vba_code, obfuscation=None):
         for match in pattern_re.finditer(vba_code):
             value = match.group()
             if value not in found:
-                results.append((pattern_type+obf_text, value))
+                results.append((pattern_type + obf_text, value))
                 found.add(value)
     return results
 
@@ -1115,7 +1387,7 @@ def detect_hex_strings(vba_code):
         value = match.group()
         if value not in found:
             decoded = binascii.unhexlify(value)
-            # Check if decoded string is actually ascii
+            # check if decoded string is actually ascii
             try:
                 decoded.decode("ascii")
                 results.append((value, decoded))
@@ -1161,6 +1433,7 @@ def detect_dridex_strings(vba_code):
     :return: list of str tuples (encoded string, decoded string)
     """
     from DridexUrlDecoder import DridexUrlDecode
+
     results = []
     found = set()
     for match in re_dridex_string.finditer(vba_code):
@@ -1179,7 +1452,42 @@ def detect_dridex_strings(vba_code):
     return results
 
 
-class VBA_Scanner (object):
+def detect_vba_strings(vba_code):
+    """
+    Detect if the VBA code contains strings obfuscated with VBA expressions
+    using keywords such as Chr, Asc, Val, StrReverse, etc.
+
+    :param vba_code: str, VBA source code
+    :return: list of str tuples (encoded string, decoded string)
+    """
+    # TODO: handle exceptions
+    results = []
+    found = set()
+    # IMPORTANT: to extract the actual VBA expressions found in the code,
+    #            we must expand tabs to have the same string as pyparsing.
+    #            Otherwise, start and end offsets are incorrect.
+    vba_code = vba_code.expandtabs()
+    for tokens, start, end in vba_expr_str.scanString(vba_code):
+        encoded = vba_code[start:end]
+        decoded = tokens[0]
+        if isinstance(decoded, VbaExpressionString):
+            # This is a VBA expression, not a simple string
+            # print 'VBA EXPRESSION: encoded=%r => decoded=%r' % (encoded, decoded)
+            # remove parentheses and quotes from original string:
+            # if encoded.startswith('(') and encoded.endswith(')'):
+            #     encoded = encoded[1:-1]
+            # if encoded.startswith('"') and encoded.endswith('"'):
+            #     encoded = encoded[1:-1]
+            # avoid duplicates and simple strings:
+            if encoded not in found and decoded != encoded:
+                results.append((encoded, decoded))
+                found.add(encoded)
+        # else:
+            # print 'VBA STRING: encoded=%r => decoded=%r' % (encoded, decoded)
+    return results
+
+
+class VBA_Scanner(object):
     """
     Class to scan the source code of a VBA module to find obfuscated strings,
     suspicious keywords, IOCs, auto-executable macros, etc.
@@ -1191,12 +1499,24 @@ class VBA_Scanner (object):
 
         :param vba_code: str, VBA source code to be analyzed
         """
-        self.code = vba_code
+        # join long lines ending with " _":
+        self.code = vba_collapse_long_lines(vba_code)
         self.code_hex = ''
         self.code_hex_rev = ''
         self.code_rev_hex = ''
         self.code_base64 = ''
         self.code_dridex = ''
+        self.code_vba = ''
+        self.strReverse = None
+        # results = None before scanning, then a list of tuples after scanning
+        self.results = None
+        self.autoexec_keywords = None
+        self.suspicious_keywords = None
+        self.iocs = None
+        self.hex_strings = None
+        self.base64_strings = None
+        self.dridex_strings = None
+        self.vba_strings = None
 
 
     def scan(self, include_decoded_strings=False):
@@ -1216,35 +1536,40 @@ class VBA_Scanner (object):
         if 'strreverse' in self.code.lower(): self.strReverse = True
         # Then append the decoded strings to the VBA code, to detect obfuscated IOCs and keywords:
         for encoded, decoded in self.hex_strings:
-            self.code_hex += '\n'+decoded
+            self.code_hex += '\n' + decoded
             # if the code contains "StrReverse", also append the hex strings in reverse order:
             if self.strReverse:
                 # StrReverse after hex decoding:
-                self.code_hex_rev += '\n'+decoded[::-1]
+                self.code_hex_rev += '\n' + decoded[::-1]
                 # StrReverse before hex decoding:
-                self.code_rev_hex += '\n'+binascii.unhexlify(encoded[::-1])
+                self.code_rev_hex += '\n' + binascii.unhexlify(encoded[::-1])
                 #example: https://malwr.com/analysis/NmFlMGI4YTY1YzYyNDkwNTg1ZTBiZmY5OGI3YjlhYzU/
         #TODO: also append the full code reversed if StrReverse? (risk of false positives?)
         # Detect Base64-encoded strings
         self.base64_strings = detect_base64_strings(self.code)
         for encoded, decoded in self.base64_strings:
-            self.code_base64 += '\n'+decoded
+            self.code_base64 += '\n' + decoded
         # Detect Dridex-encoded strings
         self.dridex_strings = detect_dridex_strings(self.code)
         for encoded, decoded in self.dridex_strings:
-            self.code_dridex += '\n'+decoded
+            self.code_dridex += '\n' + decoded
+        # Detect obfuscated strings in VBA expressions
+        self.vba_strings = detect_vba_strings(self.code)
+        for encoded, decoded in self.vba_strings:
+            self.code_vba += '\n' + decoded
         results = []
         self.autoexec_keywords = []
         self.suspicious_keywords = []
         self.iocs = []
 
         for code, obfuscation in (
-            (self.code, None),
-            (self.code_hex, 'Hex'),
-            (self.code_hex_rev, 'Hex+StrReverse'),
-            (self.code_rev_hex, 'StrReverse+Hex'),
-            (self.code_base64, 'Base64'),
-            (self.code_dridex, 'Dridex'),
+                (self.code, None),
+                (self.code_hex, 'Hex'),
+                (self.code_hex_rev, 'Hex+StrReverse'),
+                (self.code_rev_hex, 'StrReverse+Hex'),
+                (self.code_base64, 'Base64'),
+                (self.code_dridex, 'Dridex'),
+                (self.code_vba, 'VBA expression'),
         ):
             self.autoexec_keywords += detect_autoexec(code, obfuscation)
             self.suspicious_keywords += detect_suspicious(code, obfuscation)
@@ -1253,26 +1578,47 @@ class VBA_Scanner (object):
         # If hex-encoded strings were discovered, add an item to suspicious keywords:
         if self.hex_strings:
             self.suspicious_keywords.append(('Hex Strings',
-                'Hex-encoded strings were detected, may be used to obfuscate strings (option --decode to see all)'))
+                                             'Hex-encoded strings were detected, may be used to obfuscate strings (option --decode to see all)'))
         if self.base64_strings:
             self.suspicious_keywords.append(('Base64 Strings',
-                'Base64-encoded strings were detected, may be used to obfuscate strings (option --decode to see all)'))
+                                             'Base64-encoded strings were detected, may be used to obfuscate strings (option --decode to see all)'))
         if self.dridex_strings:
             self.suspicious_keywords.append(('Dridex Strings',
-                'Dridex-encoded strings were detected, may be used to obfuscate strings (option --decode to see all)'))
+                                             'Dridex-encoded strings were detected, may be used to obfuscate strings (option --decode to see all)'))
+        if self.vba_strings:
+            self.suspicious_keywords.append(('VBA obfuscated Strings',
+                                             'VBA string expressions were detected, may be used to obfuscate strings (option --decode to see all)'))
+        # use a set to avoid duplicate keywords
+        keyword_set = set()
         for keyword, description in self.autoexec_keywords:
-            results.append(('AutoExec', keyword, description))
+            if keyword not in keyword_set:
+                results.append(('AutoExec', keyword, description))
+                keyword_set.add(keyword)
+        keyword_set = set()
         for keyword, description in self.suspicious_keywords:
-            results.append(('Suspicious', keyword, description))
+            if keyword not in keyword_set:
+                results.append(('Suspicious', keyword, description))
+                keyword_set.add(keyword)
+        keyword_set = set()
         for pattern_type, value in self.iocs:
-            results.append(('IOC', value, pattern_type))
-        if include_decoded_strings:
-            for encoded, decoded in self.hex_strings:
-                results.append(('Hex String', repr(decoded), encoded))
-            for encoded, decoded in self.base64_strings:
-                results.append(('Base64 String', repr(decoded), encoded))
-            for encoded, decoded in self.dridex_strings:
-                results.append(('Dridex string', repr(decoded), encoded))
+            if value not in keyword_set:
+                results.append(('IOC', value, pattern_type))
+                keyword_set.add(value)
+
+        # include decoded strings only if they are printable or if --decode option:
+        for encoded, decoded in self.hex_strings:
+            if include_decoded_strings or is_printable(decoded):
+                results.append(('Hex String', decoded, encoded))
+        for encoded, decoded in self.base64_strings:
+            if include_decoded_strings or is_printable(decoded):
+                results.append(('Base64 String', decoded, encoded))
+        for encoded, decoded in self.dridex_strings:
+            if include_decoded_strings or is_printable(decoded):
+                results.append(('Dridex string', decoded, encoded))
+        for encoded, decoded in self.vba_strings:
+            if include_decoded_strings or is_printable(decoded):
+                results.append(('VBA string', decoded, encoded))
+        self.results = results
         return results
 
     def scan_summary(self):
@@ -1282,13 +1628,14 @@ class VBA_Scanner (object):
         such as hex-encoded strings.
 
         :return: tuple with the number of items found for each category:
-            (autoexec, suspicious, IOCs, hex, base64, dridex)
+            (autoexec, suspicious, IOCs, hex, base64, dridex, vba)
         """
-        self.scan()
+        # avoid scanning the same code twice:
+        if self.results is None:
+            self.scan()
         return (len(self.autoexec_keywords), len(self.suspicious_keywords),
-            len(self.iocs), len(self.hex_strings), len(self.base64_strings),
-            len(self.dridex_strings))
-
+                len(self.iocs), len(self.hex_strings), len(self.base64_strings),
+                len(self.dridex_strings), len(self.vba_strings))
 
 
 def scan_vba(vba_code, include_decoded_strings):
@@ -1321,7 +1668,7 @@ class VBA_Parser(object):
     - PowerPoint 2007+ (.pptm, .ppsm)
     """
 
-    def __init__(self, filename, data=None):
+    def __init__(self, filename, data=None, container=None):
         """
         Constructor for VBA_Parser
 
@@ -1330,6 +1677,9 @@ class VBA_Parser(object):
         :param data: None or bytes str, if None the file will be read from disk (or from the file-like object).
         If data is provided as a bytes string, it will be parsed as the content of the file in memory,
         and not read from disk. Note: files must be read in binary mode, i.e. open(f, 'rb').
+
+        :param container: str, path and filename of container if the file is within
+        a zip archive, None otherwise.
         """
         #TODO: filename should only be a string, data should be used for the file-like object
         #TODO: filename should be mandatory, optional data is a string or file-like object
@@ -1344,8 +1694,25 @@ class VBA_Parser(object):
         self.ole_file = None
         self.ole_subfiles = []
         self.filename = filename
+        self.container = container
         self.type = None
         self.vba_projects = None
+        self.contains_macros = None # will be set to True or False by detect_macros
+        self.vba_code_all_modules = None # to store the source code of all modules
+        # list of tuples for each module: (subfilename, stream_path, vba_filename, vba_code)
+        self.modules = None
+        # Analysis results: list of tuples (type, keyword, description) - See VBA_Scanner
+        self.analysis_results = None
+        # statistics for the scan summary and flags
+        self.nb_macros = 0
+        self.nb_autoexec = 0
+        self.nb_suspicious = 0
+        self.nb_iocs = 0
+        self.nb_hexstrings = 0
+        self.nb_base64strings = 0
+        self.nb_dridexstrings = 0
+        self.nb_vbastrings = 0
+
         # if filename is None:
         #     if isinstance(_file, basestring):
         #         if len(_file) < olefile.MINIMAL_OLEFILE_SIZE:
@@ -1356,12 +1723,12 @@ class VBA_Parser(object):
         #         self.filename = '<file-like object>'
         if olefile.isOleFile(_file):
             # This looks like an OLE file
-            logging.debug('Parsing OLE file %s' % self.filename)
+            logging.debug('Opening OLE file %s' % self.filename)
             # Open and parse the OLE file, using unicode for path names:
             self.type = TYPE_OLE
             # TODO: handle OLE parsing exceptions
             self.ole_file = olefile.OleFileIO(_file, path_encoding=None)
-            #TODO: raise TypeError if this is a Powerpoint 97 file, since VBA macros cannot be detected yet
+            # TODO: raise TypeError if this is a Powerpoint 97 file, since VBA macros cannot be detected yet
         elif zipfile.is_zipfile(_file):
             # This looks like a zip file, need to look for vbaProject.bin inside
             # It can be any OLE file inside the archive
@@ -1371,7 +1738,7 @@ class VBA_Parser(object):
             self.type = TYPE_OpenXML
             z = zipfile.ZipFile(_file)
             #TODO: check if this is actually an OpenXML file
-            #TODO: if the zip file is encrypted, suggest to use the -z option, or try '-z infected' automatically?
+            #TODO: if the zip file is encrypted, suggest to use the -z option, or try '-z infected' automatically
             # check each file within the zip if it is an OLE file, by reading its magic:
             for subfile in z.namelist():
                 magic = ""
@@ -1398,7 +1765,7 @@ class VBA_Parser(object):
             # TODO: move each format parser to a separate method
             # check if it is a Word 2003 XML file (WordProcessingML): must contain the namespace
             if 'http://schemas.microsoft.com/office/word/2003/wordml' in data:
-                logging.info('Opening Word 2003 XML file %s' % self.filename)
+                logging.debug('Opening Word 2003 XML file %s' % self.filename)
                 try:
                     # parse the XML content
                     # TODO: handle XML parsing exceptions
@@ -1480,7 +1847,7 @@ class VBA_Parser(object):
             logging.error(msg)
             raise TypeError(msg)
 
-    def find_vba_projects (self):
+    def find_vba_projects(self):
         """
         Finds all the VBA projects stored in an OLE file.
 
@@ -1577,21 +1944,27 @@ class VBA_Parser(object):
         """
         #TODO: return None or raise exception if format not supported like PPT 97-2003
         #TODO: return the number of VBA projects found instead of True/False?
+        # if this method was already called, return the previous result:
+        if self.contains_macros is not None:
+            return self.contains_macros
         # if OpenXML, check all the OLE subfiles:
         if self.ole_file is None:
             for ole_subfile in self.ole_subfiles:
                 if ole_subfile.detect_vba_macros():
+                    self.contains_macros = True
                     return True
+            # otherwise, no macro found:
+            self.contains_macros = False
             return False
         # otherwise it's an OLE file, find VBA projects:
         vba_projects = self.find_vba_projects()
         if len(vba_projects) == 0:
-            return False
+            self.contains_macros = False
         else:
-            return True
+            self.contains_macros = True
+        return self.contains_macros
 
-
-    def extract_macros (self):
+    def extract_macros(self):
         """
         Extract and decompress source code for each VBA macro found in the file
 
@@ -1608,8 +1981,58 @@ class VBA_Parser(object):
             self.find_vba_projects()
             for vba_root, project_path, dir_path in self.vba_projects:
                 # extract all VBA macros from that VBA root storage:
-                for stream_path, vba_filename, vba_code in _extract_vba(self.ole_file, vba_root, project_path, dir_path):
+                for stream_path, vba_filename, vba_code in _extract_vba(self.ole_file, vba_root, project_path,
+                                                                        dir_path):
                     yield (self.filename, stream_path, vba_filename, vba_code)
+
+
+    def extract_all_macros(self):
+        """
+        Extract and decompress source code for each VBA macro found in the file
+        by calling extract_macros(), store the results as a list of tuples
+        (filename, stream_path, vba_filename, vba_code) in self.modules.
+        See extract_macros for details.
+        """
+        if self.modules is None:
+            self.modules = []
+            for (subfilename, stream_path, vba_filename, vba_code) in self.extract_macros():
+                self.modules.append((subfilename, stream_path, vba_filename, vba_code))
+        self.nb_macros = len(self.modules)
+        return self.modules
+
+
+
+    def analyze_macros(self, show_decoded_strings=False):
+        """
+        runs extract_macros and analyze the source code of all VBA macros
+        found in the file.
+        """
+        if self.detect_vba_macros():
+            # if the analysis was already done, avoid doing it twice:
+            if self.analysis_results is not None:
+                return self.analysis_results
+            # variable to merge source code from all modules:
+            if self.vba_code_all_modules is None:
+                self.vba_code_all_modules = ''
+                for (subfilename, stream_path, vba_filename, vba_code) in self.extract_all_macros():
+                    #TODO: filter code? (each module)
+                    self.vba_code_all_modules += vba_code + '\n'
+            # Analyze the whole code at once:
+            scanner = VBA_Scanner(self.vba_code_all_modules)
+            self.analysis_results = scanner.scan(show_decoded_strings)
+            autoexec, suspicious, iocs, hexstrings, base64strings, dridex, vbastrings = scanner.scan_summary()
+            self.nb_autoexec += autoexec
+            self.nb_suspicious += suspicious
+            self.nb_iocs += iocs
+            self.nb_hexstrings += hexstrings
+            self.nb_base64strings += base64strings
+            self.nb_dridexstrings += dridex
+            self.nb_vbastrings += vbastrings
+
+        return self.analysis_results
+
+
+
 
 
     def close(self):
@@ -1624,171 +2047,218 @@ class VBA_Parser(object):
             self.ole_file.close()
 
 
-def print_analysis(vba_code, show_decoded_strings=False):
+
+class VBA_Parser_CLI(VBA_Parser):
     """
-    Analyze the provided VBA code, and print the results in a table
-
-    :param vba_code: str, VBA source code to be analyzed
-    :param show_decoded_strings: bool, if True hex-encoded strings will be displayed with their decoded content.
-    :return: None
+    VBA parser and analyzer, adding methods for the command line interface
+    of olevba. (see VBA_Parser)
     """
-    results = scan_vba(vba_code, show_decoded_strings)
-    if results:
-        t = prettytable.PrettyTable(('Type', 'Keyword', 'Description'))
-        t.align = 'l'
-        t.max_width['Type'] = 10
-        t.max_width['Keyword'] = 20
-        t.max_width['Description'] = 39
-        for kw_type, keyword, description in results:
-            t.add_row((kw_type, keyword, description))
-        print t
-    else:
-        print 'No suspicious keyword or IOC found.'
+
+    def __init__(self, filename, data=None, container=None):
+        """
+        Constructor for VBA_Parser_CLI.
+        Calls __init__ from VBA_Parser, but handles the TypeError exception
+        when the file type is not supported.
+
+        :param filename: filename or path of file to parse, or file-like object
+
+        :param data: None or bytes str, if None the file will be read from disk (or from the file-like object).
+        If data is provided as a bytes string, it will be parsed as the content of the file in memory,
+        and not read from disk. Note: files must be read in binary mode, i.e. open(f, 'rb').
+
+        :param container: str, path and filename of container if the file is within
+        a zip archive, None otherwise.
+        """
+        try:
+            VBA_Parser.__init__(self, filename, data=data, container=container)
+        except TypeError:
+            # in that case, self.type=None
+            pass
 
 
+    def print_analysis(self, show_decoded_strings=False):
+        """
+        Analyze the provided VBA code, and print the results in a table
 
-def process_file (container, filename, data, show_decoded_strings=False):
-    """
-    Process a single file
-
-    :param container: str, path and filename of container if the file is within
-    a zip archive, None otherwise.
-    :param filename: str, path and filename of file on disk, or within the container.
-    :param data: bytes, content of the file if it is in a container, None if it is a file on disk.
-    :param show_decoded_strings: bool, if True hex-encoded strings will be displayed with their decoded content.
-    """
-    #TODO: replace print by writing to a provided output file (sys.stdout by default)
-    if container:
-        display_filename = '%s in %s' % (filename, container)
-    else:
-        display_filename = filename
-    print '='*79
-    print 'FILE:', display_filename
-    try:
-        #TODO: handle olefile errors, when an OLE file is malformed
-        vba = VBA_Parser(filename, data)
-        print 'Type:', vba.type
-        if vba.detect_vba_macros():
-            #print 'Contains VBA Macros:'
-            for (subfilename, stream_path, vba_filename, vba_code) in vba.extract_macros():
-                # hide attribute lines:
-                #TODO: option to disable attribute filtering
-                vba_code_filtered = filter_vba(vba_code)
-                print '-'*79
-                print 'VBA MACRO %s ' % vba_filename
-                print 'in file: %s - OLE stream: %s' % (subfilename, repr(stream_path))
-                print '- '*39
-                # detect empty macros:
-                if vba_code_filtered.strip() == '':
-                    print '(empty macro)'
-                else:
-                    print vba_code_filtered
-                    print '- '*39
-                    print 'ANALYSIS:'
-                    # analyse the whole code, filtered to avoid false positives:
-                    print_analysis(vba_code_filtered, show_decoded_strings)
+        :param vba_code: str, VBA source code to be analyzed
+        :param show_decoded_strings: bool, if True hex-encoded strings will be displayed with their decoded content.
+        :return: None
+        """
+        # print a waiting message only if the output is not redirected to a file:
+        if sys.stdout.isatty():
+            print 'Analysis...\r',
+            sys.stdout.flush()
+        results = self.analyze_macros(show_decoded_strings)
+        if results:
+            t = prettytable.PrettyTable(('Type', 'Keyword', 'Description'))
+            t.align = 'l'
+            t.max_width['Type'] = 10
+            t.max_width['Keyword'] = 20
+            t.max_width['Description'] = 39
+            for kw_type, keyword, description in results:
+                # handle non printable strings:
+                if not is_printable(keyword):
+                    keyword = repr(keyword)
+                if not is_printable(description):
+                    description = repr(description)
+                t.add_row((kw_type, keyword, description))
+            print t
         else:
-            print 'No VBA macros found.'
-    except: #TypeError:
-        #raise
-        #TODO: print more info if debug mode
-        #print sys.exc_value
-        # display the exception with full stack trace for debugging, but do not stop:
-        traceback.print_exc()
-    print ''
+            print 'No suspicious keyword or IOC found.'
 
 
-def process_file_triage (container, filename, data):
-    """
-    Process a single file
+    def reveal(self):
+        #TODO: move this code to the VBA_Parser class (without print)
+        print 'MACRO SOURCE CODE WITH DEOBFUSCATED VBA STRINGS (EXPERIMENTAL):\n'
+        # we only want printable strings:
+        analysis = self.analyze_macros(show_decoded_strings=False)
+        # to avoid replacing short strings contained into longer strings, we sort the analysis results
+        # based on the length of the encoded string, in reverse order:
+        analysis = sorted(analysis, key=lambda type_decoded_encoded: len(type_decoded_encoded[2]), reverse=True)
+        # normally now self.vba_code_all_modules contains source code from all modules
+        deobf_code = self.vba_code_all_modules
+        for kw_type, decoded, encoded in analysis:
+            if kw_type == 'VBA string':
+                #print '%3d occurences: %r => %r' % (deobf_code.count(encoded), encoded, decoded)
+                # need to add double quotes around the decoded strings
+                # after escaping double-quotes as double-double-quotes for VBA:
+                decoded = decoded.replace('"', '""')
+                deobf_code = deobf_code.replace(encoded, '"%s"' % decoded)
+        print ''
+        print deobf_code
+        #TODO: repasser l'analyse plusieurs fois si des chaines hex ou base64 sont revelees
 
-    :param container: str, path and filename of container if the file is within
-    a zip archive, None otherwise.
-    :param filename: str, path and filename of file on disk, or within the container.
-    :param data: bytes, content of the file if it is in a container, None if it is a file on disk.
-    """
-    #TODO: replace print by writing to a provided output file (sys.stdout by default)
-    nb_macros = 0
-    nb_autoexec = 0
-    nb_suspicious = 0
-    nb_iocs = 0
-    nb_hexstrings = 0
-    nb_base64strings = 0
-    nb_dridexstrings = 0
-    # ftype = 'Other'
-    message = ''
-    try:
-        #TODO: handle olefile errors, when an OLE file is malformed
-        vba = VBA_Parser(filename, data)
-        if vba.detect_vba_macros():
-            for (subfilename, stream_path, vba_filename, vba_code) in vba.extract_macros():
-                nb_macros += 1
-                if vba_code.strip() != '':
-                    # analyse the whole code, filtered to avoid false positives:
-                    scanner = VBA_Scanner(filter_vba(vba_code))
-                    autoexec, suspicious, iocs, hexstrings, base64strings, dridex = scanner.scan_summary()
-                    nb_autoexec += autoexec
-                    nb_suspicious += suspicious
-                    nb_iocs += iocs
-                    nb_hexstrings += hexstrings
-                    nb_base64strings += base64strings
-                    nb_dridexstrings += dridex
-        if vba.type == TYPE_OLE:
-            flags = 'OLE:'
-        elif vba.type == TYPE_OpenXML:
-            flags = 'OpX:'
-        elif vba.type == TYPE_Word2003_XML:
-            flags = 'XML:'
-        elif vba.type == TYPE_MHTML:
-            flags = 'MHT:'
-        macros = autoexec = suspicious = iocs = hexstrings = base64obf = dridex = '-'
-        if nb_macros: macros = 'M'
-        if nb_autoexec: autoexec = 'A'
-        if nb_suspicious: suspicious = 'S'
-        if nb_iocs: iocs = 'I'
-        if nb_hexstrings: hexstrings = 'H'
-        if nb_base64strings: base64obf = 'B'
-        if nb_dridexstrings: dridex = 'D'
-        flags += '%s%s%s%s%s%s%s' % (macros, autoexec, suspicious, iocs, hexstrings,
-            base64obf, dridex)
 
-        # macros = autoexec = suspicious = iocs = hexstrings = 'no'
-        # if nb_macros: macros = 'YES:%d' % nb_macros
-        # if nb_autoexec: autoexec = 'YES:%d' % nb_autoexec
-        # if nb_suspicious: suspicious = 'YES:%d' % nb_suspicious
-        # if nb_iocs: iocs = 'YES:%d' % nb_iocs
-        # if nb_hexstrings: hexstrings = 'YES:%d' % nb_hexstrings
-        # # 2nd line = info
-        # print '%-8s %-7s %-7s %-7s %-7s %-7s' % (vba.type, macros, autoexec, suspicious, iocs, hexstrings)
-    except TypeError:
-        # file type not OLE nor OpenXML
-        flags = '?'
-        message = 'File format not supported'
-    except:
-        # another error occurred
-        #raise
-        #TODO: print more info if debug mode
-        #TODO: distinguish real errors from incorrect file types
-        flags = '!ERROR'
-        message = sys.exc_value
-    line = '%-11s %s' % (flags, filename)
-    if message:
-        line += ' - %s' % message
-    print line
+    def process_file(self, show_decoded_strings=False,
+                     display_code=True, global_analysis=True, hide_attributes=True,
+                     vba_code_only=False, show_deobfuscated_code=False):
+        """
+        Process a single file
 
-    # t = prettytable.PrettyTable(('filename', 'type', 'macros', 'autoexec', 'suspicious', 'ioc', 'hexstrings'),
-    #     header=False, border=False)
-    # t.align = 'l'
-    # t.max_width['filename'] = 30
-    # t.max_width['type'] = 10
-    # t.max_width['macros'] = 6
-    # t.max_width['autoexec'] = 6
-    # t.max_width['suspicious'] = 6
-    # t.max_width['ioc'] = 6
-    # t.max_width['hexstrings'] = 6
-    # t.add_row((filename, ftype, macros, autoexec, suspicious, iocs, hexstrings))
-    # print t
+        :param filename: str, path and filename of file on disk, or within the container.
+        :param data: bytes, content of the file if it is in a container, None if it is a file on disk.
+        :param show_decoded_strings: bool, if True hex-encoded strings will be displayed with their decoded content.
+        :param display_code: bool, if False VBA source code is not displayed (default True)
+        :param global_analysis: bool, if True all modules are merged for a single analysis (default),
+                                otherwise each module is analyzed separately (old behaviour)
+        :param hide_attributes: bool, if True the first lines starting with "Attribute VB" are hidden (default)
+        """
+        #TODO: replace print by writing to a provided output file (sys.stdout by default)
+        # fix conflicting parameters:
+        if vba_code_only and not display_code:
+            display_code = True
+        if self.container:
+            display_filename = '%s in %s' % (self.filename, self.container)
+        else:
+            display_filename = self.filename
+        print '=' * 79
+        print 'FILE:', display_filename
+        try:
+            #TODO: handle olefile errors, when an OLE file is malformed
+            print 'Type:', self.type
+            if self.detect_vba_macros():
+                #print 'Contains VBA Macros:'
+                for (subfilename, stream_path, vba_filename, vba_code) in self.extract_all_macros():
+                    if hide_attributes:
+                        # hide attribute lines:
+                        vba_code_filtered = filter_vba(vba_code)
+                    else:
+                        vba_code_filtered = vba_code
+                    print '-' * 79
+                    print 'VBA MACRO %s ' % vba_filename
+                    print 'in file: %s - OLE stream: %s' % (subfilename, repr(stream_path))
+                    if display_code:
+                        print '- ' * 39
+                        # detect empty macros:
+                        if vba_code_filtered.strip() == '':
+                            print '(empty macro)'
+                        else:
+                            print vba_code_filtered
+                    if not global_analysis and not vba_code_only:
+                        #TODO: remove this option
+                        raise NotImplementedError
+                        print '- ' * 39
+                        print 'ANALYSIS:'
+                        # analyse each module's code, filtered to avoid false positives:
+                        self.print_analysis(show_decoded_strings)
+                if global_analysis and not vba_code_only:
+                    # analyse the code from all modules at once:
+                    self.print_analysis(show_decoded_strings)
+                if show_deobfuscated_code:
+                    self.reveal()
+            else:
+                print 'No VBA macros found.'
+        except:  #TypeError:
+            #raise
+            #TODO: print more info if debug mode
+            #print sys.exc_value
+            # display the exception with full stack trace for debugging, but do not stop:
+            traceback.print_exc()
+        print ''
 
-def main_triage_quick():
-    pass
 
+    def process_file_triage(self):
+        """
+        Process a file in triage mode, showing only summary results on one line.
+        """
+        #TODO: replace print by writing to a provided output file (sys.stdout by default)
+        message = ''
+        try:
+            if self.type is not None:
+                #TODO: handle olefile errors, when an OLE file is malformed
+                if self.detect_vba_macros():
+                    # print a waiting message only if the output is not redirected to a file:
+                    if sys.stdout.isatty():
+                        print 'Analysis...\r',
+                        sys.stdout.flush()
+                    self.analyze_macros()
+                flags = TYPE2TAG[self.type]
+                macros = autoexec = suspicious = iocs = hexstrings = base64obf = dridex = vba_obf = '-'
+                if self.nb_macros: macros = 'M'
+                if self.nb_autoexec: autoexec = 'A'
+                if self.nb_suspicious: suspicious = 'S'
+                if self.nb_iocs: iocs = 'I'
+                if self.nb_hexstrings: hexstrings = 'H'
+                if self.nb_base64strings: base64obf = 'B'
+                if self.nb_dridexstrings: dridex = 'D'
+                if self.nb_vbastrings: vba_obf = 'V'
+                flags += '%s%s%s%s%s%s%s%s' % (macros, autoexec, suspicious, iocs, hexstrings,
+                                             base64obf, dridex, vba_obf)
+                # old table display:
+                # macros = autoexec = suspicious = iocs = hexstrings = 'no'
+                # if nb_macros: macros = 'YES:%d' % nb_macros
+                # if nb_autoexec: autoexec = 'YES:%d' % nb_autoexec
+                # if nb_suspicious: suspicious = 'YES:%d' % nb_suspicious
+                # if nb_iocs: iocs = 'YES:%d' % nb_iocs
+                # if nb_hexstrings: hexstrings = 'YES:%d' % nb_hexstrings
+                # # 2nd line = info
+                # print '%-8s %-7s %-7s %-7s %-7s %-7s' % (self.type, macros, autoexec, suspicious, iocs, hexstrings)
+            else:
+                # self.type==None
+                # file type not OLE nor OpenXML
+                flags = '?'
+                message = 'File format not supported'
+        except:
+            # another error occurred
+            #raise
+            #TODO: print more info if debug mode
+            #TODO: distinguish real errors from incorrect file types
+            flags = '!ERROR'
+            message = sys.exc_value
+        line = '%-12s %s' % (flags, self.filename)
+        if message:
+            line += ' - %s' % message
+        print line
+
+        # t = prettytable.PrettyTable(('filename', 'type', 'macros', 'autoexec', 'suspicious', 'ioc', 'hexstrings'),
+        #     header=False, border=False)
+        # t.align = 'l'
+        # t.max_width['filename'] = 30
+        # t.max_width['type'] = 10
+        # t.max_width['macros'] = 6
+        # t.max_width['autoexec'] = 6
+        # t.max_width['suspicious'] = 6
+        # t.max_width['ioc'] = 6
+        # t.max_width['hexstrings'] = 6
+        # t.add_row((filename, ftype, macros, autoexec, suspicious, iocs, hexstrings))
+        # print t

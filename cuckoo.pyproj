@@ -151,6 +151,7 @@
     <Compile Include="lib\cuckoo\common\office\olefile.py" />
     <Compile Include="lib\cuckoo\common\office\oleid.py" />
     <Compile Include="lib\cuckoo\common\office\olevba.py" />
+    <Compile Include="lib\cuckoo\common\office\pyparsing.py" />
     <Compile Include="lib\cuckoo\common\office\vbadeobf.py" />
     <Compile Include="lib\cuckoo\common\office\__init__.py" />
     <Compile Include="lib\cuckoo\common\pdftools\pdf-parser.py" />
