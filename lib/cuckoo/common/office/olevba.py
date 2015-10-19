@@ -227,6 +227,7 @@ except ImportError:
                                + "or http://effbot.org/zone/element-index.htm"
 
 import olefile
+from pyparsing import *
 
 #--- CONSTANTS ----------------------------------------------------------------
 
