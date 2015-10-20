@@ -559,6 +559,16 @@ class Process:
                 config.write("full-logs={0}\n".format(cfgoptions["full-logs"]))
             if "no-stealth" in cfgoptions:
                 config.write("no-stealth={0}\n".format(cfgoptions["no-stealth"]))
+            if "serial" in cfgoptions:
+                config.write("serial={0}\n".format(cfgoptions["serial"]))
+            if "sysvol_ctimelow" in cfgoptions:
+                config.write("sysvol_ctimelow={0}\n".format(cfgoptions["sysvol_ctimelow"]))
+            if "sysvol_ctimehigh" in cfgoptions:
+                config.write("sysvol_ctimehigh={0}\n".format(cfgoptions["sysvol_ctimehigh"]))
+            if "sys32_ctimelow" in cfgoptions:
+                config.write("sys32_ctimelow={0}\n".format(cfgoptions["sys32_ctimelow"]))
+            if "sys32_ctimehigh" in cfgoptions:
+                config.write("sys32_ctimehigh={0}\n".format(cfgoptions["sys32_ctimehigh"]))
             if "norefer" not in cfgoptions:
                 config.write("referrer={0}\n".format(get_referrer_url(interest)))
             if firstproc:

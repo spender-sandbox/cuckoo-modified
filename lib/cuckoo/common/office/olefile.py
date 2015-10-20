@@ -1,4 +1,4 @@
-# olefile (formerly OleFileIO_PL) version 0.42 2015-01-25
+# olefile (formerly OleFileIO_PL) version 0.43 2015-04-17
 #
 # Module to read/write Microsoft OLE2 files (also called Structured Storage or
 # Microsoft Compound Document File Format), such as Microsoft Office 97-2003
@@ -27,8 +27,8 @@ from __future__ import print_function   # This version of olefile requires Pytho
 
 
 __author__  = "Philippe Lagadec"
-__date__    = "2015-01-25"
-__version__ = '0.42b'
+__date__    = "2015-04-17"
+__version__ = '0.43'
 
 #--- LICENSE ------------------------------------------------------------------
 
@@ -179,6 +179,7 @@ __version__ = '0.42b'
 #                        to UTF-8 on Python 2.x (Unicode on Python 3.x)
 #                      - added path_encoding option to override the default
 #                      - fixed a bug in _list when a storage is empty
+# 2015-04-17 v0.43 PL: - slight changes in _OleDirectoryEntry
 
 #-----------------------------------------------------------------------------
 # TODO (for version 1.0):
@@ -255,7 +256,6 @@ __version__ = '0.42b'
 import io
 import sys
 import struct, array, os.path, datetime
-
 from lib.cuckoo.common.utils import convert_to_printable
 
 #=== COMPATIBILITY WORKAROUNDS ================================================
@@ -831,7 +831,7 @@ class _OleDirectoryEntry:
     # struct to parse directory entries:
     # <: little-endian byte order, standard sizes
     #    (note: this should guarantee that Q returns a 64 bits int)
-    # 64s: string containing entry name in unicode (max 31 chars) + null char
+    # 64s: string containing entry name in unicode UTF-16 (max 31 chars) + null char = 64 bytes
     # H: uint16, number of bytes used in name buffer, including null = (len+1)*2
     # B: uint8, dir entry type (between 0 and 5)
     # B: uint8, color: 0=black, 1=red
@@ -876,8 +876,8 @@ class _OleDirectoryEntry:
         self.used = False
         # decode DirEntry
         (
-            name,
-            namelength,
+            self.name_raw, # 64s: string containing entry name in unicode UTF-16 (max 31 chars) + null char = 64 bytes
+            self.namelength, # H: uint16, number of bytes used in name buffer, including null = (len+1)*2
             self.entry_type,
             self.color,
             self.sid_left,
@@ -888,8 +888,8 @@ class _OleDirectoryEntry:
             self.createTime,
             self.modifyTime,
             self.isectStart,
-            sizeLow,
-            sizeHigh
+            self.sizeLow,
+            self.sizeHigh
         ) = struct.unpack(_OleDirectoryEntry.STRUCT_DIRENTRY, entry)
         if self.entry_type not in [STGTY_ROOT, STGTY_STORAGE, STGTY_STREAM, STGTY_EMPTY]:
             olefile._raise_defect(DEFECT_INCORRECT, 'unhandled OLE storage type')
@@ -901,17 +901,17 @@ class _OleDirectoryEntry:
         #debug (struct.unpack(fmt_entry, entry[:len_entry]))
         # name should be at most 31 unicode characters + null character,
         # so 64 bytes in total (31*2 + 2):
-        if namelength>64:
-            olefile._raise_defect(DEFECT_INCORRECT, 'incorrect DirEntry name length')
+        if self.namelength>64:
+            olefile._raise_defect(DEFECT_INCORRECT, 'incorrect DirEntry name length >64 bytes')
             # if exception not raised, namelength is set to the maximum value:
-            namelength = 64
+            self.namelength = 64
         # only characters without ending null char are kept:
-        name = name[:(namelength-2)]
+        self.name_utf16 = self.name_raw[:(self.namelength-2)]
         #TODO: check if the name is actually followed by a null unicode character ([MS-CFB] 2.6.1)
         #TODO: check if the name does not contain forbidden characters:
         # [MS-CFB] 2.6.1: "The following characters are illegal and MUST NOT be part of the name: '/', '\', ':', '!'."
         # name is converted from UTF-16LE to the path encoding specified in the OleFileIO:
-        self.name = olefile._decode_utf16_str(name)
+        self.name = olefile._decode_utf16_str(self.name_utf16)
 
         debug('DirEntry SID=%d: %s' % (self.sid, repr(self.name)))
         debug(' - type: %d' % self.entry_type)
@@ -923,15 +923,14 @@ class _OleDirectoryEntry:
         # sectors, BUT apparently some implementations set it as 0xFFFFFFFF, 1
         # or some other value so it cannot be raised as a defect in general:
         if olefile.sectorsize == 512:
-            if sizeHigh != 0 and sizeHigh != 0xFFFFFFFF:
+            if self.sizeHigh != 0 and self.sizeHigh != 0xFFFFFFFF:
                 debug('sectorsize=%d, sizeLow=%d, sizeHigh=%d (%X)' %
-                    (olefile.sectorsize, sizeLow, sizeHigh, sizeHigh))
+                    (olefile.sectorsize, self.sizeLow, self.sizeHigh, self.sizeHigh))
                 olefile._raise_defect(DEFECT_UNSURE, 'incorrect OLE stream size')
-            self.size = sizeLow
+            self.size = self.sizeLow
         else:
-            self.size = sizeLow + (long(sizeHigh)<<32)
-        debug(' - size: %d (sizeLow=%d, sizeHigh=%d)' % (self.size, sizeLow, sizeHigh))
-
+            self.size = self.sizeLow + (long(self.sizeHigh)<<32)
+        debug(' - size: %d (sizeLow=%d, sizeHigh=%d)' % (self.size, self.sizeLow, self.sizeHigh))
         self.clsid = _clsid(clsid)
         # a storage should have a null size, BUT some implementations such as
         # Word 8 for Mac seem to allow non-null values => Potential defect:
@@ -2236,4 +2235,3 @@ class OleFileIO:
         self.metadata = OleMetadata()
         self.metadata.parse_properties(self)
         return self.metadata
-

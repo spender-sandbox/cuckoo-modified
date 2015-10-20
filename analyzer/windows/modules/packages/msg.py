@@ -8,12 +8,9 @@ class MSG(Package):
     """Outlook MSG analysis package."""
     PATHS = [
         ("ProgramFiles", "Microsoft Office", "OUTLOOK.EXE"),
-        ("ProgramFiles", "Microsoft Office", "Office11", "OUTLOOK.EXE"),
-        ("ProgramFiles", "Microsoft Office", "Office12", "OUTLOOK.EXE"),
-        ("ProgramFiles", "Microsoft Office", "Office14", "OUTLOOK.EXE"),
-        ("ProgramFiles", "Microsoft Office", "Office15", "OUTLOOK.EXE"),
+        ("ProgramFiles", "Microsoft Office", "Office*", "OUTLOOK.EXE"),
     ]
 
     def start(self, path):
-        outlook = self.get_path("Microsoft Office Outlook")
+        outlook = self.get_path_glob("Microsoft Office Outlook")
         return self.execute(outlook, "/f \"%s\"" % path, path)

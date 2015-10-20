@@ -8,16 +8,10 @@ class Python(Package):
     """Python analysis package."""
 
     PATHS = [
-        ("HomeDrive", "Python24", "python.exe"),
-        ("HomeDrive", "Python25", "python.exe"),
-        ("HomeDrive", "Python26", "python.exe"),
-        ("HomeDrive", "Python27", "python.exe"),
-        ("HomeDrive", "Python32", "python.exe"),
-        ("HomeDrive", "Python33", "python.exe"),
-        ("HomeDrive", "Python34", "python.exe"),
+        ("HomeDrive", "Python*", "python.exe"),
     ]
 
     def start(self, path):
-        python = self.get_path("Python")
+        python = self.get_path_glob("Python")
         arguments = self.options.get("arguments", "")
         return self.execute(python, "%s %s" % (path, arguments), path)
