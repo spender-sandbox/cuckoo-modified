@@ -85,6 +85,8 @@ class Suricata(Processing):
                         2200074,
                         # ET INFO InetSim Response from External Source Possible SinkHole
                         2017363,
+                        # SURICATA UDPv4 invalid checksum
+                        2200075,
         ]
 
         if SURICATA_RUNMODE == "socket":
@@ -134,7 +136,7 @@ class Suricata(Processing):
             if not os.path.exists(SURICATA_BIN):
                 log.warning("Unable to Run Suricata: Bin File %s Does Not Exist" % (SURICATA_CONF))
                 return suricata["alerts"]
-            cmd = "%s -c %s -l %s -r %s" % (SURICATA_BIN,SURICATA_CONF,self.logs_path,self.pcap_path)
+            cmd = "%s -c %s -k none -l %s -r %s" % (SURICATA_BIN,SURICATA_CONF,self.logs_path,self.pcap_path)
             ret,stdout,stderr = self.cmd_wrapper(cmd)
             if ret != 0:
                log.warning("Suricata returned a Exit Value Other than Zero %s" % (stderr))
