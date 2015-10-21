@@ -1394,6 +1394,13 @@ def get_vt_consensus(namelist):
         "ransom",
         "autoit",
         "java",
+        "ckrf",
+        "html",
+        "bngv",
+        "bnaq",
+        "o97m",
+        "blqi",
+        "bmbg",
     ]
 
     finaltoks = defaultdict(int)
