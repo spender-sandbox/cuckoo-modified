@@ -5,7 +5,6 @@ FAQ
 Frequently Asked Questions:
 
     * :ref:`analyze_urls`
-    * :ref:`tor_proxy`
     * :ref:`general_volatility`
     * :ref:`esxi_reqs`
     * :ref:`troubles_upgrade`
@@ -21,37 +20,6 @@ Can I analyze URLs with Cuckoo?
 -------------------------------
 
 Yes you can. Since version 0.5 URLs are natively supported by Cuckoo.
-
-.. _tor_proxy:
-
-How can I make Cuckoo's packet captures compatible with Tor transparent proxying and KVM?
----------------------------------
-
-Cuckoo attempts to start sniffing on an interface before its associated VM has
-been started.  Additionally, Tor's transparent proxying requires PREROUTING chain
-rules in the iptables nat table to redirect traffic to Tor's local transparent
-proxy port.  The former makes it infeasible to use Cuckoo to monitor the proper
-auto-generated libvirt vnet* interface when using KVM, while the latter destroys Cuckoo's
-ability to obtain valid pcap results as all the destination IPs and ports have been rewritten
-prior to tcpdump's ability to see the packets.
-
-To solve this, we first need to modify the each of our KVM snapshots with::
-
-    virsh snapshot-edit <domain name> <snapshot name>
-
-Where you see an interface entry for the network card, add the following line within it::
-
-    <target dev='<device name eg. vnet0/vnet1/vnet2>'/>
-
-This will ensure our VMs use predictable names for the interface we need to sniff on to
-obtain unmangled packets.
-
-To solve the problem of the not-yet-existing interface for sniffing, copy utils/tcpdumpwrapper.py to
-/usr/sbin and then modify the "tcpdump" option in auxiliary.conf to point to /usr/sbin/tcpdumpwrapper.py
-and add another option under the "sniffer" heading (after first checking to ensure /usr/sbin/tcpdump has
-the required suid or raised capability permissions::
-
-    suid_check = False
 
 .. _general_volatility:
 

@@ -261,9 +261,6 @@ class AnalysisManager(threading.Thread):
             machinery.release(self.machine.label)
             self.errors.put(e)
 
-        aux = RunAuxiliary(task=self.task, machine=self.machine)
-        aux.start()
-
         try:
             unlocked = False
 
@@ -279,6 +276,9 @@ class AnalysisManager(threading.Thread):
             # Machine. We can now safely release the machine lock.
             machine_lock.release()
             unlocked = True
+
+            aux = RunAuxiliary(task=self.task, machine=self.machine)
+            aux.start()
 
             # Initialize the guest manager.
             guest = GuestManager(self.machine.name, self.machine.ip,
@@ -453,8 +453,8 @@ class AnalysisManager(threading.Thread):
                     latest_symlink_lock.release()
 
             log.info("Task #%d: analysis procedure completed", self.task.id)
-        except:
-            log.exception("Failure in AnalysisManager.run")
+        except Exception as e:
+            log.exception("Failure in AnalysisManager.run: %s" % e)
 
         active_analysis_count -= 1
 

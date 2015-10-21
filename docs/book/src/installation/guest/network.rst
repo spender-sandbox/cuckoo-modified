@@ -65,3 +65,42 @@ And adding IP forwarding::
 
     sysctl -w net.ipv4.ip_forward=1
 
+Disable Noisy Network Services
+==============================
+
+Windows Vista and Windows 7 introduced new network services that create a lot of noise, and can hinder PCAP processing.
+Where's how to disable them:
+
+Teredo
+======
+
+Open a command prompt as Administrator, and run:
+
+    netsh interface teredo set state disabled
+
+
+Link Local Multicast Name Resolution (LLMNR)
+============================================
+
+Open the Group Policy editor py typing ``gpedit.msc`` into the Start Menu search box, and press enter.
+Then navigate to Computer Configuration> Administrative Templates>
+Network> DNS Client, and open Turn off Multicast Name Resolution.
+
+Set the policy to enabled.
+
+
+Network Connectivity Status Indicator, Error Reporting, etc
+===========================================================
+
+Windows has many diagnostic tools such as the Network Connectivity Status Indicator and Error Reporting, that reach
+out to Microsoft servers over the internet. Fortunately, these can all be disabled with one Group Policy change.
+
+Open the Group Policy editor py typing ``gpedit.msc`` into the Start Menu search box, and press enter.
+Then navigate to Computer Configuration> Administrative Templates>
+System> Internet Communication Management, and open Restrict Internet Communication.
+
+Set the policy to enabled.
+
+
+
+
