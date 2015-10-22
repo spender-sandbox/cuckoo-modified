@@ -12,10 +12,8 @@ from struct import unpack
 import uuid
 from Crypto.Cipher import DES, AES
 
-try:
-    import re2 as re
-except ImportError:
-    import re
+# we use some features re2 doesn't support
+import re
 
 log = logging.getLogger(__name__)
 
