@@ -117,7 +117,7 @@ def get_val(buf, idx):
         # guid
         thestr = buf[idx:idx+16]
         # we're not going to bother using the guid for anything but the mutex name, so just adjust it here
-        theval = "Global\{" + str(UUID(bytes_le=thestr)) + "}"
+        theval = "Global\{" + str(uuid.UUID(bytes_le=thestr)) + "}"
         idx += 16
     elif code == 15:
         # ushort
