@@ -176,7 +176,7 @@ def extract_config(pe):
         elif coded_config[0:4] == '\x10\x00\x00\x00':
             #print "    [-] Found Version 2.x"
             # we need to derive a key from the assembly guid
-            guid = re.search('[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}', data).group()
+            guid = re.search('[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}', pe.__data__).group()
             guid = uuid.UUID(guid).bytes_le
             encrypted_key = coded_config[4:20]
             # rfc2898 derive bytes
