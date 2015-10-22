@@ -74,7 +74,7 @@ def deflate_contents(data):
 # Returns only printable chars
 def string_print(line):
     try:
-        return ''.join((char for char in line if 32 < ord(char) < 127))
+        return ''.join((char for char in line if 31 < ord(char) < 127))
     except:
         return line
 
