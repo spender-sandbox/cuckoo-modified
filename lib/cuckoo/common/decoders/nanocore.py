@@ -1,4 +1,4 @@
-# Copyright (C) 2014-2015 Kevin Breen (http://techanarchy.net)
+# Copyright (C) 2014-2015 Kevin Breen (http://techanarchy.net), Optiv, Inc. (brad.spengler@optiv.com)
 # This file is part of Cuckoo Sandbox - http://www.cuckoosandbox.org
 # See the file 'docs/LICENSE' for copying permission.
 
@@ -8,8 +8,9 @@ import zlib
 import string
 import pefile
 import logging
-from struct import unpack
+from struct import unpack, unpack_from
 import uuid
+import datetime
 from Crypto.Cipher import DES, AES
 
 # we use some features re2 doesn't support
@@ -18,6 +19,8 @@ import re
 log = logging.getLogger(__name__)
 
 #Helper Functions Go Here
+
+
 
 def derive_key(guid, coded_key):
     try:
@@ -37,13 +40,13 @@ def decrypt_v3(coded_config, key):
     raw_config = decrypt_des(key[:8], data)
     # if the config is over a certain size it is compressed. Indicated by a non Null byte
     if raw_config[1] == '\x00':
-        return parse_config(raw_config, '3')
+        return parse_config(raw_config)
     else:
         # remove the string lengths and deflate the remainder of the stream
         deflate_config = deflate_contents(raw_config)
         #with open('nano_2.res', 'wb') as out:
         #    out.write(deflate_config)
-        return parse_config(deflate_config, '3')
+        return parse_config(deflate_config)
 
 def decrypt_v2(coded_config):
     key = coded_config[4:12]
@@ -51,11 +54,11 @@ def decrypt_v2(coded_config):
     raw_config = decrypt_des(key, data)
     # if the config is over a certain size it is compressed. Indicated by a non Null byte
     if raw_config[1] == '\x00':
-        return parse_config(raw_config, '2')
+        return parse_config(raw_config)
     else:
         # remove the string lengths and deflate the remainder of the stream
         deflate_config = deflate_contents(raw_config)
-        return parse_config(deflate_config, '2')
+        return parse_config(deflate_config)
             
 def decrypt_v1(coded_config):
     key = '\x01\x03\x05\x08\x0d\x15\x22\x37'
@@ -63,7 +66,7 @@ def decrypt_v1(coded_config):
     new_data = decrypt_des(key, data)
     if new_data[0] != '\x00':
         deflate_config = deflate_contents(new_data)
-        return parse_config(deflate_config, 'old')
+        return parse_config(deflate_config)
 
 def deflate_contents(data):
     new_data = data[5:]
@@ -76,66 +79,86 @@ def string_print(line):
     except:
         return line
 
-# returns pretty config
-def parse_config(raw_config, ver):
-    config_dict = {}
-    
-    # Some plugins drop in here as exe files. 
-    if 'This program cannot be run' in raw_config:
-        raw_config = raw_config.split('BuildTime')[1]
-    #with open('split.bin', 'wb') as out:
-        #out.write(raw_config)
-    
-    if ver == '2':
-        #config_dict['BuildTime'] = unpack(">Q", re.search('BuildTime(.*?)\x0c', raw_config).group()[10:-1])[0]
-        config_dict['Version'] = re.search('Version\x0c(.*?)\x0c', raw_config).group()[8:-1]
-        config_dict['Mutex'] = re.search('Mutex(.*?)\x0c', raw_config).group()[6:-1].encode('hex')
-        config_dict['Group'] = re.search('DefaultGroup\x0c(.*?)\x0c', raw_config).group()[14:-1]
-        config_dict['Domain1'] = re.search('PrimaryConnectionHost\x0c(.*?)Back', raw_config, re.DOTALL).group()[23:-6]
-        config_dict['Domain2'] = re.search('BackupConnectionHost\x0c(.*?)\x0c', raw_config).group()[22:-1]
-        config_dict['Port'] = unpack("<H", re.search('ConnectionPort...', raw_config, re.DOTALL).group()[15:])[0]
-        config_dict['RunOnStartup'] = re.search('RunOnStartup(.*?)\x0c', raw_config).group()[13:-1].encode('hex')
-        config_dict['RequestElevation'] = re.search('RequestElevation(.*?)\x0c', raw_config).group()[17:-1].encode('hex')
-        config_dict['BypassUAC'] = re.search('BypassUserAccountControl(.*?)\x0c', raw_config).group()[25:-1].encode('hex')
-        config_dict['ClearZoneIdentifier'] = re.search('ClearZoneIdentifier(.*?)\x0c', raw_config).group()[20:-1].encode('hex')
-        config_dict['ClearAccessControl'] = re.search('ClearAccessControl(.*?)\x0c', raw_config).group()[19:-1].encode('hex')
-        config_dict['SetCriticalProcess'] = re.search('SetCriticalProcess(.*?)\x0c', raw_config).group()[19:-1].encode('hex')
-        config_dict['FindLanServers'] = re.search('FindLanServers(.*?)\x0c', raw_config).group()[15:-1].encode('hex')
-        config_dict['RestartOnException'] = re.search('RestartOnException(.*?)\x0c', raw_config).group()[19:-1].encode('hex')
-        config_dict['EnableDebugMode'] = re.search('EnableDebugMode(.*?)\x0c', raw_config).group()[16:-1].encode('hex')
-        config_dict['ConnectDelay'] = unpack("<i", re.search('ConnectDelay(.*?)\x0c', raw_config).group()[13:-1])[0]
-        config_dict['RestartDelay'] = unpack("<i", re.search('RestartDelay(.*?)\x0c', raw_config).group()[13:-1])[0]
-    elif ver == '3':
-        config_dict['Version'] = re.search('Version..(.*?)\x0c', raw_config).group()[8:16]
-        config_dict['Mutex'] = re.search('Mutex(.*?)\x0c', raw_config).group()[6:-1].encode('hex')
-        config_dict['Group'] = re.search('DefaultGroup\x0c(.*?)\x0c', raw_config).group()[14:-1]
-        config_dict['Domain1'] = re.search('PrimaryConnectionHost\x0c(.*?)Back', raw_config, re.DOTALL).group()[23:-6]
-        config_dict['Domain2'] = re.search('BackupConnectionHost\x0c(.*?)\x0c', raw_config).group()[22:-1]
-        config_dict['Port'] = unpack("<H", re.search('ConnectionPort...', raw_config, re.DOTALL).group()[15:])[0]
-        config_dict['RunOnStartup'] = re.search('RunOnStartup(.*?)\x0c', raw_config).group()[13:-1].encode('hex')
-        config_dict['RequestElevation'] = re.search('RequestElevation(.*?)\x0c', raw_config).group()[17:-1].encode('hex')
-        config_dict['BypassUAC'] = re.search('BypassUserAccountControl(.*?)\x0c', raw_config).group()[25:-1].encode('hex')
-        config_dict['ClearZoneIdentifier'] = re.search('ClearZoneIdentifier(.*?)\x0c', raw_config).group()[20:-1].encode('hex')
-        config_dict['ClearAccessControl'] = re.search('ClearAccessControl(.*?)\x0c', raw_config).group()[19:-1].encode('hex')
-        config_dict['SetCriticalProcess'] = re.search('SetCriticalProcess(.*?)\x0c', raw_config).group()[19:-1].encode('hex')
-        config_dict['PreventSystemSleep'] = re.search('PreventSystemSleep(.*?)\x0c', raw_config).group()[19:-1].encode('hex')
+def peek_code(buf, idx):
+    ret = None
+    try:
+        ret = unpack_from("B", buf[idx:])[0]
+    except:
+        pass
+    return ret
 
-        config_dict['EnableDebugMode'] = re.search('EnableDebugMode(.*?)\x0c', raw_config).group()[16:-1].encode('hex')
-        config_dict['ConnectDelay'] = unpack("<i", re.search('ConnectDelay(.*?)\x0c', raw_config).group()[13:-1])[0]
-        config_dict['RestartDelay'] = unpack("<i", re.search('RestartDelay(.*?)\x0c', raw_config).group()[13:-1])[0]
-        try:
-            config_dict['UseCustomDNS'] = re.search('UseCustomDnsServer(.*?)\x0c', raw_config).group()[19:-1].encode('hex')
-            config_dict['PrimaryDNSServer'] = re.search('PrimaryDnsServer\x0c(.*?)\x0c', raw_config).group()[18:-1]
-            config_dict['BackupDNSServer'] = re.search('BackupDnsServer\x0c(.*?)(\x04|\x0c)', raw_config).group()[16:-1]
-        except:
-            pass
-
+def get_val(buf, idx):
+    code = unpack_from("B", buf[idx:])[0]
+    idx += 1
+    if code == 7:
+        theval = unpack_from("<I", buf[idx:])[0]
+        idx += 4
+    elif code == 12:
+        strlen = unpack_from("B", buf[idx:])[0]
+        idx += 1
+        theval = buf[idx:idx+strlen]
+        idx += strlen
+    elif code == 0:
+        theval = unpack_from("?", buf[idx:])[0]
+        idx += 1
+    elif code == 16:
+        thetime = unpack_from("<Q", buf[idx:])[0]
+        idx += 8
+        # convert from .NET DateTime to Python datetime (mask off the DateTimeKind, which is set to UTC in NanoCore)
+        # magic value is the number of 100ns increments since start of Gregorian calendar up to beginning of unix epoch time
+        theval = str(datetime.datetime.fromtimestamp(((thetime & 0x0FFFFFFFFFFFFFFFL) - 0x089f7ff5f7b58000L) / 10000000))
+    elif code == 21:
+        # version
+        strlen = unpack_from("B", buf[idx:])[0]
+        idx += 1
+        theval = buf[idx:idx+strlen]
+        idx += strlen
+    elif code == 18:
+        # guid
+        thestr = buf[idx:idx+16]
+        # we're not going to bother using the guid for anything but the mutex name, so just adjust it here
+        theval = "Global\{" + str(UUID(bytes_le=thestr)) + "}"
+        idx += 16
+    elif code == 15:
+        # ushort
+        theval = unpack_from("<H", buf[idx:])[0]
+        idx += 2
+    elif code == 2:
+        # binary blob of X bytes
+        theval = unpack_from("<I", buf[idx:])[0]
+        idx += 4 + theval
+        theval = "binary"
     else:
-        config_dict['Domain'] = re.search('HOST\x0c(.*?)\x0c', raw_config).group()[6:-1]
-        config_dict['Port'] = unpack("<H", re.search('PORT(.*?)\x0c', raw_config).group()[5:-1])[0]
-        config_dict['Group'] = re.search('GROUP\x0c(.*?)\x0c', raw_config).group()[7:-1]
-        config_dict['ConnectDelay'] = unpack("<i", re.search('DELAY(.*?)\x0c', raw_config).group()[6:-1])[0]
-        config_dict['OfflineKeyLog'] = str(re.search('OFFLINE_KEYLOGGING(.*?)\x0c', raw_config).group()[19:-1].encode('hex'))
+        # could easily implement more codes, but this will do for now
+        log.warn("Unimplemented NanoCore code: %d, report to brad.spengler@optiv.com", code)
+        return None, None
+    return idx, code, theval
+
+# returns pretty config
+def parse_config(raw_config):
+    buf = raw_config[3:]
+    idx = 0
+    config_dict = { }
+    datestr = ""
+    lastkey = ""
+    while peek_code(buf, idx) == 7:
+        idx, code, numelem = get_val(buf, idx)
+        if peek_code(buf, idx) != 12:
+            # we could also easily pull out the client interface and plugin DLL, but let's just
+            # extract the build date and plugin name
+            for i in xrange(numelem):
+                idx, code, theval = get_val(buf, idx)
+                if code == 12:
+                    config_dict[theval] = "Build Date: " + datestr
+                elif code == 16:
+                    datestr = theval
+        else:
+            for i in xrange(numelem):
+                idx, code, theval = get_val(buf, idx)
+                if not (i % 2):
+                    lastkey = theval
+                else:
+                    config_dict[lastkey] = theval
     return config_dict
 
 # This gets the encoded config from a stub
