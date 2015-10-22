@@ -43,8 +43,8 @@ def decrypt_v3(coded_config, key):
     else:
         # remove the string lengths and deflate the remainder of the stream
         deflate_config = deflate_contents(raw_config)
-        with open('nano_2.res', 'wb') as out:
-            out.write(deflate_config)
+        #with open('nano_2.res', 'wb') as out:
+        #    out.write(deflate_config)
         return parse_config(deflate_config, '3')
 
 def decrypt_v2(coded_config):
