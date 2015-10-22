@@ -1,6 +1,6 @@
 <section id="static_ratconfig">
     {% if analysis.static %}
-        {% if analysis.static.darkcomet_config or analysis.static.njrat_config %}
+        {% if analysis.static.darkcomet_config or analysis.static.njrat_config or analysis.static.nanocore_config %}
             <div>
                 <h4>RAT Configuration</h4>
                 <div id="rat_configuration">
@@ -22,6 +22,17 @@
                                 <td>njRAT</td>
                             </tr>
                             {% for key, value in analysis.static.njrat_config.iteritems %}
+                                <tr>
+                                    <th style="width: 15%;">{{key}}</th>
+                                    <td>{{value}}</td>
+                                </tr>
+                            {% endfor %}
+                        {% elif analysis.static.nanocore_config %}
+                            <tr>
+                                <th style="width: 15%;">Name</th>
+                                <td>NanoCore</td>
+                            </tr>
+                            {% for key, value in analysis.static.nanocore_config.iteritems %}
                                 <tr>
                                     <th style="width: 15%;">{{key}}</th>
                                     <td>{{value}}</td>

@@ -6,7 +6,7 @@
         <li><a href="#static_dotnet_tab" data-toggle="tab">.NET Static Analysis</a></li>
         {% endif %}
         {% if analysis.info.category == "file" and analysis.static %}
-        {% if analysis.static.njrat_config or analysis.static.darkcomet_config %}
+        {% if analysis.static.njrat_config or analysis.static.darkcomet_config or analysis.static.nanocore_config %}
         <li><a href="#static_ratconfig_tab" data-toggle="tab">RAT Configuration</a></li>
         {% endif %}
         {% endif %}
@@ -59,7 +59,7 @@
         </div>
         {% endif %}
         {% if analysis.info.category == "file" and analysis.static %}
-        {% if analysis.static.njrat_config or analysis.static.darkcomet_config %}
+        {% if analysis.static.njrat_config or analysis.static.darkcomet_config or analysis.static.nanocore_config %}
         <div class="tab-pane fade" id="static_ratconfig_tab">
             {% include "analysis/static/_ratconfig.html" %}
         </div>

@@ -131,6 +131,9 @@
     <Compile Include="lib\cuckoo\common\decoders\darkcomet.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="lib\cuckoo\common\decoders\nanocore.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="lib\cuckoo\common\decoders\njrat.py">
       <SubType>Code</SubType>
     </Compile>

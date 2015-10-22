@@ -7,6 +7,7 @@ import lib.cuckoo.common.office.olefile as olefile
 import lib.cuckoo.common.office.vbadeobf as vbadeobf
 import lib.cuckoo.common.decoders.darkcomet as darkcomet
 import lib.cuckoo.common.decoders.njrat as njrat
+import lib.cuckoo.common.decoders.nanocore as nanocore
 import logging
 import os
 import math
@@ -731,6 +732,9 @@ class PortableExecutable(object):
         njrat_config = njrat.extract_config(self.file_path)
         if njrat_config:
             results["njrat_config"] = njrat_config
+        nanocore_config = nanocore.extract_config(self.pe)
+        if nanocore_config:
+            results["nanocore_config"] = nanocore_config
         posttime = datetime.now()
         timediff = posttime - pretime
         self.add_statistic("config_decoder", "time", float("%d.%03d" % (timediff.seconds, timediff.microseconds / 1000)))
