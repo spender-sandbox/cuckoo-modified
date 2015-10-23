@@ -117,6 +117,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="analyzer\windows\modules\auxiliary\browser.py" />
+    <Compile Include="analyzer\windows\modules\auxiliary\digisig.py" />
     <Compile Include="analyzer\windows\modules\packages\chrome.py" />
     <Compile Include="analyzer\windows\modules\packages\msg.py" />
     <Compile Include="analyzer\windows\modules\packages\eml.py" />

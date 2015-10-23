@@ -21,8 +21,7 @@ class DigiSig(Auxiliary):
     For this to work, the Microsoft tool signtool.exe will need to be placed
     into the windows/analyzer/bin/ directory. signtool.exe can be downloaded
     from Microsoft as part of the SDK. (which is also usually packaged with
-    Visual Studio) Once you have a local copy of signtool.exe, enable the
-    module by turning self.enabled to True.
+    Visual Studio)
 
     TODO:
     Currently the only way to properly update root certificate cab files is
@@ -43,7 +42,7 @@ class DigiSig(Auxiliary):
             "error": None,
             "error_desc": None
         }
-        self.enabled = False
+        self.enabled = True
 
     def build_output(self, outputType, line):
         if line and line != "":
