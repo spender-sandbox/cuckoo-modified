@@ -655,12 +655,37 @@ class PortableExecutable(object):
             return None
 
         retlist = None
+        retdata = dict()
+        aux_cert_enabled = False
+        cert_data = dict()
+        cert_info = os.path.join(CUCKOO_ROOT, "storage", "analyses",
+                                 str(self.results["info"]["id"]), "aux",
+                                 "DigiSig.json")
+
+        if os.path.exists(cert_info):
+            aux_cert_enabled = True
+            with open(cert_info, "r") as cert_file:
+                buf = cert_file.read()
+            if buf:
+                cert_data = json.loads(buf)
+
+        if aux_cert_enabled and cert_data:
+            retdata = {
+                "aux_sha1": cert_data["sha1"],
+                "aux_timestamp": cert_data["timestamp"],
+                "aux_valid": cert_data["valid"],
+                "aux_error": cert_data["error"],
+                "aux_error_desc": cert_data["error_desc"],
+                "aux_signers": cert_data["signers"]
+            }
 
         if HAVE_CRYPTO:
             address = self.pe.OPTIONAL_HEADER.DATA_DIRECTORY[pefile.DIRECTORY_ENTRY['IMAGE_DIRECTORY_ENTRY_SECURITY']].VirtualAddress
 
             #check if file is digitally signed
             if address == 0:
+                if retdata:
+                    retlist = [retdata]
                 return retlist
 
             signature = self.pe.write()[address+8:]
@@ -672,7 +697,6 @@ class PortableExecutable(object):
                 if swig_pkcs7:
                     p7 = SMIME.PKCS7(swig_pkcs7)
                     xst = p7.get0_signers(X509.X509_Stack())
-                    retlist = []
                     if xst:
                         for cert in xst:
                             sn = cert.get_serial_number()
@@ -680,7 +704,15 @@ class PortableExecutable(object):
                             md5_fingerprint = cert.get_fingerprint('md5').lower()
                             subject_str = str(cert.get_subject())
                             cn = subject_str[subject_str.index("/CN=")+len("/CN="):]
-                            retlist.append({"sn":str(sn), "cn":cn, "sha1_fingerprint" : sha1_fingerprint, "md5_fingerprint" : md5_fingerprint })
+                            retdata.update({
+                                "sn": str(sn),
+                                "cn": cn,
+                                "sha1_fingerprint": sha1_fingerprint,
+                                "md5_fingerprint": md5_fingerprint,
+                            })
+
+            if retdata:
+                retlist = [retdata]
 
         return retlist
 
@@ -724,7 +756,6 @@ class PortableExecutable(object):
         results["digital_signers"] = self._get_digital_signers()
         results["imported_dll_count"] = len([x for x in results["pe_imports"] if x.get("dll")])
 
-        
         pretime = datetime.now()
         darkcomet_config = darkcomet.extract_config(self.file_path, self.pe)
         if darkcomet_config:
