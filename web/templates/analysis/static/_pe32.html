@@ -140,7 +140,7 @@
                     {% endfor %}
                 </table>
                 {% for signature in analysis.static.digital_signers %}
-                {% if signature.aux_sha1 %}
+                {% if signature.aux_signers %}
                 <h4>Microsoft Certificate Validation (Sign Tool)</h4>
                 <table class="table table-striped table-bordered">
                     <tr>
