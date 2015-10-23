@@ -66,6 +66,8 @@ class DigiSig(Auxiliary):
                 parser_switch = None
                 if not self.json_data["timestamp"]:
                     self.json_data["timestamp"] = line.split(": ")[-1]
+            if line.startswith("File is not timestamped."):
+                parser_switch = None
             # Start of timestamp verification
             if line.startswith("Timestamp Verified by:"):
                 parser_switch = "time"
