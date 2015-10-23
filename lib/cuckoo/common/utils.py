@@ -1393,6 +1393,7 @@ def get_vt_consensus(namelist):
         "multi",
         "ransom",
         "autoit",
+        "yakes",
         "java",
         "ckrf",
         "html",
