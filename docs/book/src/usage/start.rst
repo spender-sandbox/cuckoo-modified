@@ -27,9 +27,6 @@ You will get an output similar to this::
     2013-04-07 15:57:17,861 [lib.cuckoo.core.scheduler] INFO: Loaded 1 machine/s
     2013-04-07 15:57:17,862 [lib.cuckoo.core.scheduler] INFO: Waiting for analysis tasks...
 
-Note that Cuckoo checks for updates on a remote API located at *api.cuckoosandbox.org*.
-You can avoid this by disabling the ``version_check`` option in the configuration file.
-
 Now Cuckoo is ready to run and it's waiting for submissions.
 
 ``cuckoo.py`` accepts some command line options as shown by the help::
