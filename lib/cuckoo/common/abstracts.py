@@ -977,7 +977,8 @@ class Signature(object):
                             api=None,
                             category=None,
                             regex=False,
-                            all=False):
+                            all=False,
+                            ignorecase=False):
         """Checks for a specific argument of an invoked API.
         @param call: API call information.
         @param pattern: string or expression to check for.
@@ -988,6 +989,8 @@ class Signature(object):
                       expression or not and therefore should be compiled.
         @param all: boolean representing if all results should be returned
                       in a set or not
+        @param ignorecase: boolean representing whether the search is
+                    case-insensitive or not
         @return: depending on the value of param 'all', either a set of
                       matched items or the first matched item
         """
@@ -1016,7 +1019,7 @@ class Signature(object):
                                  subject=argument["value"],
                                  regex=regex,
                                  all=all,
-                                 ignorecase=False)
+                                 ignorecase=ignorecase)
             if ret:
                 if all:
                     retset.update(ret)
@@ -1035,7 +1038,8 @@ class Signature(object):
                        category=None,
                        process=None,
                        regex=False,
-                       all=False):
+                       all=False,
+                       ignorecase=False):
         """Checks for a specific argument of an invoked API.
         @param pattern: string or expression to check for.
         @param name: optional filter for the argument name.
@@ -1046,6 +1050,8 @@ class Signature(object):
                       expression or not and therefore should be compiled.
         @param all: boolean representing if all results should be returned
                       in a set or not
+        @param ignorecase: boolean representing whether the search is
+                    case-insensitive or not
         @return: depending on the value of param 'all', either a set of
                       matched items or the first matched item
         """
@@ -1062,7 +1068,7 @@ class Signature(object):
             # Loop through API calls.
             for call in item["calls"]:
                 r = self.check_argument_call(call, pattern, name,
-                                             api, category, regex, all)
+                                             api, category, regex, all, ignorecase)
                 if r:
                     if all:
                         retset.update(r)
