@@ -717,8 +717,12 @@ def search(request):
                     records = results_db.analysis.find({"malfamily": {"$regex": value, "$options": "-i"}}).sort([["_id", -1]])
                 elif term == "url":
                     records = results_db.analysis.find({"target.url": value}).sort([["_id", -1]])
+                elif term == "iconhash":
+                    records = results_db.analysis.find({"static.pe.icon_hash": value}).sort([["_id", -1]])
+                elif term == "iconfuzzy":
+                    records = results_db.analysis.find({"static.pe.icon_fuzzy": value}).sort([["_id", -1]])
                 elif term == "imphash":
-                    records = results_db.analysis.find({"static.pe_imphash": value}).sort([["_id", -1]])
+                    records = results_db.analysis.find({"static.pe.imphash": value}).sort([["_id", -1]])
                 elif term == "surialert":
                     records = results_db.analysis.find({"suricata.alerts.signature": {"$regex" : value, "$options" : "-i"}}).sort([["_id", -1]])
                 elif term == "surihttp":
@@ -774,8 +778,12 @@ def search(request):
                     records = es.search(index=fullidx, doc_type="analysis", q="malfamily: %s" % value)["hits"]["hits"]
                 elif term == "url":
                     records = es.search(index=fullidx, doc_type="analysis", q="target.url: %s" % value)["hits"]["hits"]
+                elif term == "iconhash":
+                    records = es.search(index=fullidx, doc_type="analysis", q="static.pe.icon_hash: %s" % value)["hits"]["hits"]
+                elif term == "iconfuzzy":
+                    records = es.search(index=fullidx, doc_type="analysis", q="static.pe.icon_fuzzy: %s" % value)["hits"]["hits"]
                 elif term == "imphash":
-                    records = es.search(index=fullidx, doc_type="analysis", q="static.pe_imphash: %s" % value)["hits"]["hits"]
+                    records = es.search(index=fullidx, doc_type="analysis", q="static.pe.imphash: %s" % value)["hits"]["hits"]
                 elif term == "surialert":
                     records = es.search(index=fullidx, doc_type="analysis", q="suricata.alerts.signature: %s" % value)["hits"]["hits"]
                 elif term == "surihttp":

@@ -5,10 +5,8 @@
         {% if analysis.info.category == "file" and analysis.static and "PE32" in analysis.target.file.type and "Mono" in analysis.target.file.type %}
         <li><a href="#static_dotnet_tab" data-toggle="tab">.NET Static Analysis</a></li>
         {% endif %}
-        {% if analysis.info.category == "file" and analysis.static %}
-        {% if analysis.static.njrat_config or analysis.static.darkcomet_config or analysis.static.nanocore_config %}
+        {% if analysis.info.category == "file" and analysis.static and analysis.static.rat %}
         <li><a href="#static_ratconfig_tab" data-toggle="tab">RAT Configuration</a></li>
-        {% endif %}
         {% endif %}
         {% if analysis.info.category == "file" %}
         <li><a href="#static_strings_tab" data-toggle="tab">Strings</a></li>
@@ -31,6 +29,8 @@
                 {% include "analysis/static/_office.html" %}
             {% elif "Word 2007+" in analysis.target.file.type %}
                 {% include "analysis/static/_office.html" %}
+            {% elif "Java Jar" in analysis.target.file.type or analysis.target.file.name|endswith:".jar" %}
+                {% include "analysis/static/_java.html" %}
             {% elif "Zip archive data" in analysis.target.file.type %}
                 {% if analysis.target.file.name|endswith:".docx" %}
                     {% include "analysis/static/_office.html" %}
@@ -58,12 +58,10 @@
             {% include "analysis/static/_dotnet.html" %}
         </div>
         {% endif %}
-        {% if analysis.info.category == "file" and analysis.static %}
-        {% if analysis.static.njrat_config or analysis.static.darkcomet_config or analysis.static.nanocore_config %}
+        {% if analysis.info.category == "file" and analysis.static and analysis.static.rat %}
         <div class="tab-pane fade" id="static_ratconfig_tab">
             {% include "analysis/static/_ratconfig.html" %}
         </div>
-        {% endif %}
         {% endif %}
         {% if analysis.info.category == "file" %}
         <div class="tab-pane fade" id="static_strings_tab">

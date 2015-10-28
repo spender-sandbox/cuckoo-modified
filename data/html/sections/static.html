@@ -2,9 +2,7 @@
     <div class="section-title">
         <h4>Static Analysis</h4>
     </div>
-    {% if results.static or results.strings %}
-        {% if results.static %}
-        {% if results.static.pe_imagebase or results.static.pe_entrypoint or results.static.pe_osversion or results.static.pe_pdbpath or results.static.pe_timestamp or results.static.pe_imphash or results.static.pe_icon %}
+        {% if results.static and results.static.pe %}
             <div>
                 {% if summary_report %}
                 <h4>PE Information</h4>
@@ -14,85 +12,84 @@
                 <div id="pe_information" style="display: none;">
                 {% endif %}
                     <table class="table table-striped table-bordered" style="table-layout: fixed;">
-                        {% if results.static.pe_imagebase %}
+                        {% if results.static.pe.imagebase %}
                             <tr>
                                 <th style="width: 15%;">Image Base</th>
-                                <td>{{results.static.pe_imagebase}}</td>
+                                <td>{{results.static.pe.imagebase}}</td>
                             </tr>
                         {% endif %}
-                        {% if results.static.pe_entrypoint %}
+                        {% if results.static.pe.entrypoint %}
                             <tr>
                                 <th style="width: 15%;">Entry Point</th>
-                                <td>{{results.static.pe_entrypoint}}</td>
+                                <td>{{results.static.pe.entrypoint}}</td>
                             </tr>
                         {% endif %}
-                        {% if results.static.pe_reported_checksum %}
+                        {% if results.static.pe.reported_checksum %}
                             <tr>
                                 <th style="width: 15%;">Reported Checksum</th>
-                                <td>{{results.static.pe_reported_checksum}}</td>
+                                <td>{{results.static.pe.reported_checksum}}</td>
                             </tr>
                         {% endif %}
-                        {% if results.static.pe_actual_checksum %}
+                        {% if results.static.pe.actual_checksum %}
                             <tr>
                                 <th style="width: 15%;">Actual Checksum</th>
-                                <td>{{results.static.pe_actual_checksum}}</td>
+                                <td>{{results.static.pe.actual_checksum}}</td>
                             </tr>
                         {% endif %}
-                        {% if results.static.pe_osversion %}
+                        {% if results.static.pe.osversion %}
                             <tr>
                                 <th style="width: 15%;">Minimum OS Version</th>
-                                <td>{{results.static.pe_osversion}}</td>
+                                <td>{{results.static.pe.osversion}}</td>
                             </tr>
                         {% endif %}
-                        {% if results.static.pe_pdbpath %}
+                        {% if results.static.pe.pdbpath %}
                             <tr>
                                 <th style="width: 15%;">PDB Path</th>
-                                <td>{{results.static.pe_pdbpath}}</td>
+                                <td>{{results.static.pe.pdbpath}}</td>
                             </tr>
                         {% endif %}
-                        {% if results.static.pe_timestamp %}
+                        {% if results.static.pe.timestamp %}
                             <tr>
                                 <th style="width: 15%;">Compile Time</th>
-                                <td>{{results.static.pe_timestamp}}</td>
+                                <td>{{results.static.pe.timestamp}}</td>
                             </tr>
                         {% endif %}
-                        {% if results.static.pe_imphash %}
+                        {% if results.static.pe.imphash %}
                             <tr>
                                 <th style="width: 15%;">Import Hash</th>
-                                <td>{{results.static.pe_imphash}}</td>
+                                <td>{{results.static.pe.imphash}}</td>
                             </tr>
                         {% endif %}
-                        {% if results.static.pe_icon %}
+                        {% if results.static.pe.icon %}
                             <tr>
                                 <th style="width: 15%;">Icon</th>
-                                <td><img src="data:image/jpeg;base64,{{results.static.pe_icon}}"/></td>
+                                <td><img src="data:image/jpeg;base64,{{results.static.pe.icon}}"/></td>
                             </tr>
                         {% endif %}
-                        {% if results.static.pe_icon_hash %}
+                        {% if results.static.pe.icon_hash %}
                             <tr>
                                 <th style="width: 15%;">Icon Exact Hash</th>
-                                <td>{{results.static.pe_icon_hash}}</td>
+                                <td>{{results.static.pe.icon_hash}}</td>
                             </tr>
                         {% endif %}
-                        {% if results.static.pe_icon_fuzzy %}
+                        {% if results.static.pe.icon_fuzzy %}
                             <tr>
                                 <th style="width: 15%;">Icon Similarity Hash</th>
-                                <td>{{results.static.pe_icon_fuzzy}}</td>
+                                <td>{{results.static.pe.icon_fuzzy}}</td>
                             </tr>
                         {% endif %}
-                        {% if results.static.pe_exported_dll_name %}
+                        {% if results.static.pe.exported_dll_name %}
                             <tr>
                                 <th style="width: 15%;">Exported DLL Name</th>
-                                <td>{{results.static.pe_exported_dll_name}}</td>
+                                <td>{{results.static.pe.exported_dll_name}}</td>
                             </tr>
                         {% endif %}
                     </table>
                 </div>
             </div>
             <hr />
-        {% endif %}
 
-        {% if results.static.pe_versioninfo %}
+        {% if results.static.pe.versioninfo %}
             <div>
                 {% if summary_report %}
                 <h4>Version Infos</h4>
@@ -106,7 +103,7 @@
                             <col width="150" />
                             <col width="*" />
                         </colgroup>
-                        {% for info in results.static.pe_versioninfo %}
+                        {% for info in results.static.pe.versioninfo %}
                             {% if info.name %}
                             <tr>
                                 <td><strong>{{info.name}}</strong>:</td>
@@ -119,7 +116,7 @@
             </div>
         {% endif %}
 
-        {% if results.static.pe_sections %}
+        {% if results.static.pe.sections %}
             <div>
                 {% if summary_report %}
                 <h4>Sections</h4>
@@ -137,7 +134,7 @@
                             <th>Characteristics</th>
                             <th>Entropy</th>
                         </tr>
-                        {% for section in results.static.pe_sections %}
+                        {% for section in results.static.pe.sections %}
                             <tr>
                                 <td>{{section.name}}</td>
                                 <td>{{section.virtual_address}}</td>
@@ -152,7 +149,7 @@
             </div>
         {% endif %}
 
-        {% if results.static.pe_overlay %}
+        {% if results.static.pe.overlay %}
             <div>
                 {% if summary_report %}
                 <h4>Overlay</h4>
@@ -168,18 +165,18 @@
                         </colgroup>
                         <tr>
                             <td><strong>Offset</strong>:</td>
-                            <td>{{results.static.pe_overlay.offset}}</td>
+                            <td>{{results.static.pe.overlay.offset}}</td>
                         </tr>
                         <tr>
                             <td><strong>Size</strong>:</td>
-                            <td>{{results.static.pe_overlay.size}}</td>
+                            <td>{{results.static.pe.overlay.size}}</td>
                         </tr>
                     </table>
                 </div>
             </div>
         {% endif %}
 
-        {% if results.static.pe_resources %}
+        {% if results.static.pe.resources %}
             <div>
                 {% if summary_report %}
                 <h4>Resources</h4>
@@ -198,7 +195,7 @@
                             <th>Entropy</th>
                             <th>File type</th>
                         </tr>
-                        {% for section in results.static.pe_resources %}
+                        {% for section in results.static.pe.resources %}
                             <tr>
                                 <td>{{section.name}}</td>
                                 <td>{{section.offset}}</td>
@@ -214,7 +211,7 @@
             </div>
         {% endif %}
 
-        {% if results.static.pe_imports %}
+        {% if results.static.pe.imports %}
             <div>
                 {% if summary_report %}
                 <h4>Imports</h4>
@@ -223,7 +220,7 @@
                 <h4><a href="javascript:showHide('pe_imports');">Imports</a></h4>
                 <div id="pe_imports" style="display: none;">
                 {% endif %}
-                    {% for library in results.static.pe_imports %}
+                    {% for library in results.static.pe.imports %}
                         <div class="well">
                             <div><strong>Library {{library.dll}}</strong>:</div>
                             {% for function in library.imports %}
@@ -235,7 +232,7 @@
             </div>
         {% endif %}
 
-        {% if results.static.pe_exports %}
+        {% if results.static.pe.exports %}
             <div>
                 {% if summary_report %}
                 <h4>Exports</h4>
@@ -250,7 +247,7 @@
                             <th>Address</th>
                             <th>Name</th>
                         </tr>
-                        {% for export in results.static.pe_exports %}
+                        {% for export in results.static.pe.exports %}
                             <tr>
                                 <td>{{export.ordinal}}</td>
                                 <td>{{export.address}}</td>
@@ -261,9 +258,9 @@
                 </div>
             </div>
         {% endif %}
-        {% endif %}
+    {% endif %}
 
-        {% if results.strings and not summary_report %}
+    {% if results.strings and not summary_report %}
             <div>
                 <h4><a href="javascript:showHide('strings');">Strings</a></h4>
                 <div id="strings" style="display: none;">
@@ -272,10 +269,9 @@
                     {% endfor %}
                 </div> 
             </div>
-        {% endif %}
+    {% endif %}
 
-
-    {% else %}
+    {% if not results.strings and not results.static %}
         Nothing to display.
     {% endif %}
 </section>

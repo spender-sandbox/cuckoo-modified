@@ -541,11 +541,11 @@ def ext_tasks_search(request):
             elif option == "url":
                 records = results_db.analysis.find({"target.url": dataarg}).sort([["_id", -1]])
             elif option == "iconhash":
-                records = results_db.analysis.find({"static.pe_icon_hash": dataarg}).sort([["_id", -1]])
+                records = results_db.analysis.find({"static.pe.icon_hash": dataarg}).sort([["_id", -1]])
             elif option == "iconfuzzy":
-                records = results_db.analysis.find({"static.pe_icon_fuzzy": dataarg}).sort([["_id", -1]])
+                records = results_db.analysis.find({"static.pe.icon_fuzzy": dataarg}).sort([["_id", -1]])
             elif option == "imphash":
-                records = results_db.analysis.find({"static.pe_imphash": dataarg}).sort([["_id", -1]])
+                records = results_db.analysis.find({"static.pe.imphash": dataarg}).sort([["_id", -1]])
             elif option == "surialert":
                 records = results_db.analysis.find({"suricata.alerts.signature": {"$regex" : dataarg, "$options" : "-i"}}).sort([["_id", -1]])
             elif option == "surihttp":
@@ -609,11 +609,11 @@ def ext_tasks_search(request):
             elif term == "url":
                 records = es.search(index=fullidx, doc_type="analysis", q="target.url: %s" % value)["hits"]["hits"]
             elif term == "imphash":
-                records = es.search(index=fullidx, doc_type="analysis", q="static.pe_imphash: %s" % value)["hits"]["hits"]
+                records = es.search(index=fullidx, doc_type="analysis", q="static.pe.imphash: %s" % value)["hits"]["hits"]
             elif term == "iconhash":
-                records = es.search(index=fullidx, doc_type="analysis", q="static.pe_icon_hash: %s" % value)["hits"]["hits"]
+                records = es.search(index=fullidx, doc_type="analysis", q="static.pe.icon_hash: %s" % value)["hits"]["hits"]
             elif term == "iconfuzzy":
-                records = es.search(index=fullidx, doc_type="analysis", q="static.pe_icon_fuzzy: %s" % value)["hits"]["hits"]
+                records = es.search(index=fullidx, doc_type="analysis", q="static.pe.icon_fuzzy: %s" % value)["hits"]["hits"]
             elif term == "surialert":
                 records = es.search(index=fullidx, doc_type="analysis", q="suricata.alerts.signature: %s" % value)["hits"]["hits"]
             elif term == "surihttp":

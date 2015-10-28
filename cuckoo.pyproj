@@ -129,6 +129,9 @@
     <Compile Include="analyzer\windows\modules\packages\swf.py" />
     <Compile Include="cuckoo.py" />
     <Compile Include="agent\agent.py" />
+    <Compile Include="lib\cuckoo\common\decoders\alienspy.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="lib\cuckoo\common\decoders\darkcomet.py">
       <SubType>Code</SubType>
     </Compile>
@@ -397,6 +400,7 @@
     <Content Include="web\templates\analysis\comments\index.html" />
     <Content Include="web\templates\analysis\network\_smtp.html" />
     <Content Include="web\templates\analysis\static\_dotnet.html" />
+    <Content Include="web\templates\analysis\static\_java.html" />
     <Content Include="web\templates\analysis\statistics\index.html" />
     <Content Include="web\templates\analysis\similar\index.html" />
     <Content Include="web\templates\analysis\network\_cif.html" />
