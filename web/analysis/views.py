@@ -469,6 +469,10 @@ def report(request, task_id):
                     siminfo = get_analysis_info(db, id=int(sim["id"]))
                     if siminfo:
                         similarinfo.append(siminfo)
+                if similarinfo:
+                    buf = sorted(similarinfo, key=lambda z: z["id"], reverse=True)
+                    similarinfo = buf
+
         except:
             pass
 
