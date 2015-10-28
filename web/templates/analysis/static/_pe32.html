@@ -139,10 +139,14 @@
                         </tr>
                     {% endfor %}
                 </table>
-                {% for signature in analysis.static.digital_signers %}
-                {% if signature.aux_signers %}
-                <h4>Microsoft Certificate Validation (Sign Tool)</h4>
+            </div>
+        </div>
+        {% endif %}
+        {% if analysis.static.guest_signers and analysis.static.guest_signers.aux_signers %}
+        <div>
+            <h4>Microsoft Certificate Validation (Sign Tool)</h4>
                 <table class="table table-striped table-bordered">
+                  <div id="digital_signers_validation">
                     <tr>
                         <th width="20%">SHA1</th>
                         <th width="20%">Timestamp</th>
@@ -150,18 +154,18 @@
                         <th width="55%">Error</th>
                     </tr>
                     <tr>
-                        <td>{{signature.aux_sha1}}</td>
-                        <td>{{signature.aux_timestamp}}</td>
-                        {% if signature.aux_valid %}
+                        <td>{{analysis.static.guest_signers.aux_sha1}}</td>
+                        <td>{{analysis.static.guest_signers.aux_timestamp}}</td>
+                        {% if analysis.static.guest_signers.aux_valid %}
                         <td><center><span class="label label-success">Yes</span></center></td>
                         <td>None</td>
                         {% else %}
                         <td><center><span class="label label-danger">No</span></center></td>
-                        <td>{{signature.aux_error_desc}}</td>
+                        <td>{{analysis.static.guest_signers.aux_error_desc}}</td>
                         {% endif %}
                     </tr>
                 </table>
-                {% for signer in signature.aux_signers %}
+                {% for signer in analysis.static.guest_signers.aux_signers %}
                 <table class="table table-striped table-bordered">
                     <colgroup>
                         <col style="width:15%">
@@ -190,8 +194,6 @@
                         </tr>
                     </tbody>
                  </table>
-                 {% endfor %}
-                 {% endif %}
                  {% endfor %}
             </div>
         </div>
