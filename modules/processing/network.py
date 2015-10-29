@@ -94,7 +94,7 @@ class Pcap:
         self.config = Config()
         # DNS Whitelist
         self.domain_whitelist = [
-            # Certificate Trust Update sites
+            # Certificate Trust Update domains
             "^ocsp\.usertrust\.com$",
             "^ocsp\.comodoca\.com$",
             "^ctldl\.windowsupdate\.com$",
@@ -661,7 +661,7 @@ class Pcap:
             for delip in self.ip_whitelist:
                 if delip in self.unique_hosts:
                     self.unique_hosts.remove(delip)
-        print self.unique_hosts
+
         # Build results dict.
         self.results["hosts"] = self._enrich_hosts(self.unique_hosts)
         self.results["domains"] = self.unique_domains
