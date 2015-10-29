@@ -52,6 +52,7 @@ Packet = namedtuple("Packet", ["raw", "ts"])
 
 log = logging.getLogger(__name__)
 
+enabled_whitelist = Config("processing").network.dnswhitelist
 
 class Pcap:
     """Reads network data from PCAP file."""
@@ -91,6 +92,15 @@ class Pcap:
         self.results = {}
         # Config
         self.config = Config()
+        # DNS Whitelist
+        self.domain_whitelist = [
+            # Certificate Trust Update domains
+            "^ocsp\.usertrust\.com$",
+            "^ocsp\.comodoca\.com$",
+            "^ctldl\.windowsupdate\.com$",
+            "^crl\.microsoft\.com$",
+        ]
+        self.ip_whitelist = set()
 
     def _dns_gethostbyname(self, name):
         """Get host by name wrapper.
@@ -365,6 +375,14 @@ class Pcap:
                 ans["data"] = ""
                 query["answers"].append(ans)
 
+            if enabled_whitelist:
+                for reject in self.domain_whitelist:
+                    if re.match(reject, query["request"]):
+                        if query["answers"]:
+                            for addip in query["answers"]:
+                                self.ip_whitelist.add(addip["data"])
+                        return True
+
             self._add_domain(query["request"])
 
             reqtuple = query["type"], query["request"]
@@ -637,6 +655,12 @@ class Pcap:
 
         # Post processors for reconstructed flows.
         self._process_smtp()
+
+        # Remove hosts that have an IP which correlate to a whitelisted domain
+        if enabled_whitelist:
+            for delip in self.ip_whitelist:
+                if delip in self.unique_hosts:
+                    self.unique_hosts.remove(delip)
 
         # Build results dict.
         self.results["hosts"] = self._enrich_hosts(self.unique_hosts)
