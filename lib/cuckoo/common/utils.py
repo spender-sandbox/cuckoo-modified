@@ -426,7 +426,12 @@ def pretty_print_arg(category, api_name, arg_name, arg_val):
                 4 : "SystemPerformanceInformation",
                 5 : "SystemProcessInformation",
                 8 : "SystemProcessorPerformanceInformation",
-                21 : "SystemFileCacheInformation"
+                21 : "SystemFileCacheInformation",
+                35 : "SystemKernelDebuggerInformation",
+                44 : "SystemCurrentTimeZoneInformation",
+                66 : "SystemDynamicTimeZoneInformation",
+                90 : "SystemBootEnvironmentInformation",
+                123 : "SystemBasicPerformanceInformation",
         }.get(val, None)
     elif category == "registry" and arg_name == "Type":
         val = int(arg_val, 16)
