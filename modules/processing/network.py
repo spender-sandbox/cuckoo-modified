@@ -52,6 +52,7 @@ Packet = namedtuple("Packet", ["raw", "ts"])
 
 log = logging.getLogger(__name__)
 
+enabled_whitelist = Config("processing").network.dnswhitelist
 
 class Pcap:
     """Reads network data from PCAP file."""
@@ -93,7 +94,7 @@ class Pcap:
         self.config = Config()
         # DNS Whitelist
         self.domain_whitelist = [
-            # Certificate Trust Update domains
+            # Certificate Trust Update sites
             "^ocsp\.usertrust\.com$",
             "^ocsp\.comodoca\.com$",
             "^ctldl\.windowsupdate\.com$",
@@ -374,12 +375,13 @@ class Pcap:
                 ans["data"] = ""
                 query["answers"].append(ans)
 
-            for reject in self.domain_whitelist:
-                if re.match(reject, query["request"]):
-                    if query["answers"]:
-                        for addip in query["answers"]:
-                            self.ip_whitelist.add(addip["data"])
-                    return True
+            if enabled_whitelist:
+                for reject in self.domain_whitelist:
+                    if re.match(reject, query["request"]):
+                        if query["answers"]:
+                            for addip in query["answers"]:
+                                self.ip_whitelist.add(addip["data"])
+                        return True
 
             self._add_domain(query["request"])
 
@@ -655,10 +657,11 @@ class Pcap:
         self._process_smtp()
 
         # Remove hosts that have an IP which correlate to a whitelisted domain
-        for delip in self.ip_whitelist:
-            if delip in self.unique_hosts:
-                self.unique_hosts.remove(delip)
-
+        if enabled_whitelist:
+            for delip in self.ip_whitelist:
+                if delip in self.unique_hosts:
+                    self.unique_hosts.remove(delip)
+        print self.unique_hosts
         # Build results dict.
         self.results["hosts"] = self._enrich_hosts(self.unique_hosts)
         self.results["domains"] = self.unique_domains
