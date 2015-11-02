@@ -102,7 +102,7 @@ def index(request):
                                               context_instance=RequestContext(request))
                 elif sample.size > settings.MAX_UPLOAD_SIZE:
                     return render_to_response("error.html",
-                                              {"error": "You uploaded a file that exceeds that maximum allowed upload size."},
+                                              {"error": "You uploaded a file that exceeds the maximum allowed upload size specified in web/web/local_settings.py."},
                                               context_instance=RequestContext(request))
     
                 # Moving sample from django temporary file to Cuckoo temporary storage to
@@ -128,7 +128,7 @@ def index(request):
                                               context_instance=RequestContext(request))
                 elif sample.size > settings.MAX_UPLOAD_SIZE:
                     return render_to_response("error.html",
-                                              {"error": "You uploaded a quarantine file that exceeds that maximum allowed upload size."},
+                                              {"error": "You uploaded a quarantine file that exceeds the maximum allowed upload size specified in web/web/local_settings.py."},
                                               context_instance=RequestContext(request))
     
                 # Moving sample from django temporary file to Cuckoo temporary storage to
