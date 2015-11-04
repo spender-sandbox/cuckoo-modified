@@ -4,6 +4,7 @@ except ImportError:
     import re
 
 from django.template.defaultfilters import register
+from collections import OrderedDict
 
 @register.filter("mongo_id")
 def mongo_id(value):
@@ -37,3 +38,13 @@ def stats_total(value):
        total += item["time"]
 
     return total
+
+@register.filter(name="sort")
+def sort(value):
+    if isinstance(value, dict):
+        sorteddict = OrderedDict()
+        sortedkeys = sorted(value.keys())
+        for key in sortedkeys:
+            sorteddict[key] = value[key]
+        return sorteddict
+    return value

@@ -1,3 +1,4 @@
+{% load analysis_tags %}
 <section id="static_ratconfig">
     {% if analysis.static and analysis.static.rat %}
             <div>
@@ -8,12 +9,14 @@
                             <th style="width: 15%;">Name</th>
                             <td>{{analysis.static.rat.name}}</td>
                         </tr>
-                        {% for key, value in analysis.static.rat.config.iteritems %}
+                        {% with analysis.static.rat.config|sort as sorted_config %}
+                        {% for key, value in sorted_config.iteritems %}
                             <tr>
                                 <th style="width: 15%;">{{key}}</th>
                                 <td>{{value}}</td>
                             </tr>
                         {% endfor %}
+                        {% endwith %}
                     </table>
                 </div>
             </div>
