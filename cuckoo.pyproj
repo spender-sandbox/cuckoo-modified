@@ -141,6 +141,9 @@
     <Compile Include="lib\cuckoo\common\decoders\njrat.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="lib\cuckoo\common\decoders\qrat.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="lib\cuckoo\common\decoders\__init__.py">
       <SubType>Code</SubType>
     </Compile>

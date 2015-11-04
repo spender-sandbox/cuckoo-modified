@@ -9,6 +9,7 @@ import lib.cuckoo.common.decoders.darkcomet as darkcomet
 import lib.cuckoo.common.decoders.njrat as njrat
 import lib.cuckoo.common.decoders.nanocore as nanocore
 import lib.cuckoo.common.decoders.alienspy as alienspy
+import lib.cuckoo.common.decoders.qrat as qrat
 import logging
 import os
 import math
@@ -1129,8 +1130,9 @@ class Office(object):
 
 class Java(object):
     """Java Static Analysis"""
-    def __init__(self, file_path):
+    def __init__(self, file_path, decomp_jar):
         self.file_path = file_path
+        self.decomp_jar = decomp_jar
 
     def run(self):
         """Run analysis.
@@ -1141,11 +1143,26 @@ class Java(object):
 
         results = {}
 
+        results["java"] = { }
+        
+        if self.decomp_jar:
+            try:
+                p = Popen(["java", "-jar", self.decomp_jar, self.file_path], stdout=PIPE)
+                results["java"]["decompiled"] = convert_to_printable(p.stdout.read())
+            except:
+                pass
+
         alienspy_config = alienspy.extract_config(self.file_path)
         if alienspy_config:
             results["rat"] = { }
             results["rat"]["name"] = "AlienSpy"
             results["rat"]["config"] = alienspy_config
+
+        qrat_config = qrat.extract_config(self.file_path, self.decomp_jar)
+        if qrat_config:
+            results["rat"] = { }
+            results["rat"]["name"] = "QRat"
+            results["rat"]["config"] = qrat_config
 
         return results
 
@@ -1174,7 +1191,10 @@ class Static(Processing):
             elif self.task["target"].endswith((".doc", ".docx", ".rtf", ".xls", ".xlsx", ".ppt", ".pptx", ".pps", ".ppsx", ".pptm", ".potm", ".potx", ".ppsm")):
                 static = Office(self.file_path).run()
             elif "Java Jar" in thetype or self.task["target"].endswith(".jar"):
-                static = Java(self.file_path).run()
+                decomp_jar = self.options.get("procyon_path", None)
+                if decomp_jar and not os.path.exists(decomp_jar):
+                    log.error("procyon_path specified in processing.conf but the file does not exist.")
+                static = Java(self.file_path, decomp_jar).run()
             # It's possible to fool libmagic into thinking our 2007+ file is a
             # zip. So until we have static analysis for zip files, we can use
             # oleid to fail us out silently, yeilding no static analysis
