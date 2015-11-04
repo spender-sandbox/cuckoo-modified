@@ -66,6 +66,12 @@ def extract_config(file_path, decomp_jar):
             match = re.search("Utils\.serverPort = (?P<portnum>\d+);", decompiled_data)
             if match:
                 ret["ServerPort"] = int(match.group('portnum'))
+            match = re.search("Utils\.instanceControlPortAgent = (?P<portnum>\d+);", decompiled_data)
+            if match:
+                ret["InstanceControlPortAgent"] = int(match.group('portnum'))
+            match = re.search("Utils\.instanceControlPortClient = (?P<portnum>\d+);", decompiled_data)
+            if match:
+                ret["InstanceControlPortClient"] = int(match.group('portnum'))
 
             try:
                 os.unlink(decoded_path)
