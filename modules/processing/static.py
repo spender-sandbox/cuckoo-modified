@@ -3,6 +3,7 @@
 # See the file 'docs/LICENSE' for copying permission.
 
 import json
+from lib.cuckoo.common.utils import store_temp_file
 import lib.cuckoo.common.office.olefile as olefile
 import lib.cuckoo.common.office.vbadeobf as vbadeobf
 import lib.cuckoo.common.decoders.darkcomet as darkcomet
@@ -1146,9 +1147,19 @@ class Java(object):
         results["java"] = { }
         
         if self.decomp_jar:
+            f = open(self.file_path, "rb")
+            data = f.read()
+            f.close()
+            jar_file = store_temp_file(data, "decompile.jar")
+
             try:
-                p = Popen(["java", "-jar", self.decomp_jar, self.file_path], stdout=PIPE)
+                p = Popen(["java", "-jar", self.decomp_jar, jar_file], stdout=PIPE)
                 results["java"]["decompiled"] = convert_to_printable(p.stdout.read())
+            except:
+                pass
+
+            try:
+                os.unlink(jar_file)
             except:
                 pass
 
