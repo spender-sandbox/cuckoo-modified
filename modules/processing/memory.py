@@ -1001,9 +1001,9 @@ class VolatilityManager(object):
         # Check if theres a memory profile configured in the machinery config.
         profile = Config(manager).get(vm).get("mem_profile")
         if profile == None:
-            vol = VolatilityAPI(self.memfile, self.osprofile)
-        else:
-            vol = VolatilityAPI(self.memfile, profile)
+            profile = self.osprofile
+
+        vol = VolatilityAPI(self.memfile, profile)
 
         # TODO: improve the load of volatility functions.
         if self.voptions.pslist.enabled:
