@@ -164,9 +164,18 @@ class Malheur(Report):
 
         path, dirs, files = os.walk(reportsdir).next()
         try:
-            subprocess.call(["malheur", "-c", cfgpath, "-o", outputfile, "cluster", reportsdir])
+            cmdline = ["malheur", "-c", cfgpath, "-o", outputfile, "cluster", reportsdir]
+            run = subprocess.Popen(cmdline, stdout=subprocess.PIPE,
+                                   stdin=subprocess.PIPE,
+                                   stderr=subprocess.PIPE)
+            out, err = run.communicate()
+            for line in err.splitlines():
+                if line.startswith("Warning: Discarding empty feature vector"):
+                    badfile = line.split("'")[1].split("'")[0]
+                    os.remove(os.path.join(reportsdir, badfile))
 
             # replace previous classification state with new results atomically
             os.rename(outputfile, outputfile[:-33])
+
         except Exception as e:
             raise CuckooReportError("Failed to perform Malheur classification: %s" % e)
