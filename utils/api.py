@@ -233,7 +233,7 @@ def tasks_report(task_id, report_format="json"):
         "html": "report.html",
         "htmlsumary": "summary-report.html",
         "pdf": "report.pdf",
-        "maec": "report.maec-1.1.xml",
+        "maec": "report.maec-4.1.xml",
         "metadata": "report.metadata.xml",
     }
 

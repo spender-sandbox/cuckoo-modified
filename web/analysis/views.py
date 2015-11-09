@@ -627,7 +627,7 @@ def filereport(request, task_id, category):
         "html": "report.html",
         "htmlsummary": "summary-report.html",
         "pdf": "report.pdf",
-        "maec": "report.maec-1.1.xml",
+        "maec": "report.maec-4.1.xml",
         "metadata": "report.metadata.xml",
     }
 

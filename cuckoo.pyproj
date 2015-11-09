@@ -401,6 +401,8 @@
     <Content Include="web\templates\analysis\behavior\_search.html" />
     <Content Include="web\templates\analysis\behavior\_search_results.html" />
     <Content Include="web\templates\analysis\comments\index.html" />
+    <Content Include="web\templates\analysis\memory\_netscan.html" />
+    <Content Include="web\templates\analysis\memory\_sockscan.html" />
     <Content Include="web\templates\analysis\network\_smtp.html" />
     <Content Include="web\templates\analysis\static\_dotnet.html" />
     <Content Include="web\templates\analysis\static\_java.html" />
