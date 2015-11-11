@@ -529,6 +529,9 @@ class Summary:
 
         elif call["api"] == "CreateProcessInternalW" or call["api"] == "NtCreateUserProcess":
             cmdline = self.get_argument(call, "CommandLine", strip=True)
+            appname = self.get_argument(call, "ApplicationName", strip=True)
+            if appname and cmdline:
+                cmdline = appname + " " + cmdline
             if cmdline and cmdline not in self.executed_commands:
                 self.executed_commands.append(cmdline)
 
