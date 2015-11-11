@@ -278,7 +278,7 @@ def filtered_chunk(request, task_id, pid, category, apilist):
                 {"behavior.processes.process_id": 1, "behavior.processes.calls": 1}
             )
         if enabledconf["elasticsearchdb"]:
-            print "info.id: \"%s\" and behavior.processes.process_id: \"%s\"" % (task_id, pid)
+            #print "info.id: \"%s\" and behavior.processes.process_id: \"%s\"" % (task_id, pid)
             record = es.search(
                          index=fullidx,
                          doc_type="analysis",
@@ -530,7 +530,7 @@ def elastic_file(request, category, task_id, dlfile):
         cd = "application/vnd.tcpdump.pcap"
     elif category == "screenshot":
         file_name += ".jpg"
-        print file_name
+        #print file_name
         path = os.path.join(CUCKOO_ROOT, "storage", "analyses",
                             task_id, "shots", file_name)
         cd = "image/jpeg"
@@ -999,7 +999,7 @@ def pcapstream(request, task_id, conntuple):
                                      task_id, "dump_sorted.pcap")
             fobj = open(pcap_path, "r")
     except Exception as e:
-        print str(e)
+        #print str(e)
         return render_to_response("standalone_error.html",
             {"error": "The required sorted PCAP does not exist"},
             context_instance=RequestContext(request))
