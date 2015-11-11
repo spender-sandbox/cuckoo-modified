@@ -542,6 +542,7 @@ class RunSignatures(object):
                             "known",
                             "common",
                             "troj",
+                            "trojan",
                             "team",
                             "probably",
                             "w2km",
