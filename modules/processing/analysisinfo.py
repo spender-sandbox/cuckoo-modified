@@ -1,4 +1,4 @@
-# Copyright (C) 2010-2015 Cuckoo Foundation.
+# Copyright (C) 2010-2015 Cuckoo Foundation, Optiv, Inc. (brad.spengler@optiv.com)
 # This file is part of Cuckoo Sandbox - http://www.cuckoosandbox.org
 # See the file 'docs/LICENSE' for copying permission.
 
@@ -36,6 +36,27 @@ class AnalysisInfo(Processing):
                 if "INFO: Analysis timeout hit, terminating analysis" in analysis_log:
                     return True
         return False
+
+    def get_package(self):
+        """ Get the actually used package name
+        """
+        package = self.task["package"]
+        if not package and os.path.exists(self.log_path):
+            try:
+                analysis_log = codecs.open(self.log_path, "rb", "utf-8").read()
+            except ValueError as e:
+                raise CuckooProcessingError("Error decoding %s: %s" %
+                                            (self.log_path, e))
+            except (IOError, OSError) as e:
+                raise CuckooProcessingError("Error opening %s: %s" %
+                                            (self.log_path, e))
+            else:
+                try:
+                    idx = analysis_log.index("INFO: Automatically selected analysis package \"")
+                    package = analysis_log[idx+47:].split("\"", 1)[0]
+                except:
+                    pass
+        return package
 
     def get_options(self,optstring):
         """Get analysis options.
@@ -107,7 +128,7 @@ class AnalysisInfo(Processing):
             category=self.task["category"],
             custom=self.task["custom"],
             machine=self.task["machine"],
-            package=self.task["package"],
+            package=self.get_package(),
             timeout=self.had_timeout(),
             options=self.get_options(self.task["options"])
         )
