@@ -308,7 +308,7 @@ class MongoDB(Report):
                         parent_key, psize = self.debug_dict_size(report)[0]
                         child_key, csize = self.debug_dict_size(report[parent_key])[0]
                         log.error(str(e))
-                        log.error("Largest parent key: %s (%d bytes)" % (parent_key, int(psize) / 1048576))
-                        log.error("Largest child key: %s (%d bytes)" % (child_key, int(csize) / 1048576))
+                        log.error("Largest parent key: %s (%d MB)" % (parent_key, int(psize) / 1048576))
+                        log.error("Largest child key: %s (%d MB)" % (child_key, int(csize) / 1048576))
 
         self.conn.close()
