@@ -531,7 +531,14 @@ class Summary:
             cmdline = self.get_argument(call, "CommandLine", strip=True)
             appname = self.get_argument(call, "ApplicationName", strip=True)
             if appname and cmdline:
-                cmdline = appname + " " + cmdline
+                base = appname.split('\\')[-1].split('.')[:-1]
+                firstarg = ""
+                if cmdline[0] == "\"":
+                    firstarg = cmdline[1:].split("\"")[0]
+                else:
+                    firstarg = cmdline.split(" ")[0]
+                if base not in firstarg:
+                    cmdline = appname + " " + cmdline
             if cmdline and cmdline not in self.executed_commands:
                 self.executed_commands.append(cmdline)
 
