@@ -1111,7 +1111,7 @@ class Signature(object):
                 if all:
                     retset.update(ret)
                 else:
-                    return item
+                    return item["ip"]
 
         if all and len(retset) > 0:
             return retset
@@ -1148,7 +1148,7 @@ class Signature(object):
                 if all:
                     retset.update(ret)
                 else:
-                    return item
+                    return item["domain"]
 
         if all and len(retset) > 0:
             return retset
@@ -1185,7 +1185,7 @@ class Signature(object):
                 if all:
                     retset.update(ret)
                 else:
-                    return item
+                    return item["uri"]
 
         if all and len(retset) > 0:
             return retset
