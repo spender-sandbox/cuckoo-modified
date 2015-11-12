@@ -60,5 +60,7 @@ def choose_package(file_type, file_name, exports):
         return "msg"
     elif file_name.endswith(".eml"):
         return "eml"
+    elif file_name.endswith(".js"):
+        return "js"
     else:
         return "generic"
