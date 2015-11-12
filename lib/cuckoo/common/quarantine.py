@@ -11,7 +11,7 @@ import lib.cuckoo.common.office.olefile as olefile
 from lib.cuckoo.common.utils import store_temp_file
 
 def bytearray_xor(data, key):
-    for i in range(len(data)):
+    for i in xrange(len(data)):
         data[i] ^= key
     return data
 
@@ -141,7 +141,7 @@ def sep_unquarantine(f):
         extralen = len(tagdata)
         if code == 9:
             if xor_next_container:
-                for i in range(len(tagdata)):
+                for i in xrange(len(tagdata)):
                     data[offset+5+i] ^= 0xff
                 if has_header:
                     headerlen = 12 + struct.unpack_from("<I", data[offset+5+8:offset+5+12])[0] + 28
@@ -212,9 +212,9 @@ def mse_ksa():
            0xF2, 0x76, 0x5E, 0x1A, 0x95, 0xCB, 0x7C, 0xA4, 0xC3, 0xDD,
            0xAB, 0xDD, 0xBF, 0xF3, 0x82, 0x53
     ]
-    sbox = range(256)
+    sbox = xrange(256)
     j = 0
-    for i in range(256):
+    for i in xrange(256):
         j = (j + sbox[i] + key[i]) % 256
         tmp = sbox[i]
         sbox[i] = sbox[j]
@@ -227,7 +227,7 @@ def rc4_decrypt(sbox, data):
     out = bytearray(len(data))
     i = 0
     j = 0
-    for k in range(len(data)):
+    for k in xrange(len(data)):
         i = (i + 1) % 256
         j = (j + sbox[i]) % 256
         tmp = sbox[i]
@@ -277,9 +277,9 @@ def mbam_ksa():
     m = hashlib.md5()
     m.update("XBXM8362QIXD9+637HCB02/VN0JF6Z3)cB9UFZMdF3I.*c.,c5SbO7)WNZ8CY1(XMUDb")
     key = bytearray(m.digest())
-    sbox = range(256)
+    sbox = xrange(256)
     j = 0
-    for i in range(256):
+    for i in xrange(256):
         j = (j + sbox[i] + key[i % len(key)]) % 256
         tmp = sbox[i]
         sbox[i] = sbox[j]
@@ -317,7 +317,9 @@ def kav_unquarantine(file):
     metalen = struct.unpack("<I", data[0x20:0x24])[0]
     origlen = struct.unpack("<I", data[0x30:0x34])[0]
 
-    if fsize != headerlen + origlen + metalen:
+    if fsize < headerlen + origlen + metalen:
+        return None
+    if metaoffset < headerlen + origlen:
         return None
 
     origname = "KAVDequarantineFile"
@@ -326,7 +328,7 @@ def kav_unquarantine(file):
     curoffset = metaoffset
     length = struct.unpack("<I", data[curoffset:curoffset+4])[0]
     while length:
-        for i in range(length):
+        for i in xrange(length):
             data[curoffset+4+i] ^= key[i % len(key)]
         idlen = struct.unpack("<I", data[curoffset+4:curoffset+8])[0]
         idname = str(data[curoffset+8:curoffset+8+idlen]).rstrip('\0')
@@ -334,11 +336,11 @@ def kav_unquarantine(file):
             vallen = length - idlen
             origname = unicode(data[curoffset+8+idlen:curoffset+4+length]).decode("utf-16").encode("utf8", "ignore").rstrip('\0')
         curoffset += 4 + length
-        if curoffset == fsize:
+        if curoffset >= metaoffset + metalen:
             break
         length = struct.unpack("<I", data[curoffset:curoffset+4])[0]
 
-    for i in range(origlen):
+    for i in xrange(origlen):
         data[headerlen+i] ^= key[i % len(key)]
 
     return store_temp_file(data[headerlen:headerlen+origlen], origname)
@@ -369,7 +371,7 @@ def trend_unquarantine(f):
 
     dataoffset += 10
     offset = 10
-    for i in range(numtags):
+    for i in xrange(numtags):
         code, tagdata = read_trend_tag(data, offset)
         if code == 1: # original pathname
             origpath = unicode(tagdata, encoding="utf16").encode("utf8", "ignore").rstrip("\0")
@@ -404,7 +406,7 @@ def trend_unquarantine(f):
         crc = crc32(buf) & 0xffffffff
         crcbuf = bytearray(struct.pack("<I", crc))
 
-        for i in range(unaligned, 4):
+        for i in xrange(unaligned, 4):
             if not bytesleft:
                 break
             data[curoffset] ^= crcbuf[i]
