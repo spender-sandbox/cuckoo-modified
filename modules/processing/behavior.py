@@ -531,7 +531,7 @@ class Summary:
             cmdline = self.get_argument(call, "CommandLine", strip=True)
             appname = self.get_argument(call, "ApplicationName", strip=True)
             if appname and cmdline:
-                base = appname.split('\\')[-1].split('.')[:-1]
+                base = '.'.join(appname.split('\\')[-1].split('.')[:-1])
                 firstarg = ""
                 if cmdline[0] == "\"":
                     firstarg = cmdline[1:].split("\"")[0]
