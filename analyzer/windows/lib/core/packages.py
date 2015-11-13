@@ -29,6 +29,7 @@ def choose_package(file_type, file_name, exports):
     elif "Rich Text Format" in file_type or \
             "Microsoft Word" in file_type or \
             "Microsoft Office Word" in file_type or \
+            "MIME entity" in file_type or \
             file_name.endswith((".doc", ".docx", ".rtf")):
         return "doc"
     elif "Microsoft Office Excel" in file_type or \
