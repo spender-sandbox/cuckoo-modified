@@ -29,6 +29,8 @@
                 {% include "analysis/static/_office.html" %}
             {% elif "Word 2007+" in analysis.target.file.type %}
                 {% include "analysis/static/_office.html" %}
+            {% elif "MIME entity" in analysis.target.file.type %}
+                {% include "analysis/static/_office.html" %}
             {% elif "Java Jar" in analysis.target.file.type or analysis.target.file.name|endswith:".jar" %}
                 {% include "analysis/static/_java.html" %}
             {% elif "Zip archive data" in analysis.target.file.type %}
@@ -37,6 +39,8 @@
                 {% elif analysis.target.file.name|endswith:".docm" %}
                     {% include "analysis/static/_office.html" %}
                 {% elif analysis.target.file.name|endswith:".doc" %}
+                    {% include "analysis/static/_office.html" %}
+                {% elif analysis.target.file.name|endswith:".mht" %}
                     {% include "analysis/static/_office.html" %}
                 {% elif analysis.target.file.name|endswith:".xls" %}
                     {% include "analysis/static/_office.html" %}
