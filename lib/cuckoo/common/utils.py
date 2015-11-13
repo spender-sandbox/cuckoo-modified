@@ -1247,6 +1247,13 @@ def pretty_print_arg(category, api_name, arg_name, arg_val):
                 29 : "ProcessBreakOnTermination",
                 34 : "ProcessDEPPolicy",
          }.get(val, None)
+    elif arg_name == "MemType":
+        val = int(arg_val, 16)
+        return {
+                0x20000 : "MEM_PRIVATE",
+                0x40000 : "MEM_MAPPED",
+                0x1000000 : "MEM_IMAGE",
+         }.get(val, None)
     elif arg_name == "Show":
         val = int(arg_val, 10)
         return {
