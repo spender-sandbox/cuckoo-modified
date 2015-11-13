@@ -1241,6 +1241,12 @@ def pretty_print_arg(category, api_name, arg_name, arg_val):
                 55 : "FileReplaceCompletionInformation",
                 56 : "FileMaximumInformation"
          }.get(val, None)
+    elif arg_name == "ProcessInformationClass":
+        val = int(arg_val, 10)
+        return {
+                29 : "ProcessBreakOnTermination",
+                34 : "ProcessDEPPolicy",
+         }.get(val, None)
     elif arg_name == "Show":
         val = int(arg_val, 10)
         return {
