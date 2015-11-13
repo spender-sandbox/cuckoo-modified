@@ -87,6 +87,8 @@ class Suricata(Processing):
                         2017363,
                         # SURICATA UDPv4 invalid checksum
                         2200075,
+                        # ET POLICY SSLv3 outbound connection from client vulnerable to POODLE attack
+                        2019416,
         ]
 
         if SURICATA_RUNMODE == "socket":
