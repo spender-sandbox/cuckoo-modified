@@ -67,7 +67,7 @@ The following libraries are not strictly required, but their installation is rec
     * `rarfile`_ (Optional): needed for automatic extraction of RAR files on submission
     * `jsbeautifier`_ (Optional): needed for analysis of JavaScript in PDFs
     * `mono-utils`_ (Optional): needed for .NET static analysis
-    * `python-whois`_ (Optional): needed to domain whois lookups for URL analyses
+    * `python-whois`_ (Optional): needed to perform domain whois lookups for URL analyses
 
 Some of them are already packaged in Debian/Ubuntu and can be installed with the following command::
 
