@@ -1249,8 +1249,8 @@ class URL(object):
                          "\n    ".join(w["creation_date"]),
                          "\n    ".join(w["updated_date"]),
                          "\n    ".join(w["expiration_date"]),
-                         "\n    ".join(w["registrar"]),
                          "\n    ".join(w["emails"]),
+                         "\n    ".join(w["registrar"]),
                          "\n    ".join(w["name_servers"]),
                          "\n    ".join(w["referral_url"]))
             results["url"]["whois"] = output
@@ -1294,7 +1294,8 @@ class Static(Processing):
             elif "Zip archive data, at least v2.0" in thetype:
                 static = Office(self.file_path).run()
         elif self.task["category"] == "url":
-            if HAVE_WHOIS:
+            enabled_whois = self.options.get("whois", True)
+            if HAVE_WHOIS and enabled_whois:
                 static = URL(self.task["target"]).run()
 
         return static
