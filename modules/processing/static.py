@@ -13,6 +13,7 @@ import lib.cuckoo.common.decoders.alienspy as alienspy
 import lib.cuckoo.common.decoders.qrat as qrat
 import logging
 import os
+import re
 import math
 import array
 import base64
@@ -49,6 +50,12 @@ try:
     HAVE_CRYPTO = True
 except ImportError:
     HAVE_CRYPTO = False
+
+try:
+    from whois import whois
+    HAVE_WHOIS = True
+except:
+    HAVE_WHOIS = False
 
 from lib.cuckoo.common.abstracts import Processing
 from lib.cuckoo.common.constants import CUCKOO_ROOT
@@ -1177,6 +1184,80 @@ class Java(object):
 
         return results
 
+class URL(object):
+    """URL 'Static' Analysis"""
+    def __init__(self, url):
+        self.url = url
+        p = r"^(?:https?:\/\/)?(?:www\.)?(?P<domain>[^:\/\n]+)"
+        dcheck = re.match(p, self.url)
+        if dcheck:
+            self.domain = dcheck.group("domain")
+            # Work around a bug where a "." can tail a url target if
+            # someone accidentally appends one during submission
+            while self.domain.endswith("."):
+                self.domain = self.domain[:-1]
+        else:
+            self.domain = ""
+
+    def run(self):
+        results = {}
+        if self.domain:
+            try:
+                w = whois(self.domain)
+                results["url"] = {}
+                # Create static fields if they don't exist, EG if the WHOIS
+                # data is stale.
+                fields = ['updated_date', 'status', 'name', 'city',
+                          'expiration_date', 'zipcode', 'domain_name',
+                          'country', 'whois_server', 'state', 'registrar',
+                          'referral_url', 'address', 'name_servers', 'org',
+                          'creation_date', 'emails']
+                for field in fields:
+                    if field not in w.keys() or not w[field]:
+                        w[field] = ["None"]
+            except:
+                # No WHOIS data returned
+                log.warning("No WHOIS data for domain: " + self.domain)
+                return results
+
+            # These can be a list or string, just make them all lists
+            for key in w.keys():
+                buf = list()
+                # Handle and format dates
+                if "_date" in key:
+                    if isinstance(w[key], list):
+                        buf = [str(dt).replace("T", " ").split(".")[0]
+                                for dt in w[key]]
+                    else:
+                        buf = [str(w[key]).replace("T", " ").split(".")[0]]
+                else:
+                    if isinstance(w[key], list):
+                        continue
+                    else:
+                        buf = [w[key]]
+                w[key] = buf
+
+            output = ("Name: {0}\nCountry: {1}\nState: {2}\nCity: {3}\n"
+                      "ZIP Code: {4}\nAddress: {5}\n\nOrginization: {6}\n"
+                      "Domain Name(s):\n    {7}\nCreation Date:\n    {8}\n"
+                      "Updated Date:\n    {9}\nExpiration Date:\n    {10}\n"
+                      "Email(s):\n    {11}\n\nRegistrar(s):\n    {12}\nName "
+                      "Server(s):\n    {13}\nReferral URL(s):\n    {14}")
+            output = output.format(w["name"][0], w["country"][0], w["state"][0],
+                         w["city"][0], w["zipcode"][0], w["address"][0],
+                         w["org"][0], "\n    ".join(w["domain_name"]),
+                         "\n    ".join(w["creation_date"]),
+                         "\n    ".join(w["updated_date"]),
+                         "\n    ".join(w["expiration_date"]),
+                         "\n    ".join(w["emails"]),
+                         "\n    ".join(w["registrar"]),
+                         "\n    ".join(w["name_servers"]),
+                         "\n    ".join(w["referral_url"]))
+            results["url"]["whois"] = output
+
+        return results
+
+
 class Static(Processing):
     """Static analysis."""
 
@@ -1212,5 +1293,9 @@ class Static(Processing):
             # results for actual zip files.
             elif "Zip archive data, at least v2.0" in thetype:
                 static = Office(self.file_path).run()
+        elif self.task["category"] == "url":
+            enabled_whois = self.options.get("whois", True)
+            if HAVE_WHOIS and enabled_whois:
+                static = URL(self.task["target"]).run()
 
         return static

@@ -66,7 +66,8 @@ The following libraries are not strictly required, but their installation is rec
     * `pype32`_ (Optional): needed for some RAT decoders
     * `rarfile`_ (Optional): needed for automatic extraction of RAR files on submission
     * `jsbeautifier`_ (Optional): needed for analysis of JavaScript in PDFs
-    * `mono-utils`_(Optional): needed for .NET static analysis
+    * `mono-utils`_ (Optional): needed for .NET static analysis
+    * `python-whois`_ (Optional): needed to perform domain whois lookups for URL analyses
 
 Some of them are already packaged in Debian/Ubuntu and can be installed with the following command::
 
@@ -74,7 +75,7 @@ Some of them are already packaged in Debian/Ubuntu and can be installed with the
 
 Except for *python-magic*, *python-dpkt* and *python-libvirt*, the others can be installed through ``pip`` too::
 
-    $ sudo pip install jinja2 pymongo bottle pefile django chardet pygal m2crypto clamd django-ratelimit pycrypto weasyprint rarfile jsbeautifier
+    $ sudo pip install jinja2 pymongo bottle pefile django chardet pygal m2crypto clamd django-ratelimit pycrypto weasyprint rarfile jsbeautifier python-whois
 
 For faster generation of PDF reports, you should install wkhtmltopdf instead of weasyprint.  To do this on Debian/Ubuntu, just use the following command::
 
