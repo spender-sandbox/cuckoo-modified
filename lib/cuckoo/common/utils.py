@@ -384,7 +384,18 @@ def pretty_print_arg(category, api_name, arg_name, arg_val):
                 12 : "WH_CALLWNDPROCRET",
                 13 : "WH_KEYBOARD_LL",
                 14 : "WH_MOUSE_LL"
-        }.get(val, None)                
+        }.get(val, None)
+    elif arg_name == "InfoLevel":
+        val = int(arg_val, 10)
+        return {
+                1 : "HTTP_QUERY_CONTENT_TYPE",
+                5 : "HTTP_QUERY_CONTENT_LENGTH",
+                6 : "HTTP_QUERY_CONTENT_LANGUAGE",
+                9 : "HTTP_QUERY_DATE",
+                10 : "HTTP_QUERY_EXPIRES",
+                18 : "HTTP_QUERY_VERSION",
+                21 : "HTTP_QUERY_RAW_HEADERS"
+        }.get(val, None)
     elif arg_name == "Disposition":
         val = int(arg_val, 10)
         return {
