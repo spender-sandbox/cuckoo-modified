@@ -352,7 +352,10 @@ class PortableExecutable(object):
                 symbol = {}
                 symbol["address"] = hex(self.pe.OPTIONAL_HEADER.ImageBase +
                                         exported_symbol.address)
-                symbol["name"] = convert_to_printable(exported_symbol.name)
+                if exported_symbol.name:
+                    symbol["name"] = convert_to_printable(exported_symbol.name)
+                else:
+                    symbol["name"] = ""
                 symbol["ordinal"] = exported_symbol.ordinal
                 exports.append(symbol)
 
