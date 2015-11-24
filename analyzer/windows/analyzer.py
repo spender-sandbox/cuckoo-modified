@@ -42,6 +42,7 @@ from modules import auxiliary
 log = logging.getLogger()
 
 BUFSIZE = 512
+FILES_LIST_LOCK = Lock()
 FILES_LIST = []
 DUMPED_LIST = []
 UPLOADPATH_LIST = []
@@ -146,6 +147,7 @@ def dump_file(file_path):
 
 
 def del_file(fname):
+    global FILES_LIST
 
     deleted_idxes = []
 
@@ -162,8 +164,10 @@ def del_file(fname):
 
     # If this filename exists in the FILES_LIST, then delete it, because it
     # doesn't exist anymore anyway.
-    for idx in deleted_idxes:
-        FILES_LIST.pop(idx)
+    if len(deleted_idxes) == 1:
+        FILES_LIST.pop(deleted_idxes[0])
+    else:
+        FILES_LIST = [name for idx, name in enumerate(FILES_LIST) if idx not in deleted_idxes]
 
 def move_file(old_fname, new_fname):
     # Filenames are case-insensitive in windows.
@@ -459,24 +463,30 @@ class PipeHandler(Thread):
                 # In case of FILE_NEW, the client is trying to notify the creation
                 # of a new file.
                 elif command.startswith("FILE_NEW:"):
+                    FILES_LIST_LOCK.acquire()
                     # We extract the file path.
                     file_path = unicode(command[9:].decode("utf-8"))
                     # We add the file to the list.
                     add_file(file_path)
+                    FILES_LIST_LOCK.release()
                 # In case of FILE_DEL, the client is trying to notify an ongoing
                 # deletion of an existing file, therefore we need to dump it
                 # straight away.
                 elif command.startswith("FILE_DEL:"):
+                    FILES_LIST_LOCK.acquire()
                     # Extract the file path.
                     file_path = unicode(command[9:].decode("utf-8"))
                     # Dump the file straight away.
                     del_file(file_path)
+                    FILES_LIST_LOCK.release()
                 elif command.startswith("FILE_MOVE:"):
+                    FILES_LIST_LOCK.acquire()
                     # Syntax = "FILE_MOVE:old_file_path::new_file_path".
                     if "::" in command[10:]:
                         old_fname, new_fname = command[10:].split("::", 1)
                         move_file(unicode(old_fname.decode("utf-8")),
                                   unicode(new_fname.decode("utf-8")))
+                    FILES_LIST_LOCK.release()
                 else:
                     log.warning("Received unknown command from cuckoomon: %s", command)
 
