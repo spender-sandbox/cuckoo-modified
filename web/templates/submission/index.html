@@ -165,6 +165,10 @@ $(document).ready( function() {
                                             <td>By default, logs prior to network activity for URL analyses and prior to access of the file in question for non-executable formats are suppressed.  Set to 1 to disable log suppression.</td>
                                         </tr>
                                         <tr>
+                                            <td><code>force-flush</code></td>
+                                            <td>For performance reasons, logs are buffered before being sent back to the result server.  We make every attempt to flush the buffer at critical points including when exceptions occur, but in some rare termination scenarios, logs may be lost.  Set to 1 to force flushing of the log buffers after any non-duplicate API is called.</td>
+                                        </tr>
+                                        <tr>
                                             <td><code>no-stealth</code></td>
                                             <td>Set to 1 to disable anti-anti-VM/sandbox code enabled by default.</td>
                                         </tr>
