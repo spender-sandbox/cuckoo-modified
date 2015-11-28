@@ -507,7 +507,7 @@ def mongo_file(request, category, object_id):
             content_type = "application/octet-stream"
 
         response = HttpResponse(file_item.read(), content_type=content_type)
-        response["Content-Disposition"] = "attachment; filename={0}".format(file_name)
+        response["Content-Disposition"] = "attachment; filename=%s" % file_name
 
         return response
     else:
