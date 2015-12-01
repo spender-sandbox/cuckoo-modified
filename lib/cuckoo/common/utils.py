@@ -1588,7 +1588,9 @@ def default_converter(v):
     # Fix signed ints (bson is kind of limited there).
     if type(v) is int:
         return v & 0xFFFFFFFF
-    elif type(v) is long:
+    # Need to account for subclasses since pymongo's bson module
+    # uses 'bson.int64.Int64' class for 64-bit values.
+    elif issubclass(type(v), long):
         if v & 0xFFFFFFFF00000000:
             return v & 0xFFFFFFFFFFFFFFFF
         else:

@@ -156,8 +156,8 @@ class BsonParser(object):
 
             if apiname == "__process__":
                 # Special new process message from cuckoomon.
-                timelow = argdict["TimeLow"]
-                timehigh = argdict["TimeHigh"]
+                timelow = argdict["TimeLow"] & 0xFFFFFFFF
+                timehigh = argdict["TimeHigh"] & 0xFFFFFFFF
                 # FILETIME is 100-nanoseconds from 1601 :/
                 vmtimeunix = (timelow + (timehigh << 32))
                 vmtimeunix = vmtimeunix / 10000000.0 - 11644473600
