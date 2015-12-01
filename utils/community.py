@@ -17,7 +17,7 @@ sys.path.append(os.path.join(os.path.abspath(os.path.dirname(__file__)), ".."))
 import lib.cuckoo.common.colors as colors
 from lib.cuckoo.common.constants import CUCKOO_ROOT
 
-URL = "https://github.com/brad-accuvant/community-modified/archive/{0}.zip"
+URL = "https://github.com/spender-sandbox/community-modified/archive/{0}.zip"
 
 def download_archive():
     print("Downloading modules from {0}".format(URL))
