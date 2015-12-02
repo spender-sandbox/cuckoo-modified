@@ -1,4 +1,4 @@
-This is a heavily modified version of [Cuckoo Sandbox](http://www.cuckoosandbox.org) provided under the GPL by Optiv, Inc.
+This fork aims to continue the work of the heavily modified version of [Cuckoo Sandbox](http://www.cuckoosandbox.org) provided under the GPL by Optiv, Inc.
 
 It offers a number of advantages over the upstream Cuckoo:
 + Fully-normalized file and registry names
@@ -25,6 +25,5 @@ It offers a number of advantages over the upstream Cuckoo:
 
 For more information on the initial set of changes, see:
 http://www.accuvant.com/blog/improving-reliability-of-sandbox-results
-An updated blog post covering more recent changes is forthcoming.
 
-If you want to contribute to development, submit pull requests or email brad.spengler@optiv.com.
+If you want to contribute to development, feel free to submit a pull request.
