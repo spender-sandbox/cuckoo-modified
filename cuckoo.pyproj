@@ -5,18 +5,19 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{365a3967-518e-457b-972a-3c90834f0f80}</ProjectGuid>
     <ProjectHome />
-    <StartupFile>manage.py</StartupFile>
+    <StartupFile />
     <SearchPath />
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
-    <ProjectTypeGuids>{5F0BE9CA-D677-4A4D-8806-6076C0FAAD37};{349c5851-65df-11da-9384-00065b846f21};{888888a0-9f3d-457c-b088-3a5042f75d52}</ProjectTypeGuids>
-    <LaunchProvider>Django launcher</LaunchProvider>
+    <OutputPath>.</OutputPath>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
     <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
-    <UseIISExpress>true</UseIISExpress>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'" />
   <PropertyGroup Condition="'$(Configuration)' == 'Release'" />
+  <PropertyGroup>
+    <PtvsTargetsFile>$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets</PtvsTargetsFile>
+  </PropertyGroup>
   <ItemGroup>
     <Content Include="analyzer\windows\bin\execsc.exe" />
     <Content Include="analyzer\windows\bin\loader.exe" />
@@ -609,43 +610,4 @@
     </WebPiReference>
   </ItemGroup>
   <Import Project="$(VSToolsPath)\Python Tools\Microsoft.PythonTools.Django.targets" />
-  <ProjectExtensions>
-    <VisualStudio>
-      <FlavorProperties GUID="{349c5851-65df-11da-9384-00065b846f21}">
-        <WebProjectProperties>
-          <UseIIS>True</UseIIS>
-          <AutoAssignPort>True</AutoAssignPort>
-          <DevelopmentServerPort>0</DevelopmentServerPort>
-          <DevelopmentServerVPath>/</DevelopmentServerVPath>
-          <IISUrl>http://localhost:1058/</IISUrl>
-          <NTLMAuthentication>False</NTLMAuthentication>
-          <UseCustomServer>False</UseCustomServer>
-          <CustomServerUrl>
-          </CustomServerUrl>
-          <SaveServerSettingsInUserFile>False</SaveServerSettingsInUserFile>
-        </WebProjectProperties>
-      </FlavorProperties>
-      <FlavorProperties GUID="{349c5851-65df-11da-9384-00065b846f21}" User="">
-        <WebProjectProperties>
-          <StartPageUrl>
-          </StartPageUrl>
-          <StartAction>CurrentPage</StartAction>
-          <AspNetDebugging>True</AspNetDebugging>
-          <SilverlightDebugging>False</SilverlightDebugging>
-          <NativeDebugging>False</NativeDebugging>
-          <SQLDebugging>False</SQLDebugging>
-          <ExternalProgram>
-          </ExternalProgram>
-          <StartExternalURL>
-          </StartExternalURL>
-          <StartCmdLineArguments>
-          </StartCmdLineArguments>
-          <StartWorkingDirectory>
-          </StartWorkingDirectory>
-          <EnableENC>True</EnableENC>
-          <AlwaysStartWebServerOnDebug>False</AlwaysStartWebServerOnDebug>
-        </WebProjectProperties>
-      </FlavorProperties>
-    </VisualStudio>
-  </ProjectExtensions>
 </Project>
