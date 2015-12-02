@@ -843,9 +843,18 @@ def flowtuple_from_raw(raw, linktype=1):
         sip, dip = socket.inet_ntoa(ip.src), socket.inet_ntoa(ip.dst)
         proto = ip.p
 
-        if proto == dpkt.ip.IP_PROTO_TCP or proto == dpkt.ip.IP_PROTO_UDP:
+        if proto == dpkt.ip.IP_PROTO_TCP:
             l3 = ip.data
+            if not isinstance(l3, dpkt.tcp.TCP):
+                l3 = dpkt.tcp.TCP(l3)
             sport, dport = l3.sport, l3.dport
+
+        elif proto == dpkt.ip.IP_PROTO_UDP:
+            l3 = ip.data
+            if not isinstance(l3, dpkt.udp.UDP):
+                l3 = dpkt.udp.UDP(l3)
+            sport, dport = l3.sport, l3.dport
+
         else:
             sport, dport = 0, 0
 
