@@ -20,11 +20,10 @@ log = logging.getLogger(__name__)
 
 class Zip(Package):
     """Zip analysis package."""
-
     PATHS = [
-        ("SystemRoot", "system32", "cmd.exe"),
-    ]
-
+             ("SystemRoot", "system32", "cmd.exe"),
+             ("SystemRoot", "system32", "wscript.exe"),
+            ]
     def extract_zip(self, zip_path, extract_path, password, recursion_depth):
         """Extracts a nested ZIP file.
         @param zip_path: ZIP path
@@ -89,7 +88,7 @@ class Zip(Package):
     def start(self, path):
         root = os.environ["TEMP"]
         password = self.options.get("password")
-        exe_regex = re.compile('(\.exe|\.scr|\.msi|\.bat|\.lnk)$',flags=re.IGNORECASE)
+        exe_regex = re.compile('(\.exe|\.scr|\.msi|\.bat|\.lnk|\.js)$',flags=re.IGNORECASE)
         zipinfos = self.get_infos(path)
         self.extract_zip(path, root, password, 0)
 
@@ -111,9 +110,15 @@ class Zip(Package):
 
 
         file_path = os.path.join(root, file_name)
+        log.debug("file_name: \"%s\"" % (file_name))
         if file_name.lower().endswith(".lnk"):
             cmd_path = self.get_path("cmd.exe")
             cmd_args = "/c start /wait \"\" \"{0}\"".format(file_path)
             return self.execute(cmd_path, cmd_args, file_path)
+        elif file_name.lower().endswith(".js"):
+            log.debug("ends with js")
+            wscript = self.get_path_app_in_path("wscript.exe")
+            wscript_args = "\"{0}\"".format(file_path)
+            return self.execute(wscript, wscript_args, file_path)
         else:
             return self.execute(file_path, self.options.get("arguments"), file_path)

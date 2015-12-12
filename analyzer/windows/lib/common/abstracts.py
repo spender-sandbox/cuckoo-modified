@@ -86,6 +86,21 @@ class Package(object):
         raise CuckooPackageError("Unable to find any %s executable." %
                                  application)
 
+    def get_path_app_in_path(self, application):
+        """Search for the application in all available paths.
+        @param application: application executable name
+        @return: executable path
+        """
+        for path in self.enum_paths():
+            if os.path.isfile(path):
+                if application and application.lower() not in path.lower():
+                    continue
+                else:
+                    return path
+
+        raise CuckooPackageError("Unable to find any %s executable." %
+                                 application)
+
     def execute(self, path, args, interest):
         """Starts an executable for analysis.
         @param path: executable path

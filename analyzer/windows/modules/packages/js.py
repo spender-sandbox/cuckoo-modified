@@ -15,4 +15,8 @@ class JS(Package):
     def start(self, path):
         wscript = self.get_path("wscript.exe")
         args = "\"%s\"" % path
+        if not path.lower().endswith(".js"):
+            os.rename(path,path + ".js")
+            path = path + ".js"
+        args = "\"%s\"" % path        
         return self.execute(wscript, args, path)
