@@ -386,7 +386,7 @@ def cuckoo_clean_failed_tasks():
         failed_tasks_a = db.list_tasks(status=TASK_FAILED_ANALYSIS)
         failed_tasks_p = db.list_tasks(status=TASK_FAILED_PROCESSING)
         failed_tasks_r = db.list_tasks(status=TASK_FAILED_REPORTING)
-
+        failed_tasks_rc = db.list_tasks(status=TASK_FAILED_REPORTING)
         for e in failed_tasks_a,failed_tasks_p,failed_tasks_r:
             for el2 in e:
                 new = el2.to_dict()
@@ -458,7 +458,7 @@ def cuckoo_clean_failed_url_tasks():
             else:
                 done = True 
 
-def cuckoo_clean_before_day(days=None):
+def cuckoo_clean_before_day(args):
     """Clean up failed tasks 
     It deletes all stored data from file system and configured databases (SQL
     and MongoDB for tasks completed before now - days.
@@ -466,9 +466,11 @@ def cuckoo_clean_before_day(days=None):
     # Init logging.
     # This need to init a console logger handler, because the standard
     # logger (init_logging()) logs to a file which will be deleted.
-    if not days:
+    if not args.delete_older_than_days:
         print "No days argument provided bailing"
         return
+    else:
+        days = args.delete_older_than_days
     create_structure()
     init_console_logging()
 
@@ -506,3 +508,101 @@ def cuckoo_clean_before_day(days=None):
                        "%s" % int(new["id"])))
             else:
                 print "failed to remove faile task %s from DB" % (int(new["id"]))
+
+def cuckoo_clean_sorted_pcap_dump():
+    """Clean up failed tasks 
+    It deletes all stored data from file system and configured databases (SQL
+    and MongoDB for failed tasks.
+    """
+    # Init logging.
+    # This need to init a console logger handler, because the standard
+    # logger (init_logging()) logs to a file which will be deleted.
+    create_structure()
+    init_console_logging()
+
+    # Initialize the database connection.
+    db = Database()
+
+    # Check if MongoDB reporting is enabled and drop that if it is.
+    cfg = Config("reporting")
+    if cfg.mongodb and cfg.mongodb.enabled:
+        from pymongo import MongoClient
+        host = cfg.mongodb.get("host", "127.0.0.1")
+        port = cfg.mongodb.get("port", 27017)
+        mdb = cfg.mongodb.get("db", "cuckoo")
+        try:
+            results_db = MongoClient(host, port)[mdb]
+        except:
+            log.warning("Unable to connect MongoDB database: %s", mdb)
+            return
+
+        done = False
+        while not done:
+            rtmp = results_db.analysis.find({"network.sorted_pcap_id": {"$exists": True}},{"info.id": 1},sort=[("_id", -1)]).limit( 100 )
+            if rtmp and rtmp.count() > 0:
+                for e in rtmp:
+                    if e["info"]["id"]:
+                        print e["info"]["id"]
+                        try:
+                            results_db.analysis.update({"info.id": int(e["info"]["id"])},{ "$unset": { "network.sorted_pcap_id": ""}})
+                        except:
+                            print "failed to remove sorted pcap from db for id %s" % (e["info"]["id"])
+                        try:      
+                            path = os.path.join(CUCKOO_ROOT, "storage", "analyses","%s" % (e["info"]["id"]), "dump_sorted.pcap")
+                            os.remove(path)
+                        except Exception as e:
+                            print "failed to remove sorted_pcap from disk %s" % (e)
+                    else:
+                        done = True
+            else:
+                done = True
+
+def cuckoo_clean_suricata_files_zip():
+    """Clean up failed tasks 
+    It deletes all stored data from file system and configured databases (SQL
+    and MongoDB for failed tasks.
+    """
+    # Init logging.
+    # This need to init a console logger handler, because the standard
+    # logger (init_logging()) logs to a file which will be deleted.
+    create_structure()
+    init_console_logging()
+
+    # Initialize the database connection.
+    db = Database()
+
+    # Check if MongoDB reporting is enabled and drop that if it is.
+    cfg = Config("reporting")
+    if cfg.mongodb and cfg.mongodb.enabled:
+        from pymongo import MongoClient
+        host = cfg.mongodb.get("host", "127.0.0.1")
+        port = cfg.mongodb.get("port", 27017)
+        mdb = cfg.mongodb.get("db", "cuckoo")
+        try:
+            results_db = MongoClient(host, port)[mdb]
+        except:
+            log.warning("Unable to connect MongoDB database: %s", mdb)
+            return
+
+        done = False
+        while not done:
+            rtmp = results_db.suricata.find({"suri_extracted_zip": {"$exists": True}},{"info.id": 1},sort=[("_id", -1)]).limit( 100 )
+            if rtmp and rtmp.count() > 0:
+                print rtmp.count()
+                for e in rtmp:
+                    if e["info"]["id"]:
+                        print e["info"]["id"]
+                        try:
+                            results_db.suricata.update({"info.id": int(e["info"]["id"])},{ "$unset": { "suri_extracted_zip": ""}})
+                        except:
+                            print "failed to remove sorted pcap from db for id %s" % (e["info"]["id"])
+                        try:
+                            path = os.path.join(CUCKOO_ROOT, "storage", "analyses","%s" % (e["info"]["id"]), "logs","files.zip")
+                            if os.path.exists(path):
+                                os.remove(path)
+                        except Exception as e:
+                            print "failed to remove suricata zip from disk %s" % (e)
+                    else:
+                        done = True
+            else:
+                done = True

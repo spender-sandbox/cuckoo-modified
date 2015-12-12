@@ -15,7 +15,7 @@ try:
     from lib.cuckoo.common.exceptions import CuckooCriticalError
     from lib.cuckoo.common.exceptions import CuckooDependencyError
     from lib.cuckoo.core.database import Database
-    from lib.cuckoo.core.startup import check_working_directory, check_configs, check_signatures, cuckoo_clean, cuckoo_clean_failed_tasks, cuckoo_clean_failed_url_tasks,cuckoo_clean_before_day 
+    from lib.cuckoo.core.startup import check_working_directory, check_configs, check_signatures, cuckoo_clean, cuckoo_clean_failed_tasks, cuckoo_clean_failed_url_tasks,cuckoo_clean_before_day,cuckoo_clean_sorted_pcap_dump,cuckoo_clean_suricata_files_zip 
     from lib.cuckoo.core.startup import create_structure
     from lib.cuckoo.core.startup import init_logging, init_modules, init_console_logging
     from lib.cuckoo.core.startup import init_tasks, init_yara
@@ -93,6 +93,8 @@ if __name__ == "__main__":
     parser.add_argument("--failed-clean", help="Remove all tasks maked as failed", action='store_true', required=False)
     parser.add_argument("--failed-url-clean", help="Remove all tasks that are url tasks but we don't have any HTTP traffic", action='store_true', required=False)
     parser.add_argument("--delete-older-than-days", help="Remove all tasks older than X number of days", type=int, required=False)
+    parser.add_argument("--pcap-sorted-clean", help="remove sorted pcap from jobs", action="store_true", required=False)
+    parser.add_argument("--suricata-files-zip-clean",help="remove suricata extracted files zip from jobs", action="store_true", required=False)
     args = parser.parse_args()
 
     if args.clean:
@@ -108,9 +110,15 @@ if __name__ == "__main__":
         sys.exit(0)
 
     if args.delete_older_than_days:
-        cuckoo_clean_before_day(args.delete_older_than_days)
+        cuckoo_clean_before_day(args)
         sys.exit(0)
 
+    if args.pcap_sorted_clean:
+        cuckoo_clean_sorted_pcap_dump()
+        sys.exit(0)
+    if args.suricata_files_zip_clean:
+        cuckoo_clean_suricata_files_zip()
+        sys.exit(0)
     try:
         cuckoo_init(quiet=args.quiet, debug=args.debug, artwork=args.artwork,
                     test=args.test)
