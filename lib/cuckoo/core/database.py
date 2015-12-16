@@ -572,7 +572,7 @@ class Database(object):
         row = None
         try:
             if machine != "":
-                row = session.query(Task).filter_by(status=TASK_PENDING).filter(Machine.name==machine).order_by("priority desc, added_on").first()
+                row = session.query(Task).filter_by(status=TASK_PENDING).filter(machine=machine).order_by("priority desc, added_on").first()
             else:
                 row = session.query(Task).filter_by(status=TASK_PENDING).order_by("priority desc, added_on").first()
 
