@@ -547,6 +547,7 @@ class RunSignatures(object):
                             "probably",
                             "w2km",
                             "http",
+                            "abuse",
                         ]
                         isgood = True
                         for black in blacklist:
