@@ -95,6 +95,10 @@ if __name__ == "__main__":
     parser.add_argument("--delete-older-than-days", help="Remove all tasks older than X number of days", type=int, required=False)
     parser.add_argument("--pcap-sorted-clean", help="remove sorted pcap from jobs", action="store_true", required=False)
     parser.add_argument("--suricata-files-zip-clean",help="remove suricata extracted files zip from jobs", action="store_true", required=False)
+    parser.add_argument("--suricata-zero-alert-filter",help="only remove events with zero suri alerts DELETE AFTER ONLY", action="store_true", required=False)
+    parser.add_argument("--urls-only-filter",help="only remove url events filter DELETE AFTER ONLY", action="store_true", required=False)
+    parser.add_argument("--files-only-filter",help="only remove files events filter DELETE AFTER ONLY", action="store_true", required=False)
+    parser.add_argument("--custom-include-filter",help="Only include jobs that match the custom field DELETE AFTER ONLY", required=False)
     args = parser.parse_args()
 
     if args.clean:

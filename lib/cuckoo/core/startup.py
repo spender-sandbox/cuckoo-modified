@@ -24,8 +24,8 @@ from lib.cuckoo.common.config import Config
 from lib.cuckoo.common.constants import CUCKOO_ROOT, CUCKOO_VERSION
 from lib.cuckoo.common.exceptions import CuckooStartupError
 from lib.cuckoo.common.exceptions import CuckooOperationalError
-from lib.cuckoo.common.utils import create_folders
-from lib.cuckoo.core.database import Database, TASK_RUNNING, TASK_FAILED_ANALYSIS
+from lib.cuckoo.common.utils import create_folders, store_temp_file, delete_folder
+from lib.cuckoo.core.database import Database, Task, TASK_RUNNING, TASK_FAILED_ANALYSIS, TASK_FAILED_PROCESSING, TASK_FAILED_REPORTING, TASK_RECOVERED
 from lib.cuckoo.core.plugins import import_plugin, import_package, list_plugins
 
 log = logging.getLogger()
@@ -386,8 +386,8 @@ def cuckoo_clean_failed_tasks():
         failed_tasks_a = db.list_tasks(status=TASK_FAILED_ANALYSIS)
         failed_tasks_p = db.list_tasks(status=TASK_FAILED_PROCESSING)
         failed_tasks_r = db.list_tasks(status=TASK_FAILED_REPORTING)
-        failed_tasks_rc = db.list_tasks(status=TASK_FAILED_REPORTING)
-        for e in failed_tasks_a,failed_tasks_p,failed_tasks_r:
+        failed_tasks_rc = db.list_tasks(status=TASK_RECOVERED)
+        for e in failed_tasks_a,failed_tasks_p,failed_tasks_r,failed_tasks_rc:
             for el2 in e:
                 new = el2.to_dict()
                 print int(new["id"])
@@ -473,6 +473,7 @@ def cuckoo_clean_before_day(args):
         days = args.delete_older_than_days
     create_structure()
     init_console_logging()
+    id_arr = []
 
     # Initialize the database connection.
     db = Database()
@@ -491,23 +492,50 @@ def cuckoo_clean_before_day(args):
             return
 
         added_before = datetime.now() - timedelta(days=int(days))
-        old_tasks = db.list_tasks(added_before=added_before)
+        if args.files_only_filter:
+            print("file filter applied")
+            old_tasks = db.list_tasks(added_before=added_before,category="file")
+        elif args.urls_only_filter:
+            print("url filter applied")
+            old_tasks = db.list_tasks(added_before=added_before,category="url")
+        else:
+            old_tasks = db.list_tasks(added_before=added_before)
+
         for e in old_tasks:
             new = e.to_dict()
             print int(new["id"])
+            id_arr.append({"info.id":(int(new["id"]))})
+
+        print "number of matching records %s before suri/custom filter " % len(id_arr)
+        if id_arr and args.suricata_zero_alert_filter:
+            result = list(results_db.suricata.find({"alerts.alert": {"$exists": False}, "$or": id_arr},{"info.id":1}))
+            tmp_arr =[]
+            for entry in result:
+                tmp_arr.append(entry["info"]["id"])
+            id_arr = tmp_arr
+        if id_arr and args.custom_include_filter:
+            result = list(results_db.analysis.find({"info.custom": {"$regex": args.custom_include_filter},"$or": id_arr},{"info.id":1}))
+            tmp_arr = []
+            for entry in result:
+                tmp_arr.append(entry["info"]["id"])
+            id_arr = tmp_arr
+        print "number of matching records %s" % len(id_arr)
+        for e in id_arr:
             try:
-                results_db.suricata.remove({"info.id": int(new["id"])})
+                print "removing %s from suridb" % (e)
+                results_db.suricata.remove({"info.id": e})
             except:
-                print "failed to remove suricata info (may not exist) %s" % (int(new["id"]))
+                print "failed to remove suricata info (may not exist) %s" % (e)
             try:
-                results_db.analysis.remove({"info.id": int(new["id"])})
+                print "removing %s from analysis db" % (e)  
+                results_db.analysis.remove({"info.id": e})
             except:
-                print "failed to remove analysis info (may not exist) %s" % (int(new["id"]))
-            if db.delete_task(new["id"]):
+                print "failed to remove analysis info (may not exist) %s" % (e)
+            if db.delete_task(e):
                 delete_folder(os.path.join(CUCKOO_ROOT, "storage", "analyses",
-                       "%s" % int(new["id"])))
+                       "%s" % e))
             else:
-                print "failed to remove faile task %s from DB" % (int(new["id"]))
+                print "failed to remove faile task %s from DB" % (e)
 
 def cuckoo_clean_sorted_pcap_dump():
     """Clean up failed tasks 
