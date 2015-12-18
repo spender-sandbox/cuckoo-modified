@@ -612,17 +612,18 @@ class Scheduler:
                 # Fetch a pending analysis task.
                 #TODO: this fixes only submissions by --machine, need to add other attributes (tags etc.)
                 for machine in self.db.get_available_machines():
-
                     task = self.db.fetch(machine=machine.name)
                     if task:
-                        log.debug("Processing task #%s", task.id)
-                        self.total_analysis_count += 1
-
-                        # Initialize and start the analysis manager.
-                        analysis = AnalysisManager(task, errors)
-                        analysis.daemon = True
-                        analysis.start()
                         break
+                else:
+                    task = self.db.fetch()
+                if task:
+                    log.debug("Processing task #%s", task.id)
+                    self.total_analysis_count += 1
+                    # Initialize and start the analysis manager.
+                    analysis = AnalysisManager(task, errors)
+                    analysis.daemon = True
+                    analysis.start()
 
             # Deal with errors.
             try:
