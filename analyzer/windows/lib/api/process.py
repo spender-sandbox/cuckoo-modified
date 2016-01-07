@@ -575,6 +575,10 @@ class Process:
                 config.write("sys32_ctimelow={0}\n".format(cfgoptions["sys32_ctimelow"]))
             if "sys32_ctimehigh" in cfgoptions:
                 config.write("sys32_ctimehigh={0}\n".format(cfgoptions["sys32_ctimehigh"]))
+            if "debug" in cfgoptions:
+                config.write("debug={0}\n".format(cfgoptions["debug"]))
+            if "disable_hook_content" in cfgoptions:
+                config.write("disable_hook_content={0}\n".format(cfgoptions["disable_hook_content"]))
             if "norefer" not in cfgoptions:
                 config.write("referrer={0}\n".format(get_referrer_url(interest)))
             if firstproc:
