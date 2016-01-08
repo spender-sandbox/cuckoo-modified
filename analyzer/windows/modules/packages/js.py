@@ -16,7 +16,11 @@ class JS(Package):
         wscript = self.get_path("wscript.exe")
         args = "\"%s\"" % path
         if not path.lower().endswith(".js"):
-            os.rename(path,path + ".js")
-            path = path + ".js"
-        args = "\"%s\"" % path        
+            if os.path.isfile(path) and "#@~^" in open(path, "rb").read(100):
+                os.rename(path,path + ".jse")
+                path = path + ".jse"
+            else:
+                os.rename(path,path + ".js")
+                path = path + ".js"
+        args = "\"%s\"" % path
         return self.execute(wscript, args, path)
