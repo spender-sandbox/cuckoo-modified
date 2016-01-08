@@ -65,7 +65,7 @@ def foreach_child(hwnd, lparam):
     USER32.GetClassNameW(hwnd, classname, 128)
 
     # Check if the class of the child is button.
-    if "button" in classname.value.lower() or classname.value == "NUIDialog":
+    if "button" in classname.value.lower() or classname.value == "NUIDialog" or classname.value == "bosa_sdm_msword":
         # Get the text of the button.
         length = USER32.SendMessageW(hwnd, WM_GETTEXTLENGTH, 0, 0)
         if not length:
@@ -73,7 +73,7 @@ def foreach_child(hwnd, lparam):
         text = create_unicode_buffer(length + 1)
         USER32.SendMessageW(hwnd, WM_GETTEXT, length + 1, text)
         textval = text.value.replace('&','')
-        if classname.value == "NUIDialog" and "Microsoft" in textval:
+        if "Microsoft" in textval and (classname.value == "NUIDialog" or classname.value == "bosa_sdm_msword"):
             log.info("Issuing keypress on Office dialog")
             USER32.SetForegroundWindow(hwnd)
             # enter key down/up
