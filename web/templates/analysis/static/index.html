@@ -46,6 +46,8 @@
                     {% include "analysis/static/_office.html" %}
                 {% elif analysis.target.file.name|endswith:".mht" %}
                     {% include "analysis/static/_office.html" %}
+                {% elif analysis.target.file.name|endswith:".mso" %}
+                    {% include "analysis/static/_office.html" %}
                 {% elif analysis.target.file.name|endswith:".xls" %}
                     {% include "analysis/static/_office.html" %}
                 {% elif analysis.target.file.name|endswith:".xlsx" %}

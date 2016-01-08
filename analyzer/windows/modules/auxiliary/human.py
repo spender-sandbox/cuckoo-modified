@@ -199,7 +199,7 @@ class Human(Auxiliary, Thread):
                 file_name = self.config.file_name
                 if "Rich Text Format" in file_type or "Microsoft Word" in file_type or \
                     "Microsoft Office Word" in file_type or "MIME entity" in file_type or \
-                    file_name.endswith((".doc", ".docx", ".rtf", ".mht")):
+                    file_name.endswith((".doc", ".docx", ".rtf", ".mht", ".mso")):
                     officedoc = True
                 elif "Microsoft Office Excel" in file_type or "Microsoft Excel" in file_type or \
                     file_name.endswith((".xls", ".xlsx", ".xlsm", ".xlsb")):

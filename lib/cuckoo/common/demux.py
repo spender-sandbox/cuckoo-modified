@@ -55,7 +55,7 @@ def demux_zip(filename, options):
                     continue
                 extensions = [
                     "", ".exe", ".dll", ".jar", ".pdf", ".msi", ".bin", ".scr", ".zip", ".htm", ".html", 
-                    ".doc", ".dot", ".docx", ".dotx", ".docm", ".dotm", ".docb", ".mht", ".js", ".jse", ".vbs", ".vbe",
+                    ".doc", ".dot", ".docx", ".dotx", ".docm", ".dotm", ".docb", ".mht", ".mso", ".js", ".jse", ".vbs", ".vbe",
                     ".xls", ".xlt", ".xlm", ".xlsx", ".xltx", ".xlsm", ".xltm", ".xlsb", ".xla", ".xlam", ".xll", ".xlw",
                     ".ppt", ".pot", ".pps", ".pptx", ".pptm", ".potx", ".potm", ".ppam", ".ppsx", ".ppsm", ".sldx", ".sldm"
                 ]
@@ -124,7 +124,7 @@ def demux_rar(filename, options):
                     continue
                 extensions = [
                     "", ".exe", ".dll", ".jar", ".pdf", ".msi", ".bin", ".scr", ".zip", ".htm", ".html", 
-                    ".doc", ".dot", ".docx", ".dotx", ".docm", ".dotm", ".docb", ".mht", ".js", ".jse", ".vbs", ".vbe",
+                    ".doc", ".dot", ".docx", ".dotx", ".docm", ".dotm", ".docb", ".mht", ".mso", ".js", ".jse", ".vbs", ".vbe",
                     ".xls", ".xlt", ".xlm", ".xlsx", ".xltx", ".xlsm", ".xltm", ".xlsb", ".xla", ".xlam", ".xll", ".xlw",
                     ".ppt", ".pot", ".pps", ".pptx", ".pptm", ".potx", ".potm", ".ppam", ".ppsx", ".ppsm", ".sldx", ".sldm"
                 ]

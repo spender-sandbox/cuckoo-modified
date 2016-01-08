@@ -1283,7 +1283,7 @@ class Static(Processing):
                 static = Office(self.file_path).run()
             elif "Composite Document File" in thetype:
                 static = Office(self.file_path).run()
-            elif self.task["target"].endswith((".doc", ".docx", ".rtf", ".xls", ".mht", ".xlsx", ".ppt", ".pptx", ".pps", ".ppsx", ".pptm", ".potm", ".potx", ".ppsm")):
+            elif self.task["target"].endswith((".doc", ".docx", ".rtf", ".xls", ".mht", ".mso", ".xlsx", ".ppt", ".pptx", ".pps", ".ppsx", ".pptm", ".potm", ".potx", ".ppsm")):
                 static = Office(self.file_path).run()
             elif "Java Jar" in thetype or self.task["target"].endswith(".jar"):
                 decomp_jar = self.options.get("procyon_path", None)
