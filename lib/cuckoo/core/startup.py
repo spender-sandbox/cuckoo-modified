@@ -25,7 +25,7 @@ from lib.cuckoo.common.constants import CUCKOO_ROOT, CUCKOO_VERSION
 from lib.cuckoo.common.exceptions import CuckooStartupError
 from lib.cuckoo.common.exceptions import CuckooOperationalError
 from lib.cuckoo.common.utils import create_folders, store_temp_file, delete_folder
-from lib.cuckoo.core.database import Database, Task, TASK_RUNNING, TASK_FAILED_ANALYSIS, TASK_FAILED_PROCESSING, TASK_FAILED_REPORTING, TASK_RECOVERED
+from lib.cuckoo.core.database import Database, Task, TASK_RUNNING, TASK_FAILED_ANALYSIS, TASK_FAILED_PROCESSING, TASK_FAILED_REPORTING, TASK_RECOVERED, TASK_REPORTED
 from lib.cuckoo.core.plugins import import_plugin, import_package, list_plugins
 
 log = logging.getLogger()
@@ -405,6 +405,38 @@ def cuckoo_clean_failed_tasks():
                 else:
                     print "failed to remove faile task %s from DB" % (int(new["id"]))
 
+def cuckoo_clean_bson_suri_logs():
+    """Clean up raw suri log files probably not needed if storing in mongo. Does not remove extracted files
+    """
+    # Init logging.
+    # This need to init a console logger handler, because the standard
+    # logger (init_logging()) logs to a file which will be deleted.
+    create_structure()
+    init_console_logging()
+    from glob import glob
+    # Initialize the database connection.
+    db = Database()
+    failed_tasks_a = db.list_tasks(status=TASK_FAILED_ANALYSIS)
+    failed_tasks_p = db.list_tasks(status=TASK_FAILED_PROCESSING)
+    failed_tasks_r = db.list_tasks(status=TASK_FAILED_REPORTING)
+    failed_tasks_rc = db.list_tasks(status=TASK_RECOVERED)
+    tasks_rp = db.list_tasks(status=TASK_REPORTED)
+    for e in failed_tasks_a,failed_tasks_p,failed_tasks_r,failed_tasks_rc,tasks_rp:
+        for el2 in e:
+            new = el2.to_dict()
+            id = new["id"]
+            path = os.path.join(CUCKOO_ROOT, "storage", "analyses","%s" % id)
+            if os.path.exists(path):
+                jsonlogs=glob("%s/logs/*json*" % (path))
+                bsondata=glob("%s/logs/*.bson" % (path))
+                filesmeta=glob("%s/logs/files/*.meta" %(path))
+                for f in jsonlogs,bsondata,filesmeta:
+                    for fe in f:
+                        try:
+                            print "removing %s" % (fe)
+                            os.remove(fe)
+                        except Exception as Err:
+                            print "failed to remove sorted_pcap from disk %s" % (Err)
 
 def cuckoo_clean_failed_url_tasks():
     """Clean up failed tasks 
