@@ -207,11 +207,11 @@ def index(request):
                                          options=options,
                                          priority=priority,
                                          machine=entry,
-                                        custom=custom,
-                                        memory=memory,
-                                        enforce_timeout=enforce_timeout,
-                                        tags=tags,
-                                        clock=clock)
+                                         custom=custom,
+                                         memory=memory,
+                                         enforce_timeout=enforce_timeout,
+                                         tags=tags,
+                                         clock=clock)
                     if task_id:
                         task_ids.append(task_id)
         elif settings.VTDL_ENABLED and "vtdl" in request.POST:
