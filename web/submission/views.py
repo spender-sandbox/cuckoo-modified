@@ -8,6 +8,7 @@ import sys
 import requests
 import tempfile
 import random
+import re
 
 from django.conf import settings
 from django.shortcuts import redirect, render_to_response
