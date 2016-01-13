@@ -337,6 +337,8 @@ def tasks_create_url(request):
         memory = bool(request.POST.get("memory", False))
         clock = request.POST.get("clock", None)
         enforce_timeout = bool(request.POST.get("enforce_timeout", False))
+        gateway = request.POST.get("gateway",None)
+        referer = request.POST.get("referer",None)
 
         if not url:
             resp = {"error": True, "error_value": "URL value is empty"}
@@ -346,6 +348,11 @@ def tasks_create_url(request):
             resp = {"error": True,
                     "error_value": "machine=all not supported for URL analysis API"}
             return jsonize(resp, response=True)
+
+        if referer:
+            if options:
+                options += ","
+            options += "referer=%s" % (referer)
 
         task_id = db.add_url(url=url,
                              package=package,

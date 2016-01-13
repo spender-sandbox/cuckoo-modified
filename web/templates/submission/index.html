@@ -134,6 +134,7 @@ $(document).ready( function() {
                                 <label for="form_gateway">Gateway</label>
                                 <select class="form-control" id="form_gateway" name="gateway">
                                 <option value="" active>Default</option>
+                                <option value="All">All</option>
                                 {% for k,v in gateways.items %}
                                     <option value="{{k}}">{{k}}</option>
                                 {% endfor %}
@@ -254,6 +255,13 @@ $(document).ready( function() {
                                     <input type="checkbox" name="free" /> No Injection <span class="text-muted"><small>(disable behavioral analysis)</small></span>
                                 </label>
                             </div>
+                            {% if config.gateways %}
+                            <div class="checkbox">
+                                <label>
+                                    <input type="checkbox" name="all_gw_in_group" /> Submit a job for each gateway in group
+                                </label>
+                            </div>
+                            {% endif %}
                             {% if config.tor %}
                             <div class="checkbox">
                                 <label>
