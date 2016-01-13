@@ -43,6 +43,8 @@ VTDL_PRIV_KEY = vtdl_cfg.get("dlprivkey",None)
 VTDL_INTEL_KEY = vtdl_cfg.get("dlintelkey",None)
 VTDL_PATH = vtdl_cfg.get("dlpath",None)
 
+TEMP_PATH = Config().cuckoo.get("tmppath", "/tmp")
+
 # Enabled/Disable Zer0m0n tickbox on the submission page
 OPT_ZER0M0N = False
 

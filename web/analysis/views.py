@@ -12,6 +12,8 @@ except ImportError:
 import datetime
 import os
 import json
+import zipfile
+import tempfile
 
 from django.conf import settings
 from django.core.servers.basehttp import FileWrapper
@@ -588,24 +590,36 @@ def elastic_file(request, category, task_id, dlfile):
 
 @require_safe
 def procdump(request, object_id, task_id, process_id, start, end):
+    origname = process_id + ".dmp"
+    tmpdir = None
+    tmp_file_path = None
+
     if enabledconf["mongodb"]:
         analysis = results_db.analysis.find_one({"info.id": int(task_id)}, sort=[("_id", pymongo.DESCENDING)])
-        file_item = fs.get(ObjectId(object_id))
     if enabledconf["elasticsearchdb"]:
         analysis = es.search(
                    index=fullidx,
                    doc_type="analysis",
                    q="info.id: \"%s\"" % task_id
                    )["hits"]["hits"][0]["_source"]
-        dumpfile = os.path.join(CUCKOO_ROOT, "storage", "analyses", task_id,
-                                "memory", process_id + ".dmp")
-        try:
-            file_item = open(dumpfile, "r")
-        except IOError:
-            return render_to_response("error.html",
-                                      {"error": "File not found"},
-                                      context_instance=RequestContext(request))
 
+    dumpfile = os.path.join(CUCKOO_ROOT, "storage", "analyses", task_id,
+                            "memory", origname)
+    if not os.path.exists(dumpfile):
+        dumpfile += ".zip"
+        if not os.path.exists(dumpfile):
+            return render_to_response("error.html",
+                                        {"error": "File not found"},
+                                        context_instance=RequestContext(request))
+        f = zipfile.ZipFile(dumpfile, "r")
+        tmpdir = tempfile.mkdtemp(prefix="cuckooprocdump_", dir=settings.TEMP_PATH)
+        tmp_file_path = f.extract(origname, path=tmpdir)
+        f.close()
+        dumpfile = tmp_file_path
+    try:
+        file_item = open(dumpfile, "r")
+    except IOError:
+        file_item = None
 
     file_name = "{0}_{1:x}.dmp".format(process_id, int(start, 16))
 
@@ -622,9 +636,20 @@ def procdump(request, object_id, task_id, process_id, start, end):
                     content_type = "application/octet-stream"
                     response = HttpResponse(data, content_type=content_type)
                     response["Content-Disposition"] = "attachment; filename={0}".format(file_name)
-                    if enabledconf["elasticsearchdb"]:
-                        file_item.close()
-                    return response
+                    break
+
+    if file_item:
+        file_item.close()
+    try:
+        if tmp_file_path:
+            os.unlink(tmp_file_path)
+        if tmpdir:
+            os.rmdir(tmpdir)
+    except:
+        pass
+
+    if response:
+        return response
 
     return render_to_response("error.html",
                                   {"error": "File not found"},
