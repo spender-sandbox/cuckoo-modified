@@ -59,6 +59,7 @@ def foreach_child(hwnd, lparam):
         "don't run",
         "do not ask again until the next update is available",
         "cancel",
+        "do not accept the agreement"
     ]
 
     classname = create_unicode_buffer(128)
