@@ -86,23 +86,26 @@ def delete_elastic_data(curtask=None, tid=None):
         log.debug("Task #{0} deleting ElasticSearch data for Task #{1}".format(
                   curtask, tid))
 
-def delete_directory(curtask=None, deldir=None):
-    if os.path.isdir(deldir):
-        try:
-            shutil.rmtree(deldir)
-            log.debug("Task #{0} deleting {1} due to retention quota".format(
-                curtask, deldir))
-        except (IOError, OSError) as e:
-            log.warn("Error removing {0}: {1}".format(deldir, e))
+def delete_files(curtask=None, delfiles=None):
+    delfiles_list = delfiles
+    if not isinstance(delfiles, list):
+        delfiles_list = [delfiles]
 
-def delete_file(curtask=None, delfile=None):
-    if os.path.exists(delfile):
-        try:
-            os.remove(delfile)
-            log.debug("Task #{0} deleting {1} due to retention quota".format(
-                curtask, delfile))
-        except OSError as e:
-            log.warn("Error removing {0}: {1}".format(delfile, e))
+    for delent in delfiles_list:
+        if os.path.isdir(delent):
+            try:
+                shutil.rmtree(delent)
+                log.debug("Task #{0} deleting {1} due to retention quota".format(
+                    curtask, delent))
+            except (IOError, OSError) as e:
+                log.warn("Error removing {0}: {1}".format(delent, e))
+        elif os.path.exists(delent):
+            try:
+                os.remove(delent)
+                log.debug("Task #{0} deleting {1} due to retention quota".format(
+                    curtask, delent))
+            except OSError as e:
+                log.warn("Error removing {0}: {1}".format(delent, e))
 
 class Retention(Report):
     """Used to manage data retention and delete task data from
@@ -113,12 +116,21 @@ class Retention(Report):
     def run(self, results):
         # Curtask used for logging when deleting files
         curtask = results["info"]["id"]
+
+        # Since we should be the last run reporting module, make sure we don't delay
+        # an analyst from being able to see results for their analysis on account
+        # of this taking some time
+        db.set_status(curtask, TASK_REPORTED)
+
         # Retains the last Task ID checked for retention settings per category
         taskCheck = defaultdict(int)
         # Handle the case where someone doesn't restart cuckoo and issues
         # process.py manually, the directiry structure is created in the
         # startup of cuckoo.py
         retPath = os.path.join(CUCKOO_ROOT, "storage", "retention")
+
+        confPath = os.path.join(CUCKOO_ROOT, "conf", "reporting.conf")
+
         if not os.path.isdir(retPath):
             log.warn("Retention log directory doesn't exist. Creating it now.")
             os.mkdir(retPath)
@@ -131,9 +143,17 @@ class Retention(Report):
                 log.warn("Failed to load retention log, if this is not the "
                          "time running retention, review the error: {0}".format(
                          e))
+            curtime = datetime.now()
+            since_retlog_modified = curtime - datetime.fromtimestamp(os.path.getmtime(taskFile))
+            since_conf_modified = curtime - datetime.fromtimestamp(os.path.getmtime(confPath))
+
+            # We'll only do anything in this module once every 24 hours, or immediately
+            # after changes to reporting.conf
+            if (since_retlog_modified < timedelta(days=1) and since_conf_modified > since_retlog_modified):
+                return
 
         delLocations = {
-            "memory": CUCKOO_ROOT + "/storage/analyses/{0}/memory.dmp",
+            "memory": [CUCKOO_ROOT + "/storage/analyses/{0}/memory.dmp", CUCKOO_ROOT + "/storage/analyses/{0}/memory.dmp.zip"],
             "procmemory": CUCKOO_ROOT + "/storage/analyses/{0}/memory",
             "pcap": CUCKOO_ROOT + "/storage/analyses/{0}/dump.pcap",
             "sortedpcap": CUCKOO_ROOT + "/storage/analyses/{0}/dump_sorted.pcap",
@@ -168,24 +188,8 @@ class Retention(Report):
                 # We need to delete some data
                 for tid in buf:
                     lastTask = tid.to_dict()["id"]
-                    if delLocations[item]:
-                        delete = delLocations[item].format(lastTask)
-                    if item == "memory":
-                        delete_file(curtask=curtask, delfile=delete)
-                    elif item == "procmemory":
-                        delete_directory(curtask=curtask, deldir=delete)
-                    elif item == "pcap":
-                        delete_file(curtask=curtask, delfile=delete)
-                    elif item == "sortedpcap":
-                        delete_file(curtask=curtask, delfile=delete)
-                    elif item == "bsonlogs":
-                        delete_directory(curtask=curtask, deldir=delete)
-                    elif item == "dropped":
-                        delete_directory(curtask=curtask, deldir=delete)
-                    elif item == "screencaps":
-                        delete_directory(curtask=curtask, deldir=delete)
-                    elif item == "reports":
-                        delete_directory(curtask=curtask, deldir=delete)
+                    if item != "mongo" and item != "elastic":
+                        delete_files(curtask=curtask, delfiles=delLocations[item].format(lastTask))
                     elif item == "mongo":
                         if cfg.mongodb and cfg.mongodb.enabled:
                             delete_mongo_data(curtask=curtask, tid=lastTask)
