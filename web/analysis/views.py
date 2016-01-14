@@ -48,9 +48,7 @@ for cfile in ["reporting", "processing"]:
 if enabledconf["mongodb"]:
     import pymongo
     from bson.objectid import ObjectId
-    from gridfs import GridFS
     results_db = pymongo.MongoClient(settings.MONGO_HOST, settings.MONGO_PORT)[settings.MONGO_DB]
-    fs = GridFS(results_db)
 
 if enabledconf["elasticsearchdb"]:
     from elasticsearch import Elasticsearch
@@ -488,39 +486,7 @@ def report(request, task_id):
                              context_instance=RequestContext(request))
 
 @require_safe
-def mongo_file(request, category, object_id):
-    file_item = fs.get(ObjectId(object_id))
-
-    if file_item:
-        file_name = file_item.sha256
-        if category == "pcap":
-            file_name += ".pcap"
-        elif category == "screenshot":
-            file_name += ".jpg"
-        elif category == 'memdump':
-            file_name += ".dmp"
-        elif category == "zip":
-            file_name += ".zip"
-        else:
-            file_name += ".bin"
-
-        # Managing gridfs error if field contentType is missing.
-        try:
-            content_type = file_item.contentType
-        except AttributeError:
-            content_type = "application/octet-stream"
-
-        response = HttpResponse(file_item.read(), content_type=content_type)
-        response["Content-Disposition"] = "attachment; filename=%s" % file_name
-
-        return response
-    else:
-        return render_to_response("error.html",
-                                  {"error": "File not found"},
-                                  context_instance=RequestContext(request))
-
-@require_safe
-def elastic_file(request, category, task_id, dlfile):
+def file(request, category, task_id, dlfile):
     file_name = dlfile
     cd = ""
 
@@ -577,7 +543,7 @@ def elastic_file(request, category, task_id, dlfile):
         cd = "application/octet-stream"
 
     try:
-        resp = StreamingHttpResponse(FileWrapper(open(path), 8096),
+        resp = StreamingHttpResponse(FileWrapper(open(path), 8192),
                                      content_type=cd)
     except:
         return render_to_response("error.html",
@@ -692,8 +658,7 @@ def full_memory_dump_file(request, analysis_number):
             filename = os.path.basename(file_path)
     if filename:
         content_type = "application/octet-stream"
-        chunk_size = 8192
-        response = StreamingHttpResponse(FileWrapper(open(file_path), chunk_size),
+        response = StreamingHttpResponse(FileWrapper(open(file_path), 8192),
                                    content_type=content_type)
         response['Content-Length'] = os.path.getsize(file_path)
         response['Content-Disposition'] = "attachment; filename=%s" % filename
@@ -713,8 +678,7 @@ def full_memory_dump_strings(request, analysis_number):
             filename = os.path.basename(file_path)
     if filename:
         content_type = "application/octet-stream"
-        chunk_size = 8192
-        response = StreamingHttpResponse(FileWrapper(open(file_path), chunk_size),
+        response = StreamingHttpResponse(FileWrapper(open(file_path), 8192),
                                    content_type=content_type)
         response['Content-Length'] = os.path.getsize(file_path)
         response['Content-Disposition'] = "attachment; filename=%s" % filename
@@ -944,28 +908,6 @@ def remove(request, task_id):
         if analyses.count() > 0:
             # Delete dups too.
             for analysis in analyses:
-                # Delete sample if not used.
-                if "file_id" in analysis["target"]:
-                    if results_db.analysis.find({"target.file_id": ObjectId(analysis["target"]["file_id"])}).count() == 1:
-                        fs.delete(ObjectId(analysis["target"]["file_id"]))
-
-                # Delete screenshots.
-                for shot in analysis["shots"]:
-                    if results_db.analysis.find({"shots": ObjectId(shot)}).count() == 1:
-                        fs.delete(ObjectId(shot))
-
-                # Delete network pcap.
-                if "pcap_id" in analysis["network"] and results_db.analysis.find({"network.pcap_id": ObjectId(analysis["network"]["pcap_id"])}).count() == 1:
-                    fs.delete(ObjectId(analysis["network"]["pcap_id"]))
-
-                # Delete sorted pcap
-                if "sorted_pcap_id" in analysis["network"] and results_db.analysis.find({"network.sorted_pcap_id": ObjectId(analysis["network"]["sorted_pcap_id"])}).count() == 1:
-                    fs.delete(ObjectId(analysis["network"]["sorted_pcap_id"]))
-
-                # Delete dropped.
-                for drop in analysis["dropped"]:
-                    if "object_id" in drop and results_db.analysis.find({"dropped.object_id": ObjectId(drop["object_id"])}).count() == 1:
-                        fs.delete(ObjectId(drop["object_id"]))
                 # Delete calls.
                 for process in analysis.get("behavior", {}).get("processes", []):
                     for call in process["calls"]:
@@ -1050,17 +992,12 @@ def pcapstream(request, task_id, conntuple):
             context_instance=RequestContext(request))
 
     try:
-        if enabledconf["mongodb"]:
-            fobj = fs.get(conndata["network"]["sorted_pcap_id"])
-            # gridfs gridout has no fileno(), which is needed by dpkt pcap reader for NOTHING
-            setattr(fobj, "fileno", lambda: -1)
-        if enabledconf["elasticsearchdb"]:
-            # This will check if we have a sorted PCAP
-            test_pcap = conndata["network"]["sorted_pcap_sha256"]
-            # if we do, build out the path to it
-            pcap_path = os.path.join(CUCKOO_ROOT, "storage", "analyses",
-                                     task_id, "dump_sorted.pcap")
-            fobj = open(pcap_path, "r")
+        # This will check if we have a sorted PCAP
+        test_pcap = conndata["network"]["sorted_pcap_sha256"]
+        # if we do, build out the path to it
+        pcap_path = os.path.join(CUCKOO_ROOT, "storage", "analyses",
+                                 task_id, "dump_sorted.pcap")
+        fobj = open(pcap_path, "r")
     except Exception as e:
         #print str(e)
         return render_to_response("standalone_error.html",
@@ -1068,8 +1005,7 @@ def pcapstream(request, task_id, conntuple):
             context_instance=RequestContext(request))
 
     packets = list(network.packets_for_stream(fobj, offset))
-    if enabledconf["elasticsearchdb"]:
-        fobj.close()
+    fobj.close()
 
     return HttpResponse(json.dumps(packets), content_type="application/json")
 

@@ -13,7 +13,7 @@ Cleanup utility
 
 Use :ref:`./cuckoo.py --clean` instead which *also* takes care of cleaning
 sample and task information from MySQL and PostgreSQL databases. This utility
-will also delete all data from the configured MongoDB/GridFS or ElasticSearch
+will also delete all data from the configured MongoDB or ElasticSearch
 databases.
 
 Submission Utility

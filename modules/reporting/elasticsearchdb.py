@@ -48,7 +48,7 @@ class ElasticsearchDB(Report):
 
         self.connect()
         index_prefix  = self.options.get("index", "cuckoo")
-		
+
         # Create a copy of the dictionary. This is done in order to not modify
         # the original dictionary and possibly compromise the following
         # reporting modules.

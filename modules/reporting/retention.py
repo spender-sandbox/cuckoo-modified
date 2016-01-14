@@ -22,14 +22,12 @@ db = Database()
 
 # Global connections
 if cfg.mongodb and cfg.mongodb.enabled:
-    from gridfs import GridFS
     from pymongo import MongoClient
     host = cfg.mongodb.get("host", "127.0.0.1")
     port = cfg.mongodb.get("port", 27017)
     mdb = cfg.mongodb.get("db", "cuckoo")
     try:
         results_db = MongoClient(host, port)[mdb]
-        fs = GridFS(results_db)
     except Exception as e:
         log.warning("Unable to connect to MongoDB: %s", str(e))
 
@@ -53,19 +51,6 @@ def delete_mongo_data(curtask=None, tid=None):
     analyses = results_db.analysis.find({"info.id": int(tid)})
     if analyses.count > 0:
         for analysis in analyses:
-            if "file_id" in analysis["target"]:
-                if results_db.analysis.find({"target.file_id": ObjectId(analysis["target"]["file_id"])}).count() == 1:
-                    fs.delete(ObjectId(analysis["target"]["file_id"]))
-            for shot in analysis["shots"]:
-                if results_db.analysis.find({"shots": ObjectId(shot)}).count() == 1:
-                    fs.delete(ObjectId(shot))
-            if "pcap_id" in analysis["network"] and results_db.analysis.find({"network.pcap_id": ObjectId(analysis["network"]["pcap_id"])}).count() == 1:
-                fs.delete(ObjectId(analysis["network"]["pcap_id"]))
-            if "sorted_pcap_id" in analysis["network"] and results_db.analysis.find({"network.sorted_pcap_id": ObjectId(analysis["network"]["sorted_pcap_id"])}).count() == 1:
-                fs.delete(ObjectId(analysis["network"]["sorted_pcap_id"]))
-            for drop in analysis["dropped"]:
-                if "object_id" in drop and results_db.analysis.find({"dropped.object_id": ObjectId(drop["object_id"])}).count() == 1:
-                    fs.delete(ObjectId(drop["object_id"]))
             for process in analysis.get("behavior", {}).get("processes", []):
                 for call in process["calls"]:
                     results_db.calls.remove({"_id": ObjectId(call)})

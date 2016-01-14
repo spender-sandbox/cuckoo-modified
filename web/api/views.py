@@ -33,12 +33,10 @@ repconf = Config("reporting")
 
 if repconf.mongodb.enabled:
     import pymongo
-    from gridfs import GridFS
     results_db = pymongo.MongoClient(
                      settings.MONGO_HOST,
                      settings.MONGO_PORT
                  )[settings.MONGO_DB]
-    fs = GridFS(results_db)
 
 if repconf.elasticsearchdb.enabled:
     from elasticsearch import Elasticsearch
@@ -1021,10 +1019,6 @@ def tasks_iocs(request, task_id, detail=None):
         if data["target"]["category"] == "file":
             del data["target"]["file"]["path"]
             del data["target"]["file"]["guest_paths"]
-            # MongoDB stores file_id as an object which is not JSON
-            # serializable
-            if "file_id" in data["target"].keys():
-                del data["target"]["file_id"]
     data["network"] = {}
     if "network" in buf.keys():
         data["network"]["traffic"] = {}

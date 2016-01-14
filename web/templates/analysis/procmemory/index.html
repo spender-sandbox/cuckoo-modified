@@ -38,43 +38,23 @@
                             {% endif %}
                             </td>
                         </tr>
-                        {% if config.mongodb and proc.procmem_id %}
-                            <tr>
-                                <th>Full Dump</th>
-                                {% if proc.zipdump %}
-                                    <td><a class="btn btn-primary btn-small" href="{% url "analysis.views.mongo_file" "zip" proc.procmem_id %}">Download</a></td>
-                                {% else %}
-                                    <td><a class="btn btn-primary btn-small" href="{% url "analysis.views.mongo_file" "memdump" proc.procmem_id %}">Download</a></td>
-                                {% endif %}
-                            </tr>
-                        {% endif %}
-                        {% if config.elasticsearchdb and proc.file %}
+                        {% if proc.file %}
                             <tr>
                                 <th>Full Dump</th>
                                 {% if proc.zipstrings %}
-                                    <td><a class="btn btn-primary btn-small" href="{% url "analysis.views.elastic_file" "memdumpzip" analysis.info.id proc.pid %}">Download</a></td>
+                                    <td><a class="btn btn-primary btn-small" href="{% url "analysis.views.file" "memdumpzip" analysis.info.id proc.pid %}">Download</a></td>
                                 {% else %}
-                                    <td><a class="btn btn-primary btn-small" href="{% url "analysis.views.elastic_file" "memdump" analysis.info.id proc.pid %}">Download</a></td>
+                                    <td><a class="btn btn-primary btn-small" href="{% url "analysis.views.file" "memdump" analysis.info.id proc.pid %}">Download</a></td>
                                 {% endif %}
                             </tr>
                         {% endif %}
-                        {% if config.mongodb and proc.procmem_strings_id %}
+                        {% if proc.strings_path %}
                             <tr>
                                 <th>Process Strings</th>
                                 {% if proc.zipstrings %}
-                                    <td><a class="btn btn-primary btn-small" href="{% url "analysis.views.mongo_file" "zip" proc.procmem_strings_id %}">Download</a></td>
+                                    <td><a class="btn btn-primary btn-small" href="{% url "analysis.views.file" "memdumpstringszip" analysis.info.id proc.pid %}">Download</a></td>
                                 {% else %}
-                                    <td><a class="btn btn-primary btn-small" href="{% url "analysis.views.mongo_file" "memdump" proc.procmem_strings_id %}">Download</a></td>
-                                {% endif %}
-                            </tr>
-                        {% endif %}
-                        {% if config.elasticsearchdb and proc.strings_path %}
-                            <tr>
-                                <th>Process Strings</th>
-                                {% if proc.zipstrings %}
-                                    <td><a class="btn btn-primary btn-small" href="{% url "analysis.views.elastic_file" "memdumpstringszip" analysis.info.id proc.pid %}">Download</a></td>
-                                {% else %}
-                                    <td><a class="btn btn-primary btn-small" href="{% url "analysis.views.elastic_file" "memdumpstrings" analysis.info.id proc.pid %}">Download</a></td>
+                                    <td><a class="btn btn-primary btn-small" href="{% url "analysis.views.file" "memdumpstrings" analysis.info.id proc.pid %}">Download</a></td>
                                 {% endif %}
                             </tr>
                         {% endif %}
@@ -106,11 +86,7 @@
                                     <td><span class="label label-primary">No</span></td>
                                     {% endif %}
                                     {% if proc.file %}
-                                    {% if config.mongodb %}
-                                    <td><a class="btn btn-primary btn-small" href="{% url "analysis.views.procdump" proc.procmem_id analysis.info.id proc.pid memmap.start memmap.end %}">Download</a></td>
-                                    {% elif config.elasticsearchdb %}
                                     <td><a class="btn btn-primary btn-small" href="{% url "analysis.views.procdump" proc.pid analysis.info.id proc.pid memmap.start memmap.end %}">Download</a></td>
-                                    {% endif %}
                                     {% endif %}
                                 </tr>
                                 {% if memmap.chunks|length >= 2 %}
@@ -121,9 +97,7 @@
                                         <td>{{chunk.size}}</td>
                                         <td>{{chunk.prot}}</td>
                                         <td></td>
-                                        {% if config.mongodb %}
-                                        <td><a class="btn btn-primary btn-small" href="{% url "analysis.views.procdump" proc.procmem_id analysis.info.id proc.pid chunk.start chunk.end %}">Download</a></td>
-                                        {% elif config.elasticsearchdb %}
+                                        {% if proc.file %}
                                         <td><a class="btn btn-primary btn-small" href="{% url "analysis.views.procdump" proc.pid analysis.info.id proc.pid memmap.start memmap.end %}">Download</a></td>
                                         {% endif %}
                                     </tr>

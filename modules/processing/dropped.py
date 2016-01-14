@@ -28,10 +28,8 @@ class Dropped(Processing):
                 guest_paths = [line.strip() for line in open(file_path + "_info.txt")]
 
                 file_info = File(file_path=file_path,guest_paths=guest_paths).get_all()
-                # Used by ElasticSearch to find the file on disk
-                # since they are in random generated directories
-                if Config("reporting").get("elasticsearchdb").get("enabled"):
-                    file_info["dropdir"] = file_path.split("/")[-2]
+                # Used to find the file on disk since they are in random generated directories
+                file_info["dropdir"] = file_path.split("/")[-2]
                 texttypes = [
                     "ASCII",
                     "Windows Registry text",

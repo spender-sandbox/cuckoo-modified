@@ -219,6 +219,7 @@
     <Compile Include="modules\reporting\resubmitexe.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="modules\reporting\retention.py" />
     <Compile Include="modules\reporting\syslog.py" />
     <Compile Include="modules\__init__.py" />
     <Compile Include="tests\abstracts_tests.py" />
