@@ -36,14 +36,15 @@ TASK_LIMIT = 25
 
 # Used for displaying enabled config options in Django UI
 enabledconf = dict()
-for cfile in ["reporting", "processing"]:
+for cfile in ["reporting", "processing", "auxiliary"]:
     curconf = Config(cfile)
     confdata = curconf.get_config()
     for item in confdata:
-        if confdata[item]["enabled"] == "yes":
-            enabledconf[item] = True
-        else:
-            enabledconf[item] = False
+        if confdata[item].has_key("enabled"):
+            if confdata[item]["enabled"] == "yes":
+                enabledconf[item] = True
+            else:
+                enabledconf[item] = False
 
 if enabledconf["mongodb"]:
     import pymongo
@@ -113,7 +114,7 @@ def get_analysis_info(db, id=-1, task=None):
         if rtmp.has_key("malfamily") and rtmp["malfamily"]:
             new["malfamily"] = rtmp["malfamily"]
 
-        if settings.DISPLAY_SHRIKE and rtmp.has_key("info") and rtmp["info"].has_key("shrike_msg") and rtmp["info"]["shrike_msg"]:
+        if "display_shrike" in enabledconf and enabledconf["display_shrike"] and rtmp.has_key("info") and rtmp["info"].has_key("shrike_msg") and rtmp["info"]["shrike_msg"]:
             new["shrike_msg"] = rtmp["info"]["shrike_msg"]
 
         if settings.MOLOCH_ENABLED:
@@ -122,11 +123,6 @@ def get_analysis_info(db, id=-1, task=None):
             new["moloch_url"] = settings.MOLOCH_BASE + "?date=-1&expression=tags" + quote("\x3d\x3d\x22%s\x3a%s\x22" % (settings.MOLOCH_NODE,new["id"]),safe='')
 
     return new
-
-if settings.DISPLAY_SHRIKE:
-    global_settings["display_shrike"] = True
-else:
-    global_settings["display_shrike"] = False
 
 @require_safe
 def index(request, page=1):
