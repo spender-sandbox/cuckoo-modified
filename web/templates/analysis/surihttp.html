@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% block content %}
+<p style="margin-bottom: 10px;"><img src="{{ STATIC_URL }}graphic/cuckoo.png" /></p>
+<ul class="nav nav-tabs">
+    <li class="active"><a href="#surihttp " data-toggle="tab">SuriHTTP</a></li>
+</ul>
+<div class="tab-content">
+    <div class="tab-pane fade in active" id="surihttp">
+    {% if suricata.http %}
+        <table class="table table-stripped" style="table-layout: fixed;">
+            <tr>
+                <th>TS</th>
+                <th>SRC</th>
+                <th>SPORT</th>
+                <th>DST</th>
+                <th>DPORT</th>
+                <th>HOST</th>
+                <th>URL</th>
+                <th>UA</th>
+                <th>VERB</th>
+                <th>REFERER</th>
+            </tr>
+            {% for e in suricata.http %}
+            <tr>
+                    <td>{{e.timestamp}}</td>
+                    <td>
+                    {%if e.src_ip %}
+                      {{e.src_ip}}
+                      {% if e.moloch_src_ip_url %} <a href={{e.moloch_src_ip_url}} target="_blank"><span class="mono">MLCH</span></a>{% endif %}
+                      {% if config.display_et_portal %} <a href="https://threatintel.proofpoint.com/search?q={{e.src_ip}}" target="_blank"><span class="mono">ETIntel</span></a>{% endif %}
+                      <a href="https://www.virustotal.com/en/ip-address/{{e.src_ip}}/information/" target="_blank"><span class="mono">VT</span></a>
+                    {% else %}
+                        <span class="mono">None</span>
+                    {% endif %}
+                    </td>
+                    <td>
+                    {%if e.src_port %}
+                      {{e.src_port}}
+                      {% if e.moloch_src_port_url %} <a href={{e.moloch_src_port_url}} target="_blank"><span class="mono">MLCH</span></a>{% endif %}
+                    {% else %}
+                        <span class="mono">None</span>
+                    {% endif %}
+                    </td>
+                    <td>
+                    {%if e.dest_ip %}
+                     {{e.dest_ip}}
+                      {% if e.moloch_dst_ip_url %} <a href={{e.moloch_dst_ip_url}} target="_blank"><span class="mono">MLCH</span></a>{% endif %}
+                      {% if config.display_et_portal %} <a href="https://threatintel.proofpoint.com/search?q={{e.dest_ip}}" target="_blank"><span class="mono">ETIntel</span></a>{% endif %}
+                      <a href="https://www.virustotal.com/en/ip-address/{{e.dest_ip}}/information/" target="_blank"><span class="mono">VT</span></a>
+                    {% else %}
+                        <span class="mono">None</span>
+                    {% endif %}
+                    </td>
+                    <td>
+                    {%if e.dest_port %}
+                      {{e.dest_port}}
+                      {% if e.moloch_dst_port_url %} <a href={{e.moloch_dst_port_url}} target="_blank"><span class="mono">MLCH</span></a>{% endif %}
+                    {% else %}
+                        <span class="mono">None</span>
+                    {% endif %}
+                    </td>
+                    <td>
+                    {%if e.http.hostname %}
+                      {{e.http.hostname}}
+                      {% if e.moloch_http_host_url %} <a href={{e.moloch_http_host_url}} target="_blank"><span class="mono">MLCH</span></a>{% endif %}
+                      {% if config.display_et_portal %} <a href="https://threatintel.proofpoint.com/search?q={{e.http.hostname}}" target="_blank"><span class="mono">ETIntel</span></a>{% endif %}
+                      <a href="https://www.virustotal.com/en/domain/{{e.http.hostname}}/information/" target="_blank"><span class="mono">VT</span></a>
+                    {% else %}
+                        <span class="mono">None</span>
+                    {% endif %}
+                    </td>
+                    <td>
+                    {%if e.http.url %}
+                      {{e.http.url}}
+                      {% if e.moloch_http_uri_url %}<a href={{e.moloch_http_uri_url}} target="_blank"><span class="mono">MLCH</span></a>{% endif %}
+                    {% else %}
+                        <span class="mono">None</span>
+                    {% endif %}
+                    </td>
+                    <td>
+                    {%if e.http.http_user_agent %}
+                      {{e.http.http_user_agent}}
+                      {% if e.moloch_http_ua_url %} <a href={{e.moloch_http_ua_url}} target="_blank"><span class="mono">MLCH</span></a>{% endif %}
+                    {% else %}
+                        <span class="mono">None</span>
+                    {% endif %}
+                    </td>
+                    <td>
+                    {%if e.http.http_method %}
+                      {{e.http.http_method}}
+                      {% if e.moloch_http_method_url %}  <a href={{e.moloch_http_method_url}} target="_blank"><span class="mono">MLCH</span></a>{% endif %}
+                    {% else %}
+                        <span class="mono">None</span>
+                    {% endif %}
+                    </td>
+                    <td>
+                    {% if e.http.http_refer %}
+                        {{e.http.http_refer}}
+                    {% else %}
+                        <span class="mono">None</span>
+                    {% endif %}
+                    </td>
+            </tr>
+            {% endfor %}
+        </table>
+    {% else %}
+        <p>No Suricata HTTP</p>
+    {% endif %}
+    </div>
+</div>
+{% endblock %}
