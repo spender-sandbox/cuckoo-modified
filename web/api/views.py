@@ -27,7 +27,7 @@ from lib.cuckoo.common.config import Config
 from lib.cuckoo.common.constants import CUCKOO_ROOT, CUCKOO_VERSION
 from lib.cuckoo.common.quarantine import unquarantine
 from lib.cuckoo.common.utils import store_temp_file, delete_folder
-from lib.cuckoo.common.utils import convert_to_printable
+from lib.cuckoo.common.utils import convert_to_printable, validate_referer
 from lib.cuckoo.core.database import Database, Task
 from lib.cuckoo.core.database import TASK_RUNNING, TASK_REPORTED
 
@@ -365,7 +365,7 @@ def tasks_create_url(request):
         clock = request.POST.get("clock", None)
         enforce_timeout = bool(request.POST.get("enforce_timeout", False))
         gateway = request.POST.get("gateway",None)
-        referer = request.POST.get("referer",None)
+        referer = validate_referer(request.POST.get("referer",None))
         shrike_url = request.POST.get("shrike_url", None)
         shrike_msg = request.POST.get("shrike_msg", None)
         shrike_sid = request.POST.get("shrike_sid", None)
