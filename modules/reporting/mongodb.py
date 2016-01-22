@@ -146,18 +146,30 @@ class MongoDB(Report):
             report["behavior"] = dict(report["behavior"])
             report["behavior"]["processes"] = new_processes
 
+        # Calculate the mlist_cnt for display if present to reduce db load
+        if "signatures" in results:
+            for entry in results["signatures"]:
+                if entry["name"] == "ie_martian_children":
+                    report["mlist_cnt"] = len(entry["data"])
+                if entry["name"] == "office_martian_children":
+                    report["f_mlist_cnt"] = len(entry["data"])
+
         #Other info we want Quick access to from the web UI
         if results.has_key("virustotal") and results["virustotal"] and results["virustotal"].has_key("positives") and results["virustotal"].has_key("total"):
             report["virustotal_summary"] = "%s/%s" % (results["virustotal"]["positives"],results["virustotal"]["total"])
         if results.has_key("suricata") and results["suricata"]:
             if results["suricata"].has_key("tls") and len(results["suricata"]["tls"]) > 0:
                 report["suri_tls_cnt"] = len(results["suricata"]["tls"])
-            if results["suricata"] and results["suricata"].has_key("alerts") and len(results["suricata"]["alerts"]) > 0:
+            if results["suricata"].has_key("alerts") and len(results["suricata"]["alerts"]) > 0:
                 report["suri_alert_cnt"] = len(results["suricata"]["alerts"])
             if results["suricata"].has_key("files") and len(results["suricata"]["files"]) > 0:
                 report["suri_file_cnt"] = len(results["suricata"]["files"])
             if results["suricata"].has_key("http") and len(results["suricata"]["http"]) > 0:
                 report["suri_http_cnt"] = len(results["suricata"]["http"])
+            if results["suricata"].has_key("ssh") and len(results["suricata"]["ssh"]) > 0:
+                report["suri_ssh_cnt"] = len(results["suricata"]["ssh"])
+            if results["suricata"].has_key("dns") and len(results["suricata"]["dns"]) > 0:
+                report["suri_dns_cnt"] = len(results["suricata"]["dns"])
         
         # Create an index based on the info.id dict key. Increases overall scalability
         # with large amounts of data.

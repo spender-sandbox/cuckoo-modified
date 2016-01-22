@@ -77,9 +77,10 @@ def get_analysis_info(db, id=-1, task=None):
         rtmp = results_db.analysis.find_one(
                    {"info.id": int(new["id"])},
                    {
-                       "info": 1, "virustotal_summary": 1, "malscore": 1,
-                       "malfamily": 1, "suri_tls_cnt": 1, "suri_alert_cnt": 1,
-                       "suri_http_cnt": 1, "suri_file_cnt": 1, "mlist_cnt": 1,
+                       "info": 1, "virustotal_summary": 1, "network.pcap_id":1, 
+                       "info.custom":1, "info.shrike_msg":1, "malscore": 1, "malfamily": 1, 
+                       "mlist_cnt": 1, "f_mlist_cnt": 1, "info.package": 1, "target.file.clamav": 1,
+                       "suri_tls_cnt": 1, "suri_alert_cnt": 1, "suri_http_cnt": 1, "suri_file_cnt": 1
                    }, sort=[("_id", pymongo.DESCENDING)]
                )
 
@@ -109,10 +110,14 @@ def get_analysis_info(db, id=-1, task=None):
             new["suri_http_cnt"] = rtmp["suri_http_cnt"]
         if rtmp.has_key("mlist_cnt") and rtmp["mlist_cnt"]:
             new["mlist_cnt"] = rtmp["mlist_cnt"]
+        if rtmp.has_key("f_mlist_cnt") and rtmp["f_mlist_cnt"]:
+            new["f_mlist_cnt"] = rtmp["f_mlist_cnt"]
         if rtmp.has_key("malscore"):
             new["malscore"] = rtmp["malscore"]
         if rtmp.has_key("malfamily") and rtmp["malfamily"]:
             new["malfamily"] = rtmp["malfamily"]
+        if rtmp.has_key("info") and rtmp["info"].has_key("custom") and rtmp["info"]["custom"]:
+            new["custom"] = rtmp["info"]["custom"]
 
         if "display_shrike" in enabledconf and enabledconf["display_shrike"] and rtmp.has_key("info") and rtmp["info"].has_key("shrike_msg") and rtmp["info"]["shrike_msg"]:
             new["shrike_msg"] = rtmp["info"]["shrike_msg"]
@@ -344,6 +349,195 @@ def filtered_chunk(request, task_id, pid, category, apilist):
     else:
         raise PermissionDenied
 
+def gen_moloch_from_suri_http(suricata):
+    if suricata.has_key("http") and suricata["http_cnt"] > 0:
+        for e in suricata["http"]:
+            try:
+                if e.has_key("src_ip") and e["src_ip"]:
+                    e["moloch_src_ip_url"] = settings.MOLOCH_BASE + "?date=-1&expression=ip" + quote("\x3d\x3d%s" % (str(e["src_ip"])),safe='')
+                if e.has_key("dest_ip") and e["dest_ip"]:
+                    e["moloch_dst_ip_url"] = settings.MOLOCH_BASE + "?date=-1&expression=ip" + quote("\x3d\x3d%s" % (str(e["dest_ip"])),safe='')
+                if e.has_key("dest_port") and e["dest_port"]:
+                    e["moloch_dst_port_url"] = settings.MOLOCH_BASE + "?date=-1&expression=port" + quote("\x3d\x3d%s\x26\x26tags\x3d\x3d\x22tcp\x22" % (str(e["dest_port"])),safe='')
+                if e.has_key("src_port") and e["src_port"]:
+                    e["moloch_src_port_url"] = settings.MOLOCH_BASE + "?date=-1&expression=port" + quote("\x3d\x3d%s\x26\x26tags\x3d\x3d\x22tcp\x22" % (str(e["src_port"])),safe='')
+                if e.has_key("http"):
+                    if e["http"].has_key("hostname") and e["http"]["hostname"]:
+                        e["moloch_http_host_url"] = settings.MOLOCH_BASE + "?date=-1&expression=host.http" + quote("\x3d\x3d\x22%s\x22" % (e["http"]["hostname"]),safe='')
+                    if e["http"].has_key("url") and e["http"]["url"]:
+                        e["moloch_http_uri_url"] = settings.MOLOCH_BASE + "?date=-1&expression=http.uri" + quote("\x3d\x3d\x22%s\x22" % (e["http"]["url"]),safe='')
+                    if e["http"].has_key("http_user_agent") and e["http"]["http_user_agent"]:
+                        e["moloch_http_ua_url"] = settings.MOLOCH_BASE + "?date=-1&expression=http.user-agent" + quote("\x3d\x3d\x22%s\x22" % (e["http"]["http_user_agent"]),safe='')
+                    if e["http"].has_key("http_method") and e["http"]["http_method"]:
+                        e["moloch_http_method_url"] = settings.MOLOCH_BASE + "?date=-1&expression=http.method" + quote("\x3d\x3d\x22%s\x22" % (e["http"]["http_method"]),safe='')
+                    if e["http"].has_key("http_method") and e["http"]["http_method"]:
+                        e["moloch_http_method_url"] = settings.MOLOCH_BASE + "?date=-1&expression=http.method" + quote("\x3d\x3d\x22%s\x22" % (e["http"]["http_method"]),safe='')
+            except:
+                continue
+    return suricata
+
+def gen_moloch_from_suri_alerts(suricata):
+    if suricata.has_key("alerts") and suricata["alert_cnt"] > 0:
+        for e in suricata["alerts"]:
+            if e.has_key("src_ip") and e["src_ip"]:
+                e["moloch_src_ip_url"] = settings.MOLOCH_BASE + "?date=-1&expression=ip" + quote("\x3d\x3d%s" % (str(e["src_ip"])),safe='')
+            if e.has_key("dest_ip") and e["dest_ip"]:
+                e["moloch_dst_ip_url"] = settings.MOLOCH_BASE + "?date=-1&expression=ip" + quote("\x3d\x3d%s" % (str(e["dest_ip"])),safe='')
+            if e.has_key("dest_port") and e["dest_port"]:
+                e["moloch_dst_port_url"] = settings.MOLOCH_BASE + "?date=-1&expression=port" + quote("\x3d\x3d%s\x26\x26tags\x3d\x3d\x22%s\x22" % (str(e["dest_port"]),e["proto"].lower()),safe='')
+            if e.has_key("src_port") and e["src_port"]:
+                e["moloch_src_port_url"] = settings.MOLOCH_BASE + "?date=-1&expression=port" + quote("\x3d\x3d%s\x26\x26tags\x3d\x3d\x22%s\x22" % (str(e["src_port"]),e["proto"].lower()),safe='')
+            if e.has_key("alert"):
+                if e["alert"].has_key("signature_id") and e["alert"]["signature_id"]:
+                    e["moloch_sid_url"] = settings.MOLOCH_BASE + "?date=-1&expression=tags" + quote("\x3d\x3d\x22suri_sid\x3a%s\x22" % (e["alert"]["signature_id"]),safe='')
+                if e["alert"].has_key("signature") and e["alert"]["signature"]:
+                    e["moloch_msg_url"] = settings.MOLOCH_BASE + "?date=-1&expression=tags" + quote("\x3d\x3d\x22suri_msg\x3a%s\x22" % (re.sub(r"[\W]","_",e["alert"]["signature"])),safe='')
+    return suricata
+
+def gen_moloch_from_suri_file_info(suricata):
+    if suricata.has_key("files") and suricata["file_cnt"] > 0:
+        for e in suricata["files"]:
+            if e.has_key("srcip") and e["srcip"]:
+                e["moloch_src_ip_url"] = settings.MOLOCH_BASE + "?date=-1&expression=ip" + quote("\x3d\x3d%s" % (str(e["srcip"])),safe='')
+            if e.has_key("dstip") and e["dstip"]:
+                e["moloch_dst_ip_url"] = settings.MOLOCH_BASE + "?date=-1&expression=ip" + quote("\x3d\x3d%s" % (str(e["dstip"])),safe='')
+            if e.has_key("dp") and e["dp"]:
+                e["moloch_dst_port_url"] = settings.MOLOCH_BASE + "?date=-1&expression=port" + quote("\x3d\x3d%s\x26\x26tags\x3d\x3d\x22%s\x22" % (str(e["dp"]),"tcp"),safe='')
+            if e.has_key("sp") and e["sp"]:
+                e["moloch_src_port_url"] = settings.MOLOCH_BASE + "?date=-1&expression=port" + quote("\x3d\x3d%s\x26\x26tags\x3d\x3d\x22%s\x22" % (str(e["sp"]),"tcp"),safe='')
+            if e.has_key("http_uri") and e["http_uri"]:
+                e["moloch_uri_url"] = settings.MOLOCH_BASE + "?date=-1&expression=http.uri" + quote("\x3d\x3d\x22%s\x22" % (e["http_uri"]),safe='')
+            if e.has_key("http_host") and e["http_host"]:
+                e["moloch_host_url"] = settings.MOLOCH_BASE + "?date=-1&expression=http.host" + quote("\x3d\x3d\x22%s\x22" % (e["http_host"]),safe='')
+            if e.has_key("file_info"):
+                if e["file_info"].has_key("clamav") and e["file_info"]["clamav"]:
+                    e["moloch_clamav_url"] = settings.MOLOCH_BASE + "?date=-1&expression=tags" + quote("\x3d\x3d\x22clamav\x3a%s\x22" % (re.sub(r"[\W]","_",e["file_info"]["clamav"])),safe='')
+                if e["file_info"].has_key("md5") and e["file_info"]["md5"]:
+                    e["moloch_md5_url"] = settings.MOLOCH_BASE + "?date=-1&expression=tags" + quote("\x3d\x3d\x22md5\x3a%s\x22" % (e["file_info"]["md5"]),safe='')
+                if e["file_info"].has_key("sha1") and e["file_info"]["sha1"]:
+                    e["moloch_sha1_url"] = settings.MOLOCH_BASE + "?date=-1&expression=tags" + quote("\x3d\x3d\x22sha1\x3a%s\x22" % (e["file_info"]["sha1"]),safe='')
+                if e["file_info"].has_key("sha256") and e["file_info"]["sha256"]:
+                    e["moloch_sha256_url"] = settings.MOLOCH_BASE + "?date=-1&expression=tags" + quote("\x3d\x3d\x22sha256\x3a%s\x22" % (e["file_info"]["sha256"]),safe='')
+                if e["file_info"].has_key("crc32") and e["file_info"]["crc32"]:
+                    e["moloch_crc32_url"] = settings.MOLOCH_BASE + "?date=-1&expression=tags" + quote("\x3d\x3d\x22crc32\x3a%s\x22" % (e["file_info"]["crc32"]),safe='')
+                if e["file_info"].has_key("ssdeep") and e["file_info"]["ssdeep"]:
+                    e["moloch_ssdeep_url"] = settings.MOLOCH_BASE + "?date=-1&expression=tags" + quote("\x3d\x3d\x22ssdeep\x3a%s\x22" % (e["file_info"]["ssdeep"]),safe='')
+                if e["file_info"].has_key("yara") and e["file_info"]["yara"]:
+                    for sign in e["file_info"]["yara"]:
+                        if sign.has_key("name"):
+                            sign["moloch_yara_url"] = settings.MOLOCH_BASE + "?date=-1&expression=tags" + quote("\x3d\x3d\x22yara\x3a%s\x22" % (sign["name"]),safe='')
+    return suricata
+
+def gen_moloch_from_suri_tls(suricata):
+    if suricata.has_key("tls") and suricata["tls_cnt"] > 0:
+        for e in suricata["tls"]:
+            if e.has_key("src_ip") and e["src_ip"]:
+                e["moloch_src_ip_url"] = settings.MOLOCH_BASE + "?date=-1&expression=ip" + quote("\x3d\x3d%s" % (str(e["src_ip"])),safe='')
+            if e.has_key("dest_ip") and e["dest_ip"]:
+                e["moloch_dst_ip_url"] = settings.MOLOCH_BASE + "?date=-1&expression=ip" + quote("\x3d\x3d%s" % (str(e["dest_ip"])),safe='')
+            if e.has_key("dest_port") and e["dest_port"]:
+                e["moloch_dst_port_url"] = settings.MOLOCH_BASE + "?date=-1&expression=port" + quote("\x3d\x3d%s\x26\x26tags\x3d\x3d\x22%s\x22" % (str(e["dest_port"]),e["proto"].lower()),safe='')
+            if e.has_key("src_port") and e["src_port"]:
+                e["moloch_src_port_url"] = settings.MOLOCH_BASE + "?date=-1&expression=port" + quote("\x3d\x3d%s\x26\x26tags\x3d\x3d\x22%s\x22" % (str(e["src_port"]),e["proto"].lower()),safe='')
+    return suricata
+
+def gen_moloch_from_antivirus(virustotal):
+    if virustotal and virustotal.has_key("scans"):
+        for key in virustotal["scans"]:
+            if virustotal["scans"][key]["result"]:
+                 virustotal["scans"][key]["moloch"] = settings.MOLOCH_BASE + "?date=-1&expression=" + quote("tags\x3d\x3d\x22VT:%s:%s\x22" % (key,virustotal["scans"][key]["result"]),safe='')
+    return virustotal 
+
+@require_safe
+def surialert(request,task_id):
+    suricata = results_db.suricata.find_one({"info.id": int(task_id)},{"alerts": 1,"alert_cnt": 1},sort=[("_id", pymongo.DESCENDING)])
+    if not suricata:
+        return render_to_response("error.html",
+                                  {"error": "The specified analysis does not exist"},
+                                  context_instance=RequestContext(request))
+    if settings.MOLOCH_ENABLED:
+        if settings.MOLOCH_BASE[-1] != "/":
+            settings.MOLOCH_BASE = settings.MOLOCH_BASE + "/"
+
+        if suricata.has_key("alerts"):
+            suricata=gen_moloch_from_suri_alerts(suricata)
+
+    return render_to_response("analysis/surialert.html",
+                              {"suricata": suricata,
+                               "config": enabledconf},
+                              context_instance=RequestContext(request))
+
+@require_safe
+def surihttp(request,task_id):
+    suricata = results_db.suricata.find_one({"info.id": int(task_id)},{"http": 1, "http_cnt": 1},sort=[("_id", pymongo.DESCENDING)])
+    if not suricata:
+        return render_to_response("error.html",
+                                  {"error": "The specified analysis does not exist"},
+                                  context_instance=RequestContext(request))
+    if settings.MOLOCH_ENABLED:
+        if settings.MOLOCH_BASE[-1] != "/":
+            settings.MOLOCH_BASE = settings.MOLOCH_BASE + "/"
+
+        if suricata.has_key("http"):
+            suricata=gen_moloch_from_suri_http(suricata)
+
+    return render_to_response("analysis/surihttp.html",
+                              {"suricata": suricata,
+                               "config": enabledconf},
+                              context_instance=RequestContext(request))
+
+@require_safe
+def suritls(request,task_id):
+    suricata = results_db.suricata.find_one({"info.id": int(task_id)},{"tls": 1, "tls_cnt": 1},sort=[("_id", pymongo.DESCENDING)])
+    if not suricata:
+        return render_to_response("error.html",
+                                  {"error": "The specified analysis does not exist"},
+                                  context_instance=RequestContext(request))
+    if settings.MOLOCH_ENABLED:
+        if settings.MOLOCH_BASE[-1] != "/":
+            settings.MOLOCH_BASE = settings.MOLOCH_BASE + "/"
+        if suricata.has_key("tls"):
+            suricata=gen_moloch_from_suri_tls(suricata)
+    return render_to_response("analysis/suritls.html",
+                              {"suricata": suricata,
+                               "config": enabledconf},
+                              context_instance=RequestContext(request))
+
+@require_safe
+def surifiles(request,task_id):
+    suricata = results_db.suricata.find_one({"info.id": int(task_id)},{"files": 1,"files_cnt": 1},sort=[("_id", pymongo.DESCENDING)])
+    if not suricata:
+        return render_to_response("error.html",
+                                  {"error": "The specified analysis does not exist"},
+                                  context_instance=RequestContext(request))
+    if settings.MOLOCH_ENABLED:
+        if settings.MOLOCH_BASE[-1] != "/":
+            settings.MOLOCH_BASE = settings.MOLOCH_BASE + "/"
+        if suricata.has_key("files"):
+            suricata=gen_moloch_from_suri_tls(suricata)
+    return render_to_response("analysis/surifiles.html",
+                              {"suricata": suricata,
+                               "config": enabledconf},
+                              context_instance=RequestContext(request))
+
+@require_safe
+def antivirus(request,task_id):
+    rtmp = results_db.analysis.find_one({"info.id": int(task_id)},{"virustotal": 1,"info.category": 1},sort=[("_id", pymongo.DESCENDING)])
+    if not rtmp:
+        return render_to_response("error.html",
+                                  {"error": "The specified analysis does not exist"},
+                                  context_instance=RequestContext(request))
+    if settings.MOLOCH_ENABLED:
+        if settings.MOLOCH_BASE[-1] != "/":
+            settings.MOLOCH_BASE = settings.MOLOCH_BASE + "/"
+        if rtmp.has_key("virustotal"):
+            rtmp["virustotal"]=gen_moloch_from_antivirus(rtmp["virustotal"])
+
+    return render_to_response("analysis/antivirus.html",
+                              {"analysis": rtmp},
+                              context_instance=RequestContext(request))
+
+@require_safe
 def shrike(request,task_id):
     shrike = results_db.analysis.find_one({"info.id": int(task_id)},{"info.shrike_url": 1,"info.shrike_msg": 1,"info.shrike_sid":1, "info.shrike_refer":1},sort=[("_id", pymongo.DESCENDING)])
     if not shrike:
@@ -443,6 +637,25 @@ def report(request, task_id):
                                   {"error": "The specified analysis does not exist"},
                                   context_instance=RequestContext(request))
 
+    suricata = report["suricata"]
+    if settings.MOLOCH_ENABLED:
+        if settings.MOLOCH_BASE[-1] != "/":
+            settings.MOLOCH_BASE = settings.MOLOCH_BASE + "/"
+        report["moloch_url"] = settings.MOLOCH_BASE + "?date=-1&expression=tags" + quote("\x3d\x3d\x22%s\x3a%s\x22" % (settings.MOLOCH_NODE,task_id),safe='')
+        if isinstance(suricata, dict):
+            if suricata.has_key("http") and suricata["http_cnt"] > 0:
+                suricata=gen_moloch_from_suri_http(suricata)
+            if suricata.has_key("alerts") and suricata["alert_cnt"] > 0:
+                suricata=gen_moloch_from_suri_alerts(suricata)
+            if suricata.has_key("files") and suricata["file_cnt"] > 0:
+                suricata=gen_moloch_from_suri_file_info(suricata)
+            if suricata.has_key("tls") and suricata["tls_cnt"] > 0:
+                suricata=gen_moloch_from_suri_tls(suricata)
+
+        if report.has_key("virustotal"):
+            report["virustotal"]=gen_moloch_from_antivirus(report["virustotal"])
+
+
     # Creating dns information dicts by domain and ip.
     if "network" in report and "domains" in report["network"]:
         domainlookups = dict((i["domain"], i["ip"]) for i in report["network"]["domains"])
@@ -495,6 +708,7 @@ def report(request, task_id):
                              {"analysis": report,
                               "domainlookups": domainlookups,
                               "iplookups": iplookups,
+                              "suricata": suricata,
                               "similar": similarinfo,
                               "settings": settings,
                               "config": enabledconf},
@@ -703,6 +917,75 @@ def full_memory_dump_strings(request, analysis_number):
                                   {"error": "File not found"},
                                   context_instance=RequestContext(request))
 
+def perform_search(term, value):
+    term_map = {
+        "name" : "target.file.name",
+        "type" : "target.file.type",
+        "string" : "strings",
+        "ssdeep" : "target.file.ssdeep",
+        "crc32" : "target.file.crc32",
+        "file" : "behavior.summary.files",
+        "command" : "behavior.summary.executed_commands",
+        "resolvedapi" : "behavior.summary.resolved_apis",
+        "key" : "behavior.summary.keys",
+        "mutex" : "behavior.summary.mutexes",
+        "domain" : "network.domains.domain",
+        "ip" : "network.hosts.ip",
+        "signature" : "signatures.description",
+        "signame" : "signatures.name",
+        "malfamily" : "malfamily",
+        "url" : "target.url",
+        "iconhash" : "static.pe.icon_hash",
+        "iconfuzzy" : "static.pe.icon_fuzzy",
+        "imphash" : "static.pe.imphash",
+        "surihttp" : "suricata.http",
+        "suritls" : "suricata.tls",
+        "surisid" : "suricata.alerts.signature_id",
+        "surialert" : "suricata.alerts.signature",
+        "surimsg" : "suricata.alerts.signature",
+        "suriurl" : "suricata.http.url",
+        "suriua" : "suricata.http.http_user_agent",
+        "surireferer" : "suricata.http.http_refer",
+        "suritlssubject" : "suricata.tls.subject",
+        "suritlsissuerdn" : "suricata.tls.issuerdn",
+        "suritlsfingerprint" : "suricata.tls.fingerprint",
+        "clamav" : "target.file.clamav",
+        "yaraname" : "target.file.yara.name",
+        "procmemyara" : "procmemory.yara.name",
+        "virustotal" : "virustotal.results.sig",
+        "comment" : "info.comments.Data",
+        "shrikemsg" : "info.shrike_msg",
+        "shrikeurl" : "info.shrike_url",
+        "shrikerefer" : "info.shrike_refer",
+        "shrikesid" : "info.shrike_sid",
+        "custom" : "info.custom",
+        "md5" : "target.file.md5",
+        "sha1" : "target.file.sha1",
+        "sha256" : "target.file.sha256",
+        "sha512" : "target.file.sha512",
+    }
+
+    query_val =  { "$regex" : value, "$options" : "-i"}
+    if not term:
+        value = value.lower()
+        query_val = value
+        if re.match(r"^([a-fA-F\d]{32})$", value):
+            term = "md5"
+        elif re.match(r"^([a-fA-F\d]{40})$", value):
+            term = "sha1"
+        elif re.match(r"^([a-fA-F\d]{64})$", value):
+            term = "sha256"
+        elif re.match(r"^([a-fA-F\d]{128})$", value):
+            term = "sha512"
+
+    if term not in term_map:
+        raise ValueError
+
+    if enabledconf["mongodb"]:
+        return results_db.analysis.find({term_map[term] : query_val}).sort([["_id", -1]])
+    if enabledconf["elasticsearchdb"]:
+        return es.search(index=fullidx, doc_type="analysis", q=term_map[term] + ": %s" % value)["hits"]["hits"]
+
 def search(request):
     if "search" in request.POST:
         error = None
@@ -723,180 +1006,23 @@ def search(request):
                                           context_instance=RequestContext(request))
             # name:foo or name: foo
             value = value.lstrip()
+            term = term.lower()
 
-            # Search logic.
-            # TODO: Find a way to not duplicate so much code
-            if enabledconf["mongodb"]:
-                if term == "name":
-                    records = results_db.analysis.find({"target.file.name": {"$regex": value, "$options": "-i"}}).sort([["_id", -1]])
-                elif term == "type":
-                    records = results_db.analysis.find({"target.file.type": {"$regex": value, "$options": "-i"}}).sort([["_id", -1]])
-                elif term == "string":
-                    records = results_db.analysis.find({"strings": {"$regex" : value, "$options" : "-i"}}).sort([["_id", -1]])
-                elif term == "ssdeep":
-                    records = results_db.analysis.find({"target.file.ssdeep": {"$regex": value, "$options": "-i"}}).sort([["_id", -1]])
-                elif term == "crc32":
-                    records = results_db.analysis.find({"target.file.crc32": value}).sort([["_id", -1]])
-                elif term == "file":
-                    records = results_db.analysis.find({"behavior.summary.files": {"$regex": value, "$options": "-i"}}).sort([["_id", -1]])
-                elif term == "command":
-                    records = results_db.analysis.find({"behavior.summary.executed_commands": {"$regex": value, "$options": "-i"}}).sort([["_id", -1]])
-                elif term == "resolvedapi":
-                    records = results_db.analysis.find({"behavior.summary.resolved_apis": {"$regex": value, "$options": "-i"}}).sort([["_id", -1]])
-                elif term == "key":
-                    records = results_db.analysis.find({"behavior.summary.keys": {"$regex": value, "$options": "-i"}}).sort([["_id", -1]])
-                elif term == "mutex":
-                    records = results_db.analysis.find({"behavior.summary.mutexes": {"$regex": value, "$options": "-i"}}).sort([["_id", -1]])
-                elif term == "domain":
-                    records = results_db.analysis.find({"network.domains.domain": {"$regex": value, "$options": "-i"}}).sort([["_id", -1]])
-                elif term == "ip":
-                    records = results_db.analysis.find({"network.hosts.ip": value}).sort([["_id", -1]])
-                elif term == "signature":
-                    records = results_db.analysis.find({"signatures.description": {"$regex": value, "$options": "-i"}}).sort([["_id", -1]])
-                elif term == "signame":
-                    records = results_db.analysis.find({"signatures.name": {"$regex": value, "$options": "-i"}}).sort([["_id", -1]])
-                elif term == "malfamily":
-                    records = results_db.analysis.find({"malfamily": {"$regex": value, "$options": "-i"}}).sort([["_id", -1]])
-                elif term == "url":
-                    records = results_db.analysis.find({"target.url": value}).sort([["_id", -1]])
-                elif term == "iconhash":
-                    records = results_db.analysis.find({"static.pe.icon_hash": value}).sort([["_id", -1]])
-                elif term == "iconfuzzy":
-                    records = results_db.analysis.find({"static.pe.icon_fuzzy": value}).sort([["_id", -1]])
-                elif term == "imphash":
-                    records = results_db.analysis.find({"static.pe.imphash": value}).sort([["_id", -1]])
-                elif term == "surialert":
-                    records = results_db.analysis.find({"suricata.alerts.signature": {"$regex" : value, "$options" : "-i"}}).sort([["_id", -1]])
-                elif term == "surihttp":
-                    records = results_db.analysis.find({"suricata.http": {"$regex" : value, "$options" : "-i"}}).sort([["_id", -1]])
-                elif term == "suritls":
-                    records = results_db.analysis.find({"suricata.tls": {"$regex" : value, "$options" : "-i"}}).sort([["_id", -1]])
-                elif term == "clamav":
-                    records = results_db.analysis.find({"target.file.clamav": {"$regex": value, "$options": "-i"}}).sort([["_id", -1]])
-                elif term == "yaraname":
-                    records = results_db.analysis.find({"target.file.yara.name": {"$regex": value, "$options": "-i"}}).sort([["_id", -1]])
-                elif term == "procmemyara":
-                    records = results_db.analysis.find({"procmemory.yara.name": {"$regex": value, "$options": "-i"}}).sort([["_id", -1]])
-                elif term == "virustotal":
-                    records = results_db.analysis.find({"virustotal.results.sig": {"$regex": value, "$options": "-i"}}).sort([["_id", -1]])
-                elif term == "comment":
-                    records = results_db.analysis.find({"info.comments.Data": {"$regex": value, "$options": "-i"}}).sort([["_id", -1]])
-                elif term == "shrikemsg":
-                    records = results_db.analysis.find({"info.shrike_msg": {"$regex" : value, "$options" : "-1"}}).sort([["_id", -1]])
-                elif term == "shrikeurl":
-                    records = results_db.analysis.find({"info.shrike_url": {"$regex" : value, "$options" : "-1"}}).sort([["_id", -1]])
-                elif term == "shrikerefer":
-                    records = results_db.analysis.find({"info.shrike_refer": {"$regex" : value, "$options" : "-1"}}).sort([["_id", -1]])
-                elif term == "shrikesid":
-                    records = results_db.analysis.find({"info.shrike_sid": int(value)}).sort([["_id", -1]])
-                else:
-                    return render_to_response("analysis/search.html",
-                                              {"analyses": None,
-                                               "term": request.POST["search"],
-                                               "error": "Invalid search term: %s" % term},
-                                              context_instance=RequestContext(request))
-            if enabledconf["elasticsearchdb"]:
-                if term == "name":
-                    records = es.search(index=fullidx, doc_type="analysis", q="target.file.name: %s" % value)["hits"]["hits"]
-                elif term == "type":
-                    records = es.search(index=fullidx, doc_type="analysis", q="target.file.type: %s" % value)["hits"]["hits"]
-                elif term == "string":
-                    records = es.search(index=fullidx, doc_type="analysis", q="strings: %s" % value)["hits"]["hits"]
-                elif term == "ssdeep":
-                    records = es.search(index=fullidx, doc_type="analysis", q="target.file.ssdeep: %s" % value)["hits"]["hits"]
-                elif term == "crc32":
-                    records = es.search(index=fullidx, doc_type="analysis", q="target.file.crc32: %s" % value)["hits"]["hits"]
-                elif term == "file":
-                    records = es.search(index=fullidx, doc_type="analysis", q="behavior.summary.files: %s" % value)["hits"]["hits"]
-                elif term == "command":
-                    records = es.search(index=fullidx, doc_type="analysis", q="behavior.summary.executed_commands: %s" % value)["hits"]["hits"]
-                elif term == "resolvedapi":
-                    records = es.search(index=fullidx, doc_type="analysis", q="behavior.summary.resolved_apis: %s" % value)["hits"]["hits"]
-                elif term == "key":
-                    records = es.search(index=fullidx, doc_type="analysis", q="behavior.summary.keys: %s" % value)["hits"]["hits"]
-                elif term == "mutex":
-                    records = es.search(index=fullidx, doc_type="analysis", q="behavior.summary.mutex: %s" % value)["hits"]["hits"]
-                elif term == "domain":
-                    records = es.search(index=fullidx, doc_type="analysis", q="network.domains.domain: %s" % value)["hits"]["hits"]
-                elif term == "ip":
-                    records = es.search(index=fullidx, doc_type="analysis", q="network.hosts.ip: %s" % value)["hits"]["hits"]
-                elif term == "signature":
-                    records = es.search(index=fullidx, doc_type="analysis", q="signatures.description: %s" % value)["hits"]["hits"]
-                elif term == "signame":
-                    records = es.search(index=fullidx, doc_type="analysis", q="signatures.name: %s" % value)["hits"]["hits"]
-                elif term == "malfamily":
-                    records = es.search(index=fullidx, doc_type="analysis", q="malfamily: %s" % value)["hits"]["hits"]
-                elif term == "url":
-                    records = es.search(index=fullidx, doc_type="analysis", q="target.url: %s" % value)["hits"]["hits"]
-                elif term == "iconhash":
-                    records = es.search(index=fullidx, doc_type="analysis", q="static.pe.icon_hash: %s" % value)["hits"]["hits"]
-                elif term == "iconfuzzy":
-                    records = es.search(index=fullidx, doc_type="analysis", q="static.pe.icon_fuzzy: %s" % value)["hits"]["hits"]
-                elif term == "imphash":
-                    records = es.search(index=fullidx, doc_type="analysis", q="static.pe.imphash: %s" % value)["hits"]["hits"]
-                elif term == "surialert":
-                    records = es.search(index=fullidx, doc_type="analysis", q="suricata.alerts.signature: %s" % value)["hits"]["hits"]
-                elif term == "surihttp":
-                    records = es.search(index=fullidx, doc_type="analysis", q="suricata.http: %s" % value)["hits"]["hits"]
-                elif term == "suritls":
-                    records = es.search(index=fullidx, doc_type="analysis", q="suricata.tls: %s" % value)["hits"]["hits"]
-                elif term == "clamav":
-                    records = es.search(index=fullidx, doc_type="analysis", q="target.file.clamav: %s" % value)["hits"]["hits"]
-                elif term == "yaraname":
-                    records = es.search(index=fullidx, doc_type="analysis", q="target.file.yara.name: %s" % value)["hits"]["hits"]
-                elif term == "procmemyara":
-                    records = es.search(index=fullidx, doc_type="analysis", q="procmemory.yara.name: %s" % value)["hits"]["hits"]
-                elif term == "virustotal":
-                    records = es.search(index=fullidx, doc_type="analysis", q="virustotal.results.sig: %s" % value)["hits"]["hits"]
-                elif term == "comment":
-                    records = es.search(index=fullidx, doc_type="analysis", q="info.comments.Data: %s" % value)["hits"]["hits"]
-                elif term == "shrikemsg":
-                    records = es.search(index=fullidx, doc_type="analysis", q="info.shrike_msg: %s" % value)["hits"]["hits"]
-                elif term == "shrikeurl":
-                    records = es.search(index=fullidx, doc_type="analysis", q="info.shrike_url: %s" % value)["hits"]["hits"]
-                elif term == "shrikerefer":
-                    records = es.search(index=fullidx, doc_type="analysis", q="info.shrike_refer: %s" % value)["hits"]["hits"]
-                elif term == "shrikesid":
-                    records = es.search(index=fullidx, doc_type="analysis", q="info.shrike_sid: %s" % value)["hits"]["hits"]
-                else:
-                    return render_to_response("analysis/search.html",
-                                              {"analyses": None,
-                                               "term": request.POST["search"],
-                                               "error": "Invalid search term: %s" % term},
-                                              context_instance=RequestContext(request))
-        else:
-            # hash matching is lowercase and case sensitive
-            value = value.lower()
-            if enabledconf["mongodb"]:
-                if re.match(r"^([a-fA-F\d]{32})$", value):
-                    records = results_db.analysis.find({"target.file.md5": value}).sort([["_id", -1]])
-                elif re.match(r"^([a-fA-F\d]{40})$", value):
-                    records = results_db.analysis.find({"target.file.sha1": value}).sort([["_id", -1]])
-                elif re.match(r"^([a-fA-F\d]{64})$", value):
-                    records = results_db.analysis.find({"target.file.sha256": value}).sort([["_id", -1]])
-                elif re.match(r"^([a-fA-F\d]{128})$", value):
-                    records = results_db.analysis.find({"target.file.sha512": value}).sort([["_id", -1]])
-                else:
-                    return render_to_response("analysis/search.html",
-                                              {"analyses": None,
-                                               "term": None,
-                                               "error": "Unable to recognize the search syntax"},
-                                              context_instance=RequestContext(request))
-            if enabledconf["elasticsearchdb"]:
-                if re.match(r"^([a-fA-F\d]{32})$", value):
-                    records = es.search(index=fullidx, doc_type="analysis", q="target.file.md5: %s" % value)["hits"]["hits"]
-                elif re.match(r"^([a-fA-F\d]{40})$", value):
-                    records = es.search(index=fullidx, doc_type="analysis", q="target.file.sha1: %s" % value)["hits"]["hits"]
-                elif re.match(r"^([a-fA-F\d]{64})$", value):
-                    records = es.search(index=fullidx, doc_type="analysis", q="target.file.sha256: %s" % value)["hits"]["hits"]
-                elif re.match(r"^([a-fA-F\d]{128})$", value):
-                    records = es.search(index=fullidx, doc_type="analysis", q="target.file.sha512: %s" % value)["hits"]["hits"]
-                else:
-                    return render_to_response("analysis/search.html",
-                                              {"analyses": None,
-                                               "term": None,
-                                               "error": "Unable to recognize the search syntax"},
-                                              context_instance=RequestContext(request))
+        try:
+            records = perform_search(term, value)
+        except ValueError:
+            if term:
+                return render_to_response("analysis/search.html",
+                                          {"analyses": None,
+                                           "term": request.POST["search"],
+                                           "error": "Invalid search term: %s" % term},
+                                          context_instance=RequestContext(request))
+            else:
+                return render_to_response("analysis/search.html",
+                                          {"analyses": None,
+                                           "term": None,
+                                           "error": "Unable to recognize the search syntax"},
+                                          context_instance=RequestContext(request))
 
         # Get data from cuckoo db.
         db = Database()
