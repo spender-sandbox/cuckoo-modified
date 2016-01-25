@@ -353,25 +353,22 @@ def gen_moloch_from_suri_http(suricata):
     if suricata.has_key("http") and suricata["http_cnt"] > 0:
         for e in suricata["http"]:
             try:
-                if e.has_key("src_ip") and e["src_ip"]:
-                    e["moloch_src_ip_url"] = settings.MOLOCH_BASE + "?date=-1&expression=ip" + quote("\x3d\x3d%s" % (str(e["src_ip"])),safe='')
-                if e.has_key("dest_ip") and e["dest_ip"]:
-                    e["moloch_dst_ip_url"] = settings.MOLOCH_BASE + "?date=-1&expression=ip" + quote("\x3d\x3d%s" % (str(e["dest_ip"])),safe='')
-                if e.has_key("dest_port") and e["dest_port"]:
-                    e["moloch_dst_port_url"] = settings.MOLOCH_BASE + "?date=-1&expression=port" + quote("\x3d\x3d%s\x26\x26tags\x3d\x3d\x22tcp\x22" % (str(e["dest_port"])),safe='')
-                if e.has_key("src_port") and e["src_port"]:
-                    e["moloch_src_port_url"] = settings.MOLOCH_BASE + "?date=-1&expression=port" + quote("\x3d\x3d%s\x26\x26tags\x3d\x3d\x22tcp\x22" % (str(e["src_port"])),safe='')
-                if e.has_key("http"):
-                    if e["http"].has_key("hostname") and e["http"]["hostname"]:
-                        e["moloch_http_host_url"] = settings.MOLOCH_BASE + "?date=-1&expression=host.http" + quote("\x3d\x3d\x22%s\x22" % (e["http"]["hostname"]),safe='')
-                    if e["http"].has_key("url") and e["http"]["url"]:
-                        e["moloch_http_uri_url"] = settings.MOLOCH_BASE + "?date=-1&expression=http.uri" + quote("\x3d\x3d\x22%s\x22" % (e["http"]["url"]),safe='')
-                    if e["http"].has_key("http_user_agent") and e["http"]["http_user_agent"]:
-                        e["moloch_http_ua_url"] = settings.MOLOCH_BASE + "?date=-1&expression=http.user-agent" + quote("\x3d\x3d\x22%s\x22" % (e["http"]["http_user_agent"]),safe='')
-                    if e["http"].has_key("http_method") and e["http"]["http_method"]:
-                        e["moloch_http_method_url"] = settings.MOLOCH_BASE + "?date=-1&expression=http.method" + quote("\x3d\x3d\x22%s\x22" % (e["http"]["http_method"]),safe='')
-                    if e["http"].has_key("http_method") and e["http"]["http_method"]:
-                        e["moloch_http_method_url"] = settings.MOLOCH_BASE + "?date=-1&expression=http.method" + quote("\x3d\x3d\x22%s\x22" % (e["http"]["http_method"]),safe='')
+                if e.has_key("srcip") and e["srcip"]:
+                    e["moloch_src_ip_url"] = settings.MOLOCH_BASE + "?date=-1&expression=ip" + quote("\x3d\x3d%s" % (str(e["srcip"])),safe='')
+                if e.has_key("dstip") and e["dstip"]:
+                    e["moloch_dst_ip_url"] = settings.MOLOCH_BASE + "?date=-1&expression=ip" + quote("\x3d\x3d%s" % (str(e["dstip"])),safe='')
+                if e.has_key("dstport") and e["dstport"]:
+                    e["moloch_dst_port_url"] = settings.MOLOCH_BASE + "?date=-1&expression=port" + quote("\x3d\x3d%s\x26\x26tags\x3d\x3d\x22tcp\x22" % (str(e["dstport"])),safe='')
+                if e.has_key("srcport") and e["srcport"]:
+                    e["moloch_src_port_url"] = settings.MOLOCH_BASE + "?date=-1&expression=port" + quote("\x3d\x3d%s\x26\x26tags\x3d\x3d\x22tcp\x22" % (str(e["srcport"])),safe='')
+                if e.has_key("hostname") and e["hostname"]:
+                    e["moloch_http_host_url"] = settings.MOLOCH_BASE + "?date=-1&expression=host.http" + quote("\x3d\x3d\x22%s\x22" % (e["hostname"]),safe='')
+                if e.has_key("url") and e["url"]:
+                    e["moloch_http_uri_url"] = settings.MOLOCH_BASE + "?date=-1&expression=http.uri" + quote("\x3d\x3d\x22%s\x22" % (e["url"]),safe='')
+                if e.has_key("ua") and e["ua"]:
+                    e["moloch_http_ua_url"] = settings.MOLOCH_BASE + "?date=-1&expression=http.user-agent" + quote("\x3d\x3d\x22%s\x22" % (e["ua"]),safe='')
+                if e.has_key("method") and e["method"]:
+                    e["moloch_http_method_url"] = settings.MOLOCH_BASE + "?date=-1&expression=http.method" + quote("\x3d\x3d\x22%s\x22" % (e["method"]),safe='')
             except:
                 continue
     return suricata
@@ -379,19 +376,18 @@ def gen_moloch_from_suri_http(suricata):
 def gen_moloch_from_suri_alerts(suricata):
     if suricata.has_key("alerts") and suricata["alert_cnt"] > 0:
         for e in suricata["alerts"]:
-            if e.has_key("src_ip") and e["src_ip"]:
-                e["moloch_src_ip_url"] = settings.MOLOCH_BASE + "?date=-1&expression=ip" + quote("\x3d\x3d%s" % (str(e["src_ip"])),safe='')
-            if e.has_key("dest_ip") and e["dest_ip"]:
-                e["moloch_dst_ip_url"] = settings.MOLOCH_BASE + "?date=-1&expression=ip" + quote("\x3d\x3d%s" % (str(e["dest_ip"])),safe='')
-            if e.has_key("dest_port") and e["dest_port"]:
-                e["moloch_dst_port_url"] = settings.MOLOCH_BASE + "?date=-1&expression=port" + quote("\x3d\x3d%s\x26\x26tags\x3d\x3d\x22%s\x22" % (str(e["dest_port"]),e["proto"].lower()),safe='')
-            if e.has_key("src_port") and e["src_port"]:
-                e["moloch_src_port_url"] = settings.MOLOCH_BASE + "?date=-1&expression=port" + quote("\x3d\x3d%s\x26\x26tags\x3d\x3d\x22%s\x22" % (str(e["src_port"]),e["proto"].lower()),safe='')
-            if e.has_key("alert"):
-                if e["alert"].has_key("signature_id") and e["alert"]["signature_id"]:
-                    e["moloch_sid_url"] = settings.MOLOCH_BASE + "?date=-1&expression=tags" + quote("\x3d\x3d\x22suri_sid\x3a%s\x22" % (e["alert"]["signature_id"]),safe='')
-                if e["alert"].has_key("signature") and e["alert"]["signature"]:
-                    e["moloch_msg_url"] = settings.MOLOCH_BASE + "?date=-1&expression=tags" + quote("\x3d\x3d\x22suri_msg\x3a%s\x22" % (re.sub(r"[\W]","_",e["alert"]["signature"])),safe='')
+            if e.has_key("srcip") and e["srcip"]:
+                e["moloch_src_ip_url"] = settings.MOLOCH_BASE + "?date=-1&expression=ip" + quote("\x3d\x3d%s" % (str(e["srcip"])),safe='')
+            if e.has_key("dstip") and e["dstip"]:
+                e["moloch_dst_ip_url"] = settings.MOLOCH_BASE + "?date=-1&expression=ip" + quote("\x3d\x3d%s" % (str(e["dstip"])),safe='')
+            if e.has_key("dstport") and e["dstport"]:
+                e["moloch_dst_port_url"] = settings.MOLOCH_BASE + "?date=-1&expression=port" + quote("\x3d\x3d%s\x26\x26tags\x3d\x3d\x22%s\x22" % (str(e["dsport"]),e["protocol"].lower()),safe='')
+            if e.has_key("srcport") and e["srcport"]:
+                e["moloch_src_port_url"] = settings.MOLOCH_BASE + "?date=-1&expression=port" + quote("\x3d\x3d%s\x26\x26tags\x3d\x3d\x22%s\x22" % (str(e["src_port"]),e["protocol"].lower()),safe='')
+            if e.has_key("sid") and e["alert"]["sid"]:
+                e["moloch_sid_url"] = settings.MOLOCH_BASE + "?date=-1&expression=tags" + quote("\x3d\x3d\x22suri_sid\x3a%s\x22" % (e["sid"]),safe='')
+            if e.has_key("signature") and e["alert"]["signature"]:
+                e["moloch_msg_url"] = settings.MOLOCH_BASE + "?date=-1&expression=tags" + quote("\x3d\x3d\x22suri_msg\x3a%s\x22" % (re.sub(r"[\W]","_",e["signature"])),safe='')
     return suricata
 
 def gen_moloch_from_suri_file_info(suricata):
@@ -414,14 +410,8 @@ def gen_moloch_from_suri_file_info(suricata):
                     e["moloch_clamav_url"] = settings.MOLOCH_BASE + "?date=-1&expression=tags" + quote("\x3d\x3d\x22clamav\x3a%s\x22" % (re.sub(r"[\W]","_",e["file_info"]["clamav"])),safe='')
                 if e["file_info"].has_key("md5") and e["file_info"]["md5"]:
                     e["moloch_md5_url"] = settings.MOLOCH_BASE + "?date=-1&expression=tags" + quote("\x3d\x3d\x22md5\x3a%s\x22" % (e["file_info"]["md5"]),safe='')
-                if e["file_info"].has_key("sha1") and e["file_info"]["sha1"]:
-                    e["moloch_sha1_url"] = settings.MOLOCH_BASE + "?date=-1&expression=tags" + quote("\x3d\x3d\x22sha1\x3a%s\x22" % (e["file_info"]["sha1"]),safe='')
                 if e["file_info"].has_key("sha256") and e["file_info"]["sha256"]:
                     e["moloch_sha256_url"] = settings.MOLOCH_BASE + "?date=-1&expression=tags" + quote("\x3d\x3d\x22sha256\x3a%s\x22" % (e["file_info"]["sha256"]),safe='')
-                if e["file_info"].has_key("crc32") and e["file_info"]["crc32"]:
-                    e["moloch_crc32_url"] = settings.MOLOCH_BASE + "?date=-1&expression=tags" + quote("\x3d\x3d\x22crc32\x3a%s\x22" % (e["file_info"]["crc32"]),safe='')
-                if e["file_info"].has_key("ssdeep") and e["file_info"]["ssdeep"]:
-                    e["moloch_ssdeep_url"] = settings.MOLOCH_BASE + "?date=-1&expression=tags" + quote("\x3d\x3d\x22ssdeep\x3a%s\x22" % (e["file_info"]["ssdeep"]),safe='')
                 if e["file_info"].has_key("yara") and e["file_info"]["yara"]:
                     for sign in e["file_info"]["yara"]:
                         if sign.has_key("name"):
@@ -431,14 +421,14 @@ def gen_moloch_from_suri_file_info(suricata):
 def gen_moloch_from_suri_tls(suricata):
     if suricata.has_key("tls") and suricata["tls_cnt"] > 0:
         for e in suricata["tls"]:
-            if e.has_key("src_ip") and e["src_ip"]:
-                e["moloch_src_ip_url"] = settings.MOLOCH_BASE + "?date=-1&expression=ip" + quote("\x3d\x3d%s" % (str(e["src_ip"])),safe='')
-            if e.has_key("dest_ip") and e["dest_ip"]:
-                e["moloch_dst_ip_url"] = settings.MOLOCH_BASE + "?date=-1&expression=ip" + quote("\x3d\x3d%s" % (str(e["dest_ip"])),safe='')
-            if e.has_key("dest_port") and e["dest_port"]:
-                e["moloch_dst_port_url"] = settings.MOLOCH_BASE + "?date=-1&expression=port" + quote("\x3d\x3d%s\x26\x26tags\x3d\x3d\x22%s\x22" % (str(e["dest_port"]),e["proto"].lower()),safe='')
-            if e.has_key("src_port") and e["src_port"]:
-                e["moloch_src_port_url"] = settings.MOLOCH_BASE + "?date=-1&expression=port" + quote("\x3d\x3d%s\x26\x26tags\x3d\x3d\x22%s\x22" % (str(e["src_port"]),e["proto"].lower()),safe='')
+            if e.has_key("srcip") and e["srcip"]:
+                e["moloch_src_ip_url"] = settings.MOLOCH_BASE + "?date=-1&expression=ip" + quote("\x3d\x3d%s" % (str(e["srcip"])),safe='')
+            if e.has_key("dstip") and e["dstip"]:
+                e["moloch_dst_ip_url"] = settings.MOLOCH_BASE + "?date=-1&expression=ip" + quote("\x3d\x3d%s" % (str(e["dstip"])),safe='')
+            if e.has_key("dstport") and e["dstport"]:
+                e["moloch_dst_port_url"] = settings.MOLOCH_BASE + "?date=-1&expression=port" + quote("\x3d\x3d%s\x26\x26tags\x3d\x3d\x22%s\x22" % (str(e["dstport"]),"tcp"),safe='')
+            if e.has_key("srcport") and e["srcport"]:
+                e["moloch_src_port_url"] = settings.MOLOCH_BASE + "?date=-1&expression=port" + quote("\x3d\x3d%s\x26\x26tags\x3d\x3d\x22%s\x22" % (str(e["srcport"]),"tcp"),safe='')
     return suricata
 
 def gen_moloch_from_antivirus(virustotal):

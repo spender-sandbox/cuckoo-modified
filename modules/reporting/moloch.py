@@ -114,12 +114,8 @@ class Moloch(Report):
 
             if results["target"]["file"].has_key("md5") and results["target"]["file"]["md5"]:
                 cmd = cmd + " -t \"md5:%s\"" % (results["target"]["file"]["md5"])
-            #if results["target"]["file"].has_key("sha1") and results["target"]["file"]["sha1"]:
-            #    cmd = cmd + " -t \"sha1:%s\"" % (results["target"]["file"]["sha1"])
             if results["target"]["file"].has_key("sha256") and results["target"]["file"]["sha256"]:
                 cmd = cmd + " -t \"sha256:%s\"" % (results["target"]["file"]["sha256"])
-            if results["target"]["file"].has_key("sha512") and results["target"]["file"]["sha512"]:
-                cmd = cmd + " -t \"sha512:%s\"" % (results["target"]["file"]["sha512"])
             if results["target"]["file"].has_key("clamav") and results["target"]["file"]["clamav"]:
                 cmd = cmd + " -t \"clamav:%s\"" % (re.sub(r"[\W]","_",results["target"]["file"]["clamav"]))
             if results["static"].has_key("pe_imphash") and results["static"]["pe_imphash"]:
@@ -145,23 +141,23 @@ class Moloch(Report):
         if results.has_key('suricata'):
            if results["suricata"].has_key("alerts"):
                for alert in results["suricata"]["alerts"]:
-                       proto =  alert["proto"]
+                       proto =  alert["protocol"]
                        if proto:
                            tmpdict = {}
                            cproto = ""
                            if proto == "UDP" or proto == "TCP" or proto == "6" or proto == "17":
-                               tmpdict['src_ip'] = alert['src_ip']
-                               tmpdict['src_port'] = alert['src_port'] 
-                               tmpdict['dest_ip'] = alert['dest_ip']
-                               tmpdict['dest_port'] = alert['dest_port']
+                               tmpdict['srcip'] = alert['srcip']
+                               tmpdict['srcport'] = alert['srcport'] 
+                               tmpdict['dstip'] = alert['dstip']
+                               tmpdict['dstport'] = alert['dstport']
                                if proto == "UDP" or proto == "17":
                                    tmpdict['cproto'] = "udp"
                                    tmpdict['nproto'] = 17
                                elif proto == "TCP" or proto == "6":
                                    tmpdict['cproto'] = "tcp"
                                    tmpdict['nproto'] = 6
-                               tmpdict['expression'] = "ip==%s && ip==%s && port==%s && port==%s && tags==\"%s:%s\" && ip.protocol==%s" % (tmpdict['src_ip'],tmpdict['dest_ip'],tmpdict['src_port'],tmpdict['dest_port'],self.CUCKOO_INSTANCE_TAG,self.task_id,tmpdict['cproto'])
-                               tmpdict['hash'] = tmpdict['nproto'] + struct.unpack('!L',socket.inet_aton(tmpdict['src_ip']))[0] + tmpdict['src_port'] + struct.unpack('!L',socket.inet_aton(tmpdict['dest_ip']))[0] + tmpdict['dest_port']
+                               tmpdict['expression'] = "ip==%s && ip==%s && port==%s && port==%s && tags==\"%s:%s\" && ip.protocol==%s" % (tmpdict['srcip'],tmpdict['dstip'],tmpdict['srcport'],tmpdict['dstport'],self.CUCKOO_INSTANCE_TAG,self.task_id,tmpdict['cproto'])
+                               tmpdict['hash'] = tmpdict['nproto'] + struct.unpack('!L',socket.inet_aton(tmpdict['srcip']))[0] + tmpdict['srcport'] + struct.unpack('!L',socket.inet_aton(tmpdict['dstip']))[0] + tmpdict['dstport']
                            elif proto == "ICMP" or proto == "1":
                                tmpdict['src'] = m.group('src')
                                tmpdict['dst'] = m.group('dst')
@@ -171,14 +167,14 @@ class Moloch(Report):
                                tmpdict['hash'] = tmpdict['nproto'] + struct.unpack('!L',socket.inet_aton(tmpdict['src_ip']))[0] + struct.unpack('!L',socket.inet_aton(tmpdict['dest_ip']))[0]
 
                            if self.alerthash.has_key(tmpdict['hash']):
-                               if  alert["alert"]["signature_id"] not in self.alerthash[tmpdict['hash']]['sids']:
-                                   self.alerthash[tmpdict['hash']]['sids'].append("suri_sid:%s" % (alert["alert"]["signature_id"]))
+                               if  alert["alert"]["sid"] not in self.alerthash[tmpdict['hash']]['sids']:
+                                   self.alerthash[tmpdict['hash']]['sids'].append("suri_sid:%s" % (alert["alert"]["sid"]))
                                    self.alerthash[tmpdict['hash']]['msgs'].append("suri_msg:%s" % (re.sub(r"[\W]","_",alert["alert"]["signature"])))
                            else:
                                self.alerthash[tmpdict['hash']] = copy.deepcopy(tmpdict)
                                self.alerthash[tmpdict['hash']]['sids']=[]
                                self.alerthash[tmpdict['hash']]['msgs']=[]
-                               self.alerthash[tmpdict['hash']]['sids'].append("suri_sid:%s" % (alert["alert"]["signature_id"]))
+                               self.alerthash[tmpdict['hash']]['sids'].append("suri_sid:%s" % (alert["alert"]["sid"]))
                                self.alerthash[tmpdict['hash']]['msgs'].append("suri_msg:%s" % (re.sub(r"[\W]","_",alert["alert"]["signature"])))
                for entry in self.alerthash:
                    tags = ','.join(map(str,self.alerthash[entry]['sids']) + map(str,self.alerthash[entry]['msgs']))
@@ -188,49 +184,38 @@ class Moloch(Report):
 
            if results["suricata"].has_key("files"):
                for entry in results["suricata"]["files"]:
-                   if  entry.has_key("file_info"):
+                   if entry.has_key("file_info"):
                        proto = entry["protocol"]
                        if proto:
                            tmpdict = {}
                            cproto = ""
                            tmpdict['cproto'] = "tcp"
                            tmpdict['nproto'] = 6
-                           tmpdict['src_ip'] = entry['srcip']
-                           tmpdict['src_port'] = entry['sp']
-                           tmpdict['dest_ip'] = entry['dstip']
-                           tmpdict['dest_port'] = entry['dp']
-                           tmpdict['expression'] = "ip==%s && ip==%s && port==%s && port==%s && tags==\"%s:%s\" && ip.protocol==%s" % (tmpdict['src_ip'],tmpdict['dest_ip'],tmpdict['src_port'],tmpdict['dest_port'],self.CUCKOO_INSTANCE_TAG,self.task_id,tmpdict['cproto'])
-                           tmpdict['hash'] = tmpdict['nproto'] + struct.unpack('!L',socket.inet_aton(tmpdict['src_ip']))[0] + tmpdict['src_port'] + struct.unpack('!L',socket.inet_aton(tmpdict['dest_ip']))[0] + tmpdict['dest_port']
+                           tmpdict['srcip'] = entry['srcip']
+                           tmpdict['srcport'] = entry['sp']
+                           tmpdict['dstip'] = entry['dstip']
+                           tmpdict['dstport'] = entry['dp']
+                           tmpdict['expression'] = "ip==%s && ip==%s && port==%s && port==%s && tags==\"%s:%s\" && ip.protocol==%s" % (tmpdict['srcip'],tmpdict['dstip'],tmpdict['srcport'],tmpdict['dstport'],self.CUCKOO_INSTANCE_TAG,self.task_id,tmpdict['cproto'])
+                           tmpdict['hash'] = tmpdict['nproto'] + struct.unpack('!L',socket.inet_aton(tmpdict['srcip']))[0] + tmpdict['srcport'] + struct.unpack('!L',socket.inet_aton(tmpdict['dstip']))[0] + tmpdict['dstport']
 
                            if not self.fileshash.has_key(tmpdict['hash']):
                                self.fileshash[tmpdict['hash']] = copy.deepcopy(tmpdict)
                                self.fileshash[tmpdict['hash']]['clamav']=[]
                                self.fileshash[tmpdict['hash']]['md5']=[]
-                               #self.fileshash[tmpdict['hash']]['sha1']=[]
                                self.fileshash[tmpdict['hash']]['sha256']=[]
-                               #self.fileshash[tmpdict['hash']]['crc32']=[]
-                               #self.fileshash[tmpdict['hash']]['ssdeep']=[]
                                self.fileshash[tmpdict['hash']]['yara']=[]
                            if entry["file_info"]["clamav"] and entry["file_info"]["clamav"] not in self.fileshash[tmpdict['hash']]['clamav']:
                                self.fileshash[tmpdict['hash']]['clamav'].append("clamav:%s" % (re.sub(r"[\W]","_",entry["file_info"]["clamav"])))
                            if entry["file_info"]["md5"] and entry["file_info"]["md5"] not in self.fileshash[tmpdict['hash']]['md5']:
                                self.fileshash[tmpdict['hash']]['md5'].append("md5:%s" % (entry["file_info"]["md5"]))
-                           #if entry["file_info"]["sha1"] and entry["file_info"]["sha1"] not in self.fileshash[tmpdict['hash']]['sha1']:
-                           #    self.fileshash[tmpdict['hash']]['sha1'].append("sha1:%s" % (entry["file_info"]["sha1"]))
                            if entry["file_info"]["sha256"] and entry["file_info"]["sha256"] not in self.fileshash[tmpdict['hash']]['sha256']:
                                self.fileshash[tmpdict['hash']]['sha256'].append("sha256:%s" % (entry["file_info"]["sha256"]))
-                           #these actually seem to be a bit worthless inside of moloch
-                           #if entry["file_info"]["crc32"] and entry["file_info"]["crc32"] not in self.fileshash[tmpdict['hash']]['crc32']:
-                           #    self.fileshash[tmpdict['hash']]['crc32'].append("crc32:%s" % (entry["file_info"]["crc32"]))
-                           #if entry["file_info"]["ssdeep"] and entry["file_info"]["ssdeep"] not in self.fileshash[tmpdict['hash']]['ssdeep']:
-                           #    self.fileshash[tmpdict['hash']]['ssdeep'].append("ssdeep:%s" % (entry["file_info"]["ssdeep"]))
                            if entry["file_info"]["yara"]:
                                   for sign in entry["file_info"]["yara"]:
                                       if sign["name"] not in self.fileshash[tmpdict['hash']]['yara']:
                                           self.fileshash[tmpdict['hash']]['yara'].append("yara:%s" % (sign["name"]))
 
                for entry in self.fileshash:
-                   #tags = ','.join(map(str,self.fileshash[entry]['clamav']) + map(str,self.fileshash[entry]['md5']) + map(str,self.fileshash[entry]['sha1']) + map(str,self.fileshash[entry]['sha256']) + map(str,self.fileshash[entry]['crc32']) + map(str,self.fileshash[entry]['ssdeep']) + map(str,self.fileshash[entry]['yara']))
                    tags = ','.join(map(str,self.fileshash[entry]['clamav']) + map(str,self.fileshash[entry]['md5']) + map(str,self.fileshash[entry]['sha256']) + map(str,self.fileshash[entry]['yara']))
                    if tags:
                        log.debug("moloch: updating file tags %s" % (self.fileshash[entry]['expression'])) 

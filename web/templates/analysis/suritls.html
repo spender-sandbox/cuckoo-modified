@@ -2,92 +2,11 @@
 {% block content %}
 <p style="margin-bottom: 10px;"><img src="{{ STATIC_URL }}graphic/cuckoo.png" /></p>
 <ul class="nav nav-tabs">
-    <li class="active"><a href="#suritls " data-toggle="tab">SuriTLS</a></li>
+    <li class="active"><a href="#suritls " data-toggle="tab">Suricata TLS</a></li>
 </ul>
 <div class="tab-content">
     <div class="tab-pane fade in active" id="suritls">
-    {% if suricata.tls %}
-        <table class="table table-stripped" style="table-layout: fixed;">
-            <tr>
-                <th>TS</th>
-                <th>SRC</th>
-                <th>SPORT</th>
-                <th>DST</th>
-                <th>DPORT</th>
-                <th>SUBJECT</th>
-                <th>ISSUERDN</th>
-                <th>FINGERPRINT</th>
-                <th>VERSION</th>
-            </tr>
-            {% for e in suricata.tls %}
-            <tr>
-                    <td>{{e.timestamp}}</td>
-                    <td>
-                    {%if e.src_ip %}
-                      {{e.src_ip}}
-                      {% if e.moloch_src_ip_url %} <a href={{e.moloch_src_ip_url}} target="_blank"><span class="mono">MLCH</span></a>{% endif %}
-                    {% else %}
-                        <span class="mono">None</span>
-                    {% endif %}
-                    </td>
-                    <td>
-                    {%if e.src_port %}
-                      {{e.src_port}}
-                      {% if e.moloch_src_port_url %} <a href={{e.moloch_src_port_url}} target="_blank"><span class="mono">MLCH</span></a>{% endif %}
-                    {% else %}
-                        <span class="mono">None</span>
-                    {% endif %}
-                    </td>
-                    <td>
-                    {%if e.dest_ip %}
-                     {{e.dest_ip}}
-                      {% if e.moloch_dst_ip_url %} <a href={{e.moloch_dst_ip_url}} target="_blank"><span class="mono">MLCH</span></a>{% endif %}
-                    {% else %}
-                        <span class="mono">None</span>
-                    {% endif %}
-                    </td>
-                    <td>
-                    {%if e.dest_port %}
-                      {{e.dest_port}}
-                      {% if e.moloch_dst_port_url %} <a href={{e.moloch_dst_port_url}} target="_blank"><span class="mono">MLCH</span></a>{% endif %}
-                    {% else %}
-                        <span class="mono">None</span>
-                    {% endif %}
-                    </td>
-                    <td>
-                    {%if e.tls.subject %}
-                      {{e.tls.subject}}
-                    {% else %}
-                        <span class="mono">None</span>
-                    {% endif %}
-                    </td>
-                    <td>
-                    {%if e.tls.issuerdn %}
-                      {{e.tls.issuerdn}}
-                    {% else %}
-                        <span class="mono">None</span>
-                    {% endif %}
-                    </td>
-                    <td>
-                    {%if e.tls.fingerprint %}
-                      {{e.tls.fingerprint}}
-                    {% else %}
-                        <span class="mono">None</span>
-                    {% endif %}
-                    </td>
-                    <td>
-                    {%if e.tls.version %}
-                      {{e.tls.version}}
-                    {% else %}
-                        <span class="mono">None</span>
-                    {% endif %}
-                    </td>
-            </tr>
-            {% endfor %}
-        </table>
-    {% else %}
-        <p>No Suricata TLS</p>
-    {% endif %}
+    {% include "network/_suricata_tls.html" %}
     </div>
 </div>
 {% endblock %}

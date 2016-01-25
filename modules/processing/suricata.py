@@ -200,6 +200,18 @@ class Suricata(Processing):
                         and not parsed["alert"]["signature"].startswith(
                             "SURICATA STREAM")):
                         alog = dict()
+                        if parsed["alert"]["gid"] == '':
+                            alog["gid"] = "None"
+                        else:
+                            alog["gid"] = parsed["alert"]["gid"]
+                        if parsed["alert"]["rev"] == '':
+                            alog["rev"] = "None"
+                        else:
+                            alog["rev"] = parsed["alert"]["rev"]
+                        if parsed["alert"]["severity"] == '':
+                            alog["severity"] = "None"
+                        else:
+                            alog["severity"] = parsed["alert"]["severity"]
                         alog["sid"] = parsed["alert"]["signature_id"]
                         alog["srcport"] = parsed["src_port"]
                         alog["srcip"] = parsed["src_ip"]
@@ -208,7 +220,7 @@ class Suricata(Processing):
                         alog["protocol"] = parsed["proto"]
                         alog["timestamp"] = parsed["timestamp"].replace("T", " ")
                         if parsed["alert"]["category"] == '':
-                            alog["category"] = "Undefined"
+                            alog["category"] = "None"
                         else:
                             alog["category"] = parsed["alert"]["category"]
                         alog["signature"] = parsed["alert"]["signature"]
@@ -222,9 +234,9 @@ class Suricata(Processing):
                     hlog["dstip"] = parsed["dest_ip"]
                     hlog["timestamp"] = parsed["timestamp"].replace("T", " ")
                     try:
-                        hlog["uri"] = parsed["http"]["url"]
+                        hlog["url"] = parsed["http"]["url"]
                     except:
-                        hlog["uri"] = "None"
+                        hlog["url"] = "None"
                     hlog["length"] = parsed["http"]["length"]
                     try:
                         hlog["hostname"] = parsed["http"]["hostname"]
@@ -243,6 +255,10 @@ class Suricata(Processing):
                         hlog["ua"] = parsed["http"]["http_user_agent"]
                     except:
                         hlog["ua"] = "None"
+                    try:
+                        hlog["referrer"] = parsed["http"]["http_refer"]
+                    except:
+                        hlog["referrer"] = "None"
                     suricata["http"].append(hlog)
 
                 elif parsed["event_type"] == "tls":
