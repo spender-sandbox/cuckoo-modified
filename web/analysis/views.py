@@ -77,7 +77,7 @@ def get_analysis_info(db, id=-1, task=None):
         rtmp = results_db.analysis.find_one(
                    {"info.id": int(new["id"])},
                    {
-                       "info": 1, "virustotal_summary": 1, "network.pcap_id":1, 
+                       "info": 1, "virustotal_summary": 1,
                        "info.custom":1, "info.shrike_msg":1, "malscore": 1, "malfamily": 1, 
                        "mlist_cnt": 1, "f_mlist_cnt": 1, "info.package": 1, "target.file.clamav": 1,
                        "suri_tls_cnt": 1, "suri_alert_cnt": 1, "suri_http_cnt": 1, "suri_file_cnt": 1
@@ -100,6 +100,14 @@ def get_analysis_info(db, id=-1, task=None):
     if rtmp:
         if rtmp.has_key("virustotal_summary") and rtmp["virustotal_summary"]:
             new["virustotal_summary"] = rtmp["virustotal_summary"]
+        if rtmp.has_key("mlist_cnt") and rtmp["mlist_cnt"]:
+            new["mlist_cnt"] = rtmp["mlist_cnt"]
+        if rtmp.has_key("f_mlist_cnt") and rtmp["f_mlist_cnt"]:
+            new["f_mlist_cnt"] = rtmp["f_mlist_cnt"]
+        if rtmp.has_key("info") and rtmp["info"].has_key("custom") and rtmp["info"]["custom"]:
+            new["custom"] = rtmp["info"]["custom"]
+        if enabledconf.has_key("display_shrike") and enabledconf["display_shrike"] and rtmp.has_key("info") and rtmp["info"].has_key("shrike_msg") and rtmp["info"]["shrike_msg"]:
+            new["shrike_msg"] = rtmp["info"]["shrike_msg"]
         if rtmp.has_key("suri_tls_cnt") and rtmp["suri_tls_cnt"]:
             new["suri_tls_cnt"] = rtmp["suri_tls_cnt"]
         if rtmp.has_key("suri_alert_cnt") and rtmp["suri_alert_cnt"]:
@@ -118,6 +126,10 @@ def get_analysis_info(db, id=-1, task=None):
             new["malfamily"] = rtmp["malfamily"]
         if rtmp.has_key("info") and rtmp["info"].has_key("custom") and rtmp["info"]["custom"]:
             new["custom"] = rtmp["info"]["custom"]
+        if rtmp.has_key("info") and rtmp["info"].has_key("package") and rtmp["info"]["package"]:
+            new["package"] = rtmp["info"]["package"]
+        if rtmp.has_key("target") and rtmp["target"].has_key("file") and rtmp["target"]["file"].has_key("clamav"):
+            new["clamav"] = rtmp["target"]["file"]["clamav"] 
 
         if "display_shrike" in enabledconf and enabledconf["display_shrike"] and rtmp.has_key("info") and rtmp["info"].has_key("shrike_msg") and rtmp["info"]["shrike_msg"]:
             new["shrike_msg"] = rtmp["info"]["shrike_msg"]
@@ -458,6 +470,18 @@ def surialert(request,task_id):
                               context_instance=RequestContext(request))
 
 @require_safe
+def shrike(request,task_id):
+    shrike = results_db.analysis.find_one({"info.id": int(task_id)},{"info.shrike_url": 1,"info.shrike_msg": 1,"info.shrike_sid":1, "info.shrike_refer":1},sort=[("_id", pymongo.DESCENDING)])
+    if not shrike:
+        return render_to_response("error.html",
+                                  {"error": "The specified analysis does not exist"},
+                                  context_instance=RequestContext(request))
+
+    return render_to_response("analysis/shrike.html",
+                              {"shrike": shrike},
+                              context_instance=RequestContext(request))
+
+@require_safe
 def surihttp(request,task_id):
     suricata = results_db.suricata.find_one({"info.id": int(task_id)},{"http": 1, "http_cnt": 1},sort=[("_id", pymongo.DESCENDING)])
     if not suricata:
@@ -525,18 +549,6 @@ def antivirus(request,task_id):
 
     return render_to_response("analysis/antivirus.html",
                               {"analysis": rtmp},
-                              context_instance=RequestContext(request))
-
-@require_safe
-def shrike(request,task_id):
-    shrike = results_db.analysis.find_one({"info.id": int(task_id)},{"info.shrike_url": 1,"info.shrike_msg": 1,"info.shrike_sid":1, "info.shrike_refer":1},sort=[("_id", pymongo.DESCENDING)])
-    if not shrike:
-        return render_to_response("error.html",
-                                  {"error": "The specified analysis does not exist"},
-                                  context_instance=RequestContext(request))
-
-    return render_to_response("analysis/shrike.html",
-                              {"shrike": shrike},
                               context_instance=RequestContext(request))
 
 @csrf_exempt
@@ -644,7 +656,6 @@ def report(request, task_id):
 
         if report.has_key("virustotal"):
             report["virustotal"]=gen_moloch_from_antivirus(report["virustotal"])
-
 
     # Creating dns information dicts by domain and ip.
     if "network" in report and "domains" in report["network"]:
@@ -1110,7 +1121,7 @@ def pcapstream(request, task_id, conntuple):
 
     if enabledconf["mongodb"]:
         conndata = results_db.analysis.find_one({ "info.id": int(task_id) },
-            { "network.tcp": 1, "network.udp": 1, "network.sorted_pcap_id": 1 },
+            { "network.tcp": 1, "network.udp": 1},
             sort=[("_id", pymongo.DESCENDING)])
 
     if enabledconf["elasticsearchdb"]:

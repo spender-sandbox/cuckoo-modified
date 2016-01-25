@@ -70,6 +70,18 @@ def force_int(value):
     finally:
         return value
 
+def update_options(gw, orig_options):
+    options = orig_options
+    if gw:
+        if orig_options:
+            options = orig_options + ",setgw=%s" % (gw)
+        else:
+            options = "setgw=%s" % (gw)
+        if settings.GATEWAYS_IP_MAP.has_key(gw) and settings.GATEWAYS_IP_MAP[gw]:
+            options += ",gwname=%s" % (settings.GATEWAYS_IP_MAP[gw])
+
+    return options
+
 # Same jsonize function from api.py except we can now return Django
 # HttpResponse objects as well. (Shortcut to return errors)
 def jsonize(data, response=False):
@@ -332,11 +344,10 @@ def tasks_create_file(request):
         else:
             resp = {"error": True,
                     "error_value": "Error adding task to database"}
-        return jsonize(resp, response=True)
-
     else:
         resp = {"error": True, "error_value": "Method not allowed"}
-        return jsonize(resp, response=True)
+
+    return jsonize(resp, response=True)
 
 if apiconf.urlcreate.get("enabled"):
     raterps = apiconf.urlcreate.get("rps", None)
@@ -371,31 +382,68 @@ def tasks_create_url(request):
         shrike_sid = request.POST.get("shrike_sid", None)
         shrike_refer = request.POST.get("shrike_refer", None)
 
+        task_ids = []
+        task_machines = []
+        vm_list = []
+        task_gateways = []
+        for vm in db.list_machines():
+            vm_list.append(vm.label)
+
         if not url:
             resp = {"error": True, "error_value": "URL value is empty"}
             return jsonize(resp, response=True)
 
         if machine.lower() == "all":
-            resp = {"error": True,
-                    "error_value": "machine=all not supported for URL analysis API"}
-            return jsonize(resp, response=True)
+            if not apiconf.filecreate.get("allmachines"):
+                resp = {"error": True,
+                        "error_value": "Machine=all is disabled using the API"}
+                return jsonize(resp, response=True)
+            for entry in vm_list:
+                task_machines.append(entry)
+        else:
+            # Check if VM is in our machines table
+            if machine == "" or machine in vm_list:
+                task_machines.append(machine)
+            # Error if its not
+            else:
+                resp = {"error": True,
+                        "error_value": ("Machine '{0}' does not exist. "
+                                        "Available: {1}".format(machine,
+                                        ", ".join(vm_list)))}
+                return jsonize(resp, response=True)
 
         if referer:
             if options:
                 options += ","
             options += "referer=%s" % (referer)
 
-        if gateway and gateway in settings.GATEWAYS:
-            if "," in settings.GATEWAYS[gateway]:
-                tgateway = random.choice(settings.GATEWAYS[gateway].split(","))
-                ngateway = settings.GATEWAYS[tgateway]
-            else:
-                ngateway = settings.GATEWAYS[gateway]
-            if options:
-                options += ","
-            options += "setgw=%s" % (ngateway)
+        orig_options = options
 
-        task_id = db.add_url(url=url,
+        if gateway and gateway.lower() == "all":
+            for e in settings.GATEWAYS:
+                if ipaddy_re.match(settings.GATEWAYS[e]):
+                    task_gateways.append(settings.GATEWAYS[e])
+        elif gateway and gateway in settings.GATEWAYS:
+            if "," in settings.GATEWAYS[gateway]:
+                if request.POST.get("all_gw_in_group"):
+                    tgateway = settings.GATEWAYS[gateway].split(",")
+                    for e in tgateway:
+                        task_gateways.append(settings.GATEWAYS[e]) 
+                else:
+                    tgateway = random.choice(settings.GATEWAYS[gateway].split(","))
+                    task_gateways.append(settings.GATEWAYS[tgateway])
+            else:
+                task_gateways.append(settings.GATEWAYS[gateway])
+
+        if not task_gateways:
+            # To reduce to the default case
+            task_gateways = [None]
+
+        for gw in task_gateways:
+            options = update_options(gw, orig_options)
+
+            for entry in task_machines:
+                task_id = db.add_url(url=url,
                              package=package,
                              timeout=timeout,
                              priority=priority,
@@ -412,13 +460,16 @@ def tasks_create_url(request):
                              shrike_sid=shrike_sid,
                              shrike_refer=shrike_refer
                              )
-        if task_id:
-            resp["task_ids"] = [task_id,]
+                if task_id:
+                    task_ids.append(task_id)
+                 
+        if len(task_ids):
+            resp["task_ids"] = task_ids
             resp["data"] = "Task ID {0} has been submitted".format(
-                           str(task_id))
+                           str(task_ids[0]))
             if apiconf.urlcreate.get("status"):
                 resp["url"] = ["{0}/submit/status/{1}".format(
-                              apiconf.api.get("url"), task_id)]
+                              apiconf.api.get("url"), task_ids[0])]
         else:
             resp = {"error": True,
                     "error_value": "Error adding task to database"}
@@ -484,8 +535,11 @@ def tasks_vtdl(request):
                                         ", ".join(vm_list)))}
                 return jsonize(resp, response=True)
         enforce_timeout = bool(request.POST.get("enforce_timeout", False))
+        shrike_url = request.POST.get("shrike_url", None)
+        shrike_msg = request.POST.get("shrike_msg", None)
+        shrike_sid = request.POST.get("shrike_sid", None)
+        shrike_refer = request.POST.get("shrike_refer", None)
         gateway = request.POST.get("gateway",None)
-
 
         if not vtdl:
             resp = {"error": True, "error_value": "vtdl (hash list) value is empty"}
@@ -529,7 +583,8 @@ def tasks_vtdl(request):
 
                     for entry in task_machines:
                         task_ids_new = db.demux_sample_and_add_to_db(file_path=filename, package=package, timeout=timeout, options=options, priority=priority,
-                                                                     machine=entry, custom=custom, memory=memory, enforce_timeout=enforce_timeout, tags=tags, clock=clock)
+                                                                     machine=entry, custom=custom, memory=memory, enforce_timeout=enforce_timeout, tags=tags, clock=clock,
+                                                                     shrike_url=shrike_url, shrike_msg=shrike_msg, shrike_sid=shrike_sid, shrike_refer=shrike_refer)
                         task_ids.extend(task_ids_new)
                 elif r.status_code == 403:
                     resp = {"error": True, "error_value": "API key provided is not a valid VirusTotal key or is not authorized for VirusTotal downloads"}
@@ -557,15 +612,14 @@ def tasks_vtdl(request):
                     for tid in task_ids:
                         resp["url"].append("{0}/submit/status/{1}".format(
                                            apiconf.api.get("url"), tid))
-            return jsonize(resp, response=True)
         else:
             resp = {"error": True,
                     "error_value": "Error adding task to database"}
-        return jsonize(resp, response=True)
 
     else:
         resp = {"error": True, "error_value": "Method not allowed"}
-        return jsonize(resp, response=True)
+
+    return jsonize(resp, response=True)
 
 # Return Sample inforation.
 if apiconf.fileview.get("enabled"):
@@ -619,7 +673,8 @@ def files_view(request, md5=None, sha1=None, sha256=None, sample_id=None):
             resp["data"] = sample.to_dict()
         else:
             resp["data"] = "Sample not found in database"
-        return jsonize(resp, response=True)
+
+    return jsonize(resp, response=True)
 
 # Return Task ID's and data that match a hash.
 if apiconf.tasksearch.get("enabled"):
@@ -673,7 +728,8 @@ def tasks_search(request, md5=None, sha1=None, sha256=None):
                 resp["data"].append(buf)
         else:
             resp["data"] = "Sample not found in database"
-        return jsonize(resp, response=True)
+
+    return jsonize(resp, response=True)
 
 # Return Task ID's and data that match a hash.
 if apiconf.extendedtasksearch.get("enabled"):
@@ -846,9 +902,6 @@ def ext_tasks_search(request):
         else:
             resp = {"error": True,
                     "error_value": "Unable to retrieve records"}
-
-        return jsonize(resp, response=True)
-
     else:
         if not option:
             resp = {"error": True,
@@ -859,7 +912,8 @@ def ext_tasks_search(request):
         if not option and not dataarg:
             resp = {"error": True,
                     "error_value": "No option or argument provided."}
-        return jsonize(resp, response=True)
+
+    return jsonize(resp, response=True)
 
 # Return Task ID's and data within a range of Task ID's
 if apiconf.tasklist.get("enabled"):
@@ -930,6 +984,7 @@ def tasks_list(request, offset=None, limit=None, window=None):
             task["target"] = convert_to_printable(task["target"])
 
         resp["data"].append(task)
+
     return jsonize(resp, response=True)
 
 if apiconf.taskview.get("enabled"):
@@ -969,6 +1024,7 @@ def tasks_view(request, task_id):
         resp["data"] = entry
     else:
         resp = {"data": "Task not found in Database"}
+
     return jsonize(resp, response=True)
 
 if apiconf.taskresched.get("enabled"):
@@ -1000,6 +1056,7 @@ def tasks_reschedule(request, task_id):
         resp = {"error": True,
                 "error_value": ("An error occured while trying to reschedule "
                                 "Task ID {0}".format(task_id))}
+
     return jsonize(resp, response=True)
 
 if apiconf.taskdelete.get("enabled"):
@@ -1058,6 +1115,7 @@ def tasks_status(request, task_id):
     else:
         resp = {"error": False,
                 "data": status}
+
     return jsonize(resp, response=True)
 
 if apiconf.taskreport.get("enabled"):
@@ -1240,8 +1298,6 @@ def tasks_iocs(request, task_id, detail=None):
                 tmpfile["sha256"] = surifile["file_info"]["sha512"]
                 tmpfile["sha256"] = surifile["file_info"]["sha512"]
                 del tmpfile["file_info"]
-                if "object_id" in tmpfile.keys():
-                    del tmpfile["object_id"]
                 data["network"]["ids"]["files"].append(tmpfile)
     data["static"] = {}
     if "static" in buf.keys():
@@ -1505,6 +1561,86 @@ def tasks_surifile(request, task_id):
         resp = {"error": True,
                 "error_value": "No suricata files captured for task %s" % task_id}
         return jsonize(resp, response=True)
+
+if apiconf.rollingsuri.get("enabled"):
+    raterps = apiconf.rollingsuri.get("rps")
+    raterpm = apiconf.rollingsuri.get("rpm")
+    rateblock = True
+
+@ratelimit(key="ip", rate=raterps, block=rateblock)
+@ratelimit(key="ip", rate=raterpm, block=rateblock)
+    
+def tasks_rollingsuri(request, window=60):
+    window = int(window)
+    if request.method != "GET":
+        resp = {"error": True, "error_value": "Method not allowed"}
+        return jsonize(resp, response=True)
+
+    if not apiconf.rollingsuri.get("enabled"):
+        resp = {"error": True,
+                "error_value": "Suricata Rolling Alerts API is disabled"}
+        return jsonize(resp, response=True)
+    maxwindow = apiconf.rollingsuri.get("maxwindow")
+    if maxwindow > 0:
+        if window > maxwindow:
+            resp = {"error": True,
+                    "error_value": "The Window You Specified is greater than the configured maximum"}
+            return jsonize(resp, response=True)
+         
+    gen_time = datetime.datetime.now() - datetime.timedelta(minutes=window)
+    dummy_id = ObjectId.from_datetime(gen_time)
+    result = list(results_db.suricata.find({"alerts.alert": {"$exists": True}, "_id": {"$gte": dummy_id}},{"alerts":1,"info.id":1}))
+    resp=[]
+    for e in result:
+        for alert in e["alerts"]:
+            alert["id"] = e["info"]["id"]
+            resp.append(alert)
+
+    return jsonize(resp, response=True)
+if apiconf.rollingshrike.get("enabled"):
+    raterps = apiconf.rollingshrike.get("rps")
+    raterpm = apiconf.rollingshrike.get("rpm")
+    rateblock = True
+
+@ratelimit(key="ip", rate=raterps, block=rateblock)
+@ratelimit(key="ip", rate=raterpm, block=rateblock)
+
+def tasks_rollingshrike(request, window=60, msgfilter=None):
+    window = int(window)
+    if request.method != "GET":
+        resp = {"error": True, "error_value": "Method not allowed"}
+        return jsonize(resp, response=True)
+
+    if not apiconf.rollingshrike.get("enabled"):
+        resp = {"error": True,
+                "error_value": "Rolling Shrike API is disabled"}
+        return jsonize(resp, response=True)
+    maxwindow = apiconf.rollingshrike.get("maxwindow")
+    if maxwindow > 0:
+        if window > maxwindow:
+            resp = {"error": True,
+                    "error_value": "The Window You Specified is greater than the configured maximum"}
+            return jsonize(resp, response=True)
+
+    gen_time = datetime.datetime.now() - datetime.timedelta(minutes=window)
+    dummy_id = ObjectId.from_datetime(gen_time)
+    if msgfilter: 
+       result = results_db.analysis.find({"info.shrike_url": {"$exists": True, "$ne":None }, "_id": {"$gte": dummy_id},"info.shrike_msg": {"$regex" : msgfilter, "$options" : "-1"}},{"info.id":1,"info.shrike_msg":1,"info.shrike_sid":1,"info.shrike_url":1,"info.shrike_refer":1},sort=[("_id", pymongo.DESCENDING)])
+    else:   
+        result = results_db.analysis.find({"info.shrike_url": {"$exists": True, "$ne":None }, "_id": {"$gte": dummy_id}},{"info.id":1,"info.shrike_msg":1,"info.shrike_sid":1,"info.shrike_url":1,"info.shrike_refer":1},sort=[("_id", pymongo.DESCENDING)])
+
+    resp=[]
+    for e in result:
+        tmp = {}
+        tmp["id"] = e["info"]["id"]
+        tmp["shrike_msg"] = e["info"]["shrike_msg"]
+        tmp["shrike_sid"] = e["info"]["shrike_sid"]
+        tmp["shrike_url"] = e["info"]["shrike_url"]
+        if e["info"].has_key("shrike_refer") and e["info"]["shrike_refer"]:
+            tmp["shrike_refer"]=e["info"]["shrike_refer"]
+        resp.append(tmp)
+
+    return jsonize(resp, response=True)
 
 if apiconf.taskprocmemory.get("enabled"):
     raterps = apiconf.taskprocmemory.get("rps")

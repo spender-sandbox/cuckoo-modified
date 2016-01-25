@@ -44,4 +44,7 @@ urlpatterns = patterns("",
     url(r"^machines/list/$", "api.views.machines_list"),
     url(r"^machines/view/(?P<name>[\w$-/:-?{-~!^_`\[\]]+)/$", "api.views.machines_view"),
     url(r"^cuckoo/status/$", "api.views.cuckoo_status"),
+    url(r"^tasks/get/rollingsuri/(?P<window>\d+)/$", "api.views.tasks_rollingsuri"),  
+    url(r"^tasks/get/rollingshrike/(?P<window>\d+)/$", "api.views.tasks_rollingshrike"),
+    url(r"^tasks/get/rollingshrike/(?P<window>\d+)/(?P<msgfilter>[\w$-/:-?{-~!^_`\[\]\s\x5c]+)/$", "api.views.tasks_rollingshrike"), 
 )
