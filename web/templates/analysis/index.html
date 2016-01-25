@@ -212,7 +212,7 @@
                             </span>
                         </td>
                         {% endif %}
-                        {% if global_settings.display_shrike %}
+                        {% if config.display_shrike %}
                         <td>
                             {% if analysis.shrike_msg %}
                                  {% if analysis.status == "reported" %}
@@ -454,7 +454,7 @@
                             </span>
                         </td>
                         {% endif %}
-                        {% if global_settings.display_shrike %}
+                        {% if config.display_shrike %}
                         <td>
                             {% if analysis.shrike_msg %}
                                  {% if analysis.status == "reported" %}
