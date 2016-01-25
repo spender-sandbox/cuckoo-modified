@@ -27,7 +27,6 @@ if cfg.mongodb.get("enabled") and cfg.elasticsearchdb.get("enabled"):
 aux_cfg =  Config("auxiliary")
 vtdl_cfg = aux_cfg.virustotaldl
 tor_cfg = aux_cfg.tor
-display_shrike_cfg = aux_cfg.displayshrikeinwebui
 
 # Get connection options from reporting.conf.
 MONGO_HOST = cfg.mongodb.get("host", "127.0.0.1")
