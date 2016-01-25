@@ -49,9 +49,23 @@
                 </td>
                 <td>{{alert.protocol}}</td>
                 <td>{{alert.gid}}</td>
-                <td>{{alert.sid}}</td>
+                <td>{{alert.sid}} 
+                    {% if config.display_et_portal %}
+                        <a href="https://threatintel.proofpoint.com/search?q={{alert.sid}}" target="_blank">[ET]</a> 
+                    {% endif %}
+                    {% if alert.moloch_sid_url %}
+                        <a href={{alert.moloch_sid_url}} target="_blank">[MLCH]</a>
+                    {% endif %}
+                </td>
                 <td>{{alert.rev}}</td>
-                <td>{{alert.signature}}</td>
+                <td>{{alert.signature}} 
+                    {% if config.display_et_portal %}
+                        <a href="https://threatintel.proofpoint.com/search?q={{alert.signature}}" target="_blank">[ET]</a> 
+                    {% endif %}
+                    {% if alert.moloch_msg_url %}
+                        <a href={{alert.moloch_msg_url}} target="_blank">[MLCH]</a>
+                    {% endif %}
+                </td>
                 <td>{{alert.category}}</td>
                 <td>{{alert.severity}}</td>
             </tr>
