@@ -138,7 +138,7 @@ class Moloch(Report):
 
         time.sleep(5)
          
-        if "suricata" in resutls and results["suricata"]:
+        if "suricata" in results and results["suricata"]:
            if "alerts" in results["suricata"]:
                for alert in results["suricata"]["alerts"]:
                        proto =  alert["protocol"]
