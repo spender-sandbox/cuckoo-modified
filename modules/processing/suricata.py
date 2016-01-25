@@ -118,7 +118,7 @@ class Suricata(Processing):
                 from suricatasc import SuricataSC
             except Exception as e:
                 log.warning("Failed to import suricatasc lib %s" % (e))
-                return suricata["alerts"]
+                return suricata
 
             loopcnt = 0
             maxloops = 24
@@ -134,7 +134,7 @@ class Suricata(Processing):
                 suris.send_command("pcap-file",args)
             except Exception as e:
                 log.warning("Failed to connect to socket and send command %s: %s" % (SURICATA_SOCKET_PATH, e))
-                return suricata["alerts"]
+                return suricata
             while loopcnt < maxloops:
                 try:
                     pcap_flist = suris.send_command("pcap-file-list")
@@ -153,7 +153,7 @@ class Suricata(Processing):
 
             if loopcnt == maxloops:
                 log.warning("Loop timeout of %ssec occured waiting for file %s to finish processing" % (maxloops * loopsleep, pcapfile))
-                return suricata["alerts"]
+                return suricata
         elif SURICATA_RUNMODE == "cli":
             if not os.path.exists(SURICATA_BIN):
                 log.warning("Unable to Run Suricata: Bin File %s Does Not Exist" % (SURICATA_CONF))
@@ -162,11 +162,11 @@ class Suricata(Processing):
             ret,stdout,stderr = self.cmd_wrapper(cmd)
             if ret != 0:
                log.warning("Suricata returned a Exit Value Other than Zero %s" % (stderr))
-               return suricata["alerts"]
+               return suricata
 
         else:
             log.warning("Unknown Suricata Runmode")
-            return suricata["alerts"]
+            return suricata
 
         datalist = []
         if os.path.exists(SURICATA_EVE_LOG_FULL_PATH):
