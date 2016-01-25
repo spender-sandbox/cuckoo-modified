@@ -76,7 +76,7 @@ class Moloch(Report):
         self.MOLOCH_URL = self.options.get("base",None)
         self.task_id = results["info"]["id"]
         self.custom = None
-        if results["info"].has_key("machine") and results["info"]["machine"].has_key("name"):
+        if "machine" in results["info"] and results["info"]["machine"] and "name" in results["info"]["machine"]:
             self.machine_name = re.sub(r"[\W]","_",str(results["info"]["machine"]["name"]))
         else:
             self.machine_name = "Unknown"
