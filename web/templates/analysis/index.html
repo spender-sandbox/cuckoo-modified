@@ -91,11 +91,13 @@
                             {% endif %}
                         </td>
                         {% if config.expanded_dashboard %}
+                        <td>
                             {% if analysis.package %}
                                   <span class="mono">{{analysis.package}}</span>
                             {% else %}
                                   <span class="mono">None</span>
                             {% endif %}
+                        </td>
                         {% endif %}
                         {% if config.moloch %}
                         <td>
@@ -120,11 +122,27 @@
                         {% if config.suricata %}
                         <td>
                             <span class="mono">
+                            {% if analysis.suri_alert_cnt %}
                             <a href="{% url "analysis.views.surialert" analysis.id %}" target="_blank">{{analysis.suri_alert_cnt}}</a>
+                            {% else %}
+                            0
+                            {% endif %}
                             {% if config.expanded_dashboard %}
+                                {% if analysis.suri_http_cnt %}
                                 /<a href="{% url "analysis.views.surihttp" analysis.id %}" target="_blank">{{analysis.suri_http_cnt}}</a>
+                                {% else %}
+                                /0
+                                {% endif %}
+                                {% if analysis.suri_tls_cnt %}
                                 /<a href="{% url "analysis.views.suritls" analysis.id %}" target="_blank">{{analysis.suri_tls_cnt}}</a>
+                                {% else %}
+                                /0
+                                {% endif %}
+                                {% if analysis.suri_files_cnt %}
                                 /<a href="{% url "analysis.views.surifiles" analysis.id %}" target="_blank">{{analysis.suri_files_cnt}}</a>
+                                {% else %}
+                                /0
+                                {% endif %}
                             {% endif %}
                             </span>
                         </td>
@@ -346,11 +364,27 @@
                         {% if config.suricata %}
                         <td>
                             <span class="mono">
+                            {% if analysis.suri_alert_cnt %}
                             <a href="{% url "analysis.views.surialert" analysis.id %}" target="_blank">{{analysis.suri_alert_cnt}}</a>
+                            {% else %}
+                            0
+                            {% endif %}
                             {% if config.expanded_dashboard %}
+                                {% if analysis.suri_http_cnt %}
                                 /<a href="{% url "analysis.views.surihttp" analysis.id %}" target="_blank">{{analysis.suri_http_cnt}}</a>
+                                {% else %}
+                                /0
+                                {% endif %}
+                                {% if analysis.suri_tls_cnt %}
                                 /<a href="{% url "analysis.views.suritls" analysis.id %}" target="_blank">{{analysis.suri_tls_cnt}}</a>
+                                {% else %}
+                                /0
+                                {% endif %}
+                                {% if analysis.suri_files_cnt %}
                                 /<a href="{% url "analysis.views.surifiles" analysis.id %}" target="_blank">{{analysis.suri_files_cnt}}</a>
+                                {% else %}
+                                /0
+                                {% endif %}
                             {% endif %}
                             </span>
                         </td>
