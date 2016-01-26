@@ -362,7 +362,7 @@ def filtered_chunk(request, task_id, pid, category, apilist):
         raise PermissionDenied
 
 def gen_moloch_from_suri_http(suricata):
-    if suricata.has_key("http") and suricata["http_cnt"] > 0:
+    if "http" in suricata and suricata["http"]:
         for e in suricata["http"]:
             try:
                 if e.has_key("srcip") and e["srcip"]:
@@ -386,7 +386,7 @@ def gen_moloch_from_suri_http(suricata):
     return suricata
 
 def gen_moloch_from_suri_alerts(suricata):
-    if suricata.has_key("alerts") and suricata["alert_cnt"] > 0:
+    if "alerts" in suricata and suricata["alerts"]:
         for e in suricata["alerts"]:
             if e.has_key("srcip") and e["srcip"]:
                 e["moloch_src_ip_url"] = settings.MOLOCH_BASE + "?date=-1&expression=ip" + quote("\x3d\x3d%s" % (str(e["srcip"])),safe='')
@@ -403,7 +403,7 @@ def gen_moloch_from_suri_alerts(suricata):
     return suricata
 
 def gen_moloch_from_suri_file_info(suricata):
-    if suricata.has_key("files") and suricata["file_cnt"] > 0:
+    if "files" in suricata and suricata["files"]:
         for e in suricata["files"]:
             if e.has_key("srcip") and e["srcip"]:
                 e["moloch_src_ip_url"] = settings.MOLOCH_BASE + "?date=-1&expression=ip" + quote("\x3d\x3d%s" % (str(e["srcip"])),safe='')
@@ -431,7 +431,7 @@ def gen_moloch_from_suri_file_info(suricata):
     return suricata
 
 def gen_moloch_from_suri_tls(suricata):
-    if suricata.has_key("tls") and suricata["tls_cnt"] > 0:
+    if "tls" in suricata and suricata["tls"]:
         for e in suricata["tls"]:
             if e.has_key("srcip") and e["srcip"]:
                 e["moloch_src_ip_url"] = settings.MOLOCH_BASE + "?date=-1&expression=ip" + quote("\x3d\x3d%s" % (str(e["srcip"])),safe='')
