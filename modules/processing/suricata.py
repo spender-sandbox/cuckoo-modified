@@ -171,7 +171,7 @@ class Suricata(Processing):
         datalist = []
         if os.path.exists(SURICATA_EVE_LOG_FULL_PATH):
             suricata["eve_log_full_path"] = SURICATA_EVE_LOG_FULL_PATH
-            with open(SURICATA_EVE_LOG_FULL_PATH, "r") as eve_log:
+            with open(SURICATA_EVE_LOG_FULL_PATH, "rb") as eve_log:
                 datalist.append(eve_log.read())
         else:
             paths = [
@@ -186,6 +186,9 @@ class Suricata(Processing):
                     suricata[path[0]] = path[1]
                     with open(path[1], "rb") as the_log:
                         datalist.append(the_log.read())
+
+        if not datalist:
+            log.warning("Suricata: Failed to find usable Suricata log file")
 
         for data in datalist:
             for line in data.splitlines():
@@ -279,12 +282,9 @@ class Suricata(Processing):
                 elif parsed["event_type"] == "dns":
                     suricata["dns"].append(parsed)
 
-        else:
-            log.warning("Suricata: Failed to find eve log at %s" % (SURICATA_EVE_LOG_FULL_PATH))
-
         if os.path.exists(SURICATA_FILE_LOG_FULL_PATH):
             suricata["file_log_full_path"] = SURICATA_FILE_LOG_FULL_PATH
-            f = open(SURICATA_FILE_LOG_FULL_PATH).readlines()
+            f = open(SURICATA_FILE_LOG_FULL_PATH, "rb").readlines()
             for l in f:
                 try:
                     d = json.loads(l)
@@ -318,7 +318,7 @@ class Suricata(Processing):
                             readit = True
                             break
                     if readit:
-                        with open(file_info["path"], "r") as drop_open:
+                        with open(file_info["path"], "rb") as drop_open:
                             filedata = drop_open.read(SURICATA_FILE_BUFFER + 1)
                         if len(filedata) > SURICATA_FILE_BUFFER:
                             file_info["data"] = convert_to_printable(filedata[:SURICATA_FILE_BUFFER] + " <truncated>")
