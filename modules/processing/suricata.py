@@ -184,7 +184,7 @@ class Suricata(Processing):
             for path in paths:
                 if os.path.exists(path[1]):
                     suricata[path[0]] = path[1]
-                    with open(path, "r") as the_log:
+                    with open(path[1], "rb") as the_log:
                         datalist.append(the_log.read())
 
         for data in datalist:
