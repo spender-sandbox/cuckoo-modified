@@ -452,17 +452,19 @@ def gen_moloch_from_antivirus(virustotal):
 
 @require_safe
 def surialert(request,task_id):
-    suricata = results_db.suricata.find_one({"info.id": int(task_id)},{"alerts": 1,"alert_cnt": 1},sort=[("_id", pymongo.DESCENDING)])
-    if not suricata:
+    report = results_db.analysis.find_one({"info.id": int(task_id)},{"suricata.alerts": 1},sort=[("_id", pymongo.DESCENDING)])
+    if not report:
         return render_to_response("error.html",
                                   {"error": "The specified analysis does not exist"},
                                   context_instance=RequestContext(request))
+
+    suricata = report["suricata"]
+
     if settings.MOLOCH_ENABLED:
         if settings.MOLOCH_BASE[-1] != "/":
             settings.MOLOCH_BASE = settings.MOLOCH_BASE + "/"
 
-        if suricata.has_key("alerts"):
-            suricata=gen_moloch_from_suri_alerts(suricata)
+        suricata = gen_moloch_from_suri_alerts(suricata)
 
     return render_to_response("analysis/surialert.html",
                               {"suricata": suricata,
@@ -483,17 +485,19 @@ def shrike(request,task_id):
 
 @require_safe
 def surihttp(request,task_id):
-    suricata = results_db.suricata.find_one({"info.id": int(task_id)},{"http": 1, "http_cnt": 1},sort=[("_id", pymongo.DESCENDING)])
-    if not suricata:
+    report = results_db.analysis.find_one({"info.id": int(task_id)},{"suricata.http": 1},sort=[("_id", pymongo.DESCENDING)])
+    if not report:
         return render_to_response("error.html",
                                   {"error": "The specified analysis does not exist"},
                                   context_instance=RequestContext(request))
+
+    suricata = report["suricata"]
+
     if settings.MOLOCH_ENABLED:
         if settings.MOLOCH_BASE[-1] != "/":
             settings.MOLOCH_BASE = settings.MOLOCH_BASE + "/"
 
-        if suricata.has_key("http"):
-            suricata=gen_moloch_from_suri_http(suricata)
+        suricata = gen_moloch_from_suri_http(suricata)
 
     return render_to_response("analysis/surihttp.html",
                               {"suricata": suricata,
@@ -502,16 +506,20 @@ def surihttp(request,task_id):
 
 @require_safe
 def suritls(request,task_id):
-    suricata = results_db.suricata.find_one({"info.id": int(task_id)},{"tls": 1, "tls_cnt": 1},sort=[("_id", pymongo.DESCENDING)])
-    if not suricata:
+    report = results_db.analysis.find_one({"info.id": int(task_id)},{"suricata.tls": 1},sort=[("_id", pymongo.DESCENDING)])
+    if not report:
         return render_to_response("error.html",
                                   {"error": "The specified analysis does not exist"},
                                   context_instance=RequestContext(request))
+
+    suricata = report["suricata"]
+
     if settings.MOLOCH_ENABLED:
         if settings.MOLOCH_BASE[-1] != "/":
             settings.MOLOCH_BASE = settings.MOLOCH_BASE + "/"
-        if suricata.has_key("tls"):
-            suricata=gen_moloch_from_suri_tls(suricata)
+
+        suricata = gen_moloch_from_suri_tls(suricata)
+
     return render_to_response("analysis/suritls.html",
                               {"suricata": suricata,
                                "config": enabledconf},
@@ -519,16 +527,20 @@ def suritls(request,task_id):
 
 @require_safe
 def surifiles(request,task_id):
-    suricata = results_db.suricata.find_one({"info.id": int(task_id)},{"files": 1,"files_cnt": 1},sort=[("_id", pymongo.DESCENDING)])
-    if not suricata:
+    report = results_db.analysis.find_one({"info.id": int(task_id)},{"suricata.files": 1},sort=[("_id", pymongo.DESCENDING)])
+    if not report:
         return render_to_response("error.html",
                                   {"error": "The specified analysis does not exist"},
                                   context_instance=RequestContext(request))
+
+    suricata = report["suricata"]
+
     if settings.MOLOCH_ENABLED:
         if settings.MOLOCH_BASE[-1] != "/":
             settings.MOLOCH_BASE = settings.MOLOCH_BASE + "/"
-        if suricata.has_key("files"):
-            suricata=gen_moloch_from_suri_tls(suricata)
+
+        suricata = gen_moloch_from_suri_file_info(suricata)
+
     return render_to_response("analysis/surifiles.html",
                               {"suricata": suricata,
                                "config": enabledconf},
@@ -645,17 +657,13 @@ def report(request, task_id):
             settings.MOLOCH_BASE = settings.MOLOCH_BASE + "/"
         report["moloch_url"] = settings.MOLOCH_BASE + "?date=-1&expression=tags" + quote("\x3d\x3d\x22%s\x3a%s\x22" % (settings.MOLOCH_NODE,task_id),safe='')
         if isinstance(suricata, dict):
-            if suricata.has_key("http") and suricata["http_cnt"] > 0:
-                suricata=gen_moloch_from_suri_http(suricata)
-            if suricata.has_key("alerts") and suricata["alert_cnt"] > 0:
-                suricata=gen_moloch_from_suri_alerts(suricata)
-            if suricata.has_key("files") and suricata["file_cnt"] > 0:
-                suricata=gen_moloch_from_suri_file_info(suricata)
-            if suricata.has_key("tls") and suricata["tls_cnt"] > 0:
-                suricata=gen_moloch_from_suri_tls(suricata)
+            suricata = gen_moloch_from_suri_http(suricata)
+            suricata = gen_moloch_from_suri_alerts(suricata)
+            suricata = gen_moloch_from_suri_file_info(suricata)
+            suricata = gen_moloch_from_suri_tls(suricata)
 
         if report.has_key("virustotal"):
-            report["virustotal"]=gen_moloch_from_antivirus(report["virustotal"])
+            report["virustotal"] = gen_moloch_from_antivirus(report["virustotal"])
 
     # Creating dns information dicts by domain and ip.
     if "network" in report and "domains" in report["network"]:

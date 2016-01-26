@@ -392,10 +392,6 @@ def cuckoo_clean_failed_tasks():
                 new = el2.to_dict()
                 print int(new["id"])
                 try:
-                    results_db.suricata.remove({"info.id": int(new["id"])})
-                except:
-                    print "failed to remove suricata info (may not exist) %s" % (int(new["id"]))
-                try:
                     results_db.analysis.remove({"info.id": int(new["id"])})
                 except:
                     print "failed to remove analysis info (may not exist) %s" % (int(new["id"]))
@@ -472,10 +468,6 @@ def cuckoo_clean_failed_url_tasks():
                 for e in rtmp:
                     if e["info"]["id"]:
                         print e["info"]["id"]
-                        try:
-                            results_db.suricata.remove({"info.id": int(e["info"]["id"])})
-                        except:
-                            print "failed to remove %s" % (e["info"]["id"])
                         if db.delete_task(e["info"]["id"]):
                             delete_folder(os.path.join(CUCKOO_ROOT, "storage", "analyses",
                                        "%s" % e["info"]["id"]))
@@ -540,7 +532,7 @@ def cuckoo_clean_before_day(args):
 
         print "number of matching records %s before suri/custom filter " % len(id_arr)
         if id_arr and args.suricata_zero_alert_filter:
-            result = list(results_db.suricata.find({"alerts.alert": {"$exists": False}, "$or": id_arr},{"info.id":1}))
+            result = list(results_db.analysis.find({"suricata.alerts.alert": {"$exists": False}, "$or": id_arr},{"info.id":1}))
             tmp_arr =[]
             for entry in result:
                 tmp_arr.append(entry["info"]["id"])
@@ -553,11 +545,6 @@ def cuckoo_clean_before_day(args):
             id_arr = tmp_arr
         print "number of matching records %s" % len(id_arr)
         for e in id_arr:
-            try:
-                print "removing %s from suridb" % (e)
-                results_db.suricata.remove({"info.id": e})
-            except:
-                print "failed to remove suricata info (may not exist) %s" % (e)
             try:
                 print "removing %s from analysis db" % (e)  
                 results_db.analysis.remove({"info.id": e})
@@ -612,56 +599,6 @@ def cuckoo_clean_sorted_pcap_dump():
                             os.remove(path)
                         except Exception as e:
                             print "failed to remove sorted_pcap from disk %s" % (e)
-                    else:
-                        done = True
-            else:
-                done = True
-
-def cuckoo_clean_suricata_files_zip():
-    """Clean up failed tasks 
-    It deletes all stored data from file system and configured databases (SQL
-    and MongoDB for failed tasks.
-    """
-    # Init logging.
-    # This need to init a console logger handler, because the standard
-    # logger (init_logging()) logs to a file which will be deleted.
-    create_structure()
-    init_console_logging()
-
-    # Initialize the database connection.
-    db = Database()
-
-    # Check if MongoDB reporting is enabled and drop that if it is.
-    cfg = Config("reporting")
-    if cfg.mongodb and cfg.mongodb.enabled:
-        from pymongo import MongoClient
-        host = cfg.mongodb.get("host", "127.0.0.1")
-        port = cfg.mongodb.get("port", 27017)
-        mdb = cfg.mongodb.get("db", "cuckoo")
-        try:
-            results_db = MongoClient(host, port)[mdb]
-        except:
-            log.warning("Unable to connect MongoDB database: %s", mdb)
-            return
-
-        done = False
-        while not done:
-            rtmp = results_db.suricata.find({"suri_extracted_zip": {"$exists": True}},{"info.id": 1},sort=[("_id", -1)]).limit( 100 )
-            if rtmp and rtmp.count() > 0:
-                print rtmp.count()
-                for e in rtmp:
-                    if e["info"]["id"]:
-                        print e["info"]["id"]
-                        try:
-                            results_db.suricata.update({"info.id": int(e["info"]["id"])},{ "$unset": { "suri_extracted_zip": ""}})
-                        except:
-                            print "failed to remove sorted pcap from db for id %s" % (e["info"]["id"])
-                        try:
-                            path = os.path.join(CUCKOO_ROOT, "storage", "analyses","%s" % (e["info"]["id"]), "logs","files.zip")
-                            if os.path.exists(path):
-                                os.remove(path)
-                        except Exception as e:
-                            print "failed to remove suricata zip from disk %s" % (e)
                     else:
                         done = True
             else:
