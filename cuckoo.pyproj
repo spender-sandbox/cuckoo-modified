@@ -162,10 +162,8 @@
     </Compile>
     <Compile Include="lib\cuckoo\common\office\olefile.py" />
     <Compile Include="lib\cuckoo\common\office\oleid.py" />
-    <Compile Include="lib\cuckoo\common\office\oleobj.py" />
     <Compile Include="lib\cuckoo\common\office\olevba.py" />
     <Compile Include="lib\cuckoo\common\office\pyparsing.py" />
-    <Compile Include="lib\cuckoo\common\office\rtfobj.py" />
     <Compile Include="lib\cuckoo\common\office\__init__.py" />
     <Compile Include="lib\cuckoo\common\pdftools\pdf-parser.py" />
     <Compile Include="lib\cuckoo\common\pdftools\pdfid.py" />
@@ -209,6 +207,9 @@
     <Compile Include="modules\auxiliary\tor.py" />
     <Compile Include="modules\feeds\bad_ssl_certs.py" />
     <Compile Include="modules\feeds\__init__.py" />
+    <Compile Include="modules\reporting\compression.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="modules\reporting\elasticsearchdb.py" />
     <Compile Include="modules\reporting\maec41.py" />
     <Compile Include="modules\reporting\malheur.py" />

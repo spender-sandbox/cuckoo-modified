@@ -35,13 +35,13 @@ class Strings(Processing):
 
             if nulltermonly:
                 apat = "([\x20-\x7e]{" + str(minchars) + ",})\x00"
-                strings = re.findall(apat, data)
                 upat = "((?:[\x20-\x7e][\x00]){" + str(minchars) + ",})\x00\x00"
-                strings += [str(ws.decode("utf-16le")) for ws in re.findall(upat, data)]
             else:
-                apat = "([\x20-\x7e]{" + str(minchars) + ",})\x00"
-                strings = re.findall(apat, data)
+                apat = "[\x20-\x7e]{" + str(minchars) + ",}"
                 upat = "(?:[\x20-\x7e][\x00]){" + str(minchars) + ",}"
-                strings += [str(ws.decode("utf-16le")) for ws in re.findall(upat, data)]
+
+            strings = re.findall(apat, data)
+            for ws in re.findall(upat, data):
+                strings.append(str(ws.decode("utf-16le")))
 
         return strings
