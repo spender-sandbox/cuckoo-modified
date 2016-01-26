@@ -81,7 +81,7 @@ class Suricata(Processing):
         suricata["ssh_log_full_path"] = None
         suricata["dns_log_full_path"] = None
 
-        SURICATA_ALERT_FULL_PATH = "%s/%s" % (self.logs_path, SURICATA_ALERT_LOG)
+        SURICATA_ALERT_LOG_FULL_PATH = "%s/%s" % (self.logs_path, SURICATA_ALERT_LOG)
         SURICATA_TLS_LOG_FULL_PATH = "%s/%s" % (self.logs_path, SURICATA_TLS_LOG)
         SURICATA_HTTP_LOG_FULL_PATH = "%s/%s" % (self.logs_path, SURICATA_HTTP_LOG)
         SURICATA_SSH_LOG_FULL_PATH = "%s/%s" % (self.logs_path, SURICATA_SSH_LOG)
