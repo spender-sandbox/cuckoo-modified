@@ -167,15 +167,15 @@ class Moloch(Report):
                                tmpdict['hash'] = tmpdict['nproto'] + struct.unpack('!L',socket.inet_aton(tmpdict['src_ip']))[0] + struct.unpack('!L',socket.inet_aton(tmpdict['dest_ip']))[0]
 
                            if self.alerthash.has_key(tmpdict['hash']):
-                               if  alert["alert"]["sid"] not in self.alerthash[tmpdict['hash']]['sids']:
-                                   self.alerthash[tmpdict['hash']]['sids'].append("suri_sid:%s" % (alert["alert"]["sid"]))
-                                   self.alerthash[tmpdict['hash']]['msgs'].append("suri_msg:%s" % (re.sub(r"[\W]","_",alert["alert"]["signature"])))
+                               if  alert["sid"] not in self.alerthash[tmpdict['hash']]['sids']:
+                                   self.alerthash[tmpdict['hash']]['sids'].append("suri_sid:%s" % (alert["sid"]))
+                                   self.alerthash[tmpdict['hash']]['msgs'].append("suri_msg:%s" % (re.sub(r"[\W]","_",alert["signature"])))
                            else:
                                self.alerthash[tmpdict['hash']] = copy.deepcopy(tmpdict)
                                self.alerthash[tmpdict['hash']]['sids']=[]
                                self.alerthash[tmpdict['hash']]['msgs']=[]
-                               self.alerthash[tmpdict['hash']]['sids'].append("suri_sid:%s" % (alert["alert"]["sid"]))
-                               self.alerthash[tmpdict['hash']]['msgs'].append("suri_msg:%s" % (re.sub(r"[\W]","_",alert["alert"]["signature"])))
+                               self.alerthash[tmpdict['hash']]['sids'].append("suri_sid:%s" % (alert["sid"]))
+                               self.alerthash[tmpdict['hash']]['msgs'].append("suri_msg:%s" % (re.sub(r"[\W]","_",alert["signature"])))
                for entry in self.alerthash:
                    tags = ','.join(map(str,self.alerthash[entry]['sids']) + map(str,self.alerthash[entry]['msgs']))
                    if tags:
