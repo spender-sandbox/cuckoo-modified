@@ -396,7 +396,7 @@ def gen_moloch_from_suri_alerts(suricata):
                 e["moloch_dst_port_url"] = settings.MOLOCH_BASE + "?date=-1&expression=port" + quote("\x3d\x3d%s\x26\x26tags\x3d\x3d\x22%s\x22" % (str(e["dstport"]),e["protocol"].lower()),safe='')
             if e.has_key("srcport") and e["srcport"]:
                 e["moloch_src_port_url"] = settings.MOLOCH_BASE + "?date=-1&expression=port" + quote("\x3d\x3d%s\x26\x26tags\x3d\x3d\x22%s\x22" % (str(e["srcport"]),e["protocol"].lower()),safe='')
-            if e.has_key("sid") and e["alert"]["sid"]:
+            if e.has_key("sid") and e["sid"]:
                 e["moloch_sid_url"] = settings.MOLOCH_BASE + "?date=-1&expression=tags" + quote("\x3d\x3d\x22suri_sid\x3a%s\x22" % (e["sid"]),safe='')
             if e.has_key("signature") and e["alert"]["signature"]:
                 e["moloch_msg_url"] = settings.MOLOCH_BASE + "?date=-1&expression=tags" + quote("\x3d\x3d\x22suri_msg\x3a%s\x22" % (re.sub(r"[\W]","_",e["signature"])),safe='')
