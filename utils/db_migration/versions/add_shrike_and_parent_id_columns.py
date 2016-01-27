@@ -40,13 +40,16 @@ sys.path.append(os.path.join(curdir, "..", ".."))
 import lib.cuckoo.core.database as db
 
 def upgrade():
-    op.add_column('tasks', 
-    sa.Column("shrike_url", sa.String(length=4096), nullable=True),
-    sa.Column("shrike_refer", sa.String(length=4096), nullable=True),
-    sa.Column("shrike_msg", sa.String(length=4096), nullable=True),
-    sa.Column("shrike_sid", sa.Integer(), nullable=True),
-    sa.Column("parent_id", sa.Integer(), nullable=True)
+    op.add_column('tasks', sa.Column("shrike_url", sa.String(length=4096), nullable=True))
+    op.add_column(sa.Column("shrike_refer", sa.String(length=4096), nullable=True))
+    op.add_column(sa.Column("shrike_msg", sa.String(length=4096), nullable=True),
+    op.add_column(sa.Column("shrike_sid", sa.Integer(), nullable=True))
+    op.add_column(sa.Column("parent_id", sa.Integer(), nullable=True))
     )
 
 def downgrade():
-    op.drop_column('tasks', "shrike_url", "shrike_refer", "shrike_msg", "shrike_sid", "parent_sid")
+    op.drop_column('tasks', "shrike_url")
+    op.drop_column('tasks', "shrike_refer")
+    op.drop_column('tasks', "shrike_msg")
+    op.drop_column('tasks', "shrike_sid")
+    op.drop_column('tasks', "parent_sid")
