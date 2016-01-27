@@ -17,7 +17,11 @@
                     <td>
                         {% for a in p.answers %}
                             {{a.type}} {{a.data|linebreaksbr}} 
+                            {% if a.type == "CNAME" %}
+                            <a href="https://www.virustotal.com/en/domain/{{a.data|linebreaksbr}}/information/">[VT]</a>
+                            {% else %}
                             <a href="https://www.virustotal.com/en/ip-address/{{a.data|linebreaksbr}}/information/">[VT]</a>
+                            {% endif %}
                             {% if config.display_et_portal %}
                             <a href="https://threatintel.proofpoint.com/search?q={{a.data|linebreaksbr}}" target="_blank">[ET]</a>
                             {% endif %}
