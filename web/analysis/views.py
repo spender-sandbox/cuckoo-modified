@@ -753,6 +753,7 @@ def file(request, category, task_id, dlfile):
         path = os.path.join(CUCKOO_ROOT, "storage", "analyses",
                             task_id, "memory", file_name)
         if not os.path.exists(path):
+            file_name += ".zip"
             path += ".zip"
             cd = "application/zip"
     elif category == "dropped":
