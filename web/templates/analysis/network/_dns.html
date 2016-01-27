@@ -26,10 +26,12 @@
                             {% endif %}
                         {% endfor %}
                     </td>
-                    <td>{{ domainlookups|get_item:p.request }} 
+                    <td>{% if domainlookups|get_item:p.request %}
+                        {{ domainlookups|get_item:p.request }} 
                         <a href="https://www.virustotal.com/en/ip-address/{{ domainlookups|get_item:p.request }}/information/">[VT]</a>
                         {% if config.display_et_portal %}
                         <a href="https://threatintel.proofpoint.com/search?q={{ domainlookups|get_item:p.request }}" target="_blank">[ET]</a>
+                        {% endif %}
                         {% endif %}
                     </td>
                 </tr>
