@@ -41,21 +41,13 @@
                         {% if proc.file %}
                             <tr>
                                 <th>Full Dump</th>
-                                {% if proc.zipstrings %}
-                                    <td><a class="btn btn-primary btn-small" href="{% url "analysis.views.file" "memdumpzip" analysis.info.id proc.pid %}">Download</a></td>
-                                {% else %}
-                                    <td><a class="btn btn-primary btn-small" href="{% url "analysis.views.file" "memdump" analysis.info.id proc.pid %}">Download</a></td>
-                                {% endif %}
+                                <td><a class="btn btn-primary btn-small" href="{% url "analysis.views.file" "memdump" analysis.info.id proc.pid %}">Download</a></td>
                             </tr>
                         {% endif %}
                         {% if proc.strings_path %}
                             <tr>
                                 <th>Process Strings</th>
-                                {% if proc.zipstrings %}
-                                    <td><a class="btn btn-primary btn-small" href="{% url "analysis.views.file" "memdumpstringszip" analysis.info.id proc.pid %}">Download</a></td>
-                                {% else %}
-                                    <td><a class="btn btn-primary btn-small" href="{% url "analysis.views.file" "memdumpstrings" analysis.info.id proc.pid %}">Download</a></td>
-                                {% endif %}
+                                <td><a class="btn btn-primary btn-small" href="{% url "analysis.views.file" "memdumpstrings" analysis.info.id proc.pid %}">Download</a></td>
                             </tr>
                         {% endif %}
                     </table>

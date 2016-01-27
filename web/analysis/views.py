@@ -730,9 +730,7 @@ def file(request, category, task_id, dlfile):
 
     extmap = {
         "memdump" : ".dmp",
-        "memdumpzip" : ".dmp.zip",
         "memdumpstrings" : ".dmp.strings",
-        "memdumpstringszip" : ".dmp.strings.zip"
     }
 
     if category == "sample":
@@ -754,6 +752,9 @@ def file(request, category, task_id, dlfile):
         file_name += extmap[category]
         path = os.path.join(CUCKOO_ROOT, "storage", "analyses",
                             task_id, "memory", file_name)
+        if not os.path.exists(path):
+            path += ".zip"
+            cd = "application/zip"
     elif category == "dropped":
         buf = os.path.join(CUCKOO_ROOT, "storage", "analyses",
                            task_id, "files", file_name)
