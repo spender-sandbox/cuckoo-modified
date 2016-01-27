@@ -393,7 +393,7 @@ def gen_moloch_from_suri_alerts(suricata):
             if e.has_key("dstip") and e["dstip"]:
                 e["moloch_dst_ip_url"] = settings.MOLOCH_BASE + "?date=-1&expression=ip" + quote("\x3d\x3d%s" % (str(e["dstip"])),safe='')
             if e.has_key("dstport") and e["dstport"]:
-                e["moloch_dst_port_url"] = settings.MOLOCH_BASE + "?date=-1&expression=port" + quote("\x3d\x3d%s\x26\x26tags\x3d\x3d\x22%s\x22" % (str(e["dsport"]),e["protocol"].lower()),safe='')
+                e["moloch_dst_port_url"] = settings.MOLOCH_BASE + "?date=-1&expression=port" + quote("\x3d\x3d%s\x26\x26tags\x3d\x3d\x22%s\x22" % (str(e["dstport"]),e["protocol"].lower()),safe='')
             if e.has_key("srcport") and e["srcport"]:
                 e["moloch_src_port_url"] = settings.MOLOCH_BASE + "?date=-1&expression=port" + quote("\x3d\x3d%s\x26\x26tags\x3d\x3d\x22%s\x22" % (str(e["src_port"]),e["protocol"].lower()),safe='')
             if e.has_key("sid") and e["alert"]["sid"]:
