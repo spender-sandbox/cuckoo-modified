@@ -980,7 +980,8 @@ class Database(object):
 
     def demux_sample_and_add_to_db(self, file_path, timeout=0, package="", options="", priority=1,
                                    custom="", machine="", platform="", tags=None,
-                                   memory=False, enforce_timeout=False, clock=None):
+                                   memory=False, enforce_timeout=False, clock=None,shrike_url=None,
+                                   shrike_msg=None, shrike_sid = None, shrike_refer=None):
         """
         Handles ZIP file submissions, submitting each extracted file to the database
         Returns a list of added task IDs
@@ -1001,7 +1002,11 @@ class Database(object):
                                     custom=custom,
                                     enforce_timeout=enforce_timeout,
                                     tags=tags,
-                                    clock=clock)
+                                    clock=clock,
+                                    shrike_url=shrike_url,
+                                    shrike_msg=shrike_msg,
+                                    shrike_sid=shrike_sid,
+                                    shrike_refer=shrike_refer)
             if task_id:
                 task_ids.append(task_id)
 
