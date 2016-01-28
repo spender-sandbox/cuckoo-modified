@@ -571,7 +571,9 @@ class Process:
                 "sys32_ctimehigh",
                 "debug",
                 "disable_hook_content",
-                "hook-type"
+                "hook-type",
+                "exclude-apis",
+                "exclude-dlls",
                 ]
             
             for optname in simple_optnames:
