@@ -568,6 +568,23 @@ def search_behavior(request, task_id):
     if request.method == 'POST':
         query = request.POST.get('search')
         results = []
+        search_pid = None
+        search_tid = None
+        match = re.search("pid=(?P<search_pid>\d+)", query)
+        if match:
+            search_pid = match.group("search_pid")
+        match = re.search("tid=(?P<search_tid>\d+)", query)
+        if match:
+            search_tid = match.group("search_tid")
+
+        if search_pid:
+            query = query.replace("pid=" + search_pid, "")
+        if search_tid:
+            query = query.replace("tid=" + search_tid, "")
+
+        query = query.strip()
+
+        query = re.compile(query)
 
         # Fetch anaylsis report
         if enabledconf["mongodb"]:
@@ -585,6 +602,9 @@ def search_behavior(request, task_id):
 
         # Loop through every process
         for process in record["behavior"]["processes"]:
+            if search_pid and process["process_id"] != search_pid:
+                continue
+
             process_results = []
 
             if enabledconf["mongodb"]:
@@ -605,9 +625,10 @@ def search_behavior(request, task_id):
 
             for chunk in chunks:
                 for call in chunk["calls"]:
+                    if search_tid and call["thread_id"] != search_tid:
+                        continue
                     # TODO: ES can speed this up instead of parsing with
                     # Python regex.
-                    query = re.compile(query)
                     if query.search(call['api']):
                         process_results.append(call)
                     else:
