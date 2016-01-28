@@ -237,9 +237,9 @@ class Suricata(Processing):
                     hlog["dstip"] = parsed["dest_ip"]
                     hlog["timestamp"] = parsed["timestamp"].replace("T", " ")
                     try:
-                        hlog["url"] = parsed["http"]["url"]
+                        hlog["uri"] = parsed["http"]["uri"]
                     except:
-                        hlog["url"] = "None"
+                        hlog["uri"] = "None"
                     hlog["length"] = parsed["http"]["length"]
                     try:
                         hlog["hostname"] = parsed["http"]["hostname"]
