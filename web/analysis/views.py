@@ -578,7 +578,7 @@ def search_behavior(request, task_id):
             search_tid = match.group("search_tid")
 
         if search_pid:
-            query = query.replace("pid=" + search_pid, "")
+            query = query.replace("pid=" + str(search_pid), "")
         if search_tid:
             query = query.replace("tid=" + search_tid, "")
 
