@@ -572,7 +572,7 @@ def search_behavior(request, task_id):
         search_tid = None
         match = re.search("pid=(?P<search_pid>\d+)", query)
         if match:
-            search_pid = match.group("search_pid")
+            search_pid = int(match.group("search_pid"))
         match = re.search("tid=(?P<search_tid>\d+)", query)
         if match:
             search_tid = match.group("search_tid")
