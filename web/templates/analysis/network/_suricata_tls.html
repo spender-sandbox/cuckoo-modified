@@ -21,13 +21,13 @@
                     {% if config.display_et_portal %}
                     <a href="https://threatintel.proofpoint.com/search?q={{tls.srcip}}" target="_blank">[ET]</a> 
                     {% endif %}
-                    {% if http.moloch_src_ip_url %}
-                    <a href={{e.moloch_src_ip_url}} target="_blank">[MLCH]</a>
+                    {% if tls.moloch_src_ip_url %}
+                    <a href={{tls.moloch_src_ip_url}} target="_blank">[MLCH]</a>
                     {% endif %}
                 </td>
                 <td>{{tls.srcport}} 
-                    {% if http.moloch_src_port_url %}
-                    <a href={{e.moloch_src_port_url}} target="_blank">[MLCH]</a>
+                    {% if tls.moloch_src_port_url %}
+                    <a href={{tls.moloch_src_port_url}} target="_blank">[MLCH]</a>
                     {% endif %}
                 </td>
                 <td>{{tls.dstip}} 
@@ -35,13 +35,13 @@
                     {% if config.display_et_portal %}
                     <a href="https://threatintel.proofpoint.com/search?q={{tls.dstip}}" target="_blank">[ET]</a> 
                     {% endif %}
-                    {% if http.moloch_dst_ip_url %}
-                    <a href={{e.moloch_dst_ip_url}} target="_blank">[MLCH]</a>
+                    {% if tls.moloch_dst_ip_url %}
+                    <a href={{tls.moloch_dst_ip_url}} target="_blank">[MLCH]</a>
                     {% endif %}
                 </td>
                 <td>{{tls.dstport}} 
-                    {% if http.moloch_dst_port_url %}
-                    <a href={{e.moloch_dst_port_url}} target="_blank">[MLCH]</a>
+                    {% if tls.moloch_dst_port_url %}
+                    <a href={{tls.moloch_dst_port_url}} target="_blank">[MLCH]</a>
                     {% endif %}
                 </td>
                 <td>{{tls.subject}}</td>
