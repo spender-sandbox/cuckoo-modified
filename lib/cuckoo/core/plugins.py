@@ -551,6 +551,7 @@ class RunSignatures(object):
                             "win32",
                             "unknown",
                             "single",
+                            "abuse",
                         ]
                         isgood = True
                         for black in blacklist:
