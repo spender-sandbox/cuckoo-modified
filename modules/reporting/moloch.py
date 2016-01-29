@@ -104,7 +104,7 @@ class Moloch(Report):
              
         if self.task["category"] == "file":
             try:
-                if results.has_key('virustotal'):
+                if "virustotal" in results and "scans" in results["virustotal"]:
                     for key in results["virustotal"]["scans"]:
                         if results["virustotal"]["scans"][key]["result"]:
                             cmd = cmd + " -t \"VT:%s:%s\"" % (key,results["virustotal"]["scans"][key]["result"])
