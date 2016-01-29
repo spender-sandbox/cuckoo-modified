@@ -118,7 +118,7 @@ class Moloch(Report):
                 cmd = cmd + " -t \"sha256:%s\"" % (results["target"]["file"]["sha256"])
             if results["target"]["file"].has_key("clamav") and results["target"]["file"]["clamav"]:
                 cmd = cmd + " -t \"clamav:%s\"" % (re.sub(r"[\W]","_",results["target"]["file"]["clamav"]))
-            if results["static"].has_key("pe_imphash") and results["static"]["pe_imphash"]:
+            if "static" in results and results["static"].has_key("pe_imphash") and results["static"]["pe_imphash"]:
                 cmd = cmd + " -t \"pehash:%s\"" % (results["static"]["pe_imphash"])
             if results["target"]["file"].has_key("yara"):
                 for entry in results["target"]["file"]["yara"]:
