@@ -464,7 +464,7 @@ def surialert(request,task_id):
         suricata = gen_moloch_from_suri_alerts(suricata)
 
     return render_to_response("analysis/surialert.html",
-                              {"suricata": suricata,
+                              {"analysis": report,
                                "config": enabledconf},
                               context_instance=RequestContext(request))
 
@@ -497,7 +497,7 @@ def surihttp(request,task_id):
         suricata = gen_moloch_from_suri_http(suricata)
 
     return render_to_response("analysis/surihttp.html",
-                              {"suricata": suricata,
+                              {"analysis": report,
                                "config": enabledconf},
                               context_instance=RequestContext(request))
 
@@ -518,7 +518,7 @@ def suritls(request,task_id):
         suricata = gen_moloch_from_suri_tls(suricata)
 
     return render_to_response("analysis/suritls.html",
-                              {"suricata": suricata,
+                              {"analysis": report,
                                "config": enabledconf},
                               context_instance=RequestContext(request))
 
@@ -539,7 +539,7 @@ def surifiles(request,task_id):
         suricata = gen_moloch_from_suri_file_info(suricata)
 
     return render_to_response("analysis/surifiles.html",
-                              {"suricata": suricata,
+                              {"analysis": report,
                                "config": enabledconf},
                               context_instance=RequestContext(request))
 
