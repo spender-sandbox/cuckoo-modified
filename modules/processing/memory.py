@@ -1065,7 +1065,6 @@ class VolatilityManager(object):
 
         self.find_taint(results)
         self.do_strings()
-        self.zipdump()
         self.cleanup()
 
         return self.mask_filter(results)
