@@ -669,8 +669,8 @@ def report(request, task_id):
                                   {"error": "The specified analysis does not exist"},
                                   context_instance=RequestContext(request))
 
-    suricata = report["suricata"]
-    if settings.MOLOCH_ENABLED:
+    if settings.MOLOCH_ENABLED and "suricata" in report:
+        suricata = report["suricata"]
         if settings.MOLOCH_BASE[-1] != "/":
             settings.MOLOCH_BASE = settings.MOLOCH_BASE + "/"
         report["moloch_url"] = settings.MOLOCH_BASE + "?date=-1&expression=tags" + quote("\x3d\x3d\x22%s\x3a%s\x22" % (settings.MOLOCH_NODE,task_id),safe='')
@@ -680,7 +680,7 @@ def report(request, task_id):
             suricata = gen_moloch_from_suri_file_info(suricata)
             suricata = gen_moloch_from_suri_tls(suricata)
 
-        if report.has_key("virustotal"):
+    if settings.MOLOCH_ENABLED and "virustotal" in report:
             report["virustotal"] = gen_moloch_from_antivirus(report["virustotal"])
 
     # Creating dns information dicts by domain and ip.
@@ -735,7 +735,6 @@ def report(request, task_id):
                              {"analysis": report,
                               "domainlookups": domainlookups,
                               "iplookups": iplookups,
-                              "suricata": suricata,
                               "similar": similarinfo,
                               "settings": settings,
                               "config": enabledconf},
