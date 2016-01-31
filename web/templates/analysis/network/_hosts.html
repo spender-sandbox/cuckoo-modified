@@ -21,6 +21,9 @@
                     {% if config.display_et_portal %}
                     <a href="https://threatintel.proofpoint.com/search?q={{host.ip}}" target="_blank">[ET]</a>
                     {% endif %}
+                    {% if config.display_pt_portal %}
+                    <a href="https://www.passivetotal.org/passive/{{host.ip}}" target="_blank">[PT]</a>
+                    {% endif %}
                     </td>
                     <td>{{host.country_name}}</td>
                 {% endif %}
