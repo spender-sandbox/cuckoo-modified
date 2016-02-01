@@ -812,7 +812,7 @@ def file(request, category, task_id, dlfile):
     return resp
 
 @require_safe
-def procdump(request, object_id, task_id, process_id, start, end):
+def procdump(request, task_id, process_id, start, end):
     origname = process_id + ".dmp"
     tmpdir = None
     tmp_file_path = None

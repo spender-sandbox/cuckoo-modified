@@ -20,7 +20,7 @@ urlpatterns = patterns("",
     url(r"^search/(?P<task_id>\d+)/$", "analysis.views.search_behavior"),
     url(r"^search/$", "analysis.views.search"),
     url(r"^pending/$", "analysis.views.pending"),
-    url(r"^procdump/(?P<object_id>\w+)/(?P<task_id>\d+)/(?P<process_id>\d+)/(?P<start>\w+)/(?P<end>\w+)/$", "analysis.views.procdump"),
+    url(r"^procdump/(?P<task_id>\d+)/(?P<process_id>\d+)/(?P<start>\w+)/(?P<end>\w+)/$", "analysis.views.procdump"),
     url(r"^(?P<task_id>\d+)/pcapstream/(?P<conntuple>[.,\w]+)/$", "analysis.views.pcapstream"),
     url(r"^(?P<task_id>\d+)/comments/$", "analysis.views.comments"),
 )
