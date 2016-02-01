@@ -13,6 +13,9 @@
                 {% if config.display_et_portal %}
                 <a href="https://threatintel.proofpoint.com/search?q={{p.request}}" target="_blank">[ET]</a>
                 {% endif %}
+                {% if config.display_pt_portal %}
+                <a href="https://www.passivetotal.org/passive/{{p.request}}" target="_blank">[PT]</a>
+                {% endif %}
                 </td>
                     <td>
                         {% for a in p.answers %}
@@ -25,6 +28,9 @@
                             {% if config.display_et_portal %}
                             <a href="https://threatintel.proofpoint.com/search?q={{a.data|linebreaksbr}}" target="_blank">[ET]</a>
                             {% endif %}
+                            {% if config.display_pt_portal %}
+                            <a href="https://www.passivetotal.org/passive/{{a.data|linebreaksbr}}" target="_blank">[PT]</a>
+                            {% endif %}
                             {% if not forloop.last %}
                                 <br/>
                             {% endif %}
@@ -35,6 +41,9 @@
                         <a href="https://www.virustotal.com/en/ip-address/{{ domainlookups|get_item:p.request }}/information/">[VT]</a>
                         {% if config.display_et_portal %}
                         <a href="https://threatintel.proofpoint.com/search?q={{ domainlookups|get_item:p.request }}" target="_blank">[ET]</a>
+                        {% endif %}
+                        {% if config.display_pt_portal %}
+                        <a href="https://www.passivetotal.org/passive/{{ domainlookups|get_item:p.request }}" target="_blank">[PT]</a>
                         {% endif %}
                         {% endif %}
                     </td>
