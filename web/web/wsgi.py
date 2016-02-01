@@ -17,7 +17,6 @@ middleware here, or combine a Django application with an application of another
 framework.
 
 """
-import os
 
 """
 
@@ -30,6 +29,12 @@ You can use the following command to generate SSL certs for an HTTPS setup.
 The following Apache2 vhost will work plug-and-play with the above command
 // Begin Apache2 config for WSGI usage
 
+<VirtualHost *:80>
+        RewriteEngine On
+        RewriteCond %{HTTPS} off
+        RewriteRule (.*) https://%{HTTP_HOST}%{REQUEST_URI}
+</VirtualHost>
+
 <VirtualHost *:443>
 
         # Remember to change paths where necessary
@@ -38,6 +43,9 @@ The following Apache2 vhost will work plug-and-play with the above command
         SSLCertificateFile      /etc/apache2/ssl/cert.crt
         SSLCertificateKeyFile   /etc/apache2/ssl/cert.key
 
+        # WARNING :: I haven't looked to ensure that all libs in use are threadsafe
+        #   If you have some free ram, keep your threadcount at 1; spawn processes
+        #   You've been warned. Weird things may happen...
         WSGIDaemonProcess web processes=5 threads=20
 
         WSGIScriptAlias         /       /opt/cuckoo/cuckoo-modified/web/web/wsgi.py
@@ -56,14 +64,22 @@ The following Apache2 vhost will work plug-and-play with the above command
 </VirtualHost>
 
 // End Apache2 config for WSGI usage
-
-Uncomment and edit the following lines to match your install location
 """
-#import sys
-#sys.path.append('/path/to/cuckoo-modified')
-#sys.path.append('/path/to/cuckoo-modified/web')
-#os.chdir('/path/to/cuckoo-modified/web')
 
+# These lines ensure that imports used by the WSGI daemon can be found
+import sys
+from os.path import join, dirname, abspath
+
+# Add / and /web (relative to cuckoo-modified install location) to our path
+webdir = abspath(join(dirname(abspath(__file__)), '..'))
+sys.path.append(abspath(join(webdir, '..')))
+sys.path.append(webdir)
+
+# Have WSGI run out of the WebDir
+from os import chdir, environ
+os.chdir(webdir)
+
+# Set django settings
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "web.settings")
 
 # This application object is used by any WSGI server configured to use this
@@ -72,6 +88,3 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "web.settings")
 from django.core.wsgi import get_wsgi_application
 application = get_wsgi_application()
 
-# Apply WSGI middleware here.
-# from helloworld.wsgi import HelloWorldApplication
-# application = HelloWorldApplication(application)
