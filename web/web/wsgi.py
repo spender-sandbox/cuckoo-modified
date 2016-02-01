@@ -29,6 +29,12 @@ You can use the following command to generate SSL certs for an HTTPS setup.
 The following Apache2 vhost will work plug-and-play with the above command
 // Begin Apache2 config for WSGI usage
 
+<VirtualHost *:80>
+        RewriteEngine On
+        RewriteCond %{HTTPS} off
+        RewriteRule (.*) https://%{HTTP_HOST}%{REQUEST_URI}
+</VirtualHost>
+
 <VirtualHost *:443>
 
         # Remember to change paths where necessary
@@ -70,8 +76,10 @@ sys.path.append(abspath(join(webdir, '..')))
 sys.path.append(webdir)
 
 # Have WSGI run out of the WebDir
+from os import chdir, environ
 os.chdir(webdir)
 
+# Set django settings
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "web.settings")
 
 # This application object is used by any WSGI server configured to use this
