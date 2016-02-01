@@ -22,6 +22,7 @@ from lib.cuckoo.common.colors import bold, green, red, yellow
 from lib.cuckoo.common.objects import File
 from lib.cuckoo.common.utils import to_unicode
 from lib.cuckoo.core.database import Database
+from lib.cuckoo.common.config import Config
 
 def main():
     parser = argparse.ArgumentParser()
@@ -49,7 +50,7 @@ def main():
     parser.add_argument("--shuffle", action="store_true", default=False, help="Shuffle samples before submitting them", required=False)
     parser.add_argument("--unique", action="store_true", default=False, help="Only submit new samples, ignore duplicates", required=False)
     parser.add_argument("--quiet", action="store_true", default=False, help="Only print text on failure", required=False)
-
+    parser.add_argument("--gateway",type=str, action="store", default=None, help= "Set the default gateway for the task", required=False)
     try:
         args = parser.parse_args()
     except IOError as e:
@@ -74,6 +75,17 @@ def main():
 
     sane_timeout = min(args.timeout, 60 * 60 * 24)
 
+    gateways = Config("auxiliary").gateways
+    if args.gateway and args.gateway in gateways:
+        if "," in gateways[args.gateway]:
+            tgateway = random.choice(gateways[args.gateway].split(","))
+            ngateway = gateways[tgateway]
+        else: 
+            ngateway = gateways[args.gateway]
+        if args.options:
+            args.options += ","
+        args.options += "setgw=%s" % (ngateway)
+        
     if args.url:
         if args.remote:
             if not HAVE_REQUESTS:

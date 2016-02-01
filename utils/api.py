@@ -67,6 +67,11 @@ def tasks_create_file():
     custom = request.forms.get("custom", "")
     memory = request.forms.get("memory", False)
     clock = request.forms.get("clock", None)
+    shrike_url = request.forms.get("shrike_url", None)
+    shrike_msg = request.forms.get("shrike_msg", None)
+    shrike_sid = request.forms.get("shrike_sid", None)
+    shrike_refer = request.forms.get("shrike_refer", None)
+
     if memory:
         memory = True
     enforce_timeout = request.forms.get("enforce_timeout", False)
@@ -75,7 +80,8 @@ def tasks_create_file():
 
     temp_file_path = store_temp_file(data.file.read(), data.filename)
     task_ids = db.demux_sample_and_add_to_db(file_path=temp_file_path, package=package, timeout=timeout, options=options, priority=priority,
-                                          machine=machine, platform=platform, custom=custom, memory=memory, enforce_timeout=enforce_timeout, tags=tags, clock=clock)
+                                          machine=machine, platform=platform, custom=custom, memory=memory, enforce_timeout=enforce_timeout, tags=tags, clock=clock,
+                                          shrike_url=shrike_url, shrike_msg=shrike_msg, shrike_sid=shrike_sid, shrike_refer=shrike_refer)
     response["task_ids"] = task_ids
     return jsonize(response)
 
@@ -94,6 +100,11 @@ def tasks_create_url():
     tags = request.forms.get("tags", None)
     custom = request.forms.get("custom", "")
     memory = request.forms.get("memory", False)
+    shrike_url = request.forms.get("shrike_url", None)
+    shrike_msg = request.forms.get("shrike_msg", None)
+    shrike_sid = request.forms.get("shrike_sid", None)
+    shrike_refer = request.forms.get("shrike_refer", None)
+
     if memory:
         memory = True
     enforce_timeout = request.forms.get("enforce_timeout", False)
@@ -113,7 +124,11 @@ def tasks_create_url():
         custom=custom,
         memory=memory,
         enforce_timeout=enforce_timeout,
-        clock=clock
+        clock=clock,
+        shrike_url=shrike_url,
+        shrike_msg=shrike_msg,
+        shrike_sid=shrike_sid,
+        shrike_refer=shrike_refer
     )
 
     response["task_id"] = task_id

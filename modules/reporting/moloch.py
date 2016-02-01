@@ -13,6 +13,7 @@ import time
 import socket
 import struct
 import copy
+import base64
 
 try:
     import re2 as re
@@ -28,16 +29,23 @@ class Moloch(Report):
 
     """Moloch processing."""
     def cmd_wrapper(self,cmd):
-        #print("running command and waiting for it to finish %s" % (cmd))
         p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
         stdout,stderr = p.communicate()
         return (p.returncode, stdout, stderr)
     
     # This was useful http://blog.alejandronolla.com/2013/04/06/moloch-capturing-and-indexing-network-traffic-in-realtime/
     def update_tags(self,tags,expression):
-        auth_handler = urllib2.HTTPDigestAuthHandler()
-        auth_handler.add_password(self.MOLOCH_REALM, self.MOLOCH_URL, self.MOLOCH_USER, self.MOLOCH_PASSWORD)
-        opener = urllib2.build_opener(auth_handler)
+        # support cases where we might be doing basic auth through a proxy
+        if self.MOLOCH_AUTH == "basic":
+            auth_handler = urllib2.HTTPPasswordMgrWithDefaultRealm()
+            auth_handler.add_password(None, self.MOLOCH_URL, self.MOLOCH_USER, self.MOLOCH_PASSWORD)
+            handler = urllib2.HTTPBasicAuthHandler(auth_handler)
+            opener = urllib2.build_opener(handler)
+        else: 
+            auth_handler = urllib2.HTTPDigestAuthHandler()
+            auth_handler.add_password(self.MOLOCH_REALM, self.MOLOCH_URL, self.MOLOCH_USER, self.MOLOCH_PASSWORD)
+            opener = urllib2.build_opener(auth_handler)
+
         data = urllib.urlencode({'tags' : tags})
         qstring = urllib.urlencode({'date' : "-1",'expression' : expression})
         TAG_URL = self.MOLOCH_URL + 'addTags?' + qstring
@@ -48,30 +56,37 @@ class Moloch(Report):
                 json_data = json.loads(plain_answer)
             time.sleep(.5)
         except Exception, e:
-            raise e
+            log.warning("Moloch: Unable to update tags %s" % (e))
 
-        
     def run(self,results):
         """Run Moloch to import pcap
         @return: nothing 
         """
         self.key = "moloch"
         self.alerthash ={}
+        self.fileshash ={}
         self.MOLOCH_CAPTURE_BIN = self.options.get("capture", None)
         self.MOLOCH_CAPTURE_CONF = self.options.get("captureconf",None)
         self.CUCKOO_INSTANCE_TAG = self.options.get("node",None)
         self.MOLOCH_USER = self.options.get("user",None)
         self.MOLOCH_PASSWORD = self.options.get("pass",None) 
         self.MOLOCH_REALM = self.options.get("realm",None)
+        self.MOLOCH_AUTH = self.options.get("auth","digest")
         self.pcap_path = os.path.join(self.analysis_path, "dump.pcap")
         self.MOLOCH_URL = self.options.get("base",None)
-
-        m = re.search(r"/(?P<task_id>\d+)/dump.pcap$",self.pcap_path)
-        if m == None:
-            log.warning("Unable to find task id from %s" % (self.pcap_path))
-            return results  
+        self.task_id = results["info"]["id"]
+        self.custom = None
+        if "machine" in results["info"] and results["info"]["machine"] and "name" in results["info"]["machine"]:
+            self.machine_name = re.sub(r"[\W]","_",str(results["info"]["machine"]["name"]))
         else:
-            self.task_id = m.group("task_id")
+            self.machine_name = "Unknown"
+        if results["info"].has_key("options") and results["info"]["options"].has_key("setgw"):
+            self.gateway = re.sub(r"[\W]","_",str(results["info"]["options"]["setgw"]))
+        else:
+            self.gateway = "Default"
+
+        if results["info"].has_key("options") and results["info"].has_key("custom"):
+            self.custom = re.sub(r"[\W]","_",str(results["info"]["custom"]))
 
         if not os.path.exists(self.MOLOCH_CAPTURE_BIN):
             log.warning("Unable to Run moloch-capture: BIN File %s Does Not Exist" % (self.MOLOCH_CAPTURE_BIN))
@@ -81,35 +96,38 @@ class Moloch(Report):
             log.warning("Unable to Run moloch-capture Conf File %s Does Not Exist" % (self.MOLOCH_CAPTURE_CONF))
             return         
         try:
-            cmd = "%s -c %s -r %s -n %s -t %s:%s" % (self.MOLOCH_CAPTURE_BIN,self.MOLOCH_CAPTURE_CONF,self.pcap_path,self.CUCKOO_INSTANCE_TAG,self.CUCKOO_INSTANCE_TAG,self.task_id)
+            cmd = "%s -c %s -r %s -n %s -t %s:%s -t cuckoo_jtype:%s -t cuckoo_machine:%s -t cuckoo_gw:%s" % (self.MOLOCH_CAPTURE_BIN,self.MOLOCH_CAPTURE_CONF,self.pcap_path,self.CUCKOO_INSTANCE_TAG,self.CUCKOO_INSTANCE_TAG,self.task_id,self.task["category"],self.machine_name,self.gateway)
+            if self.custom:
+                cmd = cmd + " -t custom:%s" % (self.custom)
         except Exception,e:
             log.warning("Unable to Build Basic Moloch CMD: %s" % e)
              
         if self.task["category"] == "file":
             try:
-                if self.task["category"] == "file":
-                    if results.has_key('virustotal'):
-                        for key in results["virustotal"]["scans"]:
-                            if results["virustotal"]["scans"][key]["result"]:
-                                cmd = cmd + " -t \"VT:%s:%s\"" % (key,results["virustotal"]["scans"][key]["result"])
+                if "virustotal" in results and "scans" in results["virustotal"]:
+                    for key in results["virustotal"]["scans"]:
+                        if results["virustotal"]["scans"][key]["result"]:
+                            cmd = cmd + " -t \"VT:%s:%s\"" % (key,results["virustotal"]["scans"][key]["result"])
             except Exception,e:
                 log.warning("Unable to Get VT Results For Moloch: %s" % e)
 
 
             if results["target"]["file"].has_key("md5") and results["target"]["file"]["md5"]:
                 cmd = cmd + " -t \"md5:%s\"" % (results["target"]["file"]["md5"])
-            if results["target"]["file"].has_key("sha1") and results["target"]["file"]["sha1"]:
-                cmd = cmd + " -t \"sha1:%s\"" % (results["target"]["file"]["sha1"])
             if results["target"]["file"].has_key("sha256") and results["target"]["file"]["sha256"]:
                 cmd = cmd + " -t \"sha256:%s\"" % (results["target"]["file"]["sha256"])
-            if results["target"]["file"].has_key("sha512") and results["target"]["file"]["sha512"]:
-                cmd = cmd + " -t \"sha512:%s\"" % (results["target"]["file"]["sha512"])
             if results["target"]["file"].has_key("clamav") and results["target"]["file"]["clamav"]:
-                cmd = cmd + " -t \"clamav:%s\"" % (results["target"]["file"]["clamav"])
-            if results["static"].has_key("pe_imphash") and results["static"]["pe_imphash"]:
+                cmd = cmd + " -t \"clamav:%s\"" % (re.sub(r"[\W]","_",results["target"]["file"]["clamav"]))
+            if "static" in results and results["static"].has_key("pe_imphash") and results["static"]["pe_imphash"]:
                 cmd = cmd + " -t \"pehash:%s\"" % (results["static"]["pe_imphash"])
-
+            if results["target"]["file"].has_key("yara"):
+                for entry in results["target"]["file"]["yara"]:
+                    cmd = cmd + " -t \"yara:%s\"" % entry["name"]
+        if results.has_key("signatures") and results["signatures"]:
+            for entry in results["signatures"]:
+                cmd = cmd + " -t \"cuckoosig:%s:%s\"" % (re.sub(r"[\W]","_",str(entry["name"])),re.sub(r"[\W]","_",str(entry["severity"])))
         try:                   
+            log.debug("moloch: running import command %s " % (cmd))
             ret,stdout,stderr = self.cmd_wrapper(cmd)
             if ret == 0:
                log.warning("moloch: imported pcap %s" % (self.pcap_path))
@@ -120,51 +138,86 @@ class Moloch(Report):
 
         time.sleep(5)
          
-        if results.has_key('suricata'):
-           if results["suricata"].has_key("alerts"):
+        if "suricata" in results and results["suricata"]:
+           if "alerts" in results["suricata"]:
                for alert in results["suricata"]["alerts"]:
-                   proto = alert['protocol']
-                   if proto:
-                       tmpdict = {}
-                       cproto = ""
-                       if proto == "UDP" or proto == "TCP" or proto == "6" or proto == "17":
-                           tmpdict['src'] = alert['srcip']
-                           tmpdict['sport'] = alert['srcport']
-                           tmpdict['dst'] = alert['dstip']
-                           tmpdict['dport'] = alert['dstport']
-                           if proto == "UDP" or proto == "17":
-                               tmpdict['cproto'] = "udp"
-                               tmpdict['nproto'] = 17
-                           elif proto == "TCP" or proto == "6":
-                               tmpdict['cproto'] = "tcp"
-                               tmpdict['nproto'] = 6
-                           tmpdict['expression'] = "ip==%s && ip==%s && protocols==%s && port==%s && port==%s && tags==\"%s:%s\"" % (tmpdict['src'],tmpdict['dst'],tmpdict['cproto'],tmpdict['sport'],tmpdict['dport'],self.CUCKOO_INSTANCE_TAG,self.task_id)
-                           tmpdict['hash'] = tmpdict['nproto'] + struct.unpack('!L',socket.inet_aton(tmpdict['src']))[0] + tmpdict['sport'] + struct.unpack('!L',socket.inet_aton(tmpdict['dst']))[0] + tmpdict['dport']
-                       elif proto == "ICMP" or proto == "1":
-                           tmpdict['src'] = alert['srcip']
-                           tmpdict['dst'] = alert['dstip']
-                           tmpdict['cproto'] = "icmp"
-                           tmpdict['nproto'] = 1
-                           tmpdict['expression'] = "ip==%s && ip==%s && protocols==%s && tags==\"%s:%s\"" % (tmpdict['src'],tmpdict['dst'],tmpdict['cproto'],self.CUCKOO_INSTANCE_TAG,self.task_id)
-                           tmpdict['hash'] = tmpdict['nproto'] + struct.unpack('!L',socket.inet_aton(tmpdict['src']))[0] + struct.unpack('!L',socket.inet_aton(tmpdict['dst']))[0]
+                       proto =  alert["protocol"]
+                       if proto:
+                           tmpdict = {}
+                           cproto = ""
+                           if proto == "UDP" or proto == "TCP" or proto == "6" or proto == "17":
+                               tmpdict['srcip'] = alert['srcip']
+                               tmpdict['srcport'] = alert['srcport'] 
+                               tmpdict['dstip'] = alert['dstip']
+                               tmpdict['dstport'] = alert['dstport']
+                               if proto == "UDP" or proto == "17":
+                                   tmpdict['cproto'] = "udp"
+                                   tmpdict['nproto'] = 17
+                               elif proto == "TCP" or proto == "6":
+                                   tmpdict['cproto'] = "tcp"
+                                   tmpdict['nproto'] = 6
+                               tmpdict['expression'] = "ip==%s && ip==%s && port==%s && port==%s && tags==\"%s:%s\" && ip.protocol==%s" % (tmpdict['srcip'],tmpdict['dstip'],tmpdict['srcport'],tmpdict['dstport'],self.CUCKOO_INSTANCE_TAG,self.task_id,tmpdict['cproto'])
+                               tmpdict['hash'] = tmpdict['nproto'] + struct.unpack('!L',socket.inet_aton(tmpdict['srcip']))[0] + tmpdict['srcport'] + struct.unpack('!L',socket.inet_aton(tmpdict['dstip']))[0] + tmpdict['dstport']
+                           elif proto == "ICMP" or proto == "1":
+                               tmpdict['src'] = m.group('src')
+                               tmpdict['dst'] = m.group('dst')
+                               tmpdict['cproto'] = "icmp"
+                               tmpdict['nproto'] = 1
+                               tmpdict['expression'] = "ip==%s && ip==%s && tags==\"%s:%s\" && ip.protocol==%s" % (tmpdict['src_ip'],tmpdict['dest_ip'],self.CUCKOO_INSTANCE_TAG,self.task_id,tmpdict['cproto'])
+                               tmpdict['hash'] = tmpdict['nproto'] + struct.unpack('!L',socket.inet_aton(tmpdict['src_ip']))[0] + struct.unpack('!L',socket.inet_aton(tmpdict['dest_ip']))[0]
 
-                       if self.alerthash.has_key(tmpdict['hash']):
-                           if alert['sid'] not in self.alerthash[tmpdict['hash']]['sids']:
-                               self.alerthash[tmpdict['hash']]['sids'].append("sid:%s" % (alert['sid']))
-                       else:
-                           self.alerthash[tmpdict['hash']] = copy.deepcopy(tmpdict)
-                           self.alerthash[tmpdict['hash']]['sids']=[]
-                           self.alerthash[tmpdict['hash']]['sids'].append("sid:%s" % (alert['sid']))
+                           if self.alerthash.has_key(tmpdict['hash']):
+                               if  alert["sid"] not in self.alerthash[tmpdict['hash']]['sids']:
+                                   self.alerthash[tmpdict['hash']]['sids'].append("suri_sid:%s" % (alert["sid"]))
+                                   self.alerthash[tmpdict['hash']]['msgs'].append("suri_msg:%s" % (re.sub(r"[\W]","_",alert["signature"])))
+                           else:
+                               self.alerthash[tmpdict['hash']] = copy.deepcopy(tmpdict)
+                               self.alerthash[tmpdict['hash']]['sids']=[]
+                               self.alerthash[tmpdict['hash']]['msgs']=[]
+                               self.alerthash[tmpdict['hash']]['sids'].append("suri_sid:%s" % (alert["sid"]))
+                               self.alerthash[tmpdict['hash']]['msgs'].append("suri_msg:%s" % (re.sub(r"[\W]","_",alert["signature"])))
                for entry in self.alerthash:
-                   tags = ','.join(map(str,self.alerthash[entry]['sids']))
+                   tags = ','.join(map(str,self.alerthash[entry]['sids']) + map(str,self.alerthash[entry]['msgs']))
                    if tags:
+                       log.debug("moloch: updating alert tags %s" % (self.alerthash[entry]['expression']))
                        self.update_tags(tags,self.alerthash[entry]['expression'])
 
            if results["suricata"].has_key("files"):
                for entry in results["suricata"]["files"]:
-                   if  entry.has_key("file_info"):
-                       if entry["file_info"]["clamav"]:
-                           tags = "clamav:%s" % (entry["file_info"]["clamav"])
-                           expression = "ip==%s && ip==%s && port==%s && port==%s && tags==\"%s:%s\" && protocols==tcp" % (entry["srcip"],entry["dstip"],entry["sp"],entry["dp"],self.CUCKOO_INSTANCE_TAG,self.task_id)
-                           self.update_tags(tags,expression)
+                   if entry.has_key("file_info"):
+                       proto = entry["protocol"]
+                       if proto:
+                           tmpdict = {}
+                           cproto = ""
+                           tmpdict['cproto'] = "tcp"
+                           tmpdict['nproto'] = 6
+                           tmpdict['srcip'] = entry['srcip']
+                           tmpdict['srcport'] = entry['sp']
+                           tmpdict['dstip'] = entry['dstip']
+                           tmpdict['dstport'] = entry['dp']
+                           tmpdict['expression'] = "ip==%s && ip==%s && port==%s && port==%s && tags==\"%s:%s\" && ip.protocol==%s" % (tmpdict['srcip'],tmpdict['dstip'],tmpdict['srcport'],tmpdict['dstport'],self.CUCKOO_INSTANCE_TAG,self.task_id,tmpdict['cproto'])
+                           tmpdict['hash'] = tmpdict['nproto'] + struct.unpack('!L',socket.inet_aton(tmpdict['srcip']))[0] + tmpdict['srcport'] + struct.unpack('!L',socket.inet_aton(tmpdict['dstip']))[0] + tmpdict['dstport']
+
+                           if not self.fileshash.has_key(tmpdict['hash']):
+                               self.fileshash[tmpdict['hash']] = copy.deepcopy(tmpdict)
+                               self.fileshash[tmpdict['hash']]['clamav']=[]
+                               self.fileshash[tmpdict['hash']]['md5']=[]
+                               self.fileshash[tmpdict['hash']]['sha256']=[]
+                               self.fileshash[tmpdict['hash']]['yara']=[]
+                           if entry["file_info"]["clamav"] and entry["file_info"]["clamav"] not in self.fileshash[tmpdict['hash']]['clamav']:
+                               self.fileshash[tmpdict['hash']]['clamav'].append("clamav:%s" % (re.sub(r"[\W]","_",entry["file_info"]["clamav"])))
+                           if entry["file_info"]["md5"] and entry["file_info"]["md5"] not in self.fileshash[tmpdict['hash']]['md5']:
+                               self.fileshash[tmpdict['hash']]['md5'].append("md5:%s" % (entry["file_info"]["md5"]))
+                           if entry["file_info"]["sha256"] and entry["file_info"]["sha256"] not in self.fileshash[tmpdict['hash']]['sha256']:
+                               self.fileshash[tmpdict['hash']]['sha256'].append("sha256:%s" % (entry["file_info"]["sha256"]))
+                           if entry["file_info"]["yara"]:
+                                  for sign in entry["file_info"]["yara"]:
+                                      if sign["name"] not in self.fileshash[tmpdict['hash']]['yara']:
+                                          self.fileshash[tmpdict['hash']]['yara'].append("yara:%s" % (sign["name"]))
+
+               for entry in self.fileshash:
+                   tags = ','.join(map(str,self.fileshash[entry]['clamav']) + map(str,self.fileshash[entry]['md5']) + map(str,self.fileshash[entry]['sha256']) + map(str,self.fileshash[entry]['yara']))
+                   if tags:
+                       log.debug("moloch: updating file tags %s" % (self.fileshash[entry]['expression'])) 
+                       self.update_tags(tags,self.fileshash[entry]['expression'])                
         return {} 

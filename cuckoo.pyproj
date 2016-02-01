@@ -164,7 +164,6 @@
     <Compile Include="lib\cuckoo\common\office\oleid.py" />
     <Compile Include="lib\cuckoo\common\office\olevba.py" />
     <Compile Include="lib\cuckoo\common\office\pyparsing.py" />
-    <Compile Include="lib\cuckoo\common\office\vbadeobf.py" />
     <Compile Include="lib\cuckoo\common\office\__init__.py" />
     <Compile Include="lib\cuckoo\common\pdftools\pdf-parser.py" />
     <Compile Include="lib\cuckoo\common\pdftools\pdfid.py" />
@@ -208,6 +207,9 @@
     <Compile Include="modules\auxiliary\tor.py" />
     <Compile Include="modules\feeds\bad_ssl_certs.py" />
     <Compile Include="modules\feeds\__init__.py" />
+    <Compile Include="modules\reporting\compression.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="modules\reporting\elasticsearchdb.py" />
     <Compile Include="modules\reporting\maec41.py" />
     <Compile Include="modules\reporting\malheur.py" />
@@ -400,6 +402,7 @@
     <Content Include="web\static\fonts\glyphicons-halflings-regular.ttf" />
     <Content Include="web\static\fonts\glyphicons-halflings-regular.woff" />
     <Content Include="web\static\fonts\glyphicons-halflings-regular.woff2" />
+    <Content Include="web\templates\analysis\antivirus.html" />
     <Content Include="web\templates\analysis\behavior\_api_call.html" />
     <Content Include="web\templates\analysis\behavior\_search.html" />
     <Content Include="web\templates\analysis\behavior\_search_results.html" />
@@ -407,6 +410,7 @@
     <Content Include="web\templates\analysis\memory\_netscan.html" />
     <Content Include="web\templates\analysis\memory\_sockscan.html" />
     <Content Include="web\templates\analysis\network\_smtp.html" />
+    <Content Include="web\templates\analysis\shrike.html" />
     <Content Include="web\templates\analysis\static\_dotnet.html" />
     <Content Include="web\templates\analysis\static\_java.html" />
     <Content Include="web\templates\analysis\static\_office.html" />
@@ -423,6 +427,10 @@
     <Content Include="web\templates\analysis\procmemory\index.html" />
     <Content Include="web\templates\analysis\static\_pdf.html" />
     <Content Include="web\templates\analysis\static\_ratconfig.html" />
+    <Content Include="web\templates\analysis\surialert.html" />
+    <Content Include="web\templates\analysis\surifiles.html" />
+    <Content Include="web\templates\analysis\surihttp.html" />
+    <Content Include="web\templates\analysis\suritls.html" />
     <Content Include="web\templates\api\index.html" />
     <Content Include="web\templates\base.html" />
     <Content Include="web\templates\error.html" />

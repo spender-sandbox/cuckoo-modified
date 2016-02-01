@@ -20,6 +20,10 @@ def demux_zip(filename, options):
     retlist = []
 
     try:
+        # only extract from files with no extension or with .bin (downloaded from us) or .zip extensions
+        ext = os.path.splitext(filename)[1]
+        if ext != "" and ext != ".zip" and ext != ".bin":
+            return retlist
         # don't try to extract from office docs
         magic = File(filename).get_type()
         if "Microsoft" in magic or "Java Jar" in magic or "Composite Document File" in magic:

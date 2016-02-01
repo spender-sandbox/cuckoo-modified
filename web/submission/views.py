@@ -21,7 +21,7 @@ from django.template import RequestContext
 sys.path.append(settings.CUCKOO_PATH)
 
 from lib.cuckoo.common.config import Config
-from lib.cuckoo.common.utils import store_temp_file
+from lib.cuckoo.common.utils import store_temp_file, validate_referer
 from lib.cuckoo.common.quarantine import unquarantine
 from lib.cuckoo.core.database import Database
 
@@ -57,7 +57,7 @@ def index(request):
         custom = request.POST.get("custom", "")
         memory = bool(request.POST.get("memory", False))
         enforce_timeout = bool(request.POST.get("enforce_timeout", False))
-        referer = request.POST.get("referer", None)
+        referer = validate_referer(request.POST.get("referer", None))
         tags = request.POST.get("tags", None)
 
         task_gateways = []

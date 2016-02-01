@@ -570,7 +570,10 @@ class Process:
                 "sys32_ctimelow",
                 "sys32_ctimehigh",
                 "debug",
-                "disable_hook_content"
+                "disable_hook_content",
+                "hook-type",
+                "exclude-apis",
+                "exclude-dlls",
                 ]
             
             for optname in simple_optnames:

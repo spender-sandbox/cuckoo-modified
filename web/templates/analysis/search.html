@@ -100,8 +100,44 @@
                         <td>Search for samples associated with malware family</td>
                     </tr>
                     <tr>
+                        <td><code>surimsg:</code></td>
+                        <td>Search for Suricata Alerts MSG</td>
+                    </tr>
+                    <tr>
                         <td><code>surialert:</code></td>
                         <td>Search for Suricata Alerts</td>
+                    </tr>
+                    <tr>
+                        <td><code>surisid:</code></td>
+                        <td>Search for Suricata Alerts SID</td>
+                    </tr>
+                    <tr>
+                        <td><code>suriurl:</code></td>
+                        <td>Search for URL in Suricata HTTP Logs</td>
+                    </tr>
+                    <tr>
+                        <td><code>suriua:</code></td>
+                        <td>Search for User-Agent in Suricata HTTP Logs</td>
+                    </tr>
+                    <tr>
+                        <td><code>surireferer:</code></td>
+                        <td>Search for Referer in Suricata HTTP Logs</td>
+                    </tr>
+                    <tr>
+                        <td><code>surihhost:</code></td>
+                        <td>Search for Host in Suricata HTTP Logs</td>
+                    </tr>
+                    <tr>
+                        <td><code>suritlssubject:</code></td>
+                        <td>Search for TLS Subject in Suricata TLS Logs</td>
+                    </tr>
+                    <tr>
+                        <td><code>suritlsissuerdn:</code></td>
+                        <td>Search for TLS Issuer DN in Suricata TLS Logs</td>
+                    </tr>
+                    <tr>
+                        <td><code>suritlsfingerprint:</code></td>
+                        <td>Search for TLS Fingerprint in Suricata TLS Logs</td>
                     </tr>
                     <tr>
                         <td><code>suritls:</code></td>
@@ -126,6 +162,34 @@
                     <tr>
                         <td><code>virustotal:</code></td>
                         <td>Virus Total Detected Name</td>
+                    </tr>
+                    <tr>
+                        <td><code>machinename:</code></td>
+                        <td>Name of the Target Machine</td>
+                    </tr>
+                    <tr>
+                        <td><code>machinelabel:</code></td>
+                        <td>Label of the Target Machine</td>
+                    </tr>
+                    <tr>
+                        <td><code>custom:</code></td>
+                        <td>Custom data</td>
+                    </tr>
+                    <tr>
+                        <td><code>shrikemsg:</code></td>
+                        <td>Shrike Suri Alert MSG</td>
+                    </tr>
+                    <tr>
+                        <td><code>shrikesid:</code></td>
+                        <td>Shrike Suri Alert Sid (exact int)</td>
+                    </tr>
+                    <tr>
+                        <td><code>shrikeurl:</code></td>
+                        <td>Shrike url before mangling</td>
+                    </tr>
+                    <tr>
+                        <td><code>shrikerefer:</code></td>
+                        <td>Shrike Referer</td>
                     </tr>
                     <tr>
                         <td><code>comment:</code></td>
@@ -243,6 +307,19 @@
                                 <span class="mono">None</span>
                             {% endif %}
                         </td>
+                        {% if config.display_shrike %}
+                        <td>
+                            {% if analysis.shrike_msg %}
+                                 {% if analysis.status == "reported" %}
+                                     <a href="{% url "analysis.views.shrike" analysis.id %}" target="_blank"><span class="mono">{{analysis.shrike_msg}}</span></a>
+                                 {% else %}
+                                     <span class="mono">{{analysis.shrike_msg}}</span>
+                                 {% endif %}
+                            {% else %}
+                                 <span class="mono">None</span>
+                            {% endif %}
+                        </td>
+                       {% endif %}
                         <td style="text-align: right;">
                             {% if analysis.status == "pending" %}
                                 <span class="text-muted">pending</span>

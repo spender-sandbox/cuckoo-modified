@@ -24,6 +24,10 @@ if not cfg.mongodb.get("enabled") and not cfg.elasticsearchdb.get("enabled"):
 if cfg.mongodb.get("enabled") and cfg.elasticsearchdb.get("enabled"):
     raise Exception("Both database backend reporting modules are enabled. Please only enabled ElasticSearch or MongoDB.")
 
+aux_cfg =  Config("auxiliary")
+vtdl_cfg = aux_cfg.virustotaldl
+tor_cfg = aux_cfg.tor
+
 # Get connection options from reporting.conf.
 MONGO_HOST = cfg.mongodb.get("host", "127.0.0.1")
 MONGO_PORT = cfg.mongodb.get("port", 27017)

@@ -20,12 +20,20 @@
                     {% endif %}
                 </tr>
                 <tr>
-                    <th>File URL</th>
-                    <td>{{file.http_uri}}</td>
+                    <th>File URI</th>
+                    <td>{{file.http_uri}} 
+                        {% if file.moloch_uri_url %}
+                            <a href={{file.moloch_uri_url}} target="_blank">[MLCH]</a>
+                        {% endif %}
+                    </td>
                 </tr>
                 <tr>
                     <th>Host</th>
-                    <td>{{file.http_host}}</td>
+                    <td>{{file.http_host}} 
+                        {% if file.moloch_host_url %}
+                            <a href={{file.moloch_host_url}} target="_blank">[MLCH]</a>
+                        {% endif %}
+                    </td>
                 </tr>
                 <tr>
                     <th>HTTP Referer</th>
@@ -33,7 +41,11 @@
                 </tr>
                 <tr>
                     <th>MD5</th>
-                    <td>{{file.md5}}</td>
+                    <td>{{file.md5}} 
+                        {% if file.moloch_md5_url %}
+                            <a href={{file.moloch_md5_url}} target="_blank">[MLCH]</a>
+                        {% endif %}
+                    </td>
                 </tr>
                 <tr>
                     <th>SHA1</th>
@@ -41,7 +53,11 @@
                 </tr>
                 <tr>
                     <th>SHA256</th>
-                    <td>{{file.file_info.sha256}}</td>
+                    <td>{{file.file_info.sha256}}
+                        {% if file.moloch_sha256_url %} 
+                            <a href={{file.moloch_sha256_url}} target="_blank">[MLCH]</a>
+                        {% endif %}
+                    </td>
                 </tr>
                 <tr>
                     <th>CRC32</th>
@@ -53,7 +69,11 @@
                 </tr>
                 <tr>
                     <th>ClamAV</th>
-                    <td>{{file.file_info.clamav}}</td>
+                    <td>{{file.file_info.clamav}} 
+                        {% if file.moloch_clamav_url %} 
+                            <a href={{file.moloch_clamav_url}} target="_blank">[MLCH]</a>
+                        {% endif %}
+                    </td>
                 </tr>
                 <tr>
                     <th>Yara</th>
@@ -61,7 +81,11 @@
                     {% if file.yara %}
                         <ul style="margin-bottom: 0;">
                         {% for sign in file.fileinfo.yara %}
-                            <li>{{sign.name}} - {{sign.meta.description}}</li>
+                            <li>{{sign.name}} - {{sign.meta.description}} 
+                                {% if sign.moloch_yara_url %}
+                                    <a href={{file.moloch_yara_url}} target="_blank">[MLCH]</a>
+                                {% endif %}
+                            </li>
                         {% endfor %}
                         </ul>
                     {% else %}
@@ -69,7 +93,17 @@
                     {% endif %}
                     </td>
                 </tr>
-                {% if file.object_id or file.id %}
+                <tr>
+                    <th>VirusTotal</th>
+                    <td><a href="https://www.virustotal.com/en/file/{{file.file_info.sha256}}/analysis/">Search for Analysis</a></td>
+                </tr>
+                {% if config.display_et_portal %}
+                <tr>
+                    <th>EmergingThreats</th>
+                    <td><a href="https://threatintel.proofpoint.com/search?q={{file.md5}}" target="_blank">Search for Analysis</a></td>
+                </tr>
+                {% endif %}
+                {% if file.id %}
                 <tr>
                     <th></th>
                     <td><a href="{% url "analysis.views.file" "suricata" analysis.info.id file.id %}" class="btn btn-primary btn-small">Download</a>

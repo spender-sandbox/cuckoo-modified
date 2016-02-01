@@ -14,7 +14,7 @@ from lib.cuckoo.common.config import Config
 from lib.cuckoo.common.abstracts import Report
 from lib.cuckoo.common.constants import CUCKOO_ROOT
 from lib.cuckoo.common.exceptions import CuckooReportError
-from lib.cuckoo.core.database import Database, Task
+from lib.cuckoo.core.database import Database, Task, TASK_REPORTED
 
 log = logging.getLogger(__name__)
 cfg = Config("reporting")
