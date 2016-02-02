@@ -5,91 +5,13 @@
 import os
 import struct
 
-try:
-    import re2 as re
-except ImportError:
-    import re
-
 from lib.cuckoo.common.abstracts import Processing
-from lib.cuckoo.common.objects import File
+from lib.cuckoo.common.objects import File, ProcDump
 from lib.cuckoo.common.constants import CUCKOO_ROOT
-from lib.cuckoo.common.exceptions import CuckooProcessingError
-
-PAGE_NOACCESS           = 0x00000001
-PAGE_READONLY           = 0x00000002
-PAGE_READWRITE          = 0x00000004
-PAGE_WRITECOPY          = 0x00000008
-PAGE_EXECUTE            = 0x00000010
-PAGE_EXECUTE_READ       = 0x00000020
-PAGE_EXECUTE_READWRITE  = 0x00000040
-PAGE_EXECUTE_WRITECOPY  = 0x00000080
-PAGE_GUARD              = 0x00000100
-PAGE_NOCACHE            = 0x00000200
-PAGE_WRITECOMBINE       = 0x00000400
-
-protmap = {
-    PAGE_NOACCESS : "NOACCESS",
-    PAGE_READONLY : "R",
-    PAGE_READWRITE : "RW",
-    PAGE_WRITECOPY : "RWC",
-    PAGE_EXECUTE : "X",
-    PAGE_EXECUTE_READ : "RX",
-    PAGE_EXECUTE_READWRITE : "RWX",
-    PAGE_EXECUTE_WRITECOPY : "RWXC",
-}
 
 class ProcessMemory(Processing):
     """Analyze process memory dumps."""
     order = 10
-
-    def prot_to_str(self, prot):
-        if prot & PAGE_GUARD:
-            return "G"
-        prot &= 0xff
-        return protmap[prot]
-
-    def coalesce_chunks(self, chunklist):
-        low = chunklist[0]["start"]
-        high = chunklist[-1]["end"]
-        prot = chunklist[0]["prot"]
-        PE = chunklist[0]["PE"]
-        for chunk in chunklist:
-            if chunk["prot"] != prot:
-                prot = "Mixed"
-        return { "start" : low, "end" : high, "size" : "0x%x" % (int(high, 16) - int(low, 16)), "prot" : prot, "PE" : PE, "chunks" : chunklist }
-
-    def parse_dump(self, dmp_path):
-        f = open(dmp_path, "rb")
-        address_space = []
-        curchunk = []
-        lastend = 0
-        while True:
-            data = f.read(24)
-            if data == '':
-                break
-            alloc = dict()
-            addr,size,mem_state,mem_type,mem_prot = struct.unpack("QIIII", data)
-            offset = f.tell()
-            if addr != lastend and len(curchunk):
-                address_space.append(self.coalesce_chunks(curchunk))
-                curchunk = []
-            lastend = addr + size
-            alloc["start"] = "0x%.08x" % addr
-            alloc["end"] = "0x%.08x" % (addr + size)
-            alloc["size"] = "0x%x" % size
-            alloc["prot"] = self.prot_to_str(mem_prot)
-            alloc["state"] = mem_state
-            alloc["type"] = mem_type
-            alloc["offset"] = offset
-            alloc["PE"] = False
-            if f.read(2) == "MZ":
-                alloc["PE"] = True
-            f.seek(size-2, 1)
-            curchunk.append(alloc)
-        if len(curchunk):
-            address_space.append(self.coalesce_chunks(curchunk))
-
-        return address_space
 
     def run(self):
         """Run analysis.
@@ -118,21 +40,19 @@ class ProcessMemory(Processing):
                         if process_id == process["process_id"]:
                             process_name = process["process_name"]
                             process_path = process["module_path"]
+
+                procdump = ProcDump(dmp_path, pretty=True)
+
                 proc = dict(
                     file=dmp_path,
                     pid=process_id,
                     name=process_name,
                     path=process_path,
                     yara=dmp_file.get_yara(os.path.join(CUCKOO_ROOT, "data", "yara", "index_memory.yar")),
-                    address_space=self.parse_dump(dmp_path),
+                    address_space=procdump.address_space,
                 )
                     
                 if do_strings:
-                    try:
-                        data = open(dmp_path, "rb").read()
-                    except (IOError, OSError) as e:
-                        raise CuckooProcessingError("Error opening file %s" % e)
-
                     if nulltermonly:
                         apat = "([\x20-\x7e]{" + str(minchars) + ",})\x00"
                         upat = "((?:[\x20-\x7e][\x00]){" + str(minchars) + ",})\x00\x00"
@@ -140,15 +60,17 @@ class ProcessMemory(Processing):
                         apat = "[\x20-\x7e]{" + str(minchars) + ",}"
                         upat = "(?:[\x20-\x7e][\x00]){" + str(minchars) + ",}"
 
-                    strings = re.findall(apat, data)
-                    for ws in re.findall(upat, data):
+                    strings = procdump.search(apat, all=True)
+                    ustrings = procdump.search(upat, all=True)
+                    for ws in ustrings:
                         strings.append(str(ws.decode("utf-16le")))
-                    data = None
 
                     proc["strings_path"] = dmp_path + ".strings"
                     f=open(proc["strings_path"], "w")
                     f.write("\n".join(strings))
                     f.close()
+
+                procdump.close()
 
                 # Deduplicate configs
                 if proc["yara"]:
