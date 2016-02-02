@@ -45,7 +45,7 @@ if cfg.elasticsearchdb and cfg.elasticsearchdb.enabled:
     except Exception as e:
         log.warning("Unable to connect to ElasticSearch: %s", str(e))
 
-def delete_mongo_data(curtask=None, tid=None):
+def delete_mongo_data(curtask, tid):
     # TODO: Class-ify this or make it a function in utils, some code reuse
     # between this/process.py/django view
     analyses = results_db.analysis.find({"info.id": int(tid)})
@@ -58,7 +58,7 @@ def delete_mongo_data(curtask=None, tid=None):
         log.debug("Task #{0} deleting MongoDB data for Task #{1}".format(
                   curtask, tid))
 
-def delete_elastic_data(curtask=None, tid=None):
+def delete_elastic_data(curtask, tid):
     # TODO: Class-ify this or make it a function in utils, some code reuse
     # between this/process.py/django view
     analyses = es.search(
@@ -86,12 +86,13 @@ def delete_elastic_data(curtask=None, tid=None):
         log.debug("Task #{0} deleting ElasticSearch data for Task #{1}".format(
                   curtask, tid))
 
-def delete_files(curtask=None, delfiles=None):
+def delete_files(curtask, delfiles, target_id):
     delfiles_list = delfiles
     if not isinstance(delfiles, list):
         delfiles_list = [delfiles]
 
-    for delent in delfiles_list:
+    for _delent in delfiles_list:
+        delent = _delent.format(target_id)
         if os.path.isdir(delent):
             try:
                 shutil.rmtree(delent)
@@ -189,13 +190,13 @@ class Retention(Report):
                 for tid in buf:
                     lastTask = tid.to_dict()["id"]
                     if item != "mongo" and item != "elastic":
-                        delete_files(curtask=curtask, delfiles=delLocations[item].format(lastTask))
+                        delete_files(curtask, delfiles, lastTask)
                     elif item == "mongo":
                         if cfg.mongodb and cfg.mongodb.enabled:
-                            delete_mongo_data(curtask=curtask, tid=lastTask)
+                            delete_mongo_data(curtask, lastTask)
                     elif item == "elastic":
                         if cfg.elasticsearchdb and cfg.elasticsearchdb.enabled:
-                            delete_elastic_data(curtask=curtask, tid=lastTask)
+                            delete_elastic_data(curtask, lastTask)
                 saveTaskLogged[item] = int(lastTask)
             else:
                 saveTaskLogged[item] = 0
