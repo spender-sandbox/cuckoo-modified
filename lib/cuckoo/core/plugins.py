@@ -526,7 +526,7 @@ class RunSignatures(object):
                         words = re.findall(r"[A-Za-z0-9\.]+", alert["signature"])
                         famcheck = words[2]
                         famchecklower = famcheck.lower()
-                        if famchecklower == "win32":
+                        if famchecklower == "win32" or famchecklower == "w32":
                             famcheck = words[3]
                             famchecklower = famcheck.lower()
 
