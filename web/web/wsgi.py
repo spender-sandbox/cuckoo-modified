@@ -77,10 +77,10 @@ sys.path.append(webdir)
 
 # Have WSGI run out of the WebDir
 from os import chdir, environ
-os.chdir(webdir)
+chdir(webdir)
 
 # Set django settings
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "web.settings")
+environ.setdefault("DJANGO_SETTINGS_MODULE", "web.settings")
 
 # This application object is used by any WSGI server configured to use this
 # file. This includes Django's development server, if the WSGI_APPLICATION
