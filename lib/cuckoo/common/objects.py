@@ -392,7 +392,7 @@ class ProcDump(object):
     def __init__(self, dump_file, pretty=False):
         self._dumpfile = open(dump_file, "rb")
         self.dumpfile = mmap.mmap(self._dumpfile.fileno(), 0, access=mmap.ACCESS_READ)
-        self.pretty = pretty
+        self.address_space = self.parse_dump()
         self.protmap = protmap = {
             PAGE_NOACCESS : "NOACCESS",
             PAGE_READONLY : "R",
@@ -403,7 +403,6 @@ class ProcDump(object):
             PAGE_EXECUTE_READWRITE : "RWX",
             PAGE_EXECUTE_WRITECOPY : "RWXC",
         }
-        self.address_space = self.parse_dump()
 
     def __del__(self):
         self.close()
@@ -420,6 +419,23 @@ class ProcDump(object):
         prot &= 0xff
         return self.protmap[prot]
 
+    def pretty_print(self):
+        new_addr_space = self.address_space[:]
+        for map in new_addr_space:
+            map["start"] = "0x%.08x" % map["start"]
+            map["end"] = "0x%.08x" % map["end"]
+            map["size"] = "0x%.08x" % map["size"]
+            if map["prot"] is None:
+                map["prot"] = "Mixed"
+            else:
+                map["prot"] = self._prot_to_str(map["prot"])
+            for chunk in map["chunks"]:
+                chunk["start"] = "0x%.08x" % chunk["start"]
+                chunk["end"] = "0x%.08x" % chunk["end"]
+                chunk["size"] = "0x%.08x" % chunk["size"]
+                chunk["prot"] = self._prot_to_str(chunk["prot"])
+        return new_addr_space
+
     def _coalesce_chunks(self, chunklist):
         low = chunklist[0]["start"]
         high = chunklist[-1]["end"]
@@ -427,15 +443,8 @@ class ProcDump(object):
         PE = chunklist[0]["PE"]
         for chunk in chunklist:
             if chunk["prot"] != prot:
-                # Mixed
-                if self.pretty:
-                    prot = "Mixed"
-                else:
-                    prot = None
-        if self.pretty:
-            return { "start" : low, "end" : high, "size" : "0x%x" % (int(high, 16) - int(low, 16)), "prot" : prot, "PE" : PE, "chunks" : chunklist }
-        else:
-            return { "start" : low, "end" : high, "size" : high - low, "prot" : prot, "PE" : PE, "chunks" : chunklist }
+                prot = None
+        return { "start" : low, "end" : high, "size" : high - low, "prot" : prot, "PE" : PE, "chunks" : chunklist }
  
     def parse_dump(self):
         f = self.dumpfile
@@ -453,16 +462,10 @@ class ProcDump(object):
                 address_space.append(self._coalesce_chunks(curchunk))
                 curchunk = []
             lastend = addr + size
-            if self.pretty:
-                alloc["start"] = "0x%.08x" % addr
-                alloc["end"] = "0x%.08x" % (addr + size)
-                alloc["size"] = "0x%x" % size
-                alloc["prot"] = self._prot_to_str(mem_prot)
-            else:
-                alloc["start"] = addr
-                alloc["end"] = (addr + size)
-                alloc["size"] = size
-                alloc["prot"] = mem_prot
+            alloc["start"] = addr
+            alloc["end"] = (addr + size)
+            alloc["size"] = size
+            alloc["prot"] = mem_prot
             alloc["state"] = mem_state
             alloc["type"] = mem_type
             alloc["offset"] = offset

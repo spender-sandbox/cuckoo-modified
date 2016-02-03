@@ -49,7 +49,7 @@ class ProcessMemory(Processing):
                     name=process_name,
                     path=process_path,
                     yara=dmp_file.get_yara(os.path.join(CUCKOO_ROOT, "data", "yara", "index_memory.yar")),
-                    address_space=procdump.address_space,
+                    address_space=procdump.pretty_print(),
                 )
                     
                 if do_strings:
