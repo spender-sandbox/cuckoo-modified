@@ -190,7 +190,7 @@ class Retention(Report):
                 for tid in buf:
                     lastTask = tid.to_dict()["id"]
                     if item != "mongo" and item != "elastic":
-                        delete_files(curtask, delfiles, lastTask)
+                        delete_files(curtask, delLocations[item], lastTask)
                     elif item == "mongo":
                         if cfg.mongodb and cfg.mongodb.enabled:
                             delete_mongo_data(curtask, lastTask)
