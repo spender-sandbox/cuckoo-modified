@@ -497,13 +497,13 @@ class ProcDump(object):
                 self.dumpfile.seek(chunk["offset"] + addr - chunk["start"])
                 return self.dumpfile.read(size)
 
-    def search(self, regex, flags=None, all=False):
+    def search(self, regex, flags=0, all=False):
         if all:
             matches = []
             for map in self.address_space:
                 for chunk in map["chunks"]:
                     self.dumpfile.seek(chunk["offset"])
-                    match = re.findall(regex, self.dumpfile.read(chunk["end"] - chunk["start"]))
+                    match = re.findall(regex, self.dumpfile.read(chunk["end"] - chunk["start"]), flags)
                     if match:
                         matches.extend(match)
             return matches
@@ -511,6 +511,6 @@ class ProcDump(object):
             for map in self.address_space:
                 for chunk in map["chunks"]:
                     self.dumpfile.seek(chunk["offset"])
-                    match = re.search(regex, self.dumpfile.read(chunk["end"] - chunk["start"]))
+                    match = re.search(regex, self.dumpfile.read(chunk["end"] - chunk["start"]), flags)
                     if match:
                         return match
