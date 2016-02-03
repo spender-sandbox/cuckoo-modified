@@ -411,8 +411,10 @@ class ProcDump(object):
     def close(self):
         if self.dumpfile:
             self.dumpfile.close()
+            self.dumpfile = None
         if self._dumpfile:
             self._dumpfile.close()
+            self._dumpfile = None
 
     def _prot_to_str(self, prot):
         if prot & PAGE_GUARD:
