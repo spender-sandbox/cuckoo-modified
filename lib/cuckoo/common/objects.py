@@ -8,6 +8,7 @@ import logging
 import os
 import subprocess
 import mmap
+import struct
 
 from lib.cuckoo.common.constants import CUCKOO_ROOT
 from lib.cuckoo.common.defines import PAGE_NOACCESS, PAGE_READONLY, PAGE_READWRITE, PAGE_WRITECOPY, PAGE_EXECUTE, PAGE_EXECUTE_READ
