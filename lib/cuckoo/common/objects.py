@@ -392,7 +392,6 @@ class ProcDump(object):
     def __init__(self, dump_file, pretty=False):
         self._dumpfile = open(dump_file, "rb")
         self.dumpfile = mmap.mmap(self._dumpfile.fileno(), 0, access=mmap.ACCESS_READ)
-        self.address_space = self.parse_dump()
         self.pretty = pretty
         self.protmap = protmap = {
             PAGE_NOACCESS : "NOACCESS",
@@ -404,6 +403,7 @@ class ProcDump(object):
             PAGE_EXECUTE_READWRITE : "RWX",
             PAGE_EXECUTE_WRITECOPY : "RWXC",
         }
+        self.address_space = self.parse_dump()
 
     def __del__(self):
         self.close()
