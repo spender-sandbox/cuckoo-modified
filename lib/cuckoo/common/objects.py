@@ -9,6 +9,7 @@ import os
 import subprocess
 import mmap
 import struct
+import copy
 
 from lib.cuckoo.common.constants import CUCKOO_ROOT
 from lib.cuckoo.common.defines import PAGE_NOACCESS, PAGE_READONLY, PAGE_READWRITE, PAGE_WRITECOPY, PAGE_EXECUTE, PAGE_EXECUTE_READ
@@ -420,7 +421,7 @@ class ProcDump(object):
         return self.protmap[prot]
 
     def pretty_print(self):
-        new_addr_space = self.address_space[:]
+        new_addr_space = copy.deepcopy(self.address_space)
         for map in new_addr_space:
             map["start"] = "0x%.08x" % map["start"]
             map["end"] = "0x%.08x" % map["end"]
