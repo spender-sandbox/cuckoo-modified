@@ -502,6 +502,8 @@ class ProcDump(object):
 
     def search(self, regex, flags=0, all=False):
         if all:
+            result = dict()
+            result["detail"] = []
             matches = []
             for map in self.address_space:
                 for chunk in map["chunks"]:
@@ -509,11 +511,16 @@ class ProcDump(object):
                     match = re.findall(regex, self.dumpfile.read(chunk["end"] - chunk["start"]), flags)
                     if match:
                         matches.extend(match)
-            return matches
+                        result["detail"].append({"match": match, "chunk": chunk})
+            result["matches"] = matches
+            return result
         else:
             for map in self.address_space:
                 for chunk in map["chunks"]:
                     self.dumpfile.seek(chunk["offset"])
                     match = re.search(regex, self.dumpfile.read(chunk["end"] - chunk["start"]), flags)
                     if match:
-                        return match
+                        result = dict()
+                        result["match"] = match
+                        result["chunk"] = chunk
+                        return result

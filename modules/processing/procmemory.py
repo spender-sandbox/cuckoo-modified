@@ -60,8 +60,10 @@ class ProcessMemory(Processing):
                         apat = "[\x20-\x7e]{" + str(minchars) + ",}"
                         upat = "(?:[\x20-\x7e][\x00]){" + str(minchars) + ",}"
 
-                    strings = procdump.search(apat, all=True)
-                    ustrings = procdump.search(upat, all=True)
+                    matchdict = procdump.search(apat, all=True)
+                    strings = matchdict["matches"]
+                    matchdict = procdump.search(upat, all=True)
+                    ustrings = matchdict["matches"]
                     for ws in ustrings:
                         strings.append(str(ws.decode("utf-16le")))
 
