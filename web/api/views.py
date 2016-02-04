@@ -4,7 +4,7 @@ import re
 import socket
 import sys
 import tarfile
-from datetime import datetime
+from datetime import datetime,timedelta
 import random
 import tempfile
 import requests
@@ -21,6 +21,7 @@ from django.views.decorators.http import require_safe
 from ratelimit.decorators import ratelimit
 from StringIO import StringIO
 from zipfile import ZipFile, ZIP_STORED
+from bson.objectid import ObjectId
 
 sys.path.append(settings.CUCKOO_PATH)
 from lib.cuckoo.common.config import Config
@@ -951,7 +952,7 @@ def tasks_list(request, offset=None, limit=None, window=None):
                 resp = {"error": True,
                         "error_value": "The Window You Specified is greater than the configured maximum"}
                 return jsonize(resp, response=True)
-        completed_after = datetime.datetime.now() - datetime.timedelta(minutes=int(window))
+        completed_after = datetime.now() - timedelta(minutes=int(window))
 
     status = request.GET.get("status")
 
@@ -1587,7 +1588,7 @@ def tasks_rollingsuri(request, window=60):
                     "error_value": "The Window You Specified is greater than the configured maximum"}
             return jsonize(resp, response=True)
          
-    gen_time = datetime.datetime.now() - datetime.timedelta(minutes=window)
+    gen_time = datetime.now() - timedelta(minutes=window)
     dummy_id = ObjectId.from_datetime(gen_time)
     result = list(results_db.analysis.find({"suricata.alerts.alert": {"$exists": True}, "_id": {"$gte": dummy_id}},{"suricata.alerts":1,"info.id":1}))
     resp=[]
@@ -1622,7 +1623,7 @@ def tasks_rollingshrike(request, window=60, msgfilter=None):
                     "error_value": "The Window You Specified is greater than the configured maximum"}
             return jsonize(resp, response=True)
 
-    gen_time = datetime.datetime.now() - datetime.timedelta(minutes=window)
+    gen_time = datetime.now() - timedelta(minutes=window)
     dummy_id = ObjectId.from_datetime(gen_time)
     if msgfilter: 
        result = results_db.analysis.find({"info.shrike_url": {"$exists": True, "$ne":None }, "_id": {"$gte": dummy_id},"info.shrike_msg": {"$regex" : msgfilter, "$options" : "-1"}},{"info.id":1,"info.shrike_msg":1,"info.shrike_sid":1,"info.shrike_url":1,"info.shrike_refer":1},sort=[("_id", pymongo.DESCENDING)])
