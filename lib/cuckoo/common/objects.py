@@ -473,9 +473,12 @@ class ProcDump(object):
             alloc["type"] = mem_type
             alloc["offset"] = offset
             alloc["PE"] = False
-            if f.read(2) == "MZ":
-                alloc["PE"] = True
-            f.seek(size-2, 1)
+            try:
+                if f.read(2) == "MZ":
+                    alloc["PE"] = True
+                f.seek(size-2, 1)
+            except:
+                break
             curchunk.append(alloc)
         if len(curchunk):
             address_space.append(self._coalesce_chunks(curchunk))
