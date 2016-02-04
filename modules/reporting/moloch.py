@@ -130,7 +130,7 @@ class Moloch(Report):
             log.debug("moloch: running import command %s " % (cmd))
             ret,stdout,stderr = self.cmd_wrapper(cmd)
             if ret == 0:
-               log.warning("moloch: imported pcap %s" % (self.pcap_path))
+               log.debug("moloch: imported pcap %s" % (self.pcap_path))
             else:
                 log.warning("moloch-capture returned a Exit Value Other than Zero %s" % (stderr))
         except Exception,e:
