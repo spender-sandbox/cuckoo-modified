@@ -75,7 +75,7 @@ def decrypt_RC4(enckey, data):
 	return cipher.decrypt(data) # decrpyt the data
 
 
-def decrypt_RC6(key, encrypted):
+def decrypt_RC6(key, encrypted, rounds, P, Q):
     def rol(a, i):
         a &= 0xFFFFFFFF
         i &= 0x1F
