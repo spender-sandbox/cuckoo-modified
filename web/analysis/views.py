@@ -79,6 +79,7 @@ def get_analysis_info(db, id=-1, task=None):
                    {
                        "info": 1, "virustotal_summary": 1,
                        "info.custom":1, "info.shrike_msg":1, "malscore": 1, "malfamily": 1, 
+                       "network.pcap_sha256": 1,
                        "mlist_cnt": 1, "f_mlist_cnt": 1, "info.package": 1, "target.file.clamav": 1,
                        "suri_tls_cnt": 1, "suri_alert_cnt": 1, "suri_http_cnt": 1, "suri_file_cnt": 1
                    }, sort=[("_id", pymongo.DESCENDING)]
@@ -124,6 +125,8 @@ def get_analysis_info(db, id=-1, task=None):
             new["malscore"] = rtmp["malscore"]
         if rtmp.has_key("malfamily") and rtmp["malfamily"]:
             new["malfamily"] = rtmp["malfamily"]
+        if "network" in rtmp and "pcap_sha256" in rtmp["network"]:
+            new["pcap_sha256"] = rtmp["network"]["pcap_sha256"]
         if rtmp.has_key("info") and rtmp["info"].has_key("custom") and rtmp["info"]["custom"]:
             new["custom"] = rtmp["info"]["custom"]
         if rtmp.has_key("info") and rtmp["info"].has_key("package") and rtmp["info"]["package"]:
