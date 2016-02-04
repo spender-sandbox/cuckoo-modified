@@ -114,7 +114,7 @@ def _get_filetype(data):
         return None
 
     try:
-        ms = magic.open(magic.MAGIC_NONE)
+        ms = magic.open(magic.MAGIC_SYMLINK)
         ms.load()
         file_type = ms.buffer(data)
     except:

@@ -208,7 +208,7 @@ class File:
         file_type = None
         if HAVE_MAGIC:
             try:
-                ms = magic.open(magic.MAGIC_NONE)
+                ms = magic.open(magic.MAGIC_SYMLINK)
                 ms.load()
                 file_type = ms.file(self.file_path)
             except:
@@ -224,7 +224,7 @@ class File:
 
         if file_type is None:
             try:
-                p = subprocess.Popen(["file", "-b", self.file_path],
+                p = subprocess.Popen(["file", "-b", "-L", self.file_path],
                                      stdout=subprocess.PIPE)
                 file_type = p.stdout.read().strip()
             except:
@@ -239,7 +239,7 @@ class File:
         file_type = None
         if HAVE_MAGIC:
             try:
-                ms = magic.open(magic.MAGIC_MIME)
+                ms = magic.open(magic.MAGIC_MIME|magic.MAGIC_SYMLINK)
                 ms.load()
                 file_type = ms.file(self.file_path)
             except:
@@ -255,7 +255,7 @@ class File:
 
         if file_type is None:
             try:
-                p = subprocess.Popen(["file", "-b", "--mime-type", self.file_path],
+                p = subprocess.Popen(["file", "-b", "-L", "--mime-type", self.file_path],
                                      stdout=subprocess.PIPE)
                 file_type = p.stdout.read().strip()
             except:
