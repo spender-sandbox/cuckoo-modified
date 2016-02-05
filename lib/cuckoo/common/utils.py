@@ -988,6 +988,9 @@ def pretty_print_arg(category, api_name, arg_name, arg_val):
         if val & 0x1000:
             res.append("PROCESS_QUERY_LIMITED_INFORMATION")
             remove |= 0x1000
+        if val & 0x100000:
+            res.append("SYNCHRONIZE")
+            remove |= 0x100000
         val &= ~remove
         if val:
             res.append("0x{0:08x}".format(val))
