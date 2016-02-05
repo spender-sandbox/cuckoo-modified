@@ -132,10 +132,11 @@ def hash(request, left_id, right_hash):
 @require_safe
 def both(request, left_id, right_id):
     if enabledconf["mongodb"]:
-        left = results_db.analysis.find_one({"info.id": int(left_id)}, {"target": 1, "info": 1})
-        right = results_db.analysis.find_one({"info.id": int(right_id)}, {"target": 1, "info": 1})
+        left = results_db.analysis.find_one({"info.id": int(left_id)}, {"target": 1, "info": 1, "summary": 1})
+        right = results_db.analysis.find_one({"info.id": int(right_id)}, {"target": 1, "info": 1, "summary": 1})
         # Execute comparison.
         counts = compare.helper_percentages_mongo(results_db, left_id, right_id)
+        summary_compare = compare.helper_summary_mongo(results_db, left_id, right_id)
     if enabledconf["elasticsearchdb"]:
         left = es.search(
                    index=fullidx,
@@ -148,8 +149,9 @@ def both(request, left_id, right_id):
                     q="info.id: \"%s\"" % right_id
                 )["hits"]["hits"][-1]["_source"]
         counts = compare.helper_percentages_elastic(es, left_id, right_id, fullidx)
+        summary_compare = compare.summary_similarities(left, right)
 
     return render_to_response("compare/both.html",
                               {"left": left, "right": right, "left_counts": counts[left_id],
-                               "right_counts": counts[right_id]},
+                               "right_counts": counts[right_id], "summary":summary_compare},
                                context_instance=RequestContext(request))
