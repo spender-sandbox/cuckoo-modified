@@ -78,6 +78,7 @@ class Process:
         self.system_info = SYSTEM_INFO()
         self.logserver_path = "\\\\.\\PIPE\\" + random_string(8, 12)
         self.logserver = None
+        self.critical = False
 
     def __del__(self):
         """Close open handles."""
@@ -177,12 +178,18 @@ class Process:
         """
         return self.exit_code() == STILL_ACTIVE
 
+    def set_critical(self):
+        self.critical = True
+
     def is_critical(self):
         """Determines if process is 'critical' or not, so we can prevent
            terminating it
         """
         if not self.h_process:
             self.open()
+
+        if self.critical:
+            return True
 
         NT_SUCCESS = lambda val: val >= 0
 

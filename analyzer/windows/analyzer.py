@@ -330,6 +330,7 @@ class PipeHandler(Thread):
                         # unable to inject
                         if SERVICES_PID:
                             servproc = Process(pid=SERVICES_PID,suspended=False)
+                            servproc.set_critical()
                             filepath = servproc.get_filepath()
                             servproc.inject(dll=DEFAULT_DLL, interest=filepath, nosleepskip=True)
                             LASTINJECT_TIME = datetime.now()
