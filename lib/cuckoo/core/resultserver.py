@@ -134,6 +134,12 @@ class ResultHandler(SocketServer.BaseRequestHandler):
         self.module_path = None
         self.server.register_handler(self)
 
+        if hasattr(select, "poll"):
+            self.poll = select.poll()
+            self.poll.register(self.request, select.POLLIN)
+        else:
+            self.poll = None
+
     def finish(self):
         self.done_event.set()
 
@@ -148,9 +154,14 @@ class ResultHandler(SocketServer.BaseRequestHandler):
         while True:
             if self.end_request.isSet():
                 return False
-            rs, _, _ = select.select([self.request], [], [], 1)
-            if rs:
-                return True
+
+            if self.poll:
+                if self.poll.poll(1000):
+                    return True
+            else:
+                rs, _, _ = select.select([self.request], [], [], 1)
+                if rs:
+                    return True
 
     def read(self, length):
         buf = ""
