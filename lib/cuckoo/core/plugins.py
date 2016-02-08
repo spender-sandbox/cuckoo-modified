@@ -552,6 +552,7 @@ class RunSignatures(object):
                             "unknown",
                             "single",
                             "exe",
+                            "filename",
                         ]
                         isgood = True
                         for black in blacklist:
