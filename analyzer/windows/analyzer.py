@@ -349,12 +349,16 @@ class PipeHandler(Thread):
                 # Handle attempted shutdowns/restarts -- flush logs for all monitored processes
                 # additional handling can be added later
                 elif command.startswith("SHUTDOWN:"):
+                    log.info("Received shutdown request")
                     PROCESS_LOCK.acquire()
                     for process_id in PROCESS_LIST:
                         event_name = TERMINATE_EVENT + str(process_id)
                         event_handle = KERNEL32.OpenEventA(EVENT_MODIFY_STATE, False, event_name)
                         if event_handle:
                             KERNEL32.SetEvent(event_handle)
+                            if self.options.get("procmemdump"):
+                                p = Process(pid=process_id)
+                                p.dump_memory()
                             KERNEL32.CloseHandle(event_handle)
                     PROCESS_LOCK.release()
                 # Handle case of malware terminating a process -- notify the target
