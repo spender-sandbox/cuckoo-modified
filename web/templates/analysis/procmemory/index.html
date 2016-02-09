@@ -90,7 +90,7 @@
                                         <td>{{chunk.prot}}</td>
                                         <td></td>
                                         {% if proc.file %}
-                                        <td><a class="btn btn-primary btn-small" href="{% url "analysis.views.procdump" analysis.info.id proc.pid memmap.start memmap.end %}">Download</a></td>
+                                        <td><a class="btn btn-primary btn-small" href="{% url "analysis.views.procdump" analysis.info.id proc.pid chunk.start chunk.end %}">Download</a></td>
                                         {% endif %}
                                     </tr>
                                 {% endfor %}
