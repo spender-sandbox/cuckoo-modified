@@ -97,7 +97,8 @@ class ReSubmitExtractedEXE(Report):
                                   memory=False,
                                   enforce_timeout=False,
                                   clock=None,
-                                  tags=None)
+                                  tags=None,
+                                  parent_id=int(report["info"]["id"]))
 
             if task_id:
                 log.info(u"Resubmitexe file \"{0}\" added as task with ID {1}".format(filesdict[e], task_id))

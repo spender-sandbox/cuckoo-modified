@@ -832,7 +832,7 @@ class Database(object):
             custom="", machine="", platform="", tags=None,
             memory=False, enforce_timeout=False, clock=None,
             shrike_url=None, shrike_msg=None, 
-            shrike_sid = None, shrike_refer=None):
+            shrike_sid = None, shrike_refer=None, parent_id=None):
         """Add a task to database.
         @param obj: object to add (File or URL).
         @param timeout: selected timeout.
@@ -908,7 +908,8 @@ class Database(object):
         task.shrike_url = shrike_url
         task.shrike_msg = shrike_msg
         task.shrike_sid = shrike_sid
-        task.shrike_refer =  shrike_refer
+        task.shrike_refer = shrike_refer
+        task.parent_id = parent_id
         # Deal with tags format (i.e., foo,bar,baz)
         if tags:
             for tag in tags.replace(" ", "").split(","):
@@ -949,7 +950,7 @@ class Database(object):
     def add_path(self, file_path, timeout=0, package="", options="",
                  priority=1, custom="", machine="", platform="", tags=None,
                  memory=False, enforce_timeout=False, clock=None, shrike_url=None, 
-                 shrike_msg=None, shrike_sid = None, shrike_refer=None):
+                 shrike_msg=None, shrike_sid = None, shrike_refer=None, parent_id=None):
         """Add a task to database from file path.
         @param file_path: sample path.
         @param timeout: selected timeout.
@@ -976,12 +977,12 @@ class Database(object):
 
         return self.add(File(file_path), timeout, package, options, priority,
                         custom, machine, platform, tags, memory,
-                        enforce_timeout, clock, shrike_url, shrike_msg, shrike_sid, shrike_refer)
+                        enforce_timeout, clock, shrike_url, shrike_msg, shrike_sid, shrike_refer, parent_id)
 
     def demux_sample_and_add_to_db(self, file_path, timeout=0, package="", options="", priority=1,
                                    custom="", machine="", platform="", tags=None,
                                    memory=False, enforce_timeout=False, clock=None,shrike_url=None,
-                                   shrike_msg=None, shrike_sid = None, shrike_refer=None):
+                                   shrike_msg=None, shrike_sid = None, shrike_refer=None, parent_id=None):
         """
         Handles ZIP file submissions, submitting each extracted file to the database
         Returns a list of added task IDs
@@ -1006,7 +1007,8 @@ class Database(object):
                                     shrike_url=shrike_url,
                                     shrike_msg=shrike_msg,
                                     shrike_sid=shrike_sid,
-                                    shrike_refer=shrike_refer)
+                                    shrike_refer=shrike_refer,
+                                    parent_id=parent_id)
             if task_id:
                 task_ids.append(task_id)
 
@@ -1016,7 +1018,7 @@ class Database(object):
     def add_url(self, url, timeout=0, package="", options="", priority=1,
                 custom="", machine="", platform="", tags=None, memory=False,
                 enforce_timeout=False, clock=None, shrike_url=None, shrike_msg=None, 
-                shrike_sid = None, shrike_refer=None):
+                shrike_sid = None, shrike_refer=None, parent_id=None):
         """Add a task to database from url.
         @param url: url.
         @param timeout: selected timeout.
@@ -1041,7 +1043,7 @@ class Database(object):
         return self.add(URL(url), timeout, package, options, priority,
                         custom, machine, platform, tags, memory,
                         enforce_timeout, clock, shrike_url, shrike_msg,
-                        shrike_sid, shrike_refer)
+                        shrike_sid, shrike_refer, parent_id)
 
     @classlock
     def reschedule(self, task_id):

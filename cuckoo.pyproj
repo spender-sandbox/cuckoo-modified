@@ -235,6 +235,7 @@
     <Compile Include="tests\utils_tests.py" />
     <Compile Include="utils\api.py" />
     <Compile Include="utils\community.py" />
+    <Compile Include="utils\db_migration\versions\add_shrike_and_parent_id_columns.py" />
     <Compile Include="utils\db_migration\versions\from_1_1_to_1_2-added_states.py" />
     <Compile Include="utils\db_migration\versions\from_1_1_to_1_2-extend_file_type.py" />
     <Compile Include="utils\db_migration\versions\from_1_2_to_1_2-accuvant-add_statistics.py">
