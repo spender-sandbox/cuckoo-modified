@@ -356,10 +356,11 @@ class PipeHandler(Thread):
                         event_handle = KERNEL32.OpenEventA(EVENT_MODIFY_STATE, False, event_name)
                         if event_handle:
                             KERNEL32.SetEvent(event_handle)
+                            KERNEL32.CloseHandle(event_handle)
                             if self.options.get("procmemdump"):
                                 p = Process(pid=process_id)
                                 p.dump_memory()
-                            KERNEL32.CloseHandle(event_handle)
+                            dump_files()
                     PROCESS_LOCK.release()
                 # Handle case of malware terminating a process -- notify the target
                 # ahead of time so that it can flush its log buffer
