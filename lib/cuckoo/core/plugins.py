@@ -553,6 +553,7 @@ class RunSignatures(object):
                             "single",
                             "exe",
                             "filename",
+                            "js",
                         ]
                         isgood = True
                         for black in blacklist:
