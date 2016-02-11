@@ -505,16 +505,13 @@ class Process:
         return True
 
     def check_inject(self):
-        global ATTEMPTED_APC_INJECTS
-        global ATTEMPTED_THREAD_INJECTS
-
         if not self.pid:
             return False
 
         if self.thread_id or self.suspended:
-            if (self.pid,thread_id) in ATTEMPTED_APC_INJECTS:
+            if (self.pid,self.thread_id) in ATTEMPTED_APC_INJECTS:
                 return False
-            ATTEMPTED_APC_INJECTS[(self.pid,thread_id)] = True
+            ATTEMPTED_APC_INJECTS[(self.pid,self.thread_id)] = True
         else:
             if self.pid in ATTEMPTED_THREAD_INJECTS:
                 return False
