@@ -36,6 +36,7 @@ class NetlogConnection(object):
         self.hostip, self.hostport = config.ip, config.port
         self.sock = None
         self.proto = proto
+        self.connected = False
 
     def connect(self):
         # Try to connect as quickly as possible. Just sort of force it to
@@ -49,9 +50,12 @@ class NetlogConnection(object):
                 continue
 
             self.sock = s
+            self.connected = True
 
     def send(self, data, retry=True):
         if not self.sock:
+            if self.connected:
+                return
             self.connect()
 
         totalsent = 0
@@ -62,22 +66,17 @@ class NetlogConnection(object):
                 if cursent == 0:
                     raise socket.error
                 totalsent += cursent
-            except socket.error as e:
-                if retry:
-                    time.sleep(0.1)
-                    self.connect()
-                else:
-                    raise
             except Exception as e:
-                log.error("Unhandled exception in NetlogConnection: %s", str(e))
                 # We really have nowhere to log this, if the netlog connection
                 # does not work, we can assume that any logging won't work either.
                 # So we just fail silently.
                 self.close()
+                break
 
     def close(self):
         try:
             self.sock.close()
+            self.sock = None
         except Exception:
             pass
 
