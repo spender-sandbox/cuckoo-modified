@@ -504,6 +504,24 @@ class Process:
 
         return True
 
+    def check_inject(self):
+        global ATTEMPTED_APC_INJECTS
+        global ATTEMPTED_THREAD_INJECTS
+
+        if not self.pid:
+            return False
+
+        if self.thread_id or self.suspended:
+            if (self.pid,thread_id) in ATTEMPTED_APC_INJECTS:
+                return False
+            ATTEMPTED_APC_INJECTS[(self.pid,thread_id)] = True
+        else:
+            if self.pid in ATTEMPTED_THREAD_INJECTS:
+                return False
+            ATTEMPTED_THREAD_INJECTS[self.pid] = True
+
+        return True
+
     def inject(self, dll=None, interest=None, nosleepskip=False):
         """Cuckoo DLL injection.
         @param dll: Cuckoo DLL path.
@@ -511,11 +529,8 @@ class Process:
         @param apc: APC use.
         """
         global LOGSERVER_POOL
-        global ATTEMPTED_APC_INJECTS
-        global ATTEMPTED_THREAD_INJECTS
 
         if not self.pid:
-            log.warning("No valid pid specified, injection aborted")
             return False
 
         thread_id = 0
@@ -544,14 +559,8 @@ class Process:
             return False
 
         if thread_id or self.suspended:
-            if (self.pid,thread_id) in ATTEMPTED_APC_INJECTS:
-                return False
-            ATTEMPTED_APC_INJECTS[(self.pid,thread_id)] = True
             log.debug("Using QueueUserAPC injection.")
         else:
-            if self.pid in ATTEMPTED_THREAD_INJECTS:
-                return False
-            ATTEMPTED_THREAD_INJECTS[self.pid] = True
             log.debug("Using CreateRemoteThread injection.")
 
         config_path = "C:\\%s.ini" % self.pid
