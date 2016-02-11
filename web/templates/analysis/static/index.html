@@ -35,6 +35,10 @@
                 {% include "analysis/static/_office.html" %}
             {% elif "MIME entity" in analysis.target.file.type %}
                 {% include "analysis/static/_office.html" %}
+            {% elif analysis.target.file.type == "XML document text" or analysis.info.package == "wsf" %}
+                {% include "analysis/static/_script.html" %}
+            {% elif analysis.info.package == "vbs" or analysis.info.package == "js" %}
+                {% include "analysis/static/_script.html" %}
             {% elif "Java Jar" in analysis.target.file.type or analysis.target.file.name|endswith:".jar" %}
                 {% include "analysis/static/_java.html" %}
             {% elif "Zip archive data" in analysis.target.file.type %}

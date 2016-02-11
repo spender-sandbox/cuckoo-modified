@@ -129,6 +129,7 @@
     <Compile Include="analyzer\windows\modules\packages\msi.py" />
     <Compile Include="analyzer\windows\modules\packages\ppt.py" />
     <Compile Include="analyzer\windows\modules\packages\swf.py" />
+    <Compile Include="analyzer\windows\modules\packages\wsf.py" />
     <Compile Include="cuckoo.py" />
     <Compile Include="agent\agent.py" />
     <Compile Include="lib\cuckoo\common\decoders\alienspy.py">
@@ -413,6 +414,7 @@
     <Content Include="web\templates\analysis\network\_smtp.html" />
     <Content Include="web\templates\analysis\shrike.html" />
     <Content Include="web\templates\analysis\static\_dotnet.html" />
+    <Content Include="web\templates\analysis\static\_script.html" />
     <Content Include="web\templates\analysis\static\_java.html" />
     <Content Include="web\templates\analysis\static\_office.html" />
     <Content Include="web\templates\analysis\statistics\index.html" />

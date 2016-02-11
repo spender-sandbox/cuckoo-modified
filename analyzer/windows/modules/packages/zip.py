@@ -93,7 +93,7 @@ class Zip(Package):
     def start(self, path):
         root = os.environ["TEMP"]
         password = self.options.get("password")
-        exe_regex = re.compile('(\.exe|\.scr|\.msi|\.bat|\.lnk|\.js)$',flags=re.IGNORECASE)
+        exe_regex = re.compile('(\.exe|\.scr|\.msi|\.bat|\.lnk|\.js|\.jse|\.vbs|\.vbe|\.wsf)$',flags=re.IGNORECASE)
         zipinfos = self.get_infos(path)
         self.extract_zip(path, root, password, 0)
 
@@ -120,8 +120,7 @@ class Zip(Package):
             cmd_path = self.get_path("cmd.exe")
             cmd_args = "/c start /wait \"\" \"{0}\"".format(file_path)
             return self.execute(cmd_path, cmd_args, file_path)
-        elif file_name.lower().endswith(".js"):
-            log.debug("ends with js")
+        elif file_name.lower().endswith((".js", ".jse", ".vbs", ".vbe", ".wsf")):
             wscript = self.get_path_app_in_path("wscript.exe")
             wscript_args = "\"{0}\"".format(file_path)
             return self.execute(wscript, wscript_args, file_path)
