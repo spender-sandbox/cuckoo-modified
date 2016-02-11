@@ -13,7 +13,7 @@ from time import time
 from ctypes import byref, c_ulong, create_string_buffer, c_int, sizeof
 from shutil import copy
 
-from lib.common.constants import PIPE, PATHS, SHUTDOWN_MUTEX, TERMINATE_EVENT
+from lib.common.constants import PIPE, PATHS, SHUTDOWN_MUTEX, TERMINATE_EVENT, LOGSERVER_PREFIX
 from lib.common.constants import CUCKOOMON32_NAME, CUCKOOMON64_NAME, LOADER32_NAME, LOADER64_NAME
 from lib.common.defines import ULONG_PTR
 from lib.common.defines import KERNEL32, NTDLL, SYSTEM_INFO, STILL_ACTIVE
@@ -34,6 +34,8 @@ from lib.core.log import LogServer
 IOCTL_PID = 0x222008
 IOCTL_CUCKOO_PATH = 0x22200C
 PATH_KERNEL_DRIVER = "\\\\.\\DriverSSDT"
+
+LOGSERVER_POOL = dict()
 
 log = logging.getLogger(__name__)
 
@@ -76,8 +78,6 @@ class Process:
         self.h_thread = h_thread
         self.suspended = suspended
         self.system_info = SYSTEM_INFO()
-        self.logserver_path = "\\\\.\\PIPE\\" + random_string(8, 12)
-        self.logserver = None
         self.critical = False
 
     def __del__(self):
@@ -508,6 +508,8 @@ class Process:
         @param interest: path to file of interest, handed to cuckoomon config
         @param apc: APC use.
         """
+        global LOGSERVER_POOL
+
         if not self.pid:
             log.warning("No valid pid specified, injection aborted")
             return False
@@ -543,14 +545,16 @@ class Process:
             cfgoptions = cfg.get_options()
 
             # start the logserver for this monitored process
-            self.logserver = LogServer(cfg.ip, cfg.port, self.logserver_path)
+            logserver_path = LOGSERVER_PREFIX + str(self.pid)
+            if logserver_path not in LOGSERVER_POOL:
+                LOGSERVER_POOL[logserver_path] = LogServer(cfg.ip, cfg.port, logserver_path)
 
             firstproc = Process.first_process
 
             config.write("host-ip={0}\n".format(cfg.ip))
             config.write("host-port={0}\n".format(cfg.port))
             config.write("pipe={0}\n".format(PIPE))
-            config.write("logserver={0}\n".format(self.logserver_path))
+            config.write("logserver={0}\n".format(logserver_path))
             config.write("results={0}\n".format(PATHS["root"]))
             config.write("analyzer={0}\n".format(os.getcwd()))
             config.write("first-process={0}\n".format("1" if firstproc else "0"))
