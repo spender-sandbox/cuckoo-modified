@@ -456,7 +456,7 @@ class PipeHandler(Thread):
                                 log.info("Announced %s process name: %s pid: %d", "64-bit" if is_64bit else "32-bit", filename, process_id)
 
                                 if not in_protected_path(filename):
-                                    res = proc.inject(dll, interest)
+                                    proc.inject(dll, interest)
                                     LASTINJECT_TIME = datetime.now()
                                 proc.close()
                         else:

@@ -36,6 +36,8 @@ IOCTL_CUCKOO_PATH = 0x22200C
 PATH_KERNEL_DRIVER = "\\\\.\\DriverSSDT"
 
 LOGSERVER_POOL = dict()
+ATTEMPTED_APC_INJECTS = dict()
+ATTEMPTED_THREAD_INJECTS = dict()
 
 log = logging.getLogger(__name__)
 
@@ -509,6 +511,8 @@ class Process:
         @param apc: APC use.
         """
         global LOGSERVER_POOL
+        global ATTEMPTED_APC_INJECTS
+        global ATTEMPTED_THREAD_INJECTS
 
         if not self.pid:
             log.warning("No valid pid specified, injection aborted")
@@ -538,6 +542,17 @@ class Process:
             log.warning("No valid DLL specified to be injected in process "
                         "with pid %d, injection aborted.", self.pid)
             return False
+
+        if thread_id or self.suspended:
+            if (self.pid,thread_id) in ATTEMPTED_APC_INJECTS:
+                return False
+            ATTEMPTED_APC_INJECTS[(self.pid,thread_id)] = True
+            log.debug("Using QueueUserAPC injection.")
+        else:
+            if self.pid in ATTEMPTED_THREAD_INJECTS:
+                return False
+            ATTEMPTED_THREAD_INJECTS[self.pid] = True
+            log.debug("Using CreateRemoteThread injection.")
 
         config_path = "C:\\%s.ini" % self.pid
         with open(config_path, "w") as config:
@@ -593,11 +608,6 @@ class Process:
 
             if firstproc:
                 Process.first_process = False
-
-        if thread_id or self.suspended:
-            log.debug("Using QueueUserAPC injection.")
-        else:
-            log.debug("Using CreateRemoteThread injection.")
 
         orig_bin_name = ""
         bit_str = ""
