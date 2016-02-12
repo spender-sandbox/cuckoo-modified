@@ -1296,8 +1296,8 @@ def tasks_iocs(request, task_id, detail=None):
             if "file_info" in surifile.keys():
                 tmpfile = surifile
                 tmpfile["sha1"] = surifile["file_info"]["sha1"]
-                tmpfile["sha256"] = surifile["file_info"]["sha512"]
-                tmpfile["sha256"] = surifile["file_info"]["sha512"]
+                tmpfile["sha256"] = surifile["file_info"]["sha256"]
+                tmpfile["sha512"] = surifile["file_info"]["sha512"]
                 del tmpfile["file_info"]
                 data["network"]["ids"]["files"].append(tmpfile)
     data["static"] = {}
