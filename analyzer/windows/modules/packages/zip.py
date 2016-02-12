@@ -57,7 +57,12 @@ class Zip(Package):
                     for name in archive.namelist():
                         if name.endswith(".zip"):
                             # Recurse.
-                            self.extract_zip(os.path.join(extract_path, name), extract_path, password, recursion_depth + 1)
+                            try:
+                                self.extract_zip(os.path.join(extract_path, name), extract_path, password, recursion_depth + 1)
+                            except BadZipfile:
+                                log.warning("Nested zip file '%s' name end with 'zip' extension is not a valid zip. Skip extracting" % name)
+                            except RuntimeError as run_err:
+                                log.error("Error to extract nested zip file %s with details: %s" % name, run_err)
 
     def is_overwritten(self, zip_path):
         """Checks if the ZIP file contains another file with the same name, so it is going to be overwritten.
