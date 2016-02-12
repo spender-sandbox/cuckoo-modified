@@ -95,6 +95,16 @@ def helper_percentages_mongo(results_db, tid1, tid2, ignore_categories=["misc"])
 
     return combine_behavior_percentages(counts)
 
+def helper_summary_mongo(results_db, tid1, tid2):
+    summaries = dict()
+    left_sum, right_sum = None, None
+    left_sum = results_db.analysis.find_one({"info.id": int(tid1)},{"behavior.summary": 1})
+    right_sum = results_db.analysis.find_one({"info.id": int(tid2)},{"behavior.summary": 1})
+    if left_sum and right_sum:
+        summaries = get_similar_summary(left_sum, right_sum)
+
+    return summaries
+
 def helper_percentages_elastic(es_obj, tid1, tid2, idx, ignore_categories=["misc"]):
     counts = {}
 
@@ -129,3 +139,38 @@ def helper_percentages_elastic(es_obj, tid1, tid2, idx, ignore_categories=["misc
                     counts[tid][pid][cat] = counts[tid][pid].get(cat, 0) + count
 
     return combine_behavior_percentages(counts)
+
+def helper_summary_elastic(es_obj, tid1, tid2, idx):
+    summaries = dict()
+    left_sum, right_sum = None, None
+    buf = es_obj.search(
+                  index=idx,
+                  doc_type="analysis",
+                  q="info.id: \"%s\"" % tid1,
+                 )["hits"]["hits"]
+    if buf:
+        left_sum = buf[-1]["_source"]
+
+    buf = es_obj.search(
+                  index=idx,
+                  doc_type="analysis",
+                  q="info.id: \"%s\"" % tid2,
+                 )["hits"]["hits"]
+    if buf:
+        right_sum = buf[-1]["_source"]
+
+    if left_sum and right_sum:
+        summaries = get_similar_summary(left_sum, right_sum)
+
+    return summaries
+
+def get_similar_summary(left_sum, right_sum):
+    ret = dict()
+    for summary in left_sum["behavior"]["summary"]:
+        for item in left_sum["behavior"]["summary"][summary]:
+            if item in right_sum["behavior"]["summary"][summary]:
+                if summary not in ret.keys():
+                    ret[summary] = list()
+                ret[summary].append(item)
+
+    return ret
