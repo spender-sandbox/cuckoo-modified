@@ -112,6 +112,16 @@ def validate_task(tid):
 
     return {"error": False}
 
+def createProcessTreeNode(process):
+    """Creates a single ProcessTreeNode corresponding to a single node in the tree observed cuckoo.
+    @param process: process from cuckoo dict.
+    """
+    process_node_dict = {"pid" : process["pid"],
+                         "name" : process["name"],
+                         "spawned_processes" : [createProcessTreeNode(child_process) for child_process in process["children"]]
+                        }
+    return process_node_dict
+
 @require_safe
 def index(request):
     conf = apiconf.get_config()
@@ -1296,6 +1306,7 @@ def tasks_iocs(request, task_id, detail=None):
             if "file_info" in surifile.keys():
                 tmpfile = surifile
                 tmpfile["sha1"] = surifile["file_info"]["sha1"]
+                tmpfile["md5"] = surifile["file_info"]["md5"]
                 tmpfile["sha256"] = surifile["file_info"]["sha256"]
                 tmpfile["sha512"] = surifile["file_info"]["sha512"]
                 del tmpfile["file_info"]
@@ -1343,6 +1354,9 @@ def tasks_iocs(request, task_id, detail=None):
     data["registry"]["modified"] = []
     data["registry"]["deleted"] = []
     data["mutexes"] = []
+    data["executed_commands"] = []
+    data["dropped"] = []
+
     if "behavior" in buf and "summary" in buf["behavior"]:
         if "write_files" in buf["behavior"]["summary"]:
             data["files"]["modified"] = buf["behavior"]["summary"]["write_files"]
@@ -1354,6 +1368,32 @@ def tasks_iocs(request, task_id, detail=None):
             data["registry"]["deleted"] = buf["behavior"]["summary"]["delete_keys"]
         if "mutexes" in buf["behavior"]["summary"]:
             data["mutexes"] = buf["behavior"]["summary"]["mutexes"]
+        if "executed_commands" in buf["behavior"]["summary"]:
+            data["executed_commands"] = buf["behavior"]["summary"]["executed_commands"]
+
+    data["process_tree"] = {}
+    if "behavior" in buf and "processtree" in buf["behavior"] and len(buf["behavior"]["processtree"]) > 0:
+        data["process_tree"] = {"pid" : buf["behavior"]["processtree"][0]["pid"],
+                                "name" : buf["behavior"]["processtree"][0]["name"],
+                                "spawned_processes": [createProcessTreeNode(child_process) for child_process in buf["behavior"]["processtree"][0]["children"]]
+                                }
+    if "dropped" in buf:
+        for entry in buf["dropped"]:
+            tmpdict = {}
+            if entry["clamav"]:
+                tmpdict['clamav'] = entry["clamav"]
+            if entry["sha256"]:
+                tmpdict['sha256'] = entry["sha256"]
+            if entry["md5"]:
+                tmpdict['md5'] = entry["md5"]
+            if entry["yara"]:
+                tmpdict['yara'] = entry["yara"]
+            if entry["type"]:
+                tmpdict["type"] = entry["type"]
+            if entry["guest_paths"]:
+                tmpdict["guest_paths"] = entry["guest_paths"]
+            data["dropped"].append(tmpdict)
+
     if not detail:
         resp = {"error": False, "data": data}
         return jsonize(resp, response=True)
