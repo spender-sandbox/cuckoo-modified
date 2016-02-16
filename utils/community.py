@@ -43,6 +43,7 @@ def install(enabled, force, rewrite):
     (temp, source) = download_archive()
 
     folders = {
+        "feeds": os.path.join("modules", "feeds"),
         "signatures": os.path.join("modules", "signatures"),
         "processing": os.path.join("modules", "processing"),
         "reporting": os.path.join("modules", "reporting"),
@@ -96,6 +97,7 @@ def main():
 
     parser = argparse.ArgumentParser()
     parser.add_argument("-a", "--all", help="Download everything", action="store_true", required=False)
+    parser.add_argument("-e", "--feeds", help="Download Cuckoo feed modules", action="store_true", required=False)
     parser.add_argument("-s", "--signatures", help="Download Cuckoo signatures", action="store_true", required=False)
     parser.add_argument("-p", "--processing", help="Download processing modules", action="store_true", required=False)
     parser.add_argument("-m", "--machinemanagers", help="Download machine managers",action="store_true", required=False)
@@ -110,11 +112,14 @@ def main():
     rewrite = False
 
     if args.all:
+        enabled.append("feeds")
         enabled.append("processing")
         enabled.append("signatures")
         enabled.append("reporting")
         enabled.append("machinemanagers")
     else:
+        if args.feeds:
+            enabled.append("feeds")
         if args.signatures:
             enabled.append("signatures")
         if args.processing:
