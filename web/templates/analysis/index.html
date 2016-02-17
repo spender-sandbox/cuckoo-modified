@@ -428,8 +428,8 @@
                         </td>
                         <td>
                             <span class="mono">
-                            {% if analysis.network and analysis.network.pcap_sha256 %}
-                            <a href="{% url "analysis.views.file" "pcap" analysis.id %}" target="_blank">PCAP</a>
+                            {% if analysis.pcap_sha256 %}
+                            <a href="{% url " analysis.views.file" "pcap" analysis.id analysis.pcap_sha256 %}" target="_blank">PCAP</a>
                             {% else %}
                             None
                             {% endif %}
