@@ -1630,7 +1630,7 @@ def tasks_rollingsuri(request, window=60):
          
     gen_time = datetime.now() - timedelta(minutes=window)
     dummy_id = ObjectId.from_datetime(gen_time)
-    result = list(results_db.analysis.find({"suricata.alerts.alert": {"$exists": True}, "_id": {"$gte": dummy_id}},{"suricata.alerts":1,"info.id":1}))
+    result = list(results_db.analysis.find({"suricata.alerts": {"$exists": True}, "_id": {"$gte": dummy_id}},{"suricata.alerts":1,"info.id":1}))
     resp=[]
     for e in result:
         for alert in e["suricata"]["alerts"]:
