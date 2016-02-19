@@ -44,12 +44,13 @@ class NetlogConnection(object):
         while not self.sock:
             try:
                 s = socket.create_connection((self.hostip, self.hostport), 0.1)
-                s.sendall(self.proto)
             except socket.error:
                 time.sleep(0.1)
                 continue
 
             self.sock = s
+            self.sock.settimeout(None)
+            self.sock.sendall(self.proto)
             self.connected = True
 
     def send(self, data, retry=True):
@@ -61,17 +62,10 @@ class NetlogConnection(object):
         totalsent = 0
 
         while totalsent < len(data):
-            try:
-                cursent = self.sock.send(data[totalsent:])
-                if cursent == 0:
-                    raise socket.error
-                totalsent += cursent
-            except Exception as e:
-                # We really have nowhere to log this, if the netlog connection
-                # does not work, we can assume that any logging won't work either.
-                # So we just fail silently.
-                self.close()
-                break
+            cursent = self.sock.send(data[totalsent:])
+            if cursent == 0:
+                raise socket.error
+            totalsent += cursent
 
     def close(self):
         try:
