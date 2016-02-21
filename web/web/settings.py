@@ -19,10 +19,10 @@ cfg = Config("reporting")
 
 # Error handling for database backends
 if not cfg.mongodb.get("enabled") and not cfg.elasticsearchdb.get("enabled"):
-    raise Exception("No database backend reporting module is enabled! Please enabled ElasticSearch or MongoDB.")
+    raise Exception("No database backend reporting module is enabled! Please enable either ElasticSearch or MongoDB.")
 
 if cfg.mongodb.get("enabled") and cfg.elasticsearchdb.get("enabled"):
-    raise Exception("Both database backend reporting modules are enabled. Please only enabled ElasticSearch or MongoDB.")
+    raise Exception("Both database backend reporting modules are enabled. Please only enable ElasticSearch or MongoDB.")
 
 aux_cfg =  Config("auxiliary")
 vtdl_cfg = aux_cfg.virustotaldl
