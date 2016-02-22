@@ -249,7 +249,10 @@ class Suricata(Processing):
                         hlog["status"] = str(parsed["http"]["status"])
                     except:
                         hlog["status"] = "None"
-                    hlog["method"] = parsed["http"]["http_method"]
+                    try:
+                       hlog["method"] = parsed["http"]["http_method"]
+                    except:
+                        hlog["method"] = "None"
                     try:
                        hlog["contenttype"] = parsed["http"]["http_content_type"]
                     except:
