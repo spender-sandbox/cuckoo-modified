@@ -24,12 +24,6 @@ def demux_zip(filename, options):
         ext = os.path.splitext(filename)[1]
         if ext != "" and ext != ".zip" and ext != ".bin":
             return retlist
-        # don't try to extract from office docs
-        magic = File(filename).get_type()
-        if "Microsoft" in magic or "Java Jar" in magic or "Composite Document File" in magic:
-            return retlist
-        if "PE32" in magic or "MS-DOS executable" in magic:
-            return retlist
 
         extracted = []
         password="infected"
@@ -92,11 +86,6 @@ def demux_rar(filename, options):
         return retlist
 
     try:
-        # don't try to auto-extract RAR SFXes
-        magic = File(filename).get_type()
-        if "PE32" in magic or "MS-DOS executable" in magic:
-            return retlist
-
         extracted = []
         password="infected"
         fields = options.split(",")
@@ -193,6 +182,13 @@ def demux_sample(filename, package, options):
     # this will allow for the ZIP package to be used to analyze binaries with included DLL dependencies
     # do the same if file= is specified in the options
     if package or "file=" in options:
+        return [ filename ]
+
+    # don't try to extract from office docs
+    magic = File(filename).get_type()
+    if "Microsoft" in magic or "Java Jar" in magic or "Composite Document File" in magic:
+        return [ filename ]
+    if "PE32" in magic or "MS-DOS executable" in magic:
         return [ filename ]
 
     retlist = demux_zip(filename, options)
