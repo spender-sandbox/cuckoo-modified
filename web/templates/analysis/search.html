@@ -215,17 +215,36 @@
                     <th width="5%">ID</th>
                     <th width="12%">Timestamp</th>
                     <th width="37%">Filename</th>
-                    <th width="20%">Target/MD5</th>
+                    <th width="20%">Target</th>
+                    {% if config.expanded_dashboard %}
+                    <th width="2.5%">PKG</th>
+                    {% endif %}
                     {% if config.moloch %}
                     <th width="5%">Moloch</th>
                     {% endif %}
+                    {% if config.display_office_martians or config.display_browser_martians%}
+                    <th width="5%">Martians</th>
+                    {% endif %}
                     {% if config.suricata %}
-                    <th width="5%">SuriAlert</th>
+                    <th width="7%">SuriAlert
+                        {% if config.expanded_dashboard %}
+                        /HTTP/TLS/Files
+                        {% endif %}
+                    </th>
                     {% endif %}
                     {% if config.virustotal %}
                     <th width="5%">VT</th>
                     {% endif %}
                     <th width="5%">MalScore</th>
+                    {% if config.expanded_dashboard %}
+                    <th width="4%">MalFamily</th>
+                    <th width="3%">PCAP</th>
+                    <th width="5%">ClamAV</th>
+                    <th width="10%">Custom</th>
+                    {% endif %}
+                    {% if config.display_shrike %}
+                    <th width="5%">Shrike</th>
+                    {% endif %}
                     <th width="6%" style="text-align: right;">Status</th>
                 </tr>
                 </thead>
@@ -243,7 +262,11 @@
                         {% endif %}
                         </td>
                         <td>
-                        {{analysis.filename}}
+                        {% if analysis.filename %}
+                            {{analysis.filename}}
+                        {% else %}
+                            None
+                        {% endif %}
                         </td>
                         <td style="word-wrap: break-word;">
                             {% if analysis.status == "reported" %}
@@ -262,30 +285,83 @@
                                 {% endif %}
                             {% endif %}
                         </td>
+                        {% if config.expanded_dashboard %}
+                        <td>
+                            {% if analysis.package %}
+                                  <span class="mono">{{analysis.package}}</span>
+                            {% else %}
+                                  <span class="mono">None</span>
+                            {% endif %}
+                        </td>
+                        {% endif %}
                         {% if config.moloch %}
                         <td>
                             {% if analysis.moloch_url %}
                                 <a href={{analysis.moloch_url}} target="_blank"><span class="mono">MOLOCH</span></a>
                             {% else %}
-                                <span class="mono">None</span>
+                                  <span class="mono">None</span>
                             {% endif %}
                         </td>
                         {% endif %}
+                        {% if analysis.category == "url" %}
+                            {% if config.display_browser_martians %}
+                                 <td>
+                                     <span class="mono">
+                                     {% if analysis.mlist_cnt %}
+                                         {{analysis.mlist_cnt}}
+                                     {% else %}
+                                         None
+                                     {% endif %}
+                                    </span>
+                                </td>
+                            {% endif %}
+                        {% else %}
+                            {% if config.display_office_martians %}
+                                <td>
+                                    <span class="mono">
+                                    {% if analysis.f_mlist_cnt %}
+                                        {{analysis.f_mlist_cnt}}
+                                    {% else %}
+                                        None
+                                    {% endif %}
+                                    </span>
+                                </td>
+                            {% endif %}
+                        {% endif %}
                         {% if config.suricata %}
                         <td>
+                            <span class="mono">
                             {% if analysis.suri_alert_cnt %}
-                                <span class="mono">{{analysis.suri_alert_cnt}}</span>
+                            <a href="{% url "analysis.views.surialert" analysis.id %}" target="_blank">{{analysis.suri_alert_cnt}}</a><!--
                             {% else %}
-                                <span class="mono">None</span>
+                            0<!--
                             {% endif %}
+                            {% if config.expanded_dashboard %}
+                                {% if analysis.suri_http_cnt %}
+                                -->/<a href="{% url "analysis.views.surihttp" analysis.id %}" target="_blank">{{analysis.suri_http_cnt}}</a><!--
+                                {% else %}
+                                -->/0<!--
+                                {% endif %}
+                                {% if analysis.suri_tls_cnt %}
+                                -->/<a href="{% url "analysis.views.suritls" analysis.id %}" target="_blank">{{analysis.suri_tls_cnt}}</a><!--
+                                {% else %}
+                                -->/0<!--
+                                {% endif %}
+                                {% if analysis.suri_files_cnt %}
+                                -->/<a href="{% url "analysis.views.surifiles" analysis.id %}" target="_blank">{{analysis.suri_files_cnt}}</a><!--
+                                {% else %}
+                                -->/0<!--
+                                {% endif %}
+                            {% endif %}
+                            --></span>
                         </td>
                         {% endif %}
                         {% if config.virustotal %}
                         <td>
                             {% if analysis.virustotal_summary %}
-                                <span class="mono">{{analysis.virustotal_summary}}</span>
+                                <a href="{% url "analysis.views.antivirus" analysis.id %}" target="_blank"><span class="mono">{{analysis.virustotal_summary}}</span></a>
                             {% else %}
-                                <span class="mono">None</span>
+                                  <span class="mono">None</span>
                             {% endif %}
                         </td>
                         {% endif %}
@@ -307,6 +383,44 @@
                                 <span class="mono">None</span>
                             {% endif %}
                         </td>
+                        {% if config.expanded_dashboard %}
+                        <td>
+                            <span class="mono">
+                                {% if analysis.malfamily %}
+                                {{analysis.malfamily}}
+                                {% else %}
+                                None
+                                {% endif %}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="mono">
+                            {% if analysis.pcap_sha256 %}
+                            <a href="{% url "analysis.views.file" "pcap" analysis.id analysis.pcap_sha256 %}" target="_blank">PCAP</a>
+                            {% else %}
+                            None
+                            {% endif %}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="mono">
+                            {% if analysis.clamav %}
+                                {{analysis.clamav}}
+                            {% else %}
+                                None
+                            {% endif %}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="mono">
+                            {% if analysis.custom %}
+                                {{analysis.custom}}
+                            {% else %}
+                                None
+                            {% endif %}
+                            </span>
+                        </td>
+                        {% endif %}
                         {% if config.display_shrike %}
                         <td>
                             {% if analysis.shrike_msg %}
