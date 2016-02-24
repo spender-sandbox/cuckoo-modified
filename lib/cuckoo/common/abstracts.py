@@ -1240,14 +1240,11 @@ class Signature(object):
         @return: basestring name of the process or None
         """
         if pid and pid.isdigit():
-            name = str()
             pid = int(pid)
             if self.results.get("behavior", {}).get("processtree", []):
                 for proc in self.results["behavior"]["processtree"]:
                     if proc["pid"] == pid:
-                        name = proc["name"]
-            if name:
-                return name
+                        return proc["name"]
 
         return None
 
