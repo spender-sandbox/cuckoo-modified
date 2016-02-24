@@ -224,7 +224,7 @@ class Human(Auxiliary, Thread):
                     curwind = USER32.GetForegroundWindow()
                     other_hwnds = INITIAL_HWNDS[:]
                     try:
-                        other_hands.remove(USER32.GetForegroundWindow())
+                        other_hwnds.remove(USER32.GetForegroundWindow())
                     except:
                         pass
                     USER32.SetForegroundWindow(other_hwnds[random.randint(0, len(other_hwnds)-1)])
