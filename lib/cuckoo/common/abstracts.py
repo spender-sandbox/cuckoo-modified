@@ -1233,6 +1233,23 @@ class Signature(object):
             return self._current_call_dict[name]
 
         return None
+        
+    def get_name_from_pid(self, pid):
+        """Retrieve a process name from a supplied pid
+        @param pid: a Process PID observed in the analysis
+        @return: basestring name of the process or None
+        """
+        if pid and pid.isdigit():
+            name = str()
+            pid = int(pid)
+            if self.results.get("behavior", {}).get("processtree", []):
+                for proc in self.results["behavior"]["processtree"]:
+                    if proc["pid"] == pid:
+                        name = proc["name"]
+            if name:
+                return name
+
+        return None
 
     def get_raw_argument(self, call, name):
         """Retrieves the raw value of a specific argument from an API call.
