@@ -1244,7 +1244,7 @@ class Signature(object):
             if self.results.get("behavior", {}).get("processes", []):
                 for proc in self.results["behavior"]["processes"]:
                     if proc["process_id"] == pid:
-                        return proc["name"]
+                        return proc["process_name"]
 
         return None
 
