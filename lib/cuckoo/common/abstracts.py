@@ -1241,9 +1241,9 @@ class Signature(object):
         """
         if pid and pid.isdigit():
             pid = int(pid)
-            if self.results.get("behavior", {}).get("processtree", []):
-                for proc in self.results["behavior"]["processtree"]:
-                    if proc["pid"] == pid:
+            if self.results.get("behavior", {}).get("processes", []):
+                for proc in self.results["behavior"]["processes"]:
+                    if proc["process_id"] == pid:
                         return proc["name"]
 
         return None
