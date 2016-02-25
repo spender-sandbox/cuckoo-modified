@@ -566,7 +566,8 @@ class RunSignatures(object):
 
         # fall back to ClamAV detection
         if not family and self.results["info"]["category"] == "file" and "clamav" in self.results["target"]["file"] and self.results["target"]["file"]["clamav"] and self.results["target"]["file"]["clamav"].startswith("Win.Trojan."):
-            family = self.results["target"]["file"]["clamav"][11:]
+            words = re.findall(r"[A-Za-z0-9\]+", self.results["target"]["file"]["clamav"])
+            family = words[3]
 
         self.results["malfamily"] = family
 
