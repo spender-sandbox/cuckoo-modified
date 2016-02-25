@@ -14,6 +14,8 @@ class Decompression(Processing):
     order = 0
 
     def run(self):
+        self.key = "decompression"
+
         if os.path.exists(self.memory_path + ".zip"):
             try:
                 thezip = zipfile.ZipFile(self.memory_path + ".zip", 'r')
@@ -32,4 +34,4 @@ class Decompression(Processing):
             except Exception as e:
                 raise CuckooProcessingError("Error extracting ZIP: %s" % e)
             
-
+        return []
