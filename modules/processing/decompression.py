@@ -13,7 +13,7 @@ class Decompression(Processing):
     """Decompresses analysis artifacts that have been compressed by the compression reporting module so re-analysis can be performed"""
     order = 0
 
-    def run(self, results):
+    def run(self):
         if os.path.exists(self.memory_path + ".zip"):
             try:
                 thezip = zipfile.ZipFile(self.memory_path + ".zip", 'r')
