@@ -37,11 +37,11 @@ class GuestManager:
         self.platform = platform
 
         self.cfg = Config()
-        self.timeout = self.cfg.timeouts.critical
 
-        url = "http://{0}:{1}".format(ip, CUCKOO_GUEST_PORT)
-        self.server = TimeoutServer(url, allow_none=True,
-                                    timeout=self.timeout)
+        # initialized in start_analysis so we can update the critical timeout
+        # TODO, pull options parameter into __init__ so we can do this here
+        self.timeout = None
+        self.server = None
 
     def wait(self, status):
         """Waiting for status.
@@ -127,15 +127,13 @@ class GuestManager:
         if options["category"] == "file":
             options["file_name"] = "'" + sanitize_filename(options["file_name"]) + "'"
 
-        # If the analysis timeout is higher than the critical timeout,
-        # automatically increase the critical timeout by one minute.
-        if options["timeout"] > self.timeout:
-            log.debug("Automatically increased critical timeout to %s",
-                      self.timeout)
-            self.timeout = options["timeout"] + 60
-
+        self.timeout = options["timeout"] + self.cfg.timeouts.critical
         # Get and set dynamically generated resultserver port.
         options["port"] = str(ResultServer().port)
+
+        url = "http://{0}:{1}".format(self.ip, CUCKOO_GUEST_PORT)
+        self.server = TimeoutServer(url, allow_none=True,
+                                    timeout=self.timeout)
 
         try:
             # Wait for the agent to respond. This is done to check the
