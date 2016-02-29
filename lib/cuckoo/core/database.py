@@ -699,6 +699,7 @@ class Database(object):
             # Check if there are any machines that satisfy the
             # selection requirements.
             if not machines.count():
+                session.close()
                 raise CuckooOperationalError("No machines match selection criteria.")
 
             # Get the first free machine.
