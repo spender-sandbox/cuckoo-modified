@@ -678,10 +678,12 @@ class Database(object):
         if label and platform:
             # Wrong usage.
             log.error("You can select machine only by label or by platform.")
+            session.close()
             return None
         elif label and tags:
             # Also wrong usage.
             log.error("You can select machine only by label or by tags.")
+            session.close()
             return None
 
         try:
@@ -718,6 +720,8 @@ class Database(object):
                 return None
             finally:
                 session.close()
+        else:
+            session.close()
 
         return machine
 
@@ -747,6 +751,8 @@ class Database(object):
                 return None
             finally:
                 session.close()
+        else:
+            session.close()
 
         return machine
 
