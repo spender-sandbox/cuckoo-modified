@@ -319,8 +319,10 @@ class PipeHandler(Thread):
                 elif command.startswith("SERVICE:"):
                     servname = command[8:]
                     si = subprocess.STARTUPINFO()
-                    si.dwFlags = subprocess.STARTF_USESHOWWINDOW
-                    si.wShowWindow = subprocess.SW_HIDE
+                    # STARTF_USESHOWWINDOW
+                    si.dwFlags = 1
+                    # SW_HIDE
+                    si.wShowWindow = 0
                     subprocess.call("sc config " + servname + " type= own", startupinfo=si)
                     log.info("Announced starting service \"%s\"", servname)
 
