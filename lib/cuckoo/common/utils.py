@@ -404,7 +404,10 @@ def pretty_print_arg(category, api_name, arg_name, arg_val):
                 14 : "WH_MOUSE_LL"
         }.get(val, None)
     elif arg_name == "InfoLevel":
-        val = int(arg_val, 10)
+        try:
+            val = int(arg_val, 16)
+        except:
+            val = int(arg_val, 10)
         return {
                 1 : "HTTP_QUERY_CONTENT_TYPE",
                 5 : "HTTP_QUERY_CONTENT_LENGTH",
