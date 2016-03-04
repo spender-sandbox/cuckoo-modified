@@ -1035,6 +1035,11 @@ def perform_search(term, value):
     if enabledconf["elasticsearchdb"]:
         return es.search(index=fullidx, doc_type="analysis", q=term_map[term] + ": %s" % value)["hits"]["hits"]
 
+def perform_malscore_search(value):
+    query_val =  {"$gte" : float(value)}
+    if enabledconf["mongodb"]:
+        return results_db.analysis.find({"malscore" : query_val}).sort([["_id", -1]])
+        
 def search(request):
     if "search" in request.POST:
         error = None
@@ -1046,8 +1051,8 @@ def search(request):
             value = request.POST["search"].strip()
 
         if term:
-            # Check on search size.
-            if len(value) < 3:
+            # Check on search size. But malscore can be a single digit number.
+            if term != "malscore" and len(value) < 3:
                 return render_to_response("analysis/search.html",
                                           {"analyses": None,
                                            "term": request.POST["search"],
@@ -1058,7 +1063,10 @@ def search(request):
             term = term.lower()
 
         try:
-            records = perform_search(term, value)
+            if term == "malscore":
+                records = perform_malscore_search(value)
+            else:
+                records = perform_search(term, value)
         except ValueError:
             if term:
                 return render_to_response("analysis/search.html",
