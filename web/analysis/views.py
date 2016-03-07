@@ -164,6 +164,21 @@ def index(request, page=1):
     paging["next_page"] = str(page + 1)
     paging["prev_page"] = str(page - 1)
 
+    tasks_files_number = db.count_matching_tasks(category="file", not_status=TASK_PENDING)
+    tasks_urls_number = db.count_matching_tasks(category="url", not_status=TASK_PENDING)
+    pages_files_num = tasks_files_number / TASK_LIMIT + 1
+    pages_urls_num = tasks_urls_number / TASK_LIMIT + 1
+    files_pages = []
+    urls_pages = []
+    if pages_files_num < 11 or page < 6:
+        files_pages = range(1, min(10, pages_files_num)+1)
+    elif page > 5:
+        files_pages = range(min(page-5, pages_files_num-10)+1, min(page + 5, pages_files_num)+1)
+    if pages_urls_num < 11 or page < 6:
+        urls_pages = range(1, min(10, pages_urls_num)+1)
+    elif page > 5:
+        urls_pages = range(min(page-5, pages_urls_num-10)+1, min(page + 5, pages_urls_num)+1)
+
     # On a fresh install, we need handle where there are 0 tasks.
     buf = db.list_tasks(limit=1, category="file", not_status=TASK_PENDING, order_by="added_on asc")
     if len(buf) == 1:
@@ -208,6 +223,9 @@ def index(request, page=1):
     else:
         paging["show_url_next"] = "hide"
 
+    paging["files_page_range"] = files_pages
+    paging["urls_page_range"] = urls_pages
+    paging["current_page"] = page
     return render_to_response("analysis/index.html",
             {"files": analyses_files, "urls": analyses_urls,
              "paging": paging, "config": enabledconf},
@@ -1017,6 +1035,11 @@ def perform_search(term, value):
     if enabledconf["elasticsearchdb"]:
         return es.search(index=fullidx, doc_type="analysis", q=term_map[term] + ": %s" % value)["hits"]["hits"]
 
+def perform_malscore_search(value):
+    query_val =  {"$gte" : float(value)}
+    if enabledconf["mongodb"]:
+        return results_db.analysis.find({"malscore" : query_val}).sort([["_id", -1]])
+        
 def search(request):
     if "search" in request.POST:
         error = None
@@ -1028,8 +1051,8 @@ def search(request):
             value = request.POST["search"].strip()
 
         if term:
-            # Check on search size.
-            if len(value) < 3:
+            # Check on search size. But malscore can be a single digit number.
+            if term != "malscore" and len(value) < 3:
                 return render_to_response("analysis/search.html",
                                           {"analyses": None,
                                            "term": request.POST["search"],
@@ -1040,7 +1063,10 @@ def search(request):
             term = term.lower()
 
         try:
-            records = perform_search(term, value)
+            if term == "malscore":
+                records = perform_malscore_search(value)
+            else:
+                records = perform_search(term, value)
         except ValueError:
             if term:
                 return render_to_response("analysis/search.html",
