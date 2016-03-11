@@ -152,7 +152,7 @@ class Process:
 
         NT_SUCCESS = lambda val: val >= 0
 
-        pbi = create_string_buffer(200)
+        pbi = create_string_buffer(530)
         size = c_int()
 
         # Set return value to signed 32bit integer.
