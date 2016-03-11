@@ -167,7 +167,7 @@ $(document).ready( function() {
                                         </tr>
                                         <tr>
                                             <td><code>force-flush</code></td>
-                                            <td>For performance reasons, logs are buffered before being sent back to the result server.  We make every attempt to flush the buffer at critical points including when exceptions occur, but in some rare termination scenarios, logs may be lost.  Set to 1 to force flushing of the log buffers after any non-duplicate API is called.</td>
+                                            <td>For performance reasons, logs are buffered before being sent back to the result server.  We make every attempt to flush the buffer at critical points including when exceptions occur, but in some rare termination scenarios, logs may be lost.  Set to 1 to force flushing of the log buffers after any non-duplicate API is called, set to 2 to force flushing of every log.</td>
                                         </tr>
                                         <tr>
                                             <td><code>no-stealth</code></td>
@@ -203,7 +203,7 @@ $(document).ready( function() {
                                         </tr>
                                         <tr>
                                             <td><code>arguments</code></td>
-                                            <td>When using the dll or exe package, set the arguments to be passed to the executable or exported function.</td>
+                                            <td>When using the dll, exe, or python packages, set the arguments to be passed to the executable or exported function.</td>
                                         </tr>
                                         <tr>
                                             <td><code>appdata</code></td>
@@ -214,8 +214,36 @@ $(document).ready( function() {
                                             <td>Setting this option to 1 will launch a browser 30 seconds into the analysis (useful for some banking trojans).</td>
                                         </tr>
                                         <tr>
+                                            <td><code>browserdelay</code></td>
+                                            <td>Sets the number of seconds to wait before starting the browser with the startbrowser option.  Defaults to 30 seconds.</td>
+                                        </tr>
+                                        <tr>
                                             <td><code>url</code></td>
                                             <td>When used with the startbrowser option, this will determine the URL the started browser will access.</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>debug</code></td>
+                                            <td>Set to 1 to enable reporting of critical exceptions occurring during analysis, set to 2 to enable reporting of all exceptions.</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>disable_hook_content</code></td>
+                                            <td>Set to 1 to remove functionality of all hooks except those critical for monitoring other processes.  Set to 2 to apply to all hooks.</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>hook-type</code></td>
+                                            <td>Valid for 32-bit analyses only.  Specifies the hook type to use: direct, indirect, or safe.  Safe attempts a Detours-style hook.</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>serial</code></td>
+                                            <td>Spoof the serial of the system volume as the provided hex value</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>exclude-apis</code></td>
+                                            <td>Exclude the colon-separated list of APIs from being hooked</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>exclude-dlls</code></td>
+                                            <td>Exclude the colon-separated list of DLLs from being hooked</td>
                                         </tr>
                                     </tbody>
                                 </table>
