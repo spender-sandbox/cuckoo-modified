@@ -38,16 +38,26 @@ class ReSubmitExtractedEXE(Report):
         self.task_options_stack = []
         self.task_options = None
         self.task_custom = None
+        self.machine = None
         self.resubcnt = 0
         report = dict(results)
 
         if report["info"].has_key("options") and report["info"]["options"].has_key("resubmitjob") and report["info"]["options"]["resubmitjob"]:
             return
-        else:
-           self.task_options_stack.append("resubmitjob=true")
+
+        # copy all the options from current
+        if "options" in report["info"] and report["info"]["options"]:
+            for key,val in report["info"]["options"].items():
+                self.task_options_stack.append(key + "=" + str(val))
+
+        # copy machine label from current
+        if "machine" in report["info"] and report["info"]["machine"]:
+            self.machine = report["info"]["machine"]["label"]
+
+        self.task_options_stack.append("resubmitjob=true")
         if self.noinject:
             self.task_options_stack.append("free=true")
-         
+
         if self.task_options_stack:
             self.task_options=','.join(self.task_options_stack)
 
@@ -91,7 +101,7 @@ class ReSubmitExtractedEXE(Report):
                                   timeout=200,
                                   options=self.task_options,
                                   priority=1,
-                                  machine=None,
+                                  machine=self.machine,
                                   platform=None,
                                   custom=self.task_custom,
                                   memory=False,
