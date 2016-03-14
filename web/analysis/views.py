@@ -16,7 +16,7 @@ import zipfile
 import tempfile
 
 from django.conf import settings
-from django.core.servers.basehttp import FileWrapper
+from wsgiref.util import FileWrapper
 from django.template import RequestContext
 from django.http import HttpResponse, StreamingHttpResponse
 from django.shortcuts import redirect, render_to_response

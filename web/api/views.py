@@ -12,7 +12,7 @@ import requests
 from bson import json_util
 
 from django.conf import settings
-from django.core.servers.basehttp import FileWrapper
+from wsgiref.util import FileWrapper
 from django.http import HttpResponse, StreamingHttpResponse
 from django.shortcuts import render_to_response
 from django.template import RequestContext
