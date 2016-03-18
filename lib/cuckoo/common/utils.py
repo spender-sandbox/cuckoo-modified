@@ -153,6 +153,19 @@ def sanitize_pathname(s):
 
     return "".join(convert_filename_char(c) for c in s)
 
+def simple_pretty_print_convert(argval, enumdict):
+    retnames = []
+    leftover = argval
+    for key, value in enumdict.items():
+        if argval & value:
+            leftover &= ~value
+            retnames.append(key)
+
+    if leftover:
+        retnames.append("0x{0:08x}".format(leftover))
+
+    return "|".join(retnames)
+
 def pretty_print_retval(category, api_name, status, retval):
     """Creates pretty-printed versions of an API return value
     @return: pretty-printed version of the call's return value, or None if no conversion exists
@@ -263,6 +276,30 @@ def pretty_print_arg(category, api_name, arg_name, arg_val):
         if val:
             res.append("0x{0:08x}".format(val))
         return "|".join(res)
+    elif arg_name == "ClsContext":
+        val = int(arg_val, 16)
+        enumdict = {
+            "CLSCTX_INPROC_SERVER"           : 0x1,
+            "CLSCTX_INPROC_HANDLER"          : 0x2,
+            "CLSCTX_LOCAL_SERVER"            : 0x4,
+            "CLSCTX_INPROC_SERVER16"         : 0x8,
+            "CLSCTX_REMOTE_SERVER"           : 0x10,
+            "CLSCTX_INPROC_HANDLER16"        : 0x20,
+            "CLSCTX_NO_CODE_DOWNLOAD"        : 0x400,
+            "CLSCTX_NO_CUSTOM_MARSHAL"       : 0x1000,
+            "CLSCTX_ENABLE_CODE_DOWNLOAD"    : 0x2000,
+            "CLSCTX_NO_FAILURE_LOG"          : 0x4000,
+            "CLSCTX_DISABLE_AAA"             : 0x8000,
+            "CLSCTX_ENABLE_AAA"              : 0x10000,
+            "CLSCTX_FROM_DEFAULT_CONTEXT"    : 0x20000,
+            "CLSCTX_ACTIVATE_32_BIT_SERVER"  : 0x40000,
+            "CLSCTX_ACTIVATE_64_BIT_SERVER"  : 0x80000,
+            "CLSCTX_ENABLE_CLOAKING"         : 0x100000,
+            "CLSCTX_APPCONTAINER"            : 0x400000,
+            "CLSCTX_ACTIVATE_AAA_AS_IU"      : 0x800000,
+            "CLSCTX_PS_DLL"                  : 0x80000000
+        }
+        return simple_pretty_print_convert(val, enumdict)
     elif arg_name == "Algid":
         val = int(arg_val, 16)
         return {
