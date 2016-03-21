@@ -523,7 +523,7 @@ class RunSignatures(object):
             for alert in self.results["suricata"]["alerts"]:
                 if "signature" in alert and alert["signature"]:
                     if alert["signature"].startswith("ET TROJAN") or alert["signature"].startswith("ETPRO TROJAN"):
-                        words = re.findall(r"[A-Za-z0-9\.]+", alert["signature"])
+                        words = re.findall(r"[A-Za-z0-9]+", alert["signature"])
                         famcheck = words[2]
                         famchecklower = famcheck.lower()
                         if famchecklower == "win32" or famchecklower == "w32":
