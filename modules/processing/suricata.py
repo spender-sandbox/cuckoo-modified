@@ -216,9 +216,15 @@ class Suricata(Processing):
                         else:
                             alog["severity"] = parsed["alert"]["severity"]
                         alog["sid"] = parsed["alert"]["signature_id"]
-                        alog["srcport"] = parsed["src_port"]
+                        try:
+                            alog["srcport"] = parsed["src_port"]
+                        except:
+                            alog["srcport"] = "None"
                         alog["srcip"] = parsed["src_ip"]
-                        alog["dstport"] = parsed["dest_port"]
+                        try:
+                            alog["dstport"] = parsed["dest_port"]
+                        except:
+                            alog["dstport"] = "None"
                         alog["dstip"] = parsed["dest_ip"]
                         alog["protocol"] = parsed["proto"]
                         alog["timestamp"] = parsed["timestamp"].replace("T", " ")

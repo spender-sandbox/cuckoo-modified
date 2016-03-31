@@ -8,4 +8,4 @@ class Shellcode(Package):
     """Shellcode (any x86 executable code) analysis package."""
 
     def start(self, path):
-        return self.execute("bin/execsc.exe", path, path)
+        return self.execute("bin/execsc.exe", "\"%s\"" % path, path)

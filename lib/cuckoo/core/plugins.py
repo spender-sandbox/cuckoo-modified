@@ -511,7 +511,7 @@ class RunSignatures(object):
         if not family and self.results["info"]["category"] == "file" and "virustotal" in self.results and "results" in self.results["virustotal"] and self.results["virustotal"]["results"]:
             detectnames = []
             for res in self.results["virustotal"]["results"]:
-                if res["sig"]:
+                if res["sig"] and "Trojan.Heur." not in res["sig"]:
                     # weight Microsoft's detection, they seem to be more accurate than the rest
                     if res["vendor"] == "Microsoft":
                         detectnames.append(res["sig"])
@@ -526,7 +526,7 @@ class RunSignatures(object):
                         words = re.findall(r"[A-Za-z0-9]+", alert["signature"])
                         famcheck = words[2]
                         famchecklower = famcheck.lower()
-                        if famchecklower == "win32" or famchecklower == "w32":
+                        if famchecklower == "win32" or famchecklower == "w32" or famchecklower == "ransomware":
                             famcheck = words[3]
                             famchecklower = famcheck.lower()
 

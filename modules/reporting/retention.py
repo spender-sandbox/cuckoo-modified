@@ -176,7 +176,7 @@ class Retention(Report):
             if self.options[item] == False:
                 continue
             # Sanitation
-            if taskCheck[item] == 0:
+            if item not in taskCheck or taskCheck[item] == 0:
                 lastTaskLogged = None
             else:
                 lastTaskLogged = taskCheck[item]
