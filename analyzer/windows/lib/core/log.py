@@ -6,14 +6,15 @@ import socket
 import logging
 import traceback
 from ctypes import create_string_buffer
-from ctypes import byref, c_int, sizeof
+from ctypes import byref, c_int, sizeof, addressof
 from threading import Thread
 
-from lib.common.defines import KERNEL32
+from lib.common.defines import ADVAPI32, KERNEL32
 from lib.common.defines import ERROR_MORE_DATA, ERROR_PIPE_CONNECTED
 from lib.common.defines import PIPE_ACCESS_INBOUND, PIPE_TYPE_MESSAGE
 from lib.common.defines import PIPE_READMODE_MESSAGE, PIPE_WAIT
 from lib.common.defines import PIPE_UNLIMITED_INSTANCES, INVALID_HANDLE_VALUE
+from lib.common.defines import SECURITY_DESCRIPTOR, SECURITY_ATTRIBUTES
 
 log = logging.getLogger()
 
@@ -89,6 +90,15 @@ class LogServerThread(Thread):
 
 class LogServer(object):
     def __init__(self, result_ip, result_port, logserver_path):
+        # Create the Named Pipe.
+        sd = SECURITY_DESCRIPTOR()
+        sa = SECURITY_ATTRIBUTES()
+        ADVAPI32.InitializeSecurityDescriptor(byref(sd), 1)
+        ADVAPI32.SetSecurityDescriptorDacl(byref(sd), True, None, False)
+        sa.nLength = sizeof(SECURITY_ATTRIBUTES)
+        sa.bInheritHandle = False
+        sa.lpSecurityDescriptor = addressof(sd)
+
         h_pipe = KERNEL32.CreateNamedPipeA(logserver_path,
                                             PIPE_ACCESS_INBOUND,
                                             PIPE_TYPE_MESSAGE |
@@ -98,7 +108,7 @@ class LogServer(object):
                                             BUFSIZE,
                                             LOGBUFSIZE,
                                             0,
-                                            None)
+                                            byref(sa))
 
         if h_pipe == INVALID_HANDLE_VALUE:
             log.warning("Unable to create log server pipe.")
