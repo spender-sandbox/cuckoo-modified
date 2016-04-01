@@ -809,7 +809,7 @@ def pretty_print_arg(category, api_name, arg_name, arg_val):
         if val:
             res.append("0x{0:08x}".format(val))
         return "|".join(res)
-    elif api_name == "MoveFileWithProgressW" and arg_name == "Flags":
+    elif (api_name == "MoveFileWithProgressW" or api_name == "MoveFileWithProgressTransactedW") and arg_name == "Flags":
         val = int(arg_val, 16)
         res = []
         if val & 0x00000001:

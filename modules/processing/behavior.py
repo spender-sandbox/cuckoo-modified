@@ -556,7 +556,7 @@ class Summary:
             if cmdline and cmdline not in self.executed_commands:
                 self.executed_commands.append(cmdline)
 
-        elif call["api"] == "MoveFileWithProgressW":
+        elif call["api"] == "MoveFileWithProgressW" or call["api"] == "MoveFileWithProgressTransactedW":
             origname = self.get_argument(call, "ExistingFileName")
             newname = self.get_argument(call, "NewFileName")
             if origname:
@@ -707,8 +707,7 @@ class Enhanced(object):
                 "object": "file",
                 "apis": [
                     "MoveFileWithProgressW",
-                    "MoveFileExA",
-                    "MoveFileExW"
+                    "MoveFileWithProgressTransactedW",
                 ],
                 "args": [
                     ("from", "ExistingFileName"),
