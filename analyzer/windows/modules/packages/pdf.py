@@ -7,7 +7,7 @@ from lib.common.abstracts import Package
 class PDF(Package):
     """PDF analysis package."""
     PATHS = [
-        ("ProgramFiles", "Adobe", "*Reader*", "Reader", "AcroRd32.exe"),
+        ("ProgramFiles", "Adobe", "*a*", "Reader", "AcroRd32.exe"),
     ]
 
     def start(self, path):
