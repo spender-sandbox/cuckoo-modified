@@ -29,7 +29,7 @@ from lib.common.defines import PIPE_ACCESS_DUPLEX, PIPE_TYPE_MESSAGE
 from lib.common.defines import PIPE_READMODE_MESSAGE, PIPE_WAIT
 from lib.common.defines import PIPE_UNLIMITED_INSTANCES, INVALID_HANDLE_VALUE
 from lib.common.defines import SYSTEM_PROCESS_INFORMATION
-from lib.common.defines import EVENT_MODIFY_STATE, SECURITY_DESCRIPTOR, SECURITY_ATTRIBUTES
+from lib.common.defines import EVENT_MODIFY_STATE, SECURITY_DESCRIPTOR, SECURITY_ATTRIBUTES, SYSTEMTIME
 from lib.common.exceptions import CuckooError, CuckooPackageError
 from lib.common.hashing import hash_file
 from lib.common.results import upload_to_host
@@ -737,17 +737,21 @@ class Analyzer:
 
         # Set virtual machine clock.
         clock = datetime.strptime(self.config.clock, "%Y%m%dT%H:%M:%S")
-        # Setting date and time.
-        # NOTE: Windows system has only localized commands with date format
-        # following localization settings, so these commands for english date
-        # format cannot work in other localizations.
-        # In addition DATE and TIME commands are blocking if an incorrect
-        # syntax is provided, so an echo trick is used to bypass the input
-        # request and not block analysis.
+
+        systime = SYSTEMTIME()
+        systime.wYear = clock.year
+        systime.wMonth = clock.month
+        systime.wDay = clock.day
+        systime.wHour = clock.hour
+        systime.wMinute = clock.minute
+        systime.wSecond = clock.second
+        systime.wMilliseconds = 0
+
+        KERNEL32.SetSystemTime(byref(systime))
+
         thedate = clock.strftime("%m-%d-%y")
         thetime = clock.strftime("%H:%M:%S")
-        os.system("echo:|date {0}".format(thedate))
-        os.system("echo:|time {0}".format(thetime))
+
         log.info("Date set to: {0}, time set to: {1}".format(thedate, thetime))
 
         # Set the default DLL to be used by the PipeHandler.

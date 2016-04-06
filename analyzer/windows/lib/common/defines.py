@@ -233,3 +233,16 @@ class SECURITY_ATTRIBUTES(Structure):
         ('lpSecurityDescriptor', PVOID),
         ('bInheritHandle', BYTE),
     ]
+
+class SYSTEMTIME(Structure):
+    _pack_ = 1
+    _fields_ = [
+        ('wYear', WORD),
+        ('wMonth', WORD),
+        ('wDayOfWeek', WORD),
+        ('wDay', WORD),
+        ('wHour', WORD),
+        ('wMinute', WORD),
+        ('wSecond', WORD),
+        ('wMilliseconds', WORD),
+    ]
