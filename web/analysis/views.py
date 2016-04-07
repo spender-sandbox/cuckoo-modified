@@ -61,6 +61,8 @@ if enabledconf["elasticsearchdb"]:
          }],
          timeout = 60)
 
+maxsimilar = int(Config("processing").malheur.maxsimilar)
+
 def get_analysis_info(db, id=-1, task=None):
     if not task:
         task = db.view_task(id)
@@ -741,7 +743,7 @@ def report(request, task_id):
                             classes[classname].append(addval)
             if ourclassname:
                 similar = classes[ourclassname]
-                for sim in similar:
+                for sim in similar[:maxsimilar]:
                     siminfo = get_analysis_info(db, id=int(sim["id"]))
                     if siminfo:
                         similarinfo.append(siminfo)
