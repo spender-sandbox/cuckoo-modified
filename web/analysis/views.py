@@ -61,7 +61,7 @@ if enabledconf["elasticsearchdb"]:
          }],
          timeout = 60)
 
-maxsimilar = int(Config("processing").malheur.maxsimilar)
+maxsimilar = int(Config("reporting").malheur.maxsimilar)
 
 def get_analysis_info(db, id=-1, task=None):
     if not task:
