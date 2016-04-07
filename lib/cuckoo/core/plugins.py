@@ -547,7 +547,7 @@ class RunSignatures(object):
                             "probably",
                             "w2km",
                             "http",
-                            "abuse.ch",
+                            "abuse",
                             "win32",
                             "unknown",
                             "single",
@@ -561,7 +561,6 @@ class RunSignatures(object):
                                 isgood = False
                                 break
                         if isgood:
-                            famcheck = famcheck.split(".")[0]
                             family = famcheck.title()
 
         # fall back to ClamAV detection
