@@ -1508,6 +1508,7 @@ def get_vt_consensus(namelist):
         "stealer",
         "dangerousobject",
         "symmi",
+        "zusy",
     ]
 
     finaltoks = defaultdict(int)
