@@ -25,6 +25,9 @@
                     {% if config.display_et_portal %}
                     <a href="https://threatintel.proofpoint.com/search?q={{http.srcip}}" target="_blank">[ET]</a> 
                     {% endif %}
+                    {% if config.display_pt_portal %}
+                    <a href="https://www.passivetotal.org/passive/{{http.srcip}}" target="_blank">[PT]</a>
+                    {% endif %}
                     {% if http.moloch_src_ip_url %}
                     <a href={{http.moloch_src_ip_url}} target="_blank">[MLCH]</a>
                     {% endif %}
@@ -38,6 +41,9 @@
                    <a href="https://www.virustotal.com/en/ip-address/{{http.dstip}}/information/">[VT]</a> 
                     {% if config.display_et_portal %}
                     <a href="https://threatintel.proofpoint.com/search?q={{http.dstip}}" target="_blank">[ET]</a> 
+                    {% endif %}
+                    {% if config.display_pt_portal %}
+                    <a href="https://www.passivetotal.org/passive/{{http.dstip}}" target="_blank">[PT]</a>
                     {% endif %}
                     {% if http.moloch_dst_ip_url %}
                     <a href={{http.moloch_dst_ip_url}} target="_blank">[MLCH]</a>
@@ -58,6 +64,9 @@
                     <a href="https://www.virustotal.com/en/domain/{{http.hostname}}/information/">[VT]</a> 
                     {% if config.display_et_portal %}
                     <a href="https://threatintel.proofpoint.com/search?q={{http.hostname}}" target="_blank">[ET]</a> 
+                    {% endif %}
+                    {% if config.display_pt_portal %}
+                    <a href="https://www.passivetotal.org/passive/{{http.hostname}}" target="_blank">[PT]</a>
                     {% endif %}
                     {% if http.moloch_http_host_url %}
                     <a href={{http.moloch_http_host_url}} target="_blank">[MLCH]</a>
