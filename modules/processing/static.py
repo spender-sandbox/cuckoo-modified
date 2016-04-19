@@ -715,8 +715,8 @@ class PortableExecutable(object):
                     if xst:
                         for cert in xst:
                             sn = cert.get_serial_number()
-                            sha1_fingerprint = cert.get_fingerprint('sha1').lower()
-                            md5_fingerprint = cert.get_fingerprint('md5').lower()
+                            sha1_fingerprint = cert.get_fingerprint('sha1').lower().rjust(40, '0')
+                            md5_fingerprint = cert.get_fingerprint('md5').lower().rjust(32, '0')
                             subject_str = str(cert.get_subject())
                             cn = subject_str[subject_str.index("/CN=")+len("/CN="):]
                             retlist.append({
