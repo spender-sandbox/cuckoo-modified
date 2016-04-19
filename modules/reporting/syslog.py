@@ -1,4 +1,4 @@
-# Copyright (C) 2010-2014 Cuckoo Foundation.
+# Copyright (C) 2010-2016 Cuckoo Foundation, KillerInstinct
 # This file is part of Cuckoo Sandbox - http://www.cuckoosandbox.org
 # See the file 'docs/LICENSE' for copying permission.
 
@@ -54,9 +54,9 @@ dnwhitelist = [
 
 class Syslog(Report):
     """Creates the syslog data to be sent.
-	@param results: Cuckoo results dict
-	@return: String containing syslog data built from the results dict.
-	"""
+       @param results: Cuckoo results dict
+       @return: String containing syslog data built from the results dict.
+    """
     def createLog(self, results):
         syslog = ''
         syslog += 'Timestamp="' + results["info"]["started"].replace("-","/") + '" '
@@ -70,8 +70,14 @@ class Syslog(Report):
             syslog += 'File_Size="' + str(results["target"]["file"]["size"]) + '" '
             syslog += 'File_Type="' + str(results["target"]["file"]["type"]) + '" '
             if "PDF" in str(results["target"]["file"]["type"]):
-                syslog += 'Object_Count="' + str(len(results["static"]["Objects"])) + '" '
-                syslog += 'Total_Streams="' + str(sum(results["static"]["Streams"].values())) + '" '
+                if results["static"]["pdf"].get("Keywords", {}).get("obj", 0):
+                    syslog += 'Object_Count="' + str(results["static"]["pdf"]["Keywords"]["obj"]) + '" '
+                else:
+                    syslog += 'Object_Count="0" '
+                if results["static"]["pdf"].get("JSStreams", []):
+                    syslog += 'Total_Streams="' + str(len(results["static"]["pdf"]["JSStreams"])) + '" '
+                else:
+                    syslog += 'Total_Streams="0" '
         elif results["target"]["category"] == "url":
             syslog += 'URL="' + results["target"]["url"] + '" '
         # Here you can process the custom field if need be. My example stores
@@ -97,40 +103,56 @@ class Syslog(Report):
             syslog += 'MalFamily="' + str(results["malfamily"]) + '" '
 
         if "network" in results:
-            goodips = []
-            # Walks the IP exception list, appends to a multi-value ";" delimited field.
-            for ip in results["network"]["hosts"]:
-                if ip not in ipwhitelist:
-                    goodips.append(ip)
-            if goodips == []:
+            if "hosts" in results["network"]:
+                goodips = []
+                # Walks the IP exception list, appends to a multi-value ";" delimited field.
+                for ip in results["network"]["hosts"]:
+                    if ip["ip"] not in ipwhitelist:
+                        goodips.append(ip["ip"])
+                if goodips == []:
+                    syslog += 'Related_IPs="-" '
+                else:
+                    syslog += 'Related_IPs="' + ';'.join(f for f in goodips) + '" '
+            else:
                 syslog += 'Related_IPs="-" '
+
+            if "domains" in results["network"]:
+                resultsdms = []
+                baddms = []
+                gooddms = []
+                # Walks the domain exception list, appends to a multi-value ";" delimited field.
+                for domain in results["network"]["domains"]:
+                    if domain["domain"] not in dnwhitelist:
+                        resultsdms.append(domain["domain"])
+                        for a in dnwhitelist:
+                            if domain["domain"].endswith(a):
+                                baddms.append(domain["domain"])
+                for domain in resultsdms:
+                    if domain not in baddms:
+                        gooddms.append(domain)
+                if gooddms == []:
+                    syslog += 'Related_Domains="-" '
+                else:
+                    syslog += 'Related_Domains="' + ';'.join(f for f in gooddms) + '" '
             else:
-                syslog += 'Related_IPs="' + ';'.join(f for f in goodips) + '" '
-            resultsdms = []
-            baddms = []
-            gooddms = []
-            # Walks the domain exception list, appends to a multi-value ";" delimited field.
-            for domain in results["network"]["domains"]:
-                if domain["domain"] not in dnwhitelist:
-                    resultsdms.append(domain["domain"])
-                    for a in dnwhitelist:
-                        if domain["domain"].endswith(a):
-                            baddms.append(domain["domain"])
-            for domain in resultsdms:
-                if domain not in baddms:
-                    gooddms.append(domain)
-            if gooddms == []:
                 syslog += 'Related_Domains="-" '
-            else:
-                syslog += 'Related_Domains="' + ';'.join(f for f in gooddms) + '" '
             # Some network stats...
-            syslog += 'Total_TCP="' + str(len(results["network"]["tcp"])) + '" '
-            syslog += 'Total_UDP="' + str(len(results["network"]["udp"])) + '"'
+            if "tcp" in results["network"]:
+                syslog += 'Total_TCP="' + str(len(results["network"]["tcp"])) + '" '
+            else:
+                syslog += 'Total_TCP="0" '
+            if "udp" in results["network"]:
+                syslog += 'Total_UDP="' + str(len(results["network"]["udp"])) + '"'
+            else:
+                syslog += 'Total_UDP="0" '
         # VT stats if available
-        if 'positives' in results["virustotal"]:
-            VT_bad = str(results["virustotal"]["positives"])
-            VT_total = str(results["virustotal"]["total"])
-            syslog += 'Virustotal="' + VT_bad + '/' + VT_total + '" '
+        if "virustotal" in results:
+            if all(val in results["virustotal"].keys() for val in ["positives", "total"]):
+                VT_bad = str(results["virustotal"]["positives"])
+                VT_total = str(results["virustotal"]["total"])
+                syslog += 'Virustotal="' + VT_bad + '/' + VT_total + '" '
+            else:
+                syslog += 'Virustotal="Not Found" '
             # Vendor specific detections here. Included two examples.
             #if submittype == "file":
             #    if results["virustotal"]["scans"]["Symantec"]["detected"] == True:
@@ -144,7 +166,7 @@ class Syslog(Report):
             #    else:
             #        syslog += 'McAfee="No Detection" '
         else:
-            syslog += 'Virustotal="Not Found" '
+            syslog += 'Virustotal="Not Checked" '
             # Vendor specific case when there is no detection
             #if submittype == "file":
             #    syslog += 'Symantec="N/A" '
@@ -155,7 +177,7 @@ class Syslog(Report):
         if sigs == []:
             syslog += 'Cuckoo_Sigs="-" '
         else:
-            # Ignore all sigs EXCEPT Virustotal for URL analysis 
+            # Ignore all sigs EXCEPT Virustotal for URL analysis
             # (FP's is signatures for IE mechanics)
             if submittype == "url" and "antivirus_virustotal" in sigs:
                 syslog += 'Cuckoo_Sigs="antivirus_virustotal" '
@@ -168,8 +190,9 @@ class Syslog(Report):
         # (File analysis)
         if submittype == "file":
             yara = []
-            for rule in results["target"]["file"]["yara"]:
-                yara.append(rule["name"])
+            if results["target"]["file"].get("yara", []):
+                for rule in results["target"]["file"]["yara"]:
+                    yara.append(rule["name"])
             if yara == []:
                 syslog += 'Yara="-" '
             else:
@@ -201,6 +224,7 @@ class Syslog(Report):
             result = self.createLog(results)
         except:
             raise CuckooReportError("Error creating syslog formatted log.")
+			
         # Check if the user wants it stored in the reports directory as well
         do_log = self.options.get("logfile", None)
         if do_log:
@@ -215,18 +239,22 @@ class Syslog(Report):
                 syslogfile.close()
         # Attempt to connect to the syslog server
         try:
+            server_address = (server, port)
             if proto == "tcp":
                 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                sock.connect(server_address)
+                # Attempt to send the syslog string to the syslog server
+                try:
+                    sock.sendall(result)
+                except:
+                    raise CuckooReportError("Failed to send data to syslog server")
+                finally:
+                    sock.close()
             elif proto == "udp":
                 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            server_address = (server, port)
-            sock.connect(server_address)
-            # Attempt to send the syslog string to the syslog server
-            try:
-                sock.sendall(result)
-            except:
-                raise CuckooReportError("Failed to send data to splunk")
-            finally:
-                sock.close()
+                try:
+                    sock.sendto(result, server_address)
+                except:
+                    raise CuckooReportError("Failed to send data to syslog server")
         except (UnicodeError, TypeError, IOError) as e:
-            raise CuckooReportError("Failed to send Splunk data: %s" % e)
+            raise CuckooReportError("Failed to send syslog data: %s" % e)
