@@ -147,9 +147,7 @@ def dump_file(file_path):
         idx = DUMPED_LIST.index(sha256)
         upload_path = UPLOADPATH_LIST[idx]
     else:
-        upload_path = os.path.join("files",
-                               str(random.randint(100000000, 9999999999)),
-                               file_name.encode("utf-8", "replace"))
+        upload_path = os.path.join("files", sha256)
     try:
         upload_to_host(file_path, upload_path, duplicate)
         if not duplicate:

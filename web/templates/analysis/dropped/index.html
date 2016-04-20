@@ -47,7 +47,7 @@
                     <th>ClamAV</th>
                     <td>{{file.clamav}}</td>
                 </tr>
-
+                <tr>
                     <th>Yara</th>
                     <td>
                     {% if file.yara %}
@@ -70,15 +70,25 @@
                     <th></th>
                     <td><a href="{% url "analysis.views.file" "dropped" analysis.info.id file.dropdir %}" class="btn btn-primary btn-small">Download</a>
                         {% if file.data %}
-                        &emsp;<a class="btn btn-primary btn-small" data-toggle="collapse" data-target="#{{file.dropdir}}">Display Text</a>
+                        &emsp;<a class="btn btn-primary btn-small" data-toggle="collapse" data-target="#{{file.sha256}}">Display Text</a>
                         {% endif %}
                     </td>
                 </tr>
-                {% if file.data %}
-                <tr class="collapse" id="{{file.dropdir}}">
-                    <td colspan="2"><pre>{{file.data}}</pre></td>
+                {% else %}
+                <tr>
+                    <th></th>
+                    <td>
+                        <a href="{% url "analysis.views.file" "dropped" analysis.info.id file.sha256 %}" class="btn btn-primary btn-small">Download</a>
+                        {% if file.data %}
+                        &emsp;<a class="btn btn-primary btn-small" data-toggle="collapse" data-target="#{{file.sha256}}">Display Text</a>
+                        {% endif %}
+                    </td>
                 </tr>
                 {% endif %}
+                {% if file.data %}
+                <tr class="collapse" id="{{file.sha256}}">
+                    <td colspan="2"><pre>{{file.data}}</pre></td>
+                </tr>
                 {% endif %}
             </table>
         </div>

@@ -799,11 +799,17 @@ def file(request, category, task_id, dlfile):
     elif category == "dropped":
         buf = os.path.join(CUCKOO_ROOT, "storage", "analyses",
                            task_id, "files", file_name)
-        # Grab smaller file name as we store guest paths in the
-        # [orig file name]_info.exe
-        dfile = min(os.listdir(buf), key=len)
-        path = os.path.join(buf, dfile)
-        file_name = dfile + ".bin"
+        if os.path.isdir(buf):
+            # Backward compat for when each dropped file was in a separate dir
+            # Grab smaller file name as we store guest paths in the
+            # [orig file name]_info.exe
+            dfile = min(os.listdir(buf), key=len)
+            path = os.path.join(buf, dfile)
+            file_name = dfile + ".bin"
+        else:
+            path = buf
+            file_name += ".bin"
+
     # Just for suricata dropped files currently
     elif category == "zip":
         file_name = "files.zip"

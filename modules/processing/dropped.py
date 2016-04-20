@@ -26,10 +26,8 @@ class Dropped(Processing):
                 if file_name.endswith("_info.txt") and not os.path.exists(file_path + "_info.txt"):
                     continue
                 guest_paths = [line.strip() for line in open(file_path + "_info.txt")]
-
-                file_info = File(file_path=file_path,guest_paths=guest_paths).get_all()
-                # Used to find the file on disk since they are in random generated directories
-                file_info["dropdir"] = file_path.split("/")[-2]
+                guest_name = guest_paths[0].split("\\")[-1]
+                file_info = File(file_path=file_path,guest_paths=guest_paths, file_name=guest_name).get_all()
                 texttypes = [
                     "ASCII",
                     "Windows Registry text",
