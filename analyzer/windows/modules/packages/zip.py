@@ -120,6 +120,10 @@ class Zip(Package):
             cmd_path = self.get_path("cmd.exe")
             cmd_args = "/c start /wait \"\" \"{0}\"".format(file_path)
             return self.execute(cmd_path, cmd_args, file_path)
+        elif file_name.lower().endswith(".msi"):
+            msi_path = self.get_path("msiexec.exe")
+            msi_args = "/I \"{0}\"".format(file_path)
+            return self.execute(msi_path, msi_args, file_path)
         elif file_name.lower().endswith((".js", ".jse", ".vbs", ".vbe", ".wsf")):
             wscript = self.get_path_app_in_path("wscript.exe")
             wscript_args = "\"{0}\"".format(file_path)
