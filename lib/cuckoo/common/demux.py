@@ -5,8 +5,8 @@
 import os
 import tempfile
 import gzip
+import tarfile
 from zipfile import ZipFile
-from tarfile import TarFile
 
 try:
     from rarfile import RarFile
@@ -157,7 +157,7 @@ def demux_tar(filename, options):
 
         extracted = []
 
-        with TarFile(filename, "r") as archive:
+        with tarfile.open(filename, "r") as archive:
             infolist = archive.getmembers()
             for info in infolist:
                 # avoid obvious bombs
@@ -202,13 +202,12 @@ def demux_tar(filename, options):
             if not os.path.exists(target_path):
                 os.mkdir(target_path)
             tmp_dir = tempfile.mkdtemp(prefix='cuckootar_',dir=target_path)
-
-            outpath = os.path.join(tmp_dir, extfile.name)
-            fobj = gzip.open(filename, "rb")
-            outfile = open(outpath, "wb")
-            outfile.write(fobj.read())
-            fobj.close()
-            outfile.close()
+            gzfinal = os.path.basename(os.path.splitext(filename)[0])
+            outpath = os.path.join(tmp_dir, gzfinal)
+            with gzip.open(filename, "rb") as fobj:
+                outfile = open(outpath, "wb")
+                outfile.write(fobj.read())
+                outfile.close()
             retlist.append(outpath)
         except:
             pass
