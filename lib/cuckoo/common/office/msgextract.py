@@ -77,7 +77,7 @@ class Attachment:
         if ext == "" and len(basename) and basename[0] == ".":
             return None
         extensions = [
-            "", ".exe", ".dll", ".pdf", ".msi", ".bin", ".scr", ".zip", ".htm", ".html", 
+            "", ".exe", ".dll", ".pdf", ".msi", ".bin", ".scr", ".zip", ".htm", ".html", ".hta",
             ".doc", ".dot", ".docx", ".dotx", ".docm", ".dotm", ".docb", ".mht", ".mso", ".js", ".jse", ".vbs", ".vbe",
             ".xls", ".xlt", ".xlm", ".xlsx", ".xltx", ".xlsm", ".xltm", ".xlsb", ".xla", ".xlam", ".xll", ".xlw",
             ".ppt", ".pot", ".pps", ".pptx", ".pptm", ".potx", ".potm", ".ppam", ".ppsx", ".ppsm", ".sldx", ".sldm", ".wsf",

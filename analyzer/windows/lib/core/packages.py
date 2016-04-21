@@ -39,7 +39,7 @@ def choose_package(file_type, file_name, exports):
     elif "Microsoft PowerPoint" in file_type or \
             file_name.endswith((".ppt", ".pptx", ".pps", ".ppsx", ".pptm", ".potm", ".potx", ".ppsm")):
         return "ppt"
-    elif "HTML" in file_type or file_name.endswith((".htm", ".html")):
+    elif "HTML" in file_type or file_name.endswith((".htm", ".html", ".hta")):
         return "html"
     elif "Java Jar" in file_type or file_name.endswith(".jar"):
         return "jar"

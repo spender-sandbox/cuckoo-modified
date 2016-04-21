@@ -1451,7 +1451,7 @@ class Static(Processing):
             # results for actual zip files.
             elif "Zip archive data, at least v2.0" in thetype:
                 static = Office(self.file_path).run()
-            elif package == "wsf" or thetype == "XML document text" or self.task["target"].endswith(".wsf"):
+            elif package == "wsf" or thetype == "XML document text" or self.task["target"].endswith(".wsf") or self.task["target"].endswith(".hta"):
                 static = WindowsScriptFile(self.file_path).run()
             elif package == "js" or package == "vbs":
                 static = EncodedScriptFile(self.file_path).run()

@@ -24,7 +24,7 @@ class HTML(Package):
         # IE is going to open it as a text file, so your precious sample will not
         # be executed.
         # We help you sample to execute renaming it with a proper extension.
-        if not path.endswith((".htm", ".html")):
+        if not path.endswith((".htm", ".html", ".hta")):
             shutil.copy(path, path + ".html")
             path += ".html"
             log.info("Submitted file is missing extension, adding .html")
