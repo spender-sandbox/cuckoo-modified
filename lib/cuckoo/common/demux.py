@@ -20,7 +20,7 @@ from lib.cuckoo.common.objects import File
 from lib.cuckoo.common.email_utils import find_attachments_in_email
 from lib.cuckoo.common.office.msgextract import Message
 
-demux_extension_list = [
+demux_extensions_list = [
         "", ".exe", ".dll", ".jar", ".pdf", ".msi", ".bin", ".scr", ".zip", ".tar", ".gz", ".tgz", ".rar", ".htm", ".html", ".hta",
         ".doc", ".dot", ".docx", ".dotx", ".docm", ".dotm", ".docb", ".mht", ".mso", ".js", ".jse", ".vbs", ".vbe",
         ".xls", ".xlt", ".xlm", ".xlsx", ".xltx", ".xlsm", ".xltm", ".xlsb", ".xla", ".xlam", ".xll", ".xlw",
@@ -67,18 +67,19 @@ def demux_zip(filename, options):
                         extracted.append(info.filename)
                         break
 
-            options = Config()
-            tmp_path = options.cuckoo.get("tmppath", "/tmp")
-            target_path = os.path.join(tmp_path, "cuckoo-zip-tmp")
-            if not os.path.exists(target_path):
-                os.mkdir(target_path)
-            tmp_dir = tempfile.mkdtemp(prefix='cuckoozip_',dir=target_path)
+            if extracted:
+                options = Config()
+                tmp_path = options.cuckoo.get("tmppath", "/tmp")
+                target_path = os.path.join(tmp_path, "cuckoo-zip-tmp")
+                if not os.path.exists(target_path):
+                    os.mkdir(target_path)
+                tmp_dir = tempfile.mkdtemp(prefix='cuckoozip_',dir=target_path)
 
-            for extfile in extracted:
-                try:
-                    retlist.append(archive.extract(extfile, path=tmp_dir, pwd=password))
-                except:
-                    retlist.append(archive.extract(extfile, path=tmp_dir))
+                for extfile in extracted:
+                    try:
+                        retlist.append(archive.extract(extfile, path=tmp_dir, pwd=password))
+                    except:
+                        retlist.append(archive.extract(extfile, path=tmp_dir))
     except:
         pass
 
@@ -125,22 +126,23 @@ def demux_rar(filename, options):
                         extracted.append(info.filename)
                         break
 
-            options = Config()
-            tmp_path = options.cuckoo.get("tmppath", "/tmp")
-            target_path = os.path.join(tmp_path, "cuckoo-rar-tmp")
-            if not os.path.exists(target_path):
-                os.mkdir(target_path)
-            tmp_dir = tempfile.mkdtemp(prefix='cuckoorar_',dir=target_path)
+            if extracted:
+                options = Config()
+                tmp_path = options.cuckoo.get("tmppath", "/tmp")
+                target_path = os.path.join(tmp_path, "cuckoo-rar-tmp")
+                if not os.path.exists(target_path):
+                    os.mkdir(target_path)
+                tmp_dir = tempfile.mkdtemp(prefix='cuckoorar_',dir=target_path)
 
-            for extfile in extracted:
-                # RarFile differs from ZipFile in that extract() doesn't return the path of the extracted file
-                # so we have to make it up ourselves
-                try:
-                    archive.extract(extfile, path=tmp_dir, pwd=password)
-                    retlist.append(os.path.join(tmp_dir, extfile.replace("\\", "/")))
-                except:
-                    archive.extract(extfile, path=tmp_dir)
-                    retlist.append(os.path.join(tmp_dir, extfile.replace("\\", "/")))
+                for extfile in extracted:
+                    # RarFile differs from ZipFile in that extract() doesn't return the path of the extracted file
+                    # so we have to make it up ourselves
+                    try:
+                        archive.extract(extfile, path=tmp_dir, pwd=password)
+                        retlist.append(os.path.join(tmp_dir, extfile.replace("\\", "/")))
+                    except:
+                        archive.extract(extfile, path=tmp_dir)
+                        retlist.append(os.path.join(tmp_dir, extfile.replace("\\", "/")))
     except:
         pass
 
@@ -177,21 +179,22 @@ def demux_tar(filename, options):
                         extracted.append(info)
                         break
 
-            options = Config()
-            tmp_path = options.cuckoo.get("tmppath", "/tmp")
-            target_path = os.path.join(tmp_path, "cuckoo-tar-tmp")
-            if not os.path.exists(target_path):
-                os.mkdir(target_path)
-            tmp_dir = tempfile.mkdtemp(prefix='cuckootar_',dir=target_path)
+            if extracted:
+                options = Config()
+                tmp_path = options.cuckoo.get("tmppath", "/tmp")
+                target_path = os.path.join(tmp_path, "cuckoo-tar-tmp")
+                if not os.path.exists(target_path):
+                    os.mkdir(target_path)
+                tmp_dir = tempfile.mkdtemp(prefix='cuckootar_',dir=target_path)
 
-            for extfile in extracted:
-                fobj = archive.extractfile(extfile)
-                outpath = os.path.join(tmp_dir, extfile.name)
-                outfile = open(outpath, "wb")
-                outfile.write(fobj.read())
-                fobj.close()
-                outfile.close()
-                retlist.append(outpath)
+                for extfile in extracted:
+                    fobj = archive.extractfile(extfile)
+                    outpath = os.path.join(tmp_dir, extfile.name)
+                    outfile = open(outpath, "wb")
+                    outfile.write(fobj.read())
+                    fobj.close()
+                    outfile.close()
+                    retlist.append(outpath)
     except:
         if ext == ".tgz" or ext == ".tbz2" or ext == ".tar":
             return retlist
