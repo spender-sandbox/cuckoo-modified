@@ -6,6 +6,7 @@ import os
 import tempfile
 import gzip
 import tarfile
+from bz2 import BZ2File
 from zipfile import ZipFile
 
 try:
@@ -150,9 +151,9 @@ def demux_tar(filename, options):
     ext = ""
 
     try:
-        # only extract from files with no extension or with .bin (downloaded from us) or .tar/.tgz/.tar.gz extensions
+        # only extract from files with no extension or with .bin (downloaded from us) or .tar/tarball extensions
         ext = os.path.splitext(filename)[1]
-        if ext != "" and ext != ".tar" and ext != ".gz" and ext != ".tgz" and ext != ".bin":
+        if ext != "" and ext != ".tar" and ext != ".gz" and ext != ".tgz" and ext != ".bz2" and ext != ".tbz2" and ext != ".bin":
             return retlist
 
         extracted = []
@@ -192,19 +193,37 @@ def demux_tar(filename, options):
                 outfile.close()
                 retlist.append(outpath)
     except:
-        if ext == ".tgz" or ext == ".tar":
+        if ext == ".tgz" or ext == ".tbz2" or ext == ".tar":
             return retlist
         # handle gzip
         try:
-            options = Config()
-            tmp_path = options.cuckoo.get("tmppath", "/tmp")
-            target_path = os.path.join(tmp_path, "cuckoo-tar-tmp")
-            if not os.path.exists(target_path):
-                os.mkdir(target_path)
-            tmp_dir = tempfile.mkdtemp(prefix='cuckootar_',dir=target_path)
             gzfinal = os.path.basename(os.path.splitext(filename)[0])
-            outpath = os.path.join(tmp_dir, gzfinal)
             with gzip.open(filename, "rb") as fobj:
+                options = Config()
+                tmp_path = options.cuckoo.get("tmppath", "/tmp")
+                target_path = os.path.join(tmp_path, "cuckoo-tar-tmp")
+                if not os.path.exists(target_path):
+                    os.mkdir(target_path)
+                tmp_dir = tempfile.mkdtemp(prefix='cuckootar_',dir=target_path)
+                outpath = os.path.join(tmp_dir, gzfinal)
+                outfile = open(outpath, "wb")
+                outfile.write(fobj.read())
+                outfile.close()
+            retlist.append(outpath)
+        except:
+            pass
+
+        # handle bzip2
+        try:
+            gzfinal = os.path.basename(os.path.splitext(filename)[0])
+            with BZ2File(filename, "rb") as fobj:
+                options = Config()
+                tmp_path = options.cuckoo.get("tmppath", "/tmp")
+                target_path = os.path.join(tmp_path, "cuckoo-tar-tmp")
+                if not os.path.exists(target_path):
+                    os.mkdir(target_path)
+                tmp_dir = tempfile.mkdtemp(prefix='cuckootar_',dir=target_path)
+                outpath = os.path.join(tmp_dir, gzfinal)
                 outfile = open(outpath, "wb")
                 outfile.write(fobj.read())
                 outfile.close()
