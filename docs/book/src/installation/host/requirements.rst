@@ -68,6 +68,7 @@ The following libraries are not strictly required, but their installation is rec
     * `jsbeautifier`_ (Optional): needed for analysis of JavaScript in PDFs
     * `mono-utils`_ (Optional): needed for .NET static analysis
     * `python-whois`_ (Optional): needed to perform domain whois lookups for URL analyses
+    * `bs4`_ (Optional): needed to parse and decode WSF and HTA files
 
 Some of them are already packaged in Debian/Ubuntu and can be installed with the following command::
 
@@ -75,7 +76,7 @@ Some of them are already packaged in Debian/Ubuntu and can be installed with the
 
 Except for *python-magic*, *python-dpkt* and *python-libvirt*, the others can be installed through ``pip`` too::
 
-    $ sudo pip install jinja2 pymongo bottle pefile django chardet pygal m2crypto clamd django-ratelimit pycrypto weasyprint rarfile jsbeautifier python-whois
+    $ sudo pip install jinja2 pymongo bottle pefile django chardet pygal m2crypto clamd django-ratelimit pycrypto weasyprint rarfile jsbeautifier python-whois bs4
 
 For faster generation of PDF reports, you should install wkhtmltopdf instead of weasyprint.  To do this on Debian/Ubuntu, just use the following command::
 
@@ -113,6 +114,7 @@ If you want to use KVM it's packaged too and you can install it with the followi
 .. _pype32: https://github.com/crackinglandia/pype32
 .. _rarfile: https://pypi.python.org/pypi/rarfile
 .. _jsbeautifier: https://pypi.python.org/pypi/jsbeautifier
+.. _bs4: https://pypi.python.org/pypi/bs4
 
 If you want to use XenServer you'll have to install the *XenAPI* Python package::
 

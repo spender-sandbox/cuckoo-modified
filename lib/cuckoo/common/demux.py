@@ -4,7 +4,10 @@
 
 import os
 import tempfile
+import gzip
 from zipfile import ZipFile
+from tarfile import TarFile
+
 try:
     from rarfile import RarFile
     HAS_RARFILE = True
@@ -15,6 +18,13 @@ from lib.cuckoo.common.config import Config
 from lib.cuckoo.common.objects import File
 from lib.cuckoo.common.email_utils import find_attachments_in_email
 from lib.cuckoo.common.office.msgextract import Message
+
+demux_extension_list = [
+        "", ".exe", ".dll", ".jar", ".pdf", ".msi", ".bin", ".scr", ".zip", ".tar", ".gz", ".tgz", ".rar", ".htm", ".html", ".hta",
+        ".doc", ".dot", ".docx", ".dotx", ".docm", ".dotm", ".docb", ".mht", ".mso", ".js", ".jse", ".vbs", ".vbe",
+        ".xls", ".xlt", ".xlm", ".xlsx", ".xltx", ".xlsm", ".xltm", ".xlsb", ".xla", ".xlam", ".xll", ".xlw",
+        ".ppt", ".pot", ".pps", ".pptx", ".pptm", ".potx", ".potm", ".ppam", ".ppsx", ".ppsm", ".sldx", ".sldm", ".wsf",
+    ]
 
 def demux_zip(filename, options):
     retlist = []
@@ -51,13 +61,7 @@ def demux_zip(filename, options):
                 ext = ext.lower()
                 if ext == "" and len(basename) and basename[0] == ".":
                     continue
-                extensions = [
-                    "", ".exe", ".dll", ".jar", ".pdf", ".msi", ".bin", ".scr", ".zip", ".htm", ".html", ".hta",
-                    ".doc", ".dot", ".docx", ".dotx", ".docm", ".dotm", ".docb", ".mht", ".mso", ".js", ".jse", ".vbs", ".vbe",
-                    ".xls", ".xlt", ".xlm", ".xlsx", ".xltx", ".xlsm", ".xltm", ".xlsb", ".xla", ".xlam", ".xll", ".xlw",
-                    ".ppt", ".pot", ".pps", ".pptx", ".pptm", ".potx", ".potm", ".ppam", ".ppsx", ".ppsm", ".sldx", ".sldm", ".wsf",
-                ]
-                for theext in extensions:
+                for theext in demux_extensions_list:
                     if ext == theext:
                         extracted.append(info.filename)
                         break
@@ -115,13 +119,7 @@ def demux_rar(filename, options):
                 ext = ext.lower()
                 if ext == "" and len(basename) and basename[0] == ".":
                     continue
-                extensions = [
-                    "", ".exe", ".dll", ".jar", ".pdf", ".msi", ".bin", ".scr", ".zip", ".htm", ".html", ".hta",
-                    ".doc", ".dot", ".docx", ".dotx", ".docm", ".dotm", ".docb", ".mht", ".mso", ".js", ".jse", ".vbs", ".vbe",
-                    ".xls", ".xlt", ".xlm", ".xlsx", ".xltx", ".xlsm", ".xltm", ".xlsb", ".xla", ".xlam", ".xll", ".xlw",
-                    ".ppt", ".pot", ".pps", ".pptx", ".pptm", ".potx", ".potm", ".ppam", ".ppsx", ".ppsm", ".sldx", ".sldm", ".wsf",
-                ]
-                for theext in extensions:
+                for theext in demux_extensions_list:
                     if ext == theext:
                         extracted.append(info.filename)
                         break
@@ -144,6 +142,76 @@ def demux_rar(filename, options):
                     retlist.append(os.path.join(tmp_dir, extfile.replace("\\", "/")))
     except:
         pass
+
+    return retlist
+
+def demux_tar(filename, options):
+    retlist = []
+    ext = ""
+
+    try:
+        # only extract from files with no extension or with .bin (downloaded from us) or .tar/.tgz/.tar.gz extensions
+        ext = os.path.splitext(filename)[1]
+        if ext != "" and ext != ".tar" and ext != ".gz" and ext != ".tgz" and ext != ".bin":
+            return retlist
+
+        extracted = []
+
+        with TarFile(filename, "r") as archive:
+            infolist = archive.getmembers()
+            for info in infolist:
+                # avoid obvious bombs
+                if info.size > 100 * 1024 * 1024 or not info.size:
+                    continue
+                # ignore non-regular files
+                if not info.isreg():
+                    continue
+                base, ext = os.path.splitext(info.name)
+                basename = os.path.basename(info.name)
+                ext = ext.lower()
+                if ext == "" and len(basename) and basename[0] == ".":
+                    continue
+                for theext in demux_extensions_list:
+                    if ext == theext:
+                        extracted.append(info)
+                        break
+
+            options = Config()
+            tmp_path = options.cuckoo.get("tmppath", "/tmp")
+            target_path = os.path.join(tmp_path, "cuckoo-tar-tmp")
+            if not os.path.exists(target_path):
+                os.mkdir(target_path)
+            tmp_dir = tempfile.mkdtemp(prefix='cuckootar_',dir=target_path)
+
+            for extfile in extracted:
+                fobj = archive.extractfile(extfile)
+                outpath = os.path.join(tmp_dir, extfile.name)
+                outfile = open(outpath, "wb")
+                outfile.write(fobj.read())
+                fobj.close()
+                outfile.close()
+                retlist.append(outpath)
+    except:
+        if ext == ".tgz" or ext == ".tar":
+            return retlist
+        # handle gzip
+        try:
+            options = Config()
+            tmp_path = options.cuckoo.get("tmppath", "/tmp")
+            target_path = os.path.join(tmp_path, "cuckoo-tar-tmp")
+            if not os.path.exists(target_path):
+                os.mkdir(target_path)
+            tmp_dir = tempfile.mkdtemp(prefix='cuckootar_',dir=target_path)
+
+            outpath = os.path.join(tmp_dir, extfile.name)
+            fobj = gzip.open(filename, "rb")
+            outfile = open(outpath, "wb")
+            outfile.write(fobj.read())
+            fobj.close()
+            outfile.close()
+            retlist.append(outpath)
+        except:
+            pass
 
     return retlist
 
@@ -195,6 +263,8 @@ def demux_sample(filename, package, options):
     if not retlist:
         retlist = demux_rar(filename, options)
     if not retlist:
+        retlist = demux_tar(filename, options)
+    if not retlist:
         retlist = demux_email(filename, options)
     if not retlist:
         retlist = demux_msg(filename, options)
@@ -210,7 +280,11 @@ def demux_sample(filename, package, options):
                 if rarext:
                     newretlist.extend(rarext)
                 else:
-                    newretlist.append(item)
+                    tarext = demux_tar(item, options)
+                    if tarext:
+                        newretlist.extend(tarext)
+                    else:
+                        newretlist.append(item)
         retlist = newretlist
 
     # if it wasn't a ZIP or an email or we weren't able to obtain anything interesting from either, then just submit the
