@@ -51,6 +51,7 @@ def foreach_child(hwnd, lparam):
         "finish",
         "end",
         "allow access",
+        "remind me later",
     ]
 
     # List of buttons labels to not click.
@@ -59,7 +60,8 @@ def foreach_child(hwnd, lparam):
         "don't run",
         "do not ask again until the next update is available",
         "cancel",
-        "do not accept the agreement"
+        "do not accept the agreement",
+        "i would like to help make reader even better"
     ]
 
     classname = create_unicode_buffer(128)
