@@ -476,7 +476,6 @@
     <Content Include="web\templates\analysis\behavior\index.html" />
     <Content Include="web\templates\analysis\behavior\_chunk.html" />
     <Content Include="web\templates\analysis\behavior\_processes.html" />
-    <Content Include="web\templates\analysis\behavior\_tree_process.html" />
     <Content Include="web\templates\analysis\behavior\_tree.html" />
     <Content Include="web\templates\analysis\dropped\index.html" />
     <Content Include="web\templates\analysis\memory\index.html" />
