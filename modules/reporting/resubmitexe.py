@@ -68,8 +68,21 @@ class ReSubmitExtractedEXE(Report):
             if os.path.isfile(dropped["path"]):
                 if ("PE32" in dropped["type"] or "MS-DOS" in dropped["type"]) and "DLL" not in dropped["type"]:
                     if not filesdict.has_key(dropped['sha256']):
-                        filesdict[dropped['sha256']] = dropped['path']
-                        self.resubcnt = self.resubcnt + 1
+                        srcpath = os.path.join(CUCKOO_ROOT, "storage", "analyses", str(report["info"]["id"]), "files", dropped['sha256'])
+                        linkdir = os.path.join(CUCKOO_ROOT, "storage", "analyses", str(report["info"]["id"]), "files", dropped['sha256'] + "_link")
+                        guest_paths = [line.strip() for line in open(srcpath + "_info.txt")]
+                        guest_name = guest_paths[0].split("\\")[-1]
+                        linkpath = os.path.join(linkdir, guest_name)
+                        if not os.path.exists(linkdir):
+                            os.makedirs(linkdir, mode=0755)
+                        try:
+                            if not os.path.exists(linkpath):
+                                os.symlink(srcpath, linkpath)
+                            filesdict[dropped['sha256']] = linkpath
+                            self.resubcnt += 1
+                        except:
+                            filesdict[dropped['sha256']] = dropped['path']
+                            self.resubcnt += 1
             
         if report.has_key("suricata") and report["suricata"]:
             if report["suricata"].has_key("files") and report["suricata"]["files"]:

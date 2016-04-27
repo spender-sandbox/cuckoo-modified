@@ -20,33 +20,35 @@ class Dropped(Processing):
         dropped_files = []
         buf = self.options.get("buffer", 8192)
 
-        for dir_name, dir_names, file_names in os.walk(self.dropped_path):
-            for file_name in file_names:
-                file_path = os.path.join(dir_name, file_name)
-                if file_name.endswith("_info.txt") and not os.path.exists(file_path + "_info.txt"):
-                    continue
-                guest_paths = [line.strip() for line in open(file_path + "_info.txt")]
-                guest_name = guest_paths[0].split("\\")[-1]
-                file_info = File(file_path=file_path,guest_paths=guest_paths, file_name=guest_name).get_all()
-                texttypes = [
-                    "ASCII",
-                    "Windows Registry text",
-                    "XML document text",
-                    "Unicode text",
-                ]
-                readit = False
-                for texttype in texttypes:
-                    if texttype in file_info["type"]:
-                        readit = True
-                        break
-                if readit:
-                    with open(file_info["path"], "r") as drop_open:
-                        filedata = drop_open.read(buf + 1)
-                    if len(filedata) > buf:
-                        file_info["data"] = convert_to_printable(filedata[:buf] + " <truncated>")
-                    else:
-                        file_info["data"] = convert_to_printable(filedata)
+        file_names = os.listdir(self.dropped_path)
+        for file_name in file_names:
+            file_path = os.path.join(self.dropped_path, file_name)
+            if not os.path.isfile(file_path):
+                continue
+            if file_name.endswith("_info.txt"):
+                continue
+            guest_paths = [line.strip() for line in open(file_path + "_info.txt")]
+            guest_name = guest_paths[0].split("\\")[-1]
+            file_info = File(file_path=file_path,guest_paths=guest_paths, file_name=guest_name).get_all()
+            texttypes = [
+                "ASCII",
+                "Windows Registry text",
+                "XML document text",
+                "Unicode text",
+            ]
+            readit = False
+            for texttype in texttypes:
+                if texttype in file_info["type"]:
+                    readit = True
+                    break
+            if readit:
+                with open(file_info["path"], "r") as drop_open:
+                    filedata = drop_open.read(buf + 1)
+                if len(filedata) > buf:
+                    file_info["data"] = convert_to_printable(filedata[:buf] + " <truncated>")
+                else:
+                    file_info["data"] = convert_to_printable(filedata)
 
-                dropped_files.append(file_info)
+            dropped_files.append(file_info)
 
         return dropped_files
