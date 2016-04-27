@@ -300,6 +300,18 @@ def pretty_print_arg(category, api_name, arg_name, arg_val):
             "CLSCTX_PS_DLL"                  : 0x80000000
         }
         return simple_pretty_print_convert(val, enumdict)
+    elif arg_name == "BlobType":
+        val = int(arg_val, 10)
+        return {
+                0x0001 : "SIMPLEBLOB",
+                0x0006 : "PUBLICKEYBLOB",
+                0x0007 : "PRIVATEKEYBLOB",
+                0x0008 : "PLAINTEXTKEYBLOB",
+                0x0009 : "OPAQUEKEYBLOB",
+                0x000a : "PUBLICKEYBLOBEX",
+                0x000b : "SYMMETRICWRAPKEYBLOB",
+                0x000c : "KEYSTATEBLOB",
+        }.get(val, None)
     elif arg_name == "Algid":
         val = int(arg_val, 16)
         return {
