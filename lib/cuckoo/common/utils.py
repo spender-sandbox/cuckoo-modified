@@ -303,6 +303,8 @@ def pretty_print_arg(category, api_name, arg_name, arg_val):
     elif arg_name == "Algid":
         val = int(arg_val, 16)
         return {
+                0x0001 : "AT_KEYEXCHANGE",
+                0x0002 : "AT_SIGNATURE",
                 0x8001 : "MD2",
                 0x8002 : "MD4",
                 0x8003 : "MD5",
