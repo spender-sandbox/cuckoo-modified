@@ -928,17 +928,17 @@ class Database(object):
                     task.clock = datetime.strptime(clock, "%m-%d-%Y %H:%M:%S")
                 except ValueError:
                     log.warning("The date you specified has an invalid format, using current timestamp.")
-                    task.clock = datetime.now()
+                    task.clock = datetime.utcnow()
             else:
                 task.clock = clock
         elif isinstance(obj, File):
             try:
-                clocktime = datetime.now() + timedelta(days=self.cfg.cuckoo.daydelta)
+                clocktime = datetime.utcnow() + timedelta(days=self.cfg.cuckoo.daydelta)
                 task.clock = clocktime
             except:
                 pass
         else:
-            task.clock = datetime.now()
+            task.clock = datetime.utcnow()
 
         session.add(task)
 
