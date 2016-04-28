@@ -98,6 +98,11 @@ class VirusTotal(Processing):
         except ValueError as e:
             raise CuckooProcessingError("Unable to convert response to "
                                         "JSON: {0}".format(e))
+
+        # Work around VT brain-damage
+        if isinstance(virustotal, list) and len(virustotal):
+            virustotal = virustotal[0]
+
         if "scans" in virustotal:
             items = virustotal["scans"].items()
             virustotal["scans"] = dict((engine.replace(".", "_"), signature)
