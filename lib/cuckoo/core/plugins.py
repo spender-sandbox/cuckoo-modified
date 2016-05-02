@@ -531,7 +531,6 @@ class RunSignatures(object):
                             famchecklower = famcheck.lower()
 
                         blacklist = [
-                            "upx",
                             "executable",
                             "potential",
                             "likely",
@@ -551,15 +550,15 @@ class RunSignatures(object):
                             "win32",
                             "unknown",
                             "single",
-                            "exe",
                             "filename",
-                            "js",
                         ]
                         isgood = True
                         for black in blacklist:
                             if black == famchecklower:
                                 isgood = False
                                 break
+                        if len(famcheck) < 4:
+                            isgood = False
                         if isgood:
                             family = famcheck.title()
 
