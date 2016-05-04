@@ -29,15 +29,16 @@ def choose_package(file_type, file_name, exports):
     elif "Rich Text Format" in file_type or \
             "Microsoft Word" in file_type or \
             "Microsoft Office Word" in file_type or \
+            "Microsoft OOXML" in file_type or \
             "MIME entity" in file_type or \
-            file_name.endswith((".doc", ".docx", ".rtf", ".mht", ".mso")):
+            file_name.endswith((".doc", ".dot", ".docx", ".dotx", ".docm", ".dotm", ".docb", ".rtf", ".mht", ".mso")):
         return "doc"
     elif "Microsoft Office Excel" in file_type or \
             "Microsoft Excel" in file_type or \
-            file_name.endswith((".xls", ".xlsx")):
+            file_name.endswith((".xls", ".xlt", ".xlm", ".xlsx", ".xltx", ".xlsm", ".xltm", ".xlsb", ".xla", ".xlam", ".xll", ".xlw")):
         return "xls"
     elif "Microsoft PowerPoint" in file_type or \
-            file_name.endswith((".ppt", ".pptx", ".pps", ".ppsx", ".pptm", ".potm", ".potx", ".ppsm")):
+            file_name.endswith((".ppt", ".pot", ".pps", ".pptx", ".pptm", ".potx", ".potm", ".ppam", ".ppsx", ".ppsm", ".sldx", ".sldm")):
         return "ppt"
     elif "HTML" in file_type or file_name.endswith((".htm", ".html", ".hta")):
         return "html"

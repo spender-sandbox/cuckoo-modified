@@ -23,46 +23,16 @@
         <div class="tab-pane fade in active" id="static_analysis_tab">
             {% if "PE32" in analysis.target.file.type or "MS-DOS executable" in analysis.target.file.type %}
                 {% include "analysis/static/_pe32.html" %}
-            {% elif "PDF" in analysis.target.file.type or analysis.target.file.name|endswith:".pdf" %}
+            {% elif analysis.info.package == "pdf" %}
                 {% include "analysis/static/_pdf.html" %}
-            {% elif "Composite Document File V2 Document" in analysis.target.file.type %}
-                {% include "analysis/static/_office.html" %}
-            {% elif "Excel 2007+" in analysis.target.file.type %}
-                {% include "analysis/static/_office.html" %}
-            {% elif "PowerPoint 2007+" in analysis.target.file.type %}
-                {% include "analysis/static/_office.html" %}
-            {% elif "Word 2007+" in analysis.target.file.type %}
-                {% include "analysis/static/_office.html" %}
-            {% elif "MIME entity" in analysis.target.file.type %}
-                {% include "analysis/static/_office.html" %}
             {% elif analysis.target.file.type == "XML document text" or analysis.info.package == "wsf" or analysis.target.file.name|endswith:".hta" %}
                 {% include "analysis/static/_script.html" %}
             {% elif analysis.info.package == "vbs" or analysis.info.package == "js" %}
                 {% include "analysis/static/_script.html" %}
+            {% elif analysis.info.package == "doc" or analysis.info.package == "ppt" or analysis.info.package == "xls" %}
+                {% include "analysis/static/_office.html" %}
             {% elif "Java Jar" in analysis.target.file.type or analysis.target.file.name|endswith:".jar" %}
                 {% include "analysis/static/_java.html" %}
-            {% elif "Zip archive data" in analysis.target.file.type %}
-                {% if analysis.target.file.name|endswith:".docx" %}
-                    {% include "analysis/static/_office.html" %}
-                {% elif analysis.target.file.name|endswith:".docm" %}
-                    {% include "analysis/static/_office.html" %}
-                {% elif analysis.target.file.name|endswith:".doc" %}
-                    {% include "analysis/static/_office.html" %}
-                {% elif analysis.target.file.name|endswith:".mht" %}
-                    {% include "analysis/static/_office.html" %}
-                {% elif analysis.target.file.name|endswith:".mso" %}
-                    {% include "analysis/static/_office.html" %}
-                {% elif analysis.target.file.name|endswith:".xls" %}
-                    {% include "analysis/static/_office.html" %}
-                {% elif analysis.target.file.name|endswith:".xlsx" %}
-                    {% include "analysis/static/_office.html" %}
-                {% elif analysis.target.file.name|endswith:".ppt" %}
-                    {% include "analysis/static/_office.html" %}
-                {% elif analysis.target.file.name|endswith:".pptx" %}
-                    {% include "analysis/static/_office.html" %}
-                {% else %}
-                    No static analysis available.
-                {% endif %}
             {% else %}
                 No static analysis available.
             {% endif %}

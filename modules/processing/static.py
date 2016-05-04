@@ -1434,11 +1434,7 @@ class Static(Processing):
                     static.update(DotNETExecutable(self.file_path, self.results).run())
             elif "PDF" in thetype or self.task["target"].endswith(".pdf"):
                 static = PDF(self.file_path).run()
-            elif "Word 2007" in thetype or "Excel 2007" in thetype or "PowerPoint 2007" in thetype or "MIME entity" in thetype:
-                static = Office(self.file_path).run()
-            elif "Composite Document File" in thetype:
-                static = Office(self.file_path).run()
-            elif self.task["target"].endswith((".doc", ".docx", ".rtf", ".xls", ".mht", ".mso", ".xlsx", ".ppt", ".pptx", ".pps", ".ppsx", ".pptm", ".potm", ".potx", ".ppsm")):
+            elif package in ("doc", "ppt", "xls"):
                 static = Office(self.file_path).run()
             elif "Java Jar" in thetype or self.task["target"].endswith(".jar"):
                 decomp_jar = self.options.get("procyon_path", None)
