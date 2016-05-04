@@ -6,6 +6,7 @@ import os
 import logging
 import datetime
 import struct
+import itertools
 
 from lib.cuckoo.common.abstracts import Processing
 from lib.cuckoo.common.config import Config
@@ -50,6 +51,10 @@ class ParseProcessLog(list):
         self.conversion_cache = {}
         self.cfg = Config()
         self.api_limit = self.cfg.processing.analysis_call_limit  # Limit of API calls per process
+        self.spam_apis = []
+        self.spam_apis_whitelist = {
+            "c:\\windows\\system32\\wbem\\wmiprvse.exe": ["GetSystemTimeAsFileTime"],
+        }
 
         if os.path.exists(log_path) and os.stat(log_path).st_size > 0:
             self.parse_first_and_reset()
@@ -332,6 +337,21 @@ class ParseProcessLog(list):
 
         call["arguments"] = arguments
         call["repeated"] = repeated
+        if repeated >= 10000:
+            add_repeat = True
+            if self.module_path.lower() in self.spam_apis_whitelist:
+                if api_name in self.spam_apis_whitelist[self.module_path.lower()]:
+                    add_repeat = False
+
+            if add_repeat:
+                repeat = {
+                    "pid": self.process_id,
+                    "name": self.process_name,
+                    "api": api_name,
+                    "count": repeated
+                }
+                if repeat not in self.spam_apis:
+                    self.spam_apis.append(repeat)
 
         # add the thread id to our thread set
         if call["thread_id"] not in self.threads:
@@ -379,6 +399,20 @@ class Processes:
             if current_log.process_id is None:
                 continue
 
+            # If we have a spammy API, theres a chance that process did it multiple times
+            # so we'll sum the total counts here as we now have all of the logs parsed for
+            # the specific process
+            if current_log.spam_apis:
+                new_spam_apis = list()
+                # Group by pid+api to sum the counts
+                for _, spams in itertools.groupby(current_log.spam_apis, key=lambda d:
+                                                  (d["pid"], d["api"])):
+                    spams = list(spams)
+                    new_spams = spams[0]
+                    new_spams["count"] = sum(spam["count"] for spam in spams)
+                    new_spam_apis.append(new_spams)
+                current_log.spam_apis = new_spam_apis
+
             # If the current log actually contains any data, add its data to
             # the results list.
             results.append({
@@ -389,7 +423,8 @@ class Processes:
                 "first_seen": logtime(current_log.first_seen),
                 "calls": current_log.calls,
                 "threads" : current_log.threads,
-                "environ" : current_log.environdict
+                "environ" : current_log.environdict,
+                "spam_apis": current_log.spam_apis,
             })
 
         # Sort the items in the results list chronologically. In this way we
