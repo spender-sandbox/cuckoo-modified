@@ -9,6 +9,7 @@ from threading import Thread
 
 from lib.common.abstracts import Auxiliary
 from lib.common.defines import PDH, KERNEL32, MEMORYSTATUSEX, PDH_FMT_COUNTERVALUE, PDH_FMT_DOUBLE
+from lib.common.results import NetlogFile
 
 log = logging.getLogger(__name__)
 
