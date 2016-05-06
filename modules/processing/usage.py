@@ -34,13 +34,13 @@ class Usage(Processing):
 
         lines = []
         with open(usage_log, "r") as f:
-            lines = [x for x in f.readlines()]
+            lines = [x.strip().split(" ") for x in f.readlines()]
         if not lines:
             return usage
 
         mem_points, cpu_points = zip(*lines)
-        mem_points = list(mem_points)
-        cpu_points = list(cpu_points)
+        mem_points = [int(x) for x in mem_points]
+        cpu_points = [int(x) for x in cpu_points]
 
         usage["log"] = usage_log
 
