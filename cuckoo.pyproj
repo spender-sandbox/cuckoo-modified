@@ -209,6 +209,7 @@
     <Compile Include="modules\auxiliary\tor.py" />
     <Compile Include="modules\feeds\bad_ssl_certs.py" />
     <Compile Include="modules\feeds\__init__.py" />
+    <Compile Include="modules\processing\usage.py" />
     <Compile Include="modules\reporting\compression.py">
       <SubType>Code</SubType>
     </Compile>
