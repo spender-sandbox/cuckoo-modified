@@ -44,7 +44,7 @@ class Usage(Processing):
 
         usage["log"] = usage_log
 
-        line_chart = pygal.Line(fill=True, height=200)
+        line_chart = pygal.Line(fill=True, height=150, range=[0,100], y_labels_major_every=1, show_dots=False, y_labels=[0, 25, 50, 75, 100])
         line_chart.add("CPU", cpu_points)
         line_chart.add("MEM", mem_points)
         
