@@ -48,6 +48,7 @@ DUMPED_LIST = []
 UPLOADPATH_LIST = []
 PROCESS_LIST = []
 PROTECTED_PATH_LIST = []
+AUX_ENABLED = []
 PROCESS_LOCK = Lock()
 DEFAULT_DLL = None
 
@@ -89,6 +90,20 @@ def in_protected_path(fname):
 
     return False
 
+def add_pid_to_aux_modules(pid):
+    for aux in AUX_ENABLED:
+        try:
+            aux.add_pid(pid)
+        except:
+            continue
+
+def del_pid_from_aux_modules(pid):
+    for aux in AUX_ENABLED:
+        try:
+            aux.del_pid(pid)
+        except:
+            continue
+
 def add_protected_path(name):
     """Adds a pathname to the protected list"""
     if os.path.isdir(name) and name[-1] != "\\":
@@ -101,12 +116,14 @@ def add_pid(pid):
     if isinstance(pid, (int, long, str)):
         log.info("Added new process to list with pid: %s", pid)
         PROCESS_LIST.append(int(pid))
+        add_pid_to_aux_modules(int(pid))
 
 def remove_pid(pid):
     """Remove a process to process list."""
     if isinstance(pid, (int, long, str)):
         log.info("Process with pid %s has terminated", pid)
-        PROCESS_LIST.remove(pid)
+        PROCESS_LIST.remove(int(pid))
+        del_pid_from_aux_modules(int(pid))
 
 def add_pids(pids):
     """Add PID."""
@@ -887,7 +904,7 @@ class Analyzer:
                             "\"%s\": %s", name, e)
 
         # Walk through the available auxiliary modules.
-        aux_enabled, aux_avail = [], []
+        aux_avail = []
         for module in Auxiliary.__subclasses__():
             # Try to start the auxiliary module.
             try:
@@ -902,7 +919,7 @@ class Analyzer:
                             module.__name__, e)
             else:
                 log.debug("Started auxiliary module %s", module.__name__)
-                aux_enabled.append(aux)
+                AUX_ENABLED.append(aux)
 
         # Start analysis package. If for any reason, the execution of the
         # analysis package fails, we have to abort the analysis.
@@ -1025,7 +1042,7 @@ class Analyzer:
 
         log.info("Stopping auxiliary modules.")
         # Terminate the Auxiliary modules.
-        for aux in aux_enabled:
+        for aux in AUX_ENABLED:
             try:
                 aux.stop()
             except (NotImplementedError, AttributeError):

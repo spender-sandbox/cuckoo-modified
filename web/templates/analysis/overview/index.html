@@ -7,6 +7,10 @@
 {% endif %}
 <hr />
 {% include "analysis/overview/_signatures.html" %}
+{% if analysis.usage %}
+<hr />
+{% include "analysis/overview/_usage.html" %}
+{% endif %}
 <hr />
 {% include "analysis/overview/_screenshots.html" %}
 <hr />

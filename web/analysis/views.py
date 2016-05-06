@@ -788,6 +788,11 @@ def file(request, category, task_id, dlfile):
         path = os.path.join(CUCKOO_ROOT, "storage", "analyses",
                             task_id, "shots", file_name)
         cd = "image/jpeg"
+    elif category == "usage":
+        path = os.path.join(CUCKOO_ROOT, "storage", "analyses",
+                            task_id, "aux", "usage.svg")
+        file_name = "usage.svg"
+        cd = "image/svg+xml"
     elif category in extmap:
         file_name += extmap[category]
         path = os.path.join(CUCKOO_ROOT, "storage", "analyses",

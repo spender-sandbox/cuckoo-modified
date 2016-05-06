@@ -163,3 +163,9 @@ class Auxiliary(object):
         """@param options: options dict."""
         self.options = options
         self.config = config
+
+    def add_pid(self, pid):
+        pass
+
+    def del_pid(self, pid):
+        pass
