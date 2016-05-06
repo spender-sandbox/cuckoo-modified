@@ -37,6 +37,9 @@ class Usage(Auxiliary, Thread):
         @return: operation status.
         """
 
+        meminfo = MEMORYSTATUSEX()
+        meminfo.dwLength = sizeof(MEMORYSTATUSEX)
+
         phquery = PVOID()
         PDH.PdhOpenQuery(None, None, byref(phquery))
         buflen = DWORD()
