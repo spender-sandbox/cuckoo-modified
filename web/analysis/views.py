@@ -961,6 +961,7 @@ def full_memory_dump_file(request, analysis_number):
 @require_safe
 def full_memory_dump_strings(request, analysis_number):
     file_path = os.path.join(CUCKOO_ROOT, "storage", "analyses", str(analysis_number), "memory.dmp.strings")
+    filename = None
     if os.path.exists(file_path):
         filename = os.path.basename(file_path)
     else:
