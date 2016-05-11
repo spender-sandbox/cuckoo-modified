@@ -53,7 +53,10 @@ class ParseProcessLog(list):
         self.api_limit = self.cfg.processing.analysis_call_limit  # Limit of API calls per process
         self.spam_apis = []
         self.spam_apis_whitelist = {
+            "c:\\program files\\internet explorer\\iexplore.exe": ["NtQuerySystemTime", "GetSystemTimeAsFileTime", "GetSystemTime"],
+            "c:\\program files\\microsoft office\\office14\\winword.exe": ["GetLocalTime"],
             "c:\\windows\\system32\\wbem\\wmiprvse.exe": ["GetSystemTimeAsFileTime"],
+            "c:\\windows\\system32\\wscript.exe": ["GetLocalTime", "NtQuerySystemTime"],
         }
 
         if os.path.exists(log_path) and os.stat(log_path).st_size > 0:
@@ -350,8 +353,7 @@ class ParseProcessLog(list):
                     "api": api_name,
                     "count": repeated
                 }
-                if repeat not in self.spam_apis:
-                    self.spam_apis.append(repeat)
+                self.spam_apis.append(repeat)
 
         # add the thread id to our thread set
         if call["thread_id"] not in self.threads:
@@ -403,14 +405,26 @@ class Processes:
             # so we'll sum the total counts here as we now have all of the logs parsed for
             # the specific process
             if current_log.spam_apis:
+                api_counts = dict()
+                for apiInfo in current_log.spam_apis:
+                    if apiInfo["api"] not in api_counts.keys():
+                        api_counts[apiInfo["api"]] = dict()
+                        api_counts[apiInfo["api"]]["count"] = apiInfo["count"]
+                        api_counts[apiInfo["api"]]["name"] = apiInfo["name"]
+                        api_counts[apiInfo["api"]]["pid"] = apiInfo["pid"]
+                    else:
+                        api_counts[apiInfo["api"]]["count"] += apiInfo["count"]
+
                 new_spam_apis = list()
-                # Group by pid+api to sum the counts
-                for _, spams in itertools.groupby(current_log.spam_apis, key=lambda d:
-                                                  (d["pid"], d["api"])):
-                    spams = list(spams)
-                    new_spams = spams[0]
-                    new_spams["count"] = sum(spam["count"] for spam in spams)
-                    new_spam_apis.append(new_spams)
+                for current_api in api_counts.keys():
+                    tmp = {
+                        "api": current_api,
+                        "name": api_counts[current_api]["name"],
+                        "pid": api_counts[current_api]["pid"],
+                        "count": api_counts[current_api]["count"]
+                    }
+                    new_spam_apis.append(tmp)
+
                 current_log.spam_apis = new_spam_apis
 
             # If the current log actually contains any data, add its data to
