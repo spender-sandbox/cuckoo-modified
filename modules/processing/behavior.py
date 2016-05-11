@@ -56,7 +56,7 @@ class ParseProcessLog(list):
             "c:\\program files\\internet explorer\\iexplore.exe": ["NtQuerySystemTime", "GetSystemTimeAsFileTime", "GetSystemTime"],
             "c:\\program files\\microsoft office\\office14\\winword.exe": ["GetLocalTime"],
             "c:\\windows\\system32\\wbem\\wmiprvse.exe": ["GetSystemTimeAsFileTime"],
-            "c:\\windows\\system32\\wscript.exe": ["GetLocalTime", "NtQuerySystemTime],
+            "c:\\windows\\system32\\wscript.exe": ["GetLocalTime", "NtQuerySystemTime"],
         }
 
         if os.path.exists(log_path) and os.stat(log_path).st_size > 0:
