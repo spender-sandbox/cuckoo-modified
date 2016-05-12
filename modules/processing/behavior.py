@@ -576,7 +576,7 @@ class Summary:
             if servicename and servicename not in self.created_services:
                 self.created_services.append(servicename)
 
-        elif call["api"] == "CreateProcessInternalW" or call["api"] == "NtCreateUserProcess":
+        elif call["api"] in ["CreateProcessInternalW", "NtCreateUserProcess", "CreateProcessWithTokenW", "CreateProcessWithLogonW"]:
             cmdline = self.get_argument(call, "CommandLine", strip=True)
             appname = self.get_argument(call, "ApplicationName", strip=True)
             if appname and cmdline:
@@ -848,6 +848,8 @@ class Enhanced(object):
                 "object": "file",
                 "apis": [
                     "CreateProcessInternalW",
+                    "CreateProcessWithLogonW",
+                    "CreateProcessWithTokenW",
                 ],
                 "args": [("file", "CommandLine")]
             },

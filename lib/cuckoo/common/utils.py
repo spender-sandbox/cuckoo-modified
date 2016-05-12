@@ -772,7 +772,7 @@ def pretty_print_arg(category, api_name, arg_name, arg_val):
         if val:
             res.append("0x{0:08x}".format(val))
         return "|".join(res)
-    elif api_name == "CreateProcessInternalW" and arg_name == "CreationFlags":
+    elif api_name in ["CreateProcessInternalW", "CreateProcessWithTokenW", "CreateProcessWithLogonW"] and arg_name == "CreationFlags":
         val = int(arg_val, 16)
         res = []
         if val & 0x00000001:
