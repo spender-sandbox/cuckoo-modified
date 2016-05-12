@@ -7,6 +7,8 @@ import logging
 import os
 import shutil
 
+from multiprocessing import Lock
+
 from collections import defaultdict
 from datetime import datetime, timedelta
 
@@ -19,6 +21,7 @@ from lib.cuckoo.core.database import Database, Task, TASK_REPORTED
 log = logging.getLogger(__name__)
 cfg = Config("reporting")
 db = Database()
+lock = Lock()
 
 # Global connections
 if cfg.mongodb and cfg.mongodb.enabled:
@@ -148,60 +151,67 @@ class Retention(Report):
             since_retlog_modified = curtime - datetime.fromtimestamp(os.path.getmtime(taskFile))
             since_conf_modified = curtime - datetime.fromtimestamp(os.path.getmtime(confPath))
 
-            # We'll only do anything in this module once every 24 hours, or immediately
+            # We'll only do anything in this module once every 'run_every' hours, or immediately
             # after changes to reporting.conf
-            if (since_retlog_modified < timedelta(days=1) and since_conf_modified > since_retlog_modified):
+            if (since_retlog_modified < timedelta(hours=self.options["run_every"]) and since_conf_modified > since_retlog_modified):
                 return
 
-        delLocations = {
-            "memory": [CUCKOO_ROOT + "/storage/analyses/{0}/memory.dmp", CUCKOO_ROOT + "/storage/analyses/{0}/memory.dmp.zip"],
-            "procmemory": CUCKOO_ROOT + "/storage/analyses/{0}/memory",
-            "pcap": CUCKOO_ROOT + "/storage/analyses/{0}/dump.pcap",
-            "sortedpcap": CUCKOO_ROOT + "/storage/analyses/{0}/dump_sorted.pcap",
-            "bsonlogs": CUCKOO_ROOT + "/storage/analyses/{0}/logs",
-            "dropped": CUCKOO_ROOT + "/storage/analyses/{0}/files",
-            "screencaps": CUCKOO_ROOT + "/storage/analyses/{0}/shots",
-            "reports": CUCKOO_ROOT + "/storage/analyses/{0}/reports",
-            "malheur": CUCKOO_ROOT + "/storage/malheur/reports/{0}.txt",
-            # Handled seperately
-            "mongo": None,
-            "elastic": None,
-        }
-        retentions = self.options
-        del retentions["enabled"]
-        saveTaskLogged = dict()
-        for item in retentions.keys():
-            # We only want to query the database for tasks that we have
-            # retentions set for.
-            if self.options[item] == False:
-                continue
-            # Sanitation
-            if item not in taskCheck or taskCheck[item] == 0:
-                lastTaskLogged = None
-            else:
-                lastTaskLogged = taskCheck[item]
-            add_date = datetime.now() - timedelta(days=retentions[item])
-            buf = db.list_tasks(added_before=add_date,
-                                id_after=lastTaskLogged,
-                                order_by=Task.id.asc())
-            lastTask = 0
-            if buf:
-                # We need to delete some data
-                for tid in buf:
-                    lastTask = tid.to_dict()["id"]
-                    if item != "mongo" and item != "elastic":
-                        delete_files(curtask, delLocations[item], lastTask)
-                    elif item == "mongo":
-                        if cfg.mongodb and cfg.mongodb.enabled:
-                            delete_mongo_data(curtask, lastTask)
-                    elif item == "elastic":
-                        if cfg.elasticsearchdb and cfg.elasticsearchdb.enabled:
-                            delete_elastic_data(curtask, lastTask)
-                saveTaskLogged[item] = int(lastTask)
-            else:
-                saveTaskLogged[item] = 0
+        # only allow one reporter to execute this code, otherwise rmtree will race, etc
+        if not lock.acquire(False):
+            return
+        try:
+            delLocations = {
+                "memory": [CUCKOO_ROOT + "/storage/analyses/{0}/memory.dmp", CUCKOO_ROOT + "/storage/analyses/{0}/memory.dmp.zip"],
+                "procmemory": CUCKOO_ROOT + "/storage/analyses/{0}/memory",
+                "pcap": CUCKOO_ROOT + "/storage/analyses/{0}/dump.pcap",
+                "sortedpcap": CUCKOO_ROOT + "/storage/analyses/{0}/dump_sorted.pcap",
+                "bsonlogs": CUCKOO_ROOT + "/storage/analyses/{0}/logs",
+                "dropped": CUCKOO_ROOT + "/storage/analyses/{0}/files",
+                "screencaps": CUCKOO_ROOT + "/storage/analyses/{0}/shots",
+                "reports": CUCKOO_ROOT + "/storage/analyses/{0}/reports",
+                "malheur": CUCKOO_ROOT + "/storage/malheur/reports/{0}.txt",
+                # Handled seperately
+                "mongo": None,
+                "elastic": None,
+            }
+            retentions = self.options
+            del retentions["enabled"]
+            del retentions["run_every"]
+            saveTaskLogged = dict()
+            for item in retentions.keys():
+                # We only want to query the database for tasks that we have
+                # retentions set for.
+                if self.options[item] == False:
+                    continue
+                # Sanitation
+                if item not in taskCheck or taskCheck[item] == 0:
+                    lastTaskLogged = None
+                else:
+                    lastTaskLogged = taskCheck[item]
+                add_date = datetime.now() - timedelta(days=retentions[item])
+                buf = db.list_tasks(added_before=add_date,
+                                    id_after=lastTaskLogged,
+                                    order_by=Task.id.asc())
+                lastTask = 0
+                if buf:
+                    # We need to delete some data
+                    for tid in buf:
+                        lastTask = tid.to_dict()["id"]
+                        if item != "mongo" and item != "elastic":
+                            delete_files(curtask, delLocations[item], lastTask)
+                        elif item == "mongo":
+                            if cfg.mongodb and cfg.mongodb.enabled:
+                                delete_mongo_data(curtask, lastTask)
+                        elif item == "elastic":
+                            if cfg.elasticsearchdb and cfg.elasticsearchdb.enabled:
+                                delete_elastic_data(curtask, lastTask)
+                    saveTaskLogged[item] = int(lastTask)
+                else:
+                    saveTaskLogged[item] = 0
 
-        # Write the task log for future reporting, to avoid returning tasks
-        # that we have already deleted data from.
-        with open(os.path.join(retPath, "task_check.log"), "w") as taskLog:
-            taskLog.write(json.dumps(saveTaskLogged))
+            # Write the task log for future reporting, to avoid returning tasks
+            # that we have already deleted data from.
+            with open(os.path.join(retPath, "task_check.log"), "w") as taskLog:
+                taskLog.write(json.dumps(saveTaskLogged))
+        finally:
+            lock.release()
