@@ -570,7 +570,8 @@ class Process:
             if logserver_path not in LOGSERVER_POOL:
                 LOGSERVER_POOL[logserver_path] = LogServer(cfg.ip, cfg.port, logserver_path)
 
-            firstproc = Process.first_process
+            Process.process_num += 1
+            firstproc = Process.process_num == 1
 
             config.write("host-ip={0}\n".format(cfg.ip))
             config.write("host-port={0}\n".format(cfg.port))
@@ -584,8 +585,9 @@ class Process:
             config.write("shutdown-mutex={0}\n".format(SHUTDOWN_MUTEX))
             config.write("terminate-event={0}{1}\n".format(TERMINATE_EVENT, self.pid))
 
-            if nosleepskip:
+            if nosleepskip or ("force-sleepskip" not in cfgoptions and len(interest) > 2 and interest[1] != ':' and Process.process_num <= 2):
                 config.write("force-sleepskip=0\n")
+
             if "norefer" not in cfgoptions:
                 config.write("referrer={0}\n".format(get_referrer_url(interest)))
 
@@ -611,9 +613,6 @@ class Process:
             for optname in simple_optnames:
                 if optname in cfgoptions:
                     config.write("{0}={1}\n".format(optname, cfgoptions[optname]))
-
-            if firstproc:
-                Process.first_process = False
 
         orig_bin_name = ""
         bit_str = ""
