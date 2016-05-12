@@ -62,7 +62,7 @@ def get_referrer_url(interest):
 
 class Process:
     """Windows process."""
-    first_process = True
+    process_num = 0
     # This adds 1 up to 30 times of 20 minutes to the startup
     # time of the process, therefore bypassing anti-vm checks
     # which check whether the VM has only been up for <10 minutes.
