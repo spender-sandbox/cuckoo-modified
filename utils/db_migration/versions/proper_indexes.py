@@ -14,15 +14,11 @@ Create Date: 2016-05-13 11:04:41.685468
 revision = '3c8bf4133b44'
 down_revision = 'f111620bb8'
 
-from alembic import op
-import os.path
-import sqlalchemy as sa
-import sys
-
-curdir = os.path.abspath(os.path.dirname(__file__))
-sys.path.append(os.path.join(curdir, "..", ".."))
-
-import lib.cuckoo.core.database as db
+try:
+    from alembic import op
+except ImportError:
+    print "Unable to import alembic (install with `pip install alembic`)"
+    sys.exit()
 
 def upgrade():
     op.drop_index("hash_index", "samples")
