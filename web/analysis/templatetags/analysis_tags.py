@@ -57,6 +57,7 @@ def format_cli(cli, length):
         ret = " ".join(cli.split()[1:]).strip()
     if len(cli) >= length:
         ret = ret[:length] + " ...(truncated)"
-    if not len(ret):
+    # Return blank string instead of 'None'
+    if not ret:
         return ""
     return ret
