@@ -51,13 +51,6 @@ class ParseProcessLog(list):
         self.conversion_cache = {}
         self.cfg = Config()
         self.api_limit = self.cfg.processing.analysis_call_limit  # Limit of API calls per process
-        self.spam_apis = []
-        self.spam_apis_whitelist = {
-            "c:\\program files\\internet explorer\\iexplore.exe": ["NtQuerySystemTime", "GetSystemTimeAsFileTime", "GetSystemTime"],
-            "c:\\program files\\microsoft office\\office14\\winword.exe": ["GetLocalTime"],
-            "c:\\windows\\system32\\wbem\\wmiprvse.exe": ["GetSystemTimeAsFileTime"],
-            "c:\\windows\\system32\\wscript.exe": ["GetLocalTime", "NtQuerySystemTime"],
-        }
 
         if os.path.exists(log_path) and os.stat(log_path).st_size > 0:
             self.parse_first_and_reset()
@@ -340,20 +333,6 @@ class ParseProcessLog(list):
 
         call["arguments"] = arguments
         call["repeated"] = repeated
-        if repeated >= 10000:
-            add_repeat = True
-            if self.module_path.lower() in self.spam_apis_whitelist:
-                if api_name in self.spam_apis_whitelist[self.module_path.lower()]:
-                    add_repeat = False
-
-            if add_repeat:
-                repeat = {
-                    "pid": self.process_id,
-                    "name": self.process_name,
-                    "api": api_name,
-                    "count": repeated
-                }
-                self.spam_apis.append(repeat)
 
         # add the thread id to our thread set
         if call["thread_id"] not in self.threads:
@@ -396,36 +375,10 @@ class Processes:
                 log.warning("Behavioral log {0} too big to be processed, skipped.".format(file_name))
                 continue
 
-            # Invoke parsing of current log file.
+            # Invoke parsing of current log file (if ram_boost is enabled, otherwise parsing is done on-demand)
             current_log = ParseProcessLog(file_path)
             if current_log.process_id is None:
                 continue
-
-            # If we have a spammy API, theres a chance that process did it multiple times
-            # so we'll sum the total counts here as we now have all of the logs parsed for
-            # the specific process
-            if current_log.spam_apis:
-                api_counts = dict()
-                for apiInfo in current_log.spam_apis:
-                    if apiInfo["api"] not in api_counts.keys():
-                        api_counts[apiInfo["api"]] = dict()
-                        api_counts[apiInfo["api"]]["count"] = apiInfo["count"]
-                        api_counts[apiInfo["api"]]["name"] = apiInfo["name"]
-                        api_counts[apiInfo["api"]]["pid"] = apiInfo["pid"]
-                    else:
-                        api_counts[apiInfo["api"]]["count"] += apiInfo["count"]
-
-                new_spam_apis = list()
-                for current_api in api_counts.keys():
-                    tmp = {
-                        "api": current_api,
-                        "name": api_counts[current_api]["name"],
-                        "pid": api_counts[current_api]["pid"],
-                        "count": api_counts[current_api]["count"]
-                    }
-                    new_spam_apis.append(tmp)
-
-                current_log.spam_apis = new_spam_apis
 
             # If the current log actually contains any data, add its data to
             # the results list.
@@ -438,7 +391,6 @@ class Processes:
                 "calls": current_log.calls,
                 "threads" : current_log.threads,
                 "environ" : current_log.environdict,
-                "spam_apis": current_log.spam_apis,
             })
 
         # Sort the items in the results list chronologically. In this way we
@@ -1186,9 +1138,5 @@ class BehaviorAnalysis(Processing):
                 behavior[instance.key] = instance.run()
             except:
                 log.exception("Failed to run partial behavior class \"%s\"", instance.key)
-
-            # Reset the ParseProcessLog instances after each module
-            for process in behavior["processes"]:
-                process["calls"].reset()
 
         return behavior
