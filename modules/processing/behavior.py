@@ -1119,7 +1119,8 @@ class ProcessTree:
             parent_id=process["parent_id"],
             module_path=process["module_path"],
             children=[],
-            threads=process["threads"]
+            threads=process["threads"],
+            environ=process["environ"],
         ))
 
     def run(self):
