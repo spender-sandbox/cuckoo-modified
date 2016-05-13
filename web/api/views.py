@@ -975,7 +975,7 @@ def tasks_list(request, offset=None, limit=None, window=None):
     for row in db.list_tasks(limit=limit, details=True, offset=offset,
                              completed_after=completed_after,
                              status=status,
-                             order_by="tasks_completed_on desc"):
+                             order_by="completed_on desc"):
         resp["buf"] += 1
         task = row.to_dict()
         task["guest"] = {}

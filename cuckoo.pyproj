@@ -244,6 +244,7 @@
     <Compile Include="utils\db_migration\versions\from_1_2_to_1_2-accuvant-add_statistics.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="utils\db_migration\versions\proper_indexes.py" />
     <Compile Include="utils\dist.py" />
     <Compile Include="utils\process.py" />
     <Compile Include="utils\listdump.py" />
