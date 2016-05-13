@@ -48,3 +48,16 @@ def sort(value):
             sorteddict[key] = value[key]
         return sorteddict
     return value
+
+@register.filter(name="format_cli")
+def format_cli(cli, length):
+    if cli.startswith("\""):
+        ret = " ".join(cli[cli[1:].index("\"")+2:].split()).strip()
+    else:
+        ret = " ".join(cli.split()[1:]).strip()
+    if len(cli) >= length:
+        ret = ret[:length] + " ...(truncated)"
+    # Return blank string instead of 'None'
+    if not ret:
+        return ""
+    return ret
