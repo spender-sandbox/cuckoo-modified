@@ -50,7 +50,7 @@ def sort(value):
     return value
 
 @register.filter(name="format_cli")
-def truncate_cli(cli, length):
+def format_cli(cli, length):
     if cli.startswith("\""):
         ret = " ".join(cli[cli[1:].index("\"")+2:].split()).strip()
     else:
