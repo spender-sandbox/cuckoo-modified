@@ -35,6 +35,22 @@
 Note: machine is optional.</pre></td>
             </tr>
             <tr>
+                <td>VirusTotal download and analyze</td>
+                {% if config.vtdl.enabled %}
+                <td><span class="label label-success">Yes</span></td>
+                {% else %}
+                <td><span class="label label-danger">No</span></td>
+                {% endif %}
+                <td><ul><li>RPS: {{ config.vtdl.rps }}</li>
+                        <li>RPM: {{ config.vtdl.rpm }}</li></ul></td>
+                <td>Download a file from VT for analysis. Return object will be JSON.</td>
+                <td><a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion" href="#vtdl">Example</a></td>
+            </tr>
+            <tr class="collapse" id="vtdl">
+                <td colspan="5"><pre>curl -F vtdl=hash -F machine="VM-Name" {{ config.api.url }}/api/tasks/create/vtdl/
+Note: machine is optional.</pre></td>
+            </tr>
+            <tr>
                 <td>URL Create</td>
                 {% if config.urlcreate.enabled %}
                 <td><span class="label label-success">Yes</span></td>
