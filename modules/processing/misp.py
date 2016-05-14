@@ -1,4 +1,6 @@
-### MISP integration
+# Copyright (C) 2010-2015 Cuckoo Foundation.
+# This file is part of Cuckoo Sandbox - http://www.cuckoosandbox.org
+# See the file 'docs/LICENSE' for copying permission.
 
 """
   (1,"High","*high* means sophisticated APT malware or 0-day attack","Sophisticated APT malware or 0-day attack"),
@@ -8,6 +10,7 @@
 """
 
 import os
+import json
 import logging
 import threading
 from collections import deque
@@ -30,31 +33,40 @@ class MISP(Processing):
 
     order = 2
 
-    def misper_thread(self, url):
+    def misper_thread(self, url, full_report):
         while self.iocs:
             ioc = self.iocs.pop()
-            response = self.misp.search_all(ioc)
-            if response and response.get("response", {}):
-                self.lock.acquire()
-                for res in response.get("response", {}):
-                    event = res.get("Event", {})
-                    eid = res.get("Event", {}).get("id", 0)
-                    if eid in self.misper and ioc not in self.misper[eid]["iocs"]:
-                        self.misper[eid]["iocs"].append(ioc)
-                    else:
-                        tmp_misp = dict()
-                        tmp_misp.setdefault(eid, dict())
-                        date = event.get("date", "")
-                        if "iocs" not in tmp_misp[eid]:
-                            tmp_misp[eid].setdefault("iocs", list())
-                        tmp_misp[eid]["iocs"].append(ioc)
-                        tmp_misp[eid].setdefault("eid", eid)
-                        tmp_misp[eid].setdefault("url", url+"events/view/")
-                        tmp_misp[eid].setdefault("date", date)
-                        tmp_misp[eid].setdefault("level", event.get("threat_level_id",""))
-                        tmp_misp[eid].setdefault("info", event.get("info", "").strip())
-                        self.misper.update(tmp_misp)
-                self.lock.release()
+            try:
+                response = self.misp.search_all(ioc)
+                if response and response.get("response", {}):
+                    self.lock.acquire()
+                    for res in response.get("response", {}):
+
+                        event = res.get("Event", {})
+
+                        if full_report:
+                            self.misp_full_report.setdefault(ioc, list())
+                            self.misp_full_report[ioc].append(event)
+
+                        eid = event.get("id", 0)
+                        if eid in self.misper and ioc not in self.misper[eid]["iocs"]:
+                            self.misper[eid]["iocs"].append(ioc)
+                        else:
+                            tmp_misp = dict()
+                            tmp_misp.setdefault(eid, dict())
+                            date = event.get("date", "")
+                            if "iocs" not in tmp_misp[eid]:
+                                tmp_misp[eid].setdefault("iocs", list())
+                            tmp_misp[eid]["iocs"].append(ioc)
+                            tmp_misp[eid].setdefault("eid", eid)
+                            tmp_misp[eid].setdefault("url", url+"events/view/")
+                            tmp_misp[eid].setdefault("date", date)
+                            tmp_misp[eid].setdefault("level", event.get("threat_level_id",""))
+                            tmp_misp[eid].setdefault("info", event.get("info", "").strip())
+                            self.misper.update(tmp_misp)
+                    self.lock.release()
+            except Exception as e:
+                log.error(e)
 
     def run(self):
         """Run analysis.
@@ -65,6 +77,7 @@ class MISP(Processing):
         self.iocs = deque()
         self.misper = dict()
         threads_list = list()
+        self.misp_full_report = dict()
         self.lock = threading.Lock()
 
         results = dict()
@@ -75,6 +88,7 @@ class MISP(Processing):
                 url = misp_config.misp.get("url", "")
                 apikey = misp_config.misp.get("apikey", "")
                 threads = misp_config.misp.get("threads", "")
+                full_report = misp_config.misp.get("reporting", "no")
                 if not threads:
                     threads = 5
 
@@ -101,7 +115,7 @@ class MISP(Processing):
 
                     if self.iocs:
                         for thread_id in xrange(int(threads)):
-                            thread = threading.Thread(target=self.misper_thread, args=(url,))
+                            thread = threading.Thread(target=self.misper_thread, args=(url, full_report))
                             thread.daemon = True
                             thread.start()
 
@@ -113,6 +127,11 @@ class MISP(Processing):
                         if self.misper:
                             results = sorted(self.misper.values(), key=lambda x: datetime.strptime(x["date"], "%Y-%m-%d"), reverse=True)
 
+                            if full_report and self.results.get("info", {}).get("id", None):
+                                misp_report_path = os.path.join(CUCKOO_ROOT, "storage", "analyses", str(self.results["info"]["id"]), "reports", "misp.json")
+                                full_report = open(misp_report_path, "wb")
+                                full_report.write(json.dumps(self.misp_full_report))
+                                full_report.close()
                 else:
                     log.error("MISP url or apikey not configurated")
             else:
