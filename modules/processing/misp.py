@@ -49,6 +49,7 @@ class MISP(Processing):
                             self.misp_full_report[ioc].append(event)
 
                         eid = event.get("id", 0)
+
                         if eid in self.misper and ioc not in self.misper[eid]["iocs"]:
                             self.misper[eid]["iocs"].append(ioc)
                         else:
