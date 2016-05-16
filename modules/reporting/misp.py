@@ -18,8 +18,6 @@ from datetime import datetime
 from lib.cuckoo.common.config import Config
 from lib.cuckoo.common.abstracts import Report
 from lib.cuckoo.common.constants import CUCKOO_ROOT
-from lib.cuckoo.common.exceptions import CuckooReportError
-
 
 PYMISP = False
 try:
@@ -134,4 +132,4 @@ class MISP(Report):
                 log.error("pyMISP dependency missed")
 
         except Exception as e:
-            raise CuckooReportError("Failed to generate JSON report: %s" % e)
+            log.error("Failed to generate JSON report: %s" % e)
