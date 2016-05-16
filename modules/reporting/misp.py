@@ -10,12 +10,13 @@
 """
 
 import os
+import json
 import logging
 import threading
 from collections import deque
 from datetime import datetime
 from lib.cuckoo.common.config import Config
-from lib.cuckoo.common.abstracts import Processing
+from lib.cuckoo.common.abstracts import Report
 from lib.cuckoo.common.constants import CUCKOO_ROOT
 
 PYMISP = False
@@ -27,10 +28,10 @@ except ImportError:
 
 log = logging.getLogger(__name__)
 
-class MISP(Processing):
+class MISP(Report):
     """MISP Analyzer."""
 
-    order = 2
+    order = 1
 
     def misper_thread(self, url):
         while self.iocs:
@@ -40,8 +41,14 @@ class MISP(Processing):
                 if response and response.get("response", {}):
                     self.lock.acquire()
                     for res in response.get("response", {}):
+
                         event = res.get("Event", {})
-                        eid = res.get("Event", {}).get("id", 0)
+
+                        self.misp_full_report.setdefault(ioc, list())
+                        self.misp_full_report[ioc].append(event)
+
+                        eid = event.get("id", 0)
+
                         if eid in self.misper and ioc not in self.misper[eid]["iocs"]:
                             self.misper[eid]["iocs"].append(ioc)
                         else:
@@ -61,25 +68,23 @@ class MISP(Processing):
             except Exception as e:
                 log.error(e)
 
-    def run(self):
+    def run(self, results):
         """Run analysis.
         @return: MISP results dict.
         """
-        self.key = "misp"
+
         whitelist = list()
         self.iocs = deque()
         self.misper = dict()
         threads_list = list()
+        self.misp_full_report = dict()
         self.lock = threading.Lock()
 
-        results = dict()
-
         try:
-            misp_config = Config("processing")
-            if PYMISP and hasattr(misp_config, "misp"):
-                url = misp_config.misp.get("url", "")
-                apikey = misp_config.misp.get("apikey", "")
-                threads = misp_config.misp.get("threads", "")
+            if PYMISP:
+                url = self.options.get("url", "")
+                apikey = self.options.get("apikey", "")
+                threads = self.options.get("threads", "")
                 if not threads:
                     threads = 5
 
@@ -92,13 +97,13 @@ class MISP(Processing):
                 if url and apikey:
                     self.misp = PyMISP(url, apikey, False, "json")
 
-                    for drop in self.results.get("dropped", []):
+                    for drop in results.get("dropped", []):
                         if drop.get("md5", "") and drop["md5"] not in self.iocs and drop["md5"] not in whitelist:
                             self.iocs.append(drop["md5"])
 
-                    if self.results.get("target", {}).get("file", {}).get("md5", "") and self.results["target"]["file"]["md5"] not in whitelist:
-                        self.iocs.append(self.results["target"]["file"]["md5"])
-                    for block in self.results.get("network", {}).get("hosts", []):
+                    if results.get("target", {}).get("file", {}).get("md5", "") and results["target"]["file"]["md5"] not in whitelist:
+                        self.iocs.append(results["target"]["file"]["md5"])
+                    for block in results.get("network", {}).get("hosts", []):
                         if block.get("ip", "") and block["ip"] not in self.iocs and block["ip"] not in whitelist:
                             self.iocs.append(block["ip"])
                         if block.get("hostname", "") and block["hostname"] not in self.iocs and block["hostname"] not in whitelist:
@@ -116,14 +121,15 @@ class MISP(Processing):
                             thread.join()
 
                         if self.misper:
-                            results = sorted(self.misper.values(), key=lambda x: datetime.strptime(x["date"], "%Y-%m-%d"), reverse=True)
-
+                            results["misp"] = sorted(self.misper.values(), key=lambda x: datetime.strptime(x["date"], "%Y-%m-%d"), reverse=True)
+                            misp_report_path = os.path.join(self.reports_path, "misp.json")
+                            full_report = open(misp_report_path, "wb")
+                            full_report.write(json.dumps(self.misp_full_report))
+                            full_report.close()
                 else:
                     log.error("MISP url or apikey not configurated")
             else:
-                log.error("MISP config not exists")
+                log.error("pyMISP dependency missed")
 
         except Exception as e:
-            log.exception(str(e))
-
-        return results
+            log.error("Failed to generate JSON report: %s" % e)
