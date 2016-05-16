@@ -38,10 +38,11 @@ class MISP(Report):
             ioc = self.iocs.pop()
             try:
                 response = self.misp.search_all(ioc)
-                if response and response.get("response", {}):
-                    self.lock.acquire()
+                if not response or not response.get("response", {}):
+                    continue
+                self.lock.acquire()
+                try:
                     for res in response.get("response", {}):
-
                         event = res.get("Event", {})
 
                         self.misp_full_report.setdefault(ioc, list())
@@ -64,6 +65,7 @@ class MISP(Report):
                             tmp_misp[eid].setdefault("level", event.get("threat_level_id",""))
                             tmp_misp[eid].setdefault("info", event.get("info", "").strip())
                             self.misper.update(tmp_misp)
+                finally:
                     self.lock.release()
             except Exception as e:
                 log.error(e)
@@ -73,6 +75,21 @@ class MISP(Report):
         @return: MISP results dict.
         """
 
+        if not PYMISP:
+            log.error("pyMISP dependency is missing.")
+            return
+
+        url = self.options.get("url", "")
+        apikey = self.options.get("apikey", "")
+
+        if not url or not apikey:
+            log.error("MISP URL or API key not configured.")
+            return
+
+        threads = self.options.get("threads", "")
+        if not threads:
+            threads = 5
+
         whitelist = list()
         self.iocs = deque()
         self.misper = dict()
@@ -81,55 +98,44 @@ class MISP(Report):
         self.lock = threading.Lock()
 
         try:
-            if PYMISP:
-                url = self.options.get("url", "")
-                apikey = self.options.get("apikey", "")
-                threads = self.options.get("threads", "")
-                if not threads:
-                    threads = 5
+            # load whitelist if exists
+            if os.path.exists(os.path.join(CUCKOO_ROOT, "conf", "misp.conf")):
+                whitelist = Config("misp").whitelist.whitelist
+                if whitelist:
+                    whitelist = [ioc.strip() for ioc in whitelist.split(",")]
 
-                # load whitelist if exists
-                if os.path.exists(os.path.join(CUCKOO_ROOT, "conf", "misp.conf")):
-                    whitelist = Config("misp").whitelist.whitelist
-                    if whitelist:
-                        whitelist = [ioc.strip() for ioc in whitelist.split(",")]
+            self.misp = PyMISP(url, apikey, False, "json")
 
-                if url and apikey:
-                    self.misp = PyMISP(url, apikey, False, "json")
+            for drop in results.get("dropped", []):
+                if drop.get("md5", "") and drop["md5"] not in self.iocs and drop["md5"] not in whitelist:
+                    self.iocs.append(drop["md5"])
 
-                    for drop in results.get("dropped", []):
-                        if drop.get("md5", "") and drop["md5"] not in self.iocs and drop["md5"] not in whitelist:
-                            self.iocs.append(drop["md5"])
+            if results.get("target", {}).get("file", {}).get("md5", "") and results["target"]["file"]["md5"] not in whitelist:
+                self.iocs.append(results["target"]["file"]["md5"])
+            for block in results.get("network", {}).get("hosts", []):
+                if block.get("ip", "") and block["ip"] not in self.iocs and block["ip"] not in whitelist:
+                    self.iocs.append(block["ip"])
+                if block.get("hostname", "") and block["hostname"] not in self.iocs and block["hostname"] not in whitelist:
+                    self.iocs.append(block["hostname"])
 
-                    if results.get("target", {}).get("file", {}).get("md5", "") and results["target"]["file"]["md5"] not in whitelist:
-                        self.iocs.append(results["target"]["file"]["md5"])
-                    for block in results.get("network", {}).get("hosts", []):
-                        if block.get("ip", "") and block["ip"] not in self.iocs and block["ip"] not in whitelist:
-                            self.iocs.append(block["ip"])
-                        if block.get("hostname", "") and block["hostname"] not in self.iocs and block["hostname"] not in whitelist:
-                            self.iocs.append(block["hostname"])
+            if not self.iocs:
+                return
 
-                    if self.iocs:
-                        for thread_id in xrange(int(threads)):
-                            thread = threading.Thread(target=self.misper_thread, args=(url,))
-                            thread.daemon = True
-                            thread.start()
+            for thread_id in xrange(int(threads)):
+                thread = threading.Thread(target=self.misper_thread, args=(url,))
+                thread.daemon = True
+                thread.start()
 
-                            threads_list.append(thread)
+                threads_list.append(thread)
 
-                        for thread in threads_list:
-                            thread.join()
+            for thread in threads_list:
+                thread.join()
 
-                        if self.misper:
-                            results["misp"] = sorted(self.misper.values(), key=lambda x: datetime.strptime(x["date"], "%Y-%m-%d"), reverse=True)
-                            misp_report_path = os.path.join(self.reports_path, "misp.json")
-                            full_report = open(misp_report_path, "wb")
-                            full_report.write(json.dumps(self.misp_full_report))
-                            full_report.close()
-                else:
-                    log.error("MISP url or apikey not configurated")
-            else:
-                log.error("pyMISP dependency missed")
-
+            if self.misper:
+                results["misp"] = sorted(self.misper.values(), key=lambda x: datetime.strptime(x["date"], "%Y-%m-%d"), reverse=True)
+                misp_report_path = os.path.join(self.reports_path, "misp.json")
+                full_report = open(misp_report_path, "wb")
+                full_report.write(json.dumps(self.misp_full_report))
+                full_report.close()
         except Exception as e:
             log.error("Failed to generate JSON report: %s" % e)
