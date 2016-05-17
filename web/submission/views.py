@@ -23,6 +23,7 @@ sys.path.append(settings.CUCKOO_PATH)
 from lib.cuckoo.common.config import Config
 from lib.cuckoo.common.utils import store_temp_file, validate_referer
 from lib.cuckoo.common.quarantine import unquarantine
+from lib.cuckoo.common.saztopcap import saz_to_pcap 
 from lib.cuckoo.core.database import Database
 
 def force_int(value):
@@ -194,6 +195,42 @@ def index(request):
                         task_ids_new = db.demux_sample_and_add_to_db(file_path=path, package=package, timeout=timeout, options=options, priority=priority,
                                                                      machine=entry, custom=custom, memory=memory, enforce_timeout=enforce_timeout, tags=tags, clock=clock)
                         task_ids.extend(task_ids_new)
+        elif "pcap" in request.FILES:
+            samples = request.FILES.getlist("pcap")
+            for sample in samples:
+                if not sample.size:
+                    if len(samples) != 1:
+                        continue
+                    
+                    return render_to_response("error.html",
+                                              {"error": "You uploaded an empty PCAP file."},
+                                              context_instance=RequestContext(request))
+                elif sample.size > settings.MAX_UPLOAD_SIZE:
+                    return render_to_response("error.html",
+                                              {"error": "You uploaded a PCAP file that exceeds the maximum allowed upload size specified in web/web/local_settings.py."},
+                                              context_instance=RequestContext(request))
+
+                # Moving sample from django temporary file to Cuckoo temporary storage to
+                # let it persist between reboot (if user like to configure it in that way).
+                path = store_temp_file(sample.read(),
+                                       sample.name)
+
+                if sample.name.lower().endswith(".saz"):
+                    saz = saz_to_pcap(path)
+                    if saz:
+                        try:
+                            os.remove(path)
+                        except:
+                            pass
+                        path = saz
+                    else:
+                        return render_to_response("error.html",
+                                                  {"error": "Conversion from SAZ to PCAP failed."},
+                                                  context_instance=RequestContext(request))
+       
+                task_id = db.add_pcap(file_path=path)
+                task_ids.append(task_id)
+
         elif "url" in request.POST and request.POST.get("url").strip():
             url = request.POST.get("url").strip()
             if not url:

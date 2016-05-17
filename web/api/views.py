@@ -27,6 +27,7 @@ sys.path.append(settings.CUCKOO_PATH)
 from lib.cuckoo.common.config import Config
 from lib.cuckoo.common.constants import CUCKOO_ROOT, CUCKOO_VERSION
 from lib.cuckoo.common.quarantine import unquarantine
+from lib.cuckoo.common.saztopcap import saz_to_pcap
 from lib.cuckoo.common.utils import store_temp_file, delete_folder
 from lib.cuckoo.common.utils import convert_to_printable, validate_referer
 from lib.cuckoo.core.database import Database, Task
@@ -185,6 +186,7 @@ def tasks_create_file(request):
         resp["error"] = False
         # Parse potential POST options (see submission/views.py)
         quarantine = request.POST.get("quarantine", "")
+        pcap = request.POST.get("pcap", "")
         package = request.POST.get("package", "")
         timeout = force_int(request.POST.get("timeout"))
         priority = force_int(request.POST.get("priority"))
@@ -257,14 +259,34 @@ def tasks_create_file(request):
                             "error_value": "File size exceeds API limit"}
                     return jsonize(resp, response=True)
 
+                
                 tmp_path = store_temp_file(sample.read(), sample.name)
-
+                if pcap:
+                    if sample.name.lower().endswith(".saz"):
+                        saz = saz_to_pcap(tmp_path)
+                        if saz:
+                            try:
+                                os.remove(tmp_path)
+                            except:
+                                pass
+                            path = saz  
+                        else:
+                             resp = {"error": True,
+                                     "error_value": "Failed to convert SAZ to PCAP"}
+                             return jsonize(resp, response=True)
+                    else:
+                        path = tmp_path
+                    task_id = db.add_pcap(file_path=path)
+                    task_ids.append(task_id)
+                    continue 
+            
                 if quarantine:
                     path = unquarantine(tmp_path)
                     try:
                         os.remove(tmp_path)
                     except:
                         pass
+
                 else:
                     path = tmp_path
 
@@ -303,6 +325,23 @@ def tasks_create_file(request):
                 resp["warning"] = ("Multi-file API submissions disabled - "
                                    "Accepting first file")
             tmp_path = store_temp_file(sample.read(), sample.name)
+            if pcap:
+                if sample.name.lower().endswith(".saz"):
+                    saz = saz_to_pcap(tmp_path)
+                    if saz:
+                        path = saz
+                        try:
+                            os.remove(tmp_path)
+                        except:
+                            pass
+                    else:
+                        resp = {"error": True,
+                                "error_value": "Failed to convert PCAP to SAZ"}
+                        return jsonize(resp, response=True)
+                else:
+                    path = tmp_path
+                task_id = db.add_pcap(file_path=path)
+                task_ids.append(task_id)
 
             if quarantine:
                 path = unquarantine(tmp_path)
@@ -314,25 +353,26 @@ def tasks_create_file(request):
                 path = tmp_path
 
             for entry in task_machines:
-                task_ids_new = db.demux_sample_and_add_to_db(file_path=path,
-                                      package=package,
-                                      timeout=timeout,
-                                      priority=priority,
-                                      options=options,
-                                      machine=entry,
-                                      platform=platform,
-                                      tags=tags,
-                                      custom=custom,
-                                      memory=memory,
-                                      enforce_timeout=enforce_timeout,
-                                      clock=clock,
-                                      shrike_url=shrike_url,
-                                      shrike_msg=shrike_msg,
-                                      shrike_sid=shrike_sid,
-                                      shrike_refer=shrike_refer
-                                      )
-                if task_ids_new:
-                    task_ids.extend(task_ids_new)
+                if not pcap:
+                    task_ids_new = db.demux_sample_and_add_to_db(file_path=path,
+                                          package=package,
+                                          timeout=timeout,
+                                          priority=priority,
+                                          options=options,
+                                          machine=entry,
+                                          platform=platform,
+                                          tags=tags,
+                                          custom=custom,
+                                          memory=memory,
+                                          enforce_timeout=enforce_timeout,
+                                          clock=clock,
+                                          shrike_url=shrike_url,
+                                          shrike_msg=shrike_msg,
+                                          shrike_sid=shrike_sid,
+                                          shrike_refer=shrike_refer
+                                          )
+                    if task_ids_new:
+                        task_ids.extend(task_ids_new)
 
         if len(task_ids) > 0:
             resp["task_ids"] = task_ids

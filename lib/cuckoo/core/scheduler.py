@@ -233,7 +233,7 @@ class AnalysisManager(threading.Thread):
         if not self.init_storage():
             return False
 
-        if self.task.category == "file":
+        if self.task.category in ["file", "pcap"]:
             # Check whether the file has been changed for some unknown reason.
             # And fail this analysis if it has been modified.
             if not self.check_file():
@@ -242,6 +242,20 @@ class AnalysisManager(threading.Thread):
             # Store a copy of the original file.
             if not self.store_file():
                 return False
+
+        if self.task.category == "pcap":
+            # symlink the "binary" to dump.pcap
+            if hasattr(os, "symlink"):
+                os.symlink(self.binary, os.path.join(self.storage, "dump.pcap"))
+            else:
+                shutil.copy(self.binary, os.path.join(self.storage, "dump.pcap"))
+            # create the logs directory for suricata results as
+            # normally the resultserver would do it
+            try:
+                os.makedirs(os.path.join(self.storage, "logs"))
+            except:
+                pass
+            return True
 
         # Acquire analysis machine.
         try:

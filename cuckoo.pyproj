@@ -205,6 +205,7 @@
     <Compile Include="lib\cuckoo\common\quarantine.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="lib\cuckoo\common\saztopcap.py" />
     <Compile Include="lib\__init__.py" />
     <Compile Include="modules\auxiliary\tor.py" />
     <Compile Include="modules\feeds\bad_ssl_certs.py" />

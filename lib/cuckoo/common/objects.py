@@ -57,6 +57,11 @@ class Dictionary(dict):
     __setattr__ = dict.__setitem__
     __delattr__ = dict.__delitem__
 
+class PCAP:
+    """PCAP base object."""
+    def __init__(self, file_path):
+        self.file_path = file_path
+
 class URL:
     """URL base object."""
 

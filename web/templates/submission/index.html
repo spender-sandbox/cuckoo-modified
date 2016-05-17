@@ -46,6 +46,14 @@ $(document).ready( function() {
         }
 
     });
+    $('.nav-tabs a').on('show.bs.tab', function (event) {
+        var tabname = $(event.target).text()
+        if (tabname == " PCAP") {
+            document.getElementById('accordion').style.display = "none";
+        } else {
+            document.getElementById('accordion').style.display = "block";
+        }
+    });
 });
 </script>
 <div class="row">
@@ -61,6 +69,7 @@ $(document).ready( function() {
                     {% if config.vt %}
                         <li><a href="#vtdl" data-toggle="tab"><span class="glyphicon glyphicon-cloud-download"></span> VirusTotal Download</a></li>
                     {% endif %}
+                    <li><a href="#pcap" data-toggle="tab"><span class="glyphicon glyphicon-transfer"></span> PCAP</a></li>
                 </ul>
                 <div class="tab-content">
                     <div class="tab-pane fade in active" id="file">
@@ -97,6 +106,16 @@ $(document).ready( function() {
                          </div>
                      </div>
                     {% endif %}
+                    <div class="tab-pane fade" id="pcap">
+                        <div class="input-group col-md-6">
+                            <span class="input-group-btn">
+                                <input type="text" class="form-control" readonly>
+                                <span class="btn btn-primary btn-file">
+                                    Select <input type="file" name="pcap" multiple="multiple">
+                                </span>
+                            </span>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="panel" id="accordion" style="margin-top: 20px;">

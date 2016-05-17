@@ -28,10 +28,12 @@ $(function() {
     {% if analysis.static or config.virustotal and analysis.virustotal %}<li><a href="#static" data-toggle="tab">Static Analysis</a></li>{% endif %}
     {% if analysis.behavior.processes %}<li><a href="#behavior" data-toggle="tab" id="graph_hook">Behavioral Analysis</a></li>{% endif %}
     <li><a href="#network" data-toggle="tab">Network Analysis</a></li>
+    {% if analysis.info.category != "pcap" %}
     {% if analysis.dropped|length %}
         <li><a href="#dropped" data-toggle="tab">Dropped Files ({{analysis.dropped|length}})</a></li>
     {% else %}
         <li><a href="#dropped" data-toggle="tab">Dropped Files</a></li>
+    {% endif %}
     {% endif %}
     {% if analysis.procmemory %}<li><a href="#procmemory" data-toggle="tab">Process Memory</a></li>{% endif %}
     {% if analysis.memory %}<li><a href="#memory" data-toggle="tab">Memory Analysis</a></li>{% endif %}
