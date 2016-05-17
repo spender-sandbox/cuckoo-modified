@@ -228,7 +228,7 @@ def index(request):
                                                   {"error": "Conversion from SAZ to PCAP failed."},
                                                   context_instance=RequestContext(request))
        
-                task_id = db.add_pcap(file_path=path)
+                task_id = db.add_pcap(file_path=path, priority=priority)
                 task_ids.append(task_id)
 
         elif "url" in request.POST and request.POST.get("url").strip():

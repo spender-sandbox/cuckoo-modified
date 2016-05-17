@@ -49,9 +49,11 @@ $(document).ready( function() {
     $('.nav-tabs a').on('show.bs.tab', function (event) {
         var tabname = $(event.target).text()
         if (tabname == " PCAP") {
-            document.getElementById('accordion').style.display = "none";
+            document.getElementById('non-pcap-1').style.display = "none";
+            document.getElementById('non-pcap-2').style.display = "none";
         } else {
-            document.getElementById('accordion').style.display = "block";
+            document.getElementById('non-pcap-1').style.display = "block";
+            document.getElementById('non-pcap-2').style.display = "block";
         }
     });
 });
@@ -60,14 +62,15 @@ $(document).ready( function() {
     <div class="col-md-6 col-md-offset-3 center">
         <p style="margin-bottom: 10px;"><img src="{{ STATIC_URL }}graphic/cuckoo.png" /></p>
 
-        <form role="form" action="" method="post" enctype="multipart/form-data">{% csrf_token %}
+        <form role="form" action="" method="post" enctype="multipart/form-data">
+            {% csrf_token %}
             <div class="tabbable">
                 <ul class="nav nav-tabs">
                     <li class="active"><a href="#file" data-toggle="tab"><span class="glyphicon glyphicon-file"></span> File</a></li>
                     <li><a href="#quarantine" data-toggle="tab"><span class="glyphicon glyphicon-fire"></span> Quarantine File</a></li>
                     <li><a href="#url" data-toggle="tab"><span class="glyphicon glyphicon-globe"></span> URL</a></li>
                     {% if config.vt %}
-                        <li><a href="#vtdl" data-toggle="tab"><span class="glyphicon glyphicon-cloud-download"></span> VirusTotal Download</a></li>
+                    <li><a href="#vtdl" data-toggle="tab"><span class="glyphicon glyphicon-cloud-download"></span> VirusTotal Download</a></li>
                     {% endif %}
                     <li><a href="#pcap" data-toggle="tab"><span class="glyphicon glyphicon-transfer"></span> PCAP</a></li>
                 </ul>
@@ -99,12 +102,12 @@ $(document).ready( function() {
                         </div>
                     </div>
                     {% if config.vt %}
-                     <div class="tab-pane fade" id="vtdl">
-                         <div class="input-group col-md-12">
-                             <label class="sr-only" form="form_vtdl">VirusTotal Download</label>
-                             <input type="text" class="form-control" id="form_vtdl" name="vtdl" placeholder="Enter Hash Here" />
-                         </div>
-                     </div>
+                    <div class="tab-pane fade" id="vtdl">
+                        <div class="input-group col-md-12">
+                            <label class="sr-only" form="form_vtdl">VirusTotal Download</label>
+                            <input type="text" class="form-control" id="form_vtdl" name="vtdl" placeholder="Enter Hash Here" />
+                        </div>
+                    </div>
                     {% endif %}
                     <div class="tab-pane fade" id="pcap">
                         <div class="input-group col-md-6">
@@ -125,149 +128,151 @@ $(document).ready( function() {
                     </div>
                     <div id="options" class="panel-collapse collapse in" style="text-align: left;">
                         <div class="panel-body">
-                            <div class="form-group">
-                                <label for="form_package">Analysis Package</label>
-                                <select class="form-control" id="form_package" name="package">
-                                    <option value="" active>Detect Automatically</option>
-                                    {% for package in packages %}
-                                    <option value="{{package}}">{{package}}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="form_machine">Machine</label>
-                                <select class="form-control" id="form_machine" name="machine">
-                                {% for id,label in machines %}
-                                    <option value="{{id}}">{{label}}</option>
-                                {% endfor %}
-                                </select>
-                            </div>
-                            {% if config.tags %}
-                            <div class="form-group">
-                                <label for="form_tags">Machine Tags</label>
-                                <input type="text" class="form-control" id="form_tags" name="tags" />
-                            </div>
-                            {% endif %}
-                            {% if config.gateways %}
-                            <div class="form-group">
-                                <label for="form_gateway">Gateway</label>
-                                <select class="form-control" id="form_gateway" name="gateway">
-                                <option value="" active>Default</option>
-                                <option value="All">All</option>
-                                {% for k,v in gateways.items %}
-                                    <option value="{{k}}">{{k}}</option>
-                                {% endfor %}
-                                </select>
-                            </div>
-                            {% endif %}
-                            <div class="form-group">
-                                <label for="form_timeout">Timeout</label>
-                                <input type="text" class="form-control" id="form_timeout" name="timeout" />
-                            </div>
-                            <div class="form-group">
-                                <label for="form_options">Options (<a href="#optionhelp" data-toggle="collapse">help</a>)</label>
-                                <div id="optionhelp" class="collapse">
-                                <p class="text-muted" style="margin-top: 10px;">Syntax is option1=val1,option2=val2,option3=val3, etc.</p>
-                                <table class="table table-striped table-centered">
-                                    <thead>
-                                        <tr>
-                                            <th style="text-align: center;">Option</th>
-                                            <th style="text-align: center;">Description</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr>
-                                            <td><code>force-sleepskip</code></td>
-                                            <td>Override default sleep skipping behavior:  0 disables all sleep skipping, 1 skips all sleeps.</td>
-                                        </tr>
-                                        <tr>
-                                            <td><code>full-logs</code></td>
-                                            <td>By default, logs prior to network activity for URL analyses and prior to access of the file in question for non-executable formats are suppressed.  Set to 1 to disable log suppression.</td>
-                                        </tr>
-                                        <tr>
-                                            <td><code>force-flush</code></td>
-                                            <td>For performance reasons, logs are buffered before being sent back to the result server.  We make every attempt to flush the buffer at critical points including when exceptions occur, but in some rare termination scenarios, logs may be lost.  Set to 1 to force flushing of the log buffers after any non-duplicate API is called, set to 2 to force flushing of every log.</td>
-                                        </tr>
-                                        <tr>
-                                            <td><code>no-stealth</code></td>
-                                            <td>Set to 1 to disable anti-anti-VM/sandbox code enabled by default.</td>
-                                        </tr>
-                                        <tr>
-                                            <td><code>buffer-max</code></td>
-                                            <td>When set to an integer of your choice, changes the maximum number of bytes that can be logged for most API buffers.</td>
-                                        </tr>
-                                        <tr>
-                                            <td><code>large-buffer-max</code></td>
-                                            <td>Some hooked APIs permit larger buffers to be logged.  To change the limit for this, set this to an integer of your choice.</td>
-                                        </tr>
-                                        <tr>
-                                            <td><code>norefer</code></td>
-                                            <td>Disables use of a fake referrer when performing URL analyses</td>
-                                        </tr>
-                                        <tr>
-                                            <td><code>file</code></td>
-                                            <td>When using the zip or rar package, set the name of the file to execute</td>
-                                        </tr>
-                                        <tr>
-                                            <td><code>password</code></td>
-                                            <td>When using the zip or rar package, set the password to use for extraction</td>
-                                        </tr>
-                                        <tr>
-                                            <td><code>function</code></td>
-                                            <td>When using the dll package, set the name of the exported function to execute</td>
-                                        </tr>
-                                        <tr>
-                                            <td><code>loader</code></td>
-                                            <td>When using the dll package, set the name of the process loading the DLL (defaults to rundll32.exe).</td>
-                                        </tr>
-                                        <tr>
-                                            <td><code>arguments</code></td>
-                                            <td>When using the dll, exe, or python packages, set the arguments to be passed to the executable or exported function.</td>
-                                        </tr>
-                                        <tr>
-                                            <td><code>appdata</code></td>
-                                            <td>When using the exe package, set to 1 to run the executable out of the Application Data path instead of the Temp directory.</td>
-                                        </tr>
-                                        <tr>
-                                            <td><code>startbrowser</code></td>
-                                            <td>Setting this option to 1 will launch a browser 30 seconds into the analysis (useful for some banking trojans).</td>
-                                        </tr>
-                                        <tr>
-                                            <td><code>browserdelay</code></td>
-                                            <td>Sets the number of seconds to wait before starting the browser with the startbrowser option.  Defaults to 30 seconds.</td>
-                                        </tr>
-                                        <tr>
-                                            <td><code>url</code></td>
-                                            <td>When used with the startbrowser option, this will determine the URL the started browser will access.</td>
-                                        </tr>
-                                        <tr>
-                                            <td><code>debug</code></td>
-                                            <td>Set to 1 to enable reporting of critical exceptions occurring during analysis, set to 2 to enable reporting of all exceptions.</td>
-                                        </tr>
-                                        <tr>
-                                            <td><code>disable_hook_content</code></td>
-                                            <td>Set to 1 to remove functionality of all hooks except those critical for monitoring other processes.  Set to 2 to apply to all hooks.</td>
-                                        </tr>
-                                        <tr>
-                                            <td><code>hook-type</code></td>
-                                            <td>Valid for 32-bit analyses only.  Specifies the hook type to use: direct, indirect, or safe.  Safe attempts a Detours-style hook.</td>
-                                        </tr>
-                                        <tr>
-                                            <td><code>serial</code></td>
-                                            <td>Spoof the serial of the system volume as the provided hex value</td>
-                                        </tr>
-                                        <tr>
-                                            <td><code>exclude-apis</code></td>
-                                            <td>Exclude the colon-separated list of APIs from being hooked</td>
-                                        </tr>
-                                        <tr>
-                                            <td><code>exclude-dlls</code></td>
-                                            <td>Exclude the colon-separated list of DLLs from being hooked</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
+                            <div id="non-pcap-1">
+                                <div class="form-group">
+                                    <label for="form_package">Analysis Package</label>
+                                    <select class="form-control" id="form_package" name="package">
+                                        <option value="" active>Detect Automatically</option>
+                                        {% for package in packages %}
+                                        <option value="{{package}}">{{package}}</option>
+                                        {% endfor %}
+                                    </select>
                                 </div>
-                                <input type="text" class="form-control" id="form_options" name="options" />
+                                <div class="form-group">
+                                    <label for="form_machine">Machine</label>
+                                    <select class="form-control" id="form_machine" name="machine">
+                                        {% for id,label in machines %}
+                                        <option value="{{id}}">{{label}}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                {% if config.tags %}
+                                <div class="form-group">
+                                    <label for="form_tags">Machine Tags</label>
+                                    <input type="text" class="form-control" id="form_tags" name="tags" />
+                                </div>
+                                {% endif %}
+                                {% if config.gateways %}
+                                <div class="form-group">
+                                    <label for="form_gateway">Gateway</label>
+                                    <select class="form-control" id="form_gateway" name="gateway">
+                                        <option value="" active>Default</option>
+                                        <option value="All">All</option>
+                                        {% for k,v in gateways.items %}
+                                        <option value="{{k}}">{{k}}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                {% endif %}
+                                <div class="form-group">
+                                    <label for="form_timeout">Timeout</label>
+                                    <input type="text" class="form-control" id="form_timeout" name="timeout" />
+                                </div>
+                                <div class="form-group">
+                                    <label for="form_options">Options (<a href="#optionhelp" data-toggle="collapse">help</a>)</label>
+                                    <div id="optionhelp" class="collapse">
+                                        <p class="text-muted" style="margin-top: 10px;">Syntax is option1=val1,option2=val2,option3=val3, etc.</p>
+                                        <table class="table table-striped table-centered">
+                                            <thead>
+                                                <tr>
+                                                    <th style="text-align: center;">Option</th>
+                                                    <th style="text-align: center;">Description</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td><code>force-sleepskip</code></td>
+                                                    <td>Override default sleep skipping behavior:  0 disables all sleep skipping, 1 skips all sleeps.</td>
+                                                </tr>
+                                                <tr>
+                                                    <td><code>full-logs</code></td>
+                                                    <td>By default, logs prior to network activity for URL analyses and prior to access of the file in question for non-executable formats are suppressed.  Set to 1 to disable log suppression.</td>
+                                                </tr>
+                                                <tr>
+                                                    <td><code>force-flush</code></td>
+                                                    <td>For performance reasons, logs are buffered before being sent back to the result server.  We make every attempt to flush the buffer at critical points including when exceptions occur, but in some rare termination scenarios, logs may be lost.  Set to 1 to force flushing of the log buffers after any non-duplicate API is called, set to 2 to force flushing of every log.</td>
+                                                </tr>
+                                                <tr>
+                                                    <td><code>no-stealth</code></td>
+                                                    <td>Set to 1 to disable anti-anti-VM/sandbox code enabled by default.</td>
+                                                </tr>
+                                                <tr>
+                                                    <td><code>buffer-max</code></td>
+                                                    <td>When set to an integer of your choice, changes the maximum number of bytes that can be logged for most API buffers.</td>
+                                                </tr>
+                                                <tr>
+                                                    <td><code>large-buffer-max</code></td>
+                                                    <td>Some hooked APIs permit larger buffers to be logged.  To change the limit for this, set this to an integer of your choice.</td>
+                                                </tr>
+                                                <tr>
+                                                    <td><code>norefer</code></td>
+                                                    <td>Disables use of a fake referrer when performing URL analyses</td>
+                                                </tr>
+                                                <tr>
+                                                    <td><code>file</code></td>
+                                                    <td>When using the zip or rar package, set the name of the file to execute</td>
+                                                </tr>
+                                                <tr>
+                                                    <td><code>password</code></td>
+                                                    <td>When using the zip or rar package, set the password to use for extraction</td>
+                                                </tr>
+                                                <tr>
+                                                    <td><code>function</code></td>
+                                                    <td>When using the dll package, set the name of the exported function to execute</td>
+                                                </tr>
+                                                <tr>
+                                                    <td><code>loader</code></td>
+                                                    <td>When using the dll package, set the name of the process loading the DLL (defaults to rundll32.exe).</td>
+                                                </tr>
+                                                <tr>
+                                                    <td><code>arguments</code></td>
+                                                    <td>When using the dll, exe, or python packages, set the arguments to be passed to the executable or exported function.</td>
+                                                </tr>
+                                                <tr>
+                                                    <td><code>appdata</code></td>
+                                                    <td>When using the exe package, set to 1 to run the executable out of the Application Data path instead of the Temp directory.</td>
+                                                </tr>
+                                                <tr>
+                                                    <td><code>startbrowser</code></td>
+                                                    <td>Setting this option to 1 will launch a browser 30 seconds into the analysis (useful for some banking trojans).</td>
+                                                </tr>
+                                                <tr>
+                                                    <td><code>browserdelay</code></td>
+                                                    <td>Sets the number of seconds to wait before starting the browser with the startbrowser option.  Defaults to 30 seconds.</td>
+                                                </tr>
+                                                <tr>
+                                                    <td><code>url</code></td>
+                                                    <td>When used with the startbrowser option, this will determine the URL the started browser will access.</td>
+                                                </tr>
+                                                <tr>
+                                                    <td><code>debug</code></td>
+                                                    <td>Set to 1 to enable reporting of critical exceptions occurring during analysis, set to 2 to enable reporting of all exceptions.</td>
+                                                </tr>
+                                                <tr>
+                                                    <td><code>disable_hook_content</code></td>
+                                                    <td>Set to 1 to remove functionality of all hooks except those critical for monitoring other processes.  Set to 2 to apply to all hooks.</td>
+                                                </tr>
+                                                <tr>
+                                                    <td><code>hook-type</code></td>
+                                                    <td>Valid for 32-bit analyses only.  Specifies the hook type to use: direct, indirect, or safe.  Safe attempts a Detours-style hook.</td>
+                                                </tr>
+                                                <tr>
+                                                    <td><code>serial</code></td>
+                                                    <td>Spoof the serial of the system volume as the provided hex value</td>
+                                                </tr>
+                                                <tr>
+                                                    <td><code>exclude-apis</code></td>
+                                                    <td>Exclude the colon-separated list of APIs from being hooked</td>
+                                                </tr>
+                                                <tr>
+                                                    <td><code>exclude-dlls</code></td>
+                                                    <td>Exclude the colon-separated list of DLLs from being hooked</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <input type="text" class="form-control" id="form_options" name="options" />
+                                </div>
                             </div>
                             <div class="form-group">
                                 <label for="form_priority">Priority</label>
@@ -277,10 +282,11 @@ $(document).ready( function() {
                                     <option value="3">High</option>
                                 </select>
                             </div>
+                            <div id="non-pcap-2">
                             <div class="form-group">
                                 <label for="form_custom">Clock</label>
                                 <div class='input-group date' id='datetimepicker1'>
-                                    <input type='text' class="form-control" name="clock"/>
+                                    <input type='text' class="form-control" name="clock" />
                                     <span class="input-group-addon">
                                         <span class="glyphicon glyphicon-calendar"></span>
                                     </span>
@@ -355,6 +361,7 @@ $(document).ready( function() {
                         </div>
                     </div>
                 </div>
+            </div>
             </div>
             <div style="margin-top: 20px;"><button type="submit" class="btn btn-primary btn-lg">Analyze</button></div>
         </form>
