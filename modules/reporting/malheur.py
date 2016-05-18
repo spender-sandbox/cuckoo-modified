@@ -144,7 +144,7 @@ class Malheur(Report):
         """Runs Malheur processing
         @return: Nothing.  Results of this processing are obtained at an arbitrary future time.
         """
-        if results["target"]["category"] in ["url", "pcap"]:
+        if results["target"]["category"] in ["pcap"]:
             return
 
         basedir = os.path.join(CUCKOO_ROOT, "storage", "malheur")
