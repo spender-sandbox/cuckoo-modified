@@ -249,12 +249,14 @@ class AnalysisManager(threading.Thread):
                 os.symlink(self.binary, os.path.join(self.storage, "dump.pcap"))
             else:
                 shutil.copy(self.binary, os.path.join(self.storage, "dump.pcap"))
-            # create the logs directory for suricata results as
+            # create the logs/files directories as
             # normally the resultserver would do it
-            try:
-                os.makedirs(os.path.join(self.storage, "logs"))
-            except:
-                pass
+            dirnames = ["logs", "files", "aux"]
+            for dirname in dirnames:
+                try:
+                    os.makedirs(os.path.join(self.storage, dirname))
+                except:
+                    pass
             return True
 
         # Acquire analysis machine.
