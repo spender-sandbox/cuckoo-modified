@@ -38,10 +38,12 @@ $(function() {
     {% if analysis.procmemory %}<li><a href="#procmemory" data-toggle="tab">Process Memory</a></li>{% endif %}
     {% if analysis.memory %}<li><a href="#memory" data-toggle="tab">Memory Analysis</a></li>{% endif %}
     {% if config.malheur %}
+    {% if analysis.info.category == "file" %}
     {% if similar|length %}
         <li><a href="#similar" data-toggle="tab">Similar ({{similar|length}})</a></li>
     {% else %}
         <li><a href="#similar" data-toggle="tab">Similar</a></li>
+    {% endif %}
     {% endif %}
     {% endif %}
     <li><a href="#reports" data-toggle="tab">Reports</a></li>
@@ -89,9 +91,11 @@ $(function() {
     </div>
     {% endif %}
     {% if config.malheur %}
+    {% if analysis.info.category == "file" %}
     <div class="tab-pane fade" id="similar">
         {% include "analysis/similar/index.html" %}
     </div>
+    {% endif %}
     {% endif %}
     <div class="tab-pane fade" id="reports">
         {% include "analysis/reports/index.html" %}
