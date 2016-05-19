@@ -538,6 +538,7 @@ class RunSignatures(object):
                             "single",
                             "filename",
                             "worm",
+                            "fake",
                         ]
                         isgood = True
                         for black in blacklist:
