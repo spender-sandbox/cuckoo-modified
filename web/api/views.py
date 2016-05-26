@@ -1215,7 +1215,7 @@ def tasks_report(request, task_id, report_format="json"):
             if report_format == "json":
                 content = "application/json; charset=UTF-8"
                 ext = "json"
-            elif report_format.startswith("html)":
+            elif report_format.startswith("html"):
                 content = "text/html"
                 ext = "html"
             elif report_format == "maec" or report_format == "metadata":
