@@ -20,6 +20,9 @@ class Dropped(Processing):
         dropped_files = []
         buf = self.options.get("buffer", 8192)
 
+        if self.task["category"] == "pcap":
+            return dropped_files
+
         file_names = os.listdir(self.dropped_path)
         for file_name in file_names:
             file_path = os.path.join(self.dropped_path, file_name)

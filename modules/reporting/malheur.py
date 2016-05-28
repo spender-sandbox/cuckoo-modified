@@ -144,6 +144,9 @@ class Malheur(Report):
         """Runs Malheur processing
         @return: Nothing.  Results of this processing are obtained at an arbitrary future time.
         """
+        if results["target"]["category"] in ["pcap"]:
+            return
+
         basedir = os.path.join(CUCKOO_ROOT, "storage", "malheur")
         cfgpath = os.path.join(CUCKOO_ROOT, "conf", "malheur.conf")
         reportsdir = os.path.join(basedir, "reports")
