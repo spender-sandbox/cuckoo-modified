@@ -1201,6 +1201,8 @@ def tasks_report(request, task_id, report_format="json"):
     formats = {
         "json": "report.json",
         "html": "report.html",
+        "htmlsummary": "summary-report.html",
+        "pdf": "report.pdf",
         "maec": "report.maec-4.1.xml",
         "metadata": "report.metadata.xml",
     }
@@ -1213,12 +1215,15 @@ def tasks_report(request, task_id, report_format="json"):
             if report_format == "json":
                 content = "application/json; charset=UTF-8"
                 ext = "json"
-            elif report_format == "html":
+            elif report_format.startswith("html"):
                 content = "text/html"
                 ext = "html"
             elif report_format == "maec" or report_format == "metadata":
                 content = "text/xml"
                 ext = "xml"
+            elif export_format == "pdf":
+                content = "application/pdf"
+                ext = "pdf"
             fname = "%s_report.%s" % (task_id, ext)
             with open(report_path, "rb") as report_data:
                 data = report_data.read()
