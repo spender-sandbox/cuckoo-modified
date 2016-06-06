@@ -56,6 +56,7 @@ SERVICES_PID = None
 MONITORED_SERVICES = False
 MONITORED_WMI = False
 MONITORED_DCOM = False
+MONITORED_BITS = False
 MONITORED_TASKSCHED = False
 LASTINJECT_TIME = None
 NUM_INJECTED = 0
@@ -258,6 +259,7 @@ class PipeHandler(Thread):
         global MONITORED_WMI
         global MONITORED_DCOM
         global MONITORED_TASKSCHED
+        global MONITORED_BITS
         global LASTINJECT_TIME
         global NUM_INJECTED
         try:
@@ -419,6 +421,34 @@ class PipeHandler(Thread):
                         if sched_pid:
                             servproc = Process(pid=sched_pid,suspended=False)
                             servproc.set_critical()
+                            filepath = servproc.get_filepath()
+                            servproc.inject(dll=DEFAULT_DLL, interest=filepath, nosleepskip=True)
+                            LASTINJECT_TIME = datetime.now()
+                            servproc.close()
+                            KERNEL32.Sleep(2000)
+
+                elif command.startswith("BITS:"):
+                    if not MONITORED_BITS:
+                        MONITORED_BITS = True
+                        si = subprocess.STARTUPINFO()
+                        # STARTF_USESHOWWINDOW
+                        si.dwFlags = 1
+                        # SW_HIDE
+                        si.wShowWindow = 0
+                        log.info("Stopping BITS Service")
+                        p = subprocess.Popen(['net', 'stop', 'BITS'], startupinfo=si, stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.STDOUT)
+                        dummyvar = p.communicate(input='Y\n')
+                        log.info("Stopped BITS Service")
+                        subprocess.call("sc config BITS type= own", startupinfo=si)
+
+                        log.info("Starting BITS Service")
+                        subprocess.call("net start BITS", startupinfo=si)
+                        log.info("Started BITS Service")
+
+                        bits_pid = pid_from_service_name("BITS")
+                        if bits_pid:
+                            add_critical_pid(bits_pid)
+                            servproc = Process(pid=bits_pid,suspended=False)
                             filepath = servproc.get_filepath()
                             servproc.inject(dll=DEFAULT_DLL, interest=filepath, nosleepskip=True)
                             LASTINJECT_TIME = datetime.now()
