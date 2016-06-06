@@ -375,6 +375,7 @@ class PipeHandler(Thread):
                         subprocess.call("sc config winmgmt type= own", startupinfo=si)
 
                         if not MONITORED_DCOM:
+                            MONITORED_DCOM = True
                             dcom_pid = pid_from_service_name("DcomLaunch")
                             if dcom_pid:
                                 servproc = Process(pid=dcom_pid,suspended=False)
@@ -440,6 +441,18 @@ class PipeHandler(Thread):
                         dummyvar = p.communicate(input='Y\n')
                         log.info("Stopped BITS Service")
                         subprocess.call("sc config BITS type= own", startupinfo=si)
+
+                        if not MONITORED_DCOM:
+                            MONITORED_DCOM = True
+                            dcom_pid = pid_from_service_name("DcomLaunch")
+                            if dcom_pid:
+                                add_critical_pid(dcom_pid)
+                                servproc = Process(pid=dcom_pid,suspended=False)
+                                filepath = servproc.get_filepath()
+                                servproc.inject(dll=DEFAULT_DLL, interest=filepath, nosleepskip=True)
+                                LASTINJECT_TIME = datetime.now()
+                                servproc.close()
+                                KERNEL32.Sleep(2000)
 
                         log.info("Starting BITS Service")
                         subprocess.call("net start BITS", startupinfo=si)
