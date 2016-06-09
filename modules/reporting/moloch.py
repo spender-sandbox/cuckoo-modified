@@ -54,7 +54,6 @@ class Moloch(Report):
             if response.code == 200:
                 plain_answer = response.read()
                 json_data = json.loads(plain_answer)
-            time.sleep(.5)
         except Exception, e:
             log.warning("Moloch: Unable to update tags %s" % (e))
 
@@ -136,7 +135,7 @@ class Moloch(Report):
         except Exception,e:
             log.warning("Unable to Run moloch-capture: %s" % e)
 
-        time.sleep(5)
+        time.sleep(1)
          
         if "suricata" in results and results["suricata"]:
            if "alerts" in results["suricata"]:
