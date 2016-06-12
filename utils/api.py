@@ -83,6 +83,7 @@ def tasks_create_file():
                                           machine=machine, platform=platform, custom=custom, memory=memory, enforce_timeout=enforce_timeout, tags=tags, clock=clock,
                                           shrike_url=shrike_url, shrike_msg=shrike_msg, shrike_sid=shrike_sid, shrike_refer=shrike_refer)
     response["task_ids"] = task_ids
+    response["task_id"] = task_ids[0]
     return jsonize(response)
 
 @route("/tasks/create/url", method="POST")
@@ -132,6 +133,7 @@ def tasks_create_url():
     )
 
     response["task_id"] = task_id
+    esponse["task_id"] = task_ids[0]
     return jsonize(response)
 
 @route("/tasks/list", method="GET")
