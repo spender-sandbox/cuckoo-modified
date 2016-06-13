@@ -1,15 +1,12 @@
 import json
 import os
-import re
 import socket
 import sys
 import tarfile
-from datetime import datetime,timedelta
+from datetime import datetime, timedelta
 import random
 import tempfile
 import requests
-
-from bson import json_util
 
 from django.conf import settings
 from wsgiref.util import FileWrapper
@@ -20,7 +17,6 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_safe
 from ratelimit.decorators import ratelimit
 from StringIO import StringIO
-from zipfile import ZipFile, ZIP_STORED
 from bson.objectid import ObjectId
 
 sys.path.append(settings.CUCKOO_PATH)
@@ -30,8 +26,8 @@ from lib.cuckoo.common.quarantine import unquarantine
 from lib.cuckoo.common.saztopcap import saz_to_pcap
 from lib.cuckoo.common.utils import store_temp_file, delete_folder
 from lib.cuckoo.common.utils import convert_to_printable, validate_referer
-from lib.cuckoo.core.database import Database, Task
-from lib.cuckoo.core.database import TASK_RUNNING, TASK_REPORTED
+from lib.cuckoo.core.database import Database
+from lib.cuckoo.core.database import TASK_REPORTED
 
 # Config variables
 apiconf = Config("api")
@@ -375,17 +371,19 @@ def tasks_create_file(request):
                         task_ids.extend(task_ids_new)
 
         if len(task_ids) > 0:
-            resp["task_ids"] = task_ids
+            resp["data"] = {}
+            resp["data"]["task_ids"] = task_ids
             callback = apiconf.filecreate.get("status")
             if len(task_ids) == 1:
-                resp["data"] = "Task ID {0} has been submitted".format(
+                resp["data"]["message"] = "Task ID {0} has been submitted".format(
                                str(task_ids[0]))
                 if callback:
                     resp["url"] = ["{0}/submit/status/{1}/".format(
                                   apiconf.api.get("url"), task_ids[0])]
             else:
-                resp["task_ids"] = task_ids
-                resp["data"] = "Task IDs {0} have been submitted".format(
+                resp["data"] = {}
+                resp["data"]["task_ids"] = task_ids
+                resp["data"]["message"] = "Task IDs {0} have been submitted".format(
                                ", ".join(str(x) for x in task_ids))
                 if callback:
                     resp["url"] = list()
@@ -414,6 +412,7 @@ def tasks_create_url(request):
             resp = {"error": True, "error_value": "URL Create API is Disabled"}
             return jsonize(resp, response=True)
 
+        resp["error"] = False
         url = request.POST.get("url", None)
         package = request.POST.get("package", "")
         timeout = force_int(request.POST.get("timeout"))
@@ -515,8 +514,9 @@ def tasks_create_url(request):
                     task_ids.append(task_id)
                  
         if len(task_ids):
-            resp["task_ids"] = task_ids
-            resp["data"] = "Task ID {0} has been submitted".format(
+            resp["data"] = {}
+            resp["data"]["task_ids"] = task_ids
+            resp["data"]["message"] = "Task ID {0} has been submitted".format(
                            str(task_ids[0]))
             if apiconf.urlcreate.get("status"):
                 resp["url"] = ["{0}/submit/status/{1}".format(
@@ -646,17 +646,18 @@ def tasks_vtdl(request):
                 return jsonize(resp, response=True)
          
         if len(task_ids) > 0:
-            resp["task_ids"] = task_ids
+            resp["data"] = {}
+            resp["data"]["task_ids"] = task_ids
             callback = apiconf.filecreate.get("status")
             if len(task_ids) == 1:
-                resp["data"] = "Task ID {0} has been submitted".format(
+                resp["data"]["message"] = "Task ID {0} has been submitted".format(
                                str(task_ids[0]))
                 if callback:
                     resp["url"] = ["{0}/submit/status/{1}/".format(
                                   apiconf.api.get("url"), task_ids[0])]
             else:
-                resp["task_ids"] = task_ids
-                resp["data"] = "Task IDs {0} have been submitted".format(
+                resp["data"]["task_ids"] = task_ids
+                resp["data"]["message"] = "Task IDs {0} have been submitted".format(
                                ", ".join(str(x) for x in task_ids))
                 if callback:
                     resp["url"] = list()
@@ -672,7 +673,7 @@ def tasks_vtdl(request):
 
     return jsonize(resp, response=True)
 
-# Return Sample inforation.
+# Return Sample information.
 if apiconf.fileview.get("enabled"):
     raterps = apiconf.fileview.get("rps", None)
     raterpm = apiconf.fileview.get("rpm", None)
@@ -723,7 +724,7 @@ def files_view(request, md5=None, sha1=None, sha256=None, sample_id=None):
         if sample:
             resp["data"] = sample.to_dict()
         else:
-            resp["data"] = "Sample not found in database"
+            resp = {"error": True, "error_value": "Sample not found in database"}
 
     return jsonize(resp, response=True)
 
@@ -778,7 +779,7 @@ def tasks_search(request, md5=None, sha1=None, sha256=None):
                 buf["target"] = buf["target"].split("/")[-1]
                 resp["data"].append(buf)
         else:
-            resp["data"] = "Sample not found in database"
+            resp = {"data": [], "error": False}
 
     return jsonize(resp, response=True)
 
@@ -1074,7 +1075,7 @@ def tasks_view(request, task_id):
 
         resp["data"] = entry
     else:
-        resp = {"data": "Task not found in Database"}
+        resp = {"error": True, "error_value": "Task not found in database"}
 
     return jsonize(resp, response=True)
 
@@ -1294,6 +1295,9 @@ def tasks_iocs(request, task_id, detail=None):
             buf = tmp[-1]["_source"]
         else:
             buf = None
+    if buf is None:
+        resp = {"error": True, "error_value": "Sample not found in database"}
+        return jsonize(resp, response=True)
     if repconf.jsondump.get("enabled") and not buf:
         jfile = os.path.join(CUCKOO_ROOT, "storage", "analyses",
                              "%s" % task_id, "reports", "report.json")
@@ -1305,10 +1309,7 @@ def tasks_iocs(request, task_id, detail=None):
         return jsonize(resp, response=True)
 
     data = {}
-    if buf["malfamily"]:
-        data["malfamily"] = buf["malfamily"]
-    else:
-        data["malfamily"] = "None Identified"
+    data["malfamily"] = buf["malfamily"]
     data["malscore"] = buf["malscore"]
     data["info"] = buf["info"]
     del data["info"]["custom"]
