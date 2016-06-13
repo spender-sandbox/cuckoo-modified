@@ -142,7 +142,7 @@ class Syslog(Report):
             else:
                 syslog += 'Total_TCP="0" '
             if "udp" in results["network"]:
-                syslog += 'Total_UDP="' + str(len(results["network"]["udp"])) + '"'
+                syslog += 'Total_UDP="' + str(len(results["network"]["udp"])) + '" '
             else:
                 syslog += 'Total_UDP="0" '
         # VT stats if available
