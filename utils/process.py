@@ -17,7 +17,7 @@ sys.path.append(os.path.join(os.path.abspath(os.path.dirname(__file__)), ".."))
 
 from lib.cuckoo.common.config import Config
 from lib.cuckoo.common.constants import CUCKOO_ROOT
-from lib.cuckoo.core.database import Database, TASK_REPORTED, TASK_COMPLETED
+from lib.cuckoo.core.database import Database, Task, TASK_REPORTED, TASK_COMPLETED
 from lib.cuckoo.core.database import TASK_FAILED_PROCESSING
 from lib.cuckoo.core.plugins import GetFeeds, RunProcessing, RunSignatures
 from lib.cuckoo.core.plugins import RunReporting
@@ -167,7 +167,7 @@ def autoprocess(parallel=1):
             # If we're here, getting parallel tasks should at least
             # have one we don't know.
             tasks = db.list_tasks(status=TASK_COMPLETED, limit=parallel,
-                                  order_by="completed_on asc")
+                                  order_by=Task.completed_on.asc())
 
             added = False
             # For loop to add only one, nice. (reason is that we shouldn't overshoot maxcount)

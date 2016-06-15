@@ -26,7 +26,7 @@ from lib.cuckoo.common.quarantine import unquarantine
 from lib.cuckoo.common.saztopcap import saz_to_pcap
 from lib.cuckoo.common.utils import store_temp_file, delete_folder
 from lib.cuckoo.common.utils import convert_to_printable, validate_referer
-from lib.cuckoo.core.database import Database
+from lib.cuckoo.core.database import Database, Task
 from lib.cuckoo.core.database import TASK_REPORTED
 
 # Config variables
@@ -1016,7 +1016,7 @@ def tasks_list(request, offset=None, limit=None, window=None):
     for row in db.list_tasks(limit=limit, details=True, offset=offset,
                              completed_after=completed_after,
                              status=status,
-                             order_by="completed_on desc"):
+                             order_by=Task.completed_on.desc()):
         resp["buf"] += 1
         task = row.to_dict()
         task["guest"] = {}
