@@ -1486,6 +1486,7 @@ def get_vt_consensus(namelist):
         "reputation",
         "script",
         "w97m",
+        "pp97m",
         "lookslike",
         "macro",
         "dloadr",
