@@ -11,8 +11,8 @@
     {% else %}
     <li>
     <strong><a href="javascript:show_tab('process_{{process.pid}}');">{{process.name}}</a></strong> {{process.pid}}
-    {% if process.environ.CommandLine %}
-      <i>{{ process.environ.CommandLine|format_cli:128 }}</i>
+    {% if process.commandline %}
+      <i>{{ process.commandline }}</i>
     {% endif %}
     </li>
     {% endif %}
