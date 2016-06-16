@@ -741,12 +741,12 @@ class PortableExecutable(object):
         @return: analysis results dict or None.
         """
         if not os.path.exists(self.file_path):
-            return None
+            return {}
 
         try:
             self.pe = pefile.PE(self.file_path)
         except pefile.PEFormatError:
-            return None
+            return {}
 
         results = {}
         peresults = results["pe"] = { }
