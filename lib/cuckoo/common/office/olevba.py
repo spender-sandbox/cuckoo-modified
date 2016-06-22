@@ -1140,7 +1140,7 @@ def _extract_vba(ole, vba_root, project_path, dir_path):
             continue
 
         logging.error('invalid or unknown check Id {0:04X}'.format(check))
-        sys.exit(0)
+        return
 
     PROJECTMODULES_Id = check  #struct.unpack("<H", dir_stream.read(2))[0]
     check_value('PROJECTMODULES_Id', 0x000F, PROJECTMODULES_Id)
