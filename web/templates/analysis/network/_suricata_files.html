@@ -8,8 +8,12 @@
                     <td style="border-top: 0;"><b>{{file.filename}}</b></td>
                 </tr>
                 <tr>
-                    <th>File Size</th>
+                    <th>Expected File Size</th>
                     <td>{{file.size}} bytes</td>
+                </tr>
+                <tr>
+                    <th>Actual File Size</th>
+                    <td>{{file.file_info.size}} bytes</td>
                 </tr>
                 <tr>
                     <th>File Type</th>
