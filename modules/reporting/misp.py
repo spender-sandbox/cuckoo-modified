@@ -90,9 +90,7 @@ class MISP(Report):
         analysis = int(self.options.get("analysis", 2))
 
         comment = "{} {}".format(results.get('info', {}).get('id'))
-
-        event = self.misp.new_event(distribution, threat_level_id, analysis, comment, date=datetime.now().strftime('%Y-%m-%d'), published=True)
-
+        
         iocs = deque()
         filtered_iocs = deque()
         threads_list = list()
@@ -151,6 +149,9 @@ class MISP(Report):
                         filtered_iocs.append(regkey)
 
         if iocs:
+          
+            event = self.misp.new_event(distribution, threat_level_id, analysis, comment, date=datetime.now().strftime('%Y-%m-%d'), published=True)
+          
             for thread_id in xrange(int(self.threads)):
                 thread = threading.Thread(target=self.cuckoo2misp_thread, args=(iocs, event))
                 thread.daemon = True
