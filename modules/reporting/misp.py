@@ -89,7 +89,7 @@ class MISP(Report):
         threat_level_id = int(self.options.get("threat_level_id", 2))
         analysis = int(self.options.get("analysis", 2))
 
-        comment = "{} {}".format(results.get('info', {}).get('id'))
+        comment = "{} {}".format(self.options.get("title", ""), results.get('info', {}).get('id'))
         
         iocs = deque()
         filtered_iocs = deque()
