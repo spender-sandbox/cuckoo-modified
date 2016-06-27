@@ -268,7 +268,7 @@ class MISP(Report):
                     full_report.write(json.dumps(self.misp_full_report))
                     full_report.close()
 
-            if self.options.get("upload_iocs", ""):
+            if self.options.get("upload_iocs", False) and results.get("malscore", 0) >= self.options.get("min_malscore", 0):
                 self.cuckoo2misp(results, whitelist)
 
         except Exception as e:
