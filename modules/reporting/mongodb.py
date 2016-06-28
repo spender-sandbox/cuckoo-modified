@@ -4,6 +4,11 @@
 
 import logging
 import os
+import gzip
+import json
+
+from bson import BSON
+from bson import json_util
 
 from lib.cuckoo.common.abstracts import Report
 from lib.cuckoo.common.exceptions import CuckooDependencyError
@@ -60,6 +65,31 @@ class MongoDB(Report):
             walk(key, key, val)
 
         return sorted(totals.items(), key=lambda item: item[1], reverse=True)
+
+    def save_mongo_to_file(self, report):
+
+        """
+            Save mongo data to dist to retreive from distributed cuckoo
+        """
+
+        success = False
+        try:
+            report = json.dumps(report, indent=4, default=json_util.default)
+        except Exception as e:
+            log.exception(e)
+            return False
+
+        try:
+            with gzip.open(os.path.join(self.analysis_path, "reports", "report.mongo"), "wb") as f:
+                f.write(report)
+
+        except Exception as e:
+            log.exception(e)
+            return False
+
+        return True
+            
+                
 
     def run(self, results):
         """Writes report.
@@ -179,6 +209,7 @@ class MongoDB(Report):
         # Store the report and retrieve its object id.
         try:
             self.db.analysis.save(report)
+            self.save_mongo_to_file(report)
         except InvalidDocument as e:
             parent_key, psize = self.debug_dict_size(report)[0]
             child_key, csize = self.debug_dict_size(report[parent_key])[0]
@@ -196,6 +227,7 @@ class MongoDB(Report):
                     del report[parent_key][child_key]
                     try:
                         self.db.analysis.save(report)
+                        self.save_mongo_to_file(report)
                         error_saved = False
                     except InvalidDocument as e:
                         parent_key, psize = self.debug_dict_size(report)[0]

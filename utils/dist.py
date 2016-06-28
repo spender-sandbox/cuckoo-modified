@@ -14,10 +14,29 @@ import threading
 import time
 from datetime import datetime
 
+import gzip
+import StringIO
+from bson.json_util import loads
+#patch it
+#from lib.cuckoo.common.constants import CUCKOO_ROOT
+sys.path.append("/opt/cuckoo-modified/")
+from lib.cuckoo.common.config import Config
+from lib.cuckoo.core.database import Database, TASK_REPORTED, TASK_RUNNING
+
+# im not including ES, as it oficially not maintained
+try:
+    from pymongo import MongoClient
+    from pymongo.errors import ConnectionFailure, InvalidDocument
+    HAVE_MONGO = True
+except ImportError:
+    HAVE_MONGO = False
+
+# we need original db to reserve ID in db, to store later report, from master or slave
+cuckoo_conf = Config("cuckoo")
+
 INTERVAL = 30
 MINIMUMQUEUE = 500
 RESET_LASTCHECK = 100
-
 
 def required(package):
     sys.exit("The %s package is required: pip install %s" %
@@ -117,7 +136,6 @@ class Node(db.Model):
                 memory=task.memory, clock=task.clock,
                 enforce_timeout=task.enforce_timeout,
             )
-
             # If the file does not exist anymore, ignore it and move on
             # to the next file.
             if not os.path.isfile(task.path):
@@ -126,10 +144,29 @@ class Node(db.Model):
                 db.session.refresh(task)
                 return
 
+            # we don't need create extra id in master ;)
+            if self.name != "master":
+                main_task_id = main_db.add_path(
+                    file_path=task.path,
+                    package=task.package,
+                    timeout=task.timeout,
+                    options=task.options,
+                    priority=task.priority,
+                    machine=task.machine,
+                    custom=task.custom,
+                    memory=task.memory,
+                    enforce_timeout=task.enforce_timeout,
+                    tags=task.tags
+                )
+                # reserving id in main db, to later store in mongo with the same id
+                main_db.set_status(main_task_id, TASK_RUNNING)
+
             files = dict(file=open(task.path, "rb"))
             r = requests.post(url, data=data, files=files)
             task.node_id = self.id
-            task.task_ids = r.json()["task_ids"]
+            task.task_id = r.json()["task_ids"][0]
+            task.main_task_id = main_task_id
+            # ToDo reserve ID here
 
             # We have to refresh() the task object because otherwise we get
             # the unmodified object back in further sql queries..
@@ -144,7 +181,7 @@ class Node(db.Model):
     def fetch_tasks(self, status, since=None):
         try:
             url = os.path.join(self.url, "tasks", "list")
-            params = dict(completed_after=since, status=status)
+            params = dict(status=status)#completed_after=since,
             r = requests.get(url, params=params)
             return r.json()["tasks"]
         except Exception as e:
@@ -205,7 +242,8 @@ class Task(db.Model):
     node_id = db.Column(db.Integer, db.ForeignKey("node.id"))
     task_id = db.Column(db.Integer)
     finished = db.Column(db.Boolean, nullable=False)
-
+    main_task_id = db.Column(db.Integer)   
+  
     def __init__(self, path, package, timeout, priority, options, machine,
                  platform, tags, custom, memory, clock, enforce_timeout):
         self.path = path
@@ -243,14 +281,15 @@ class StatusThread(threading.Thread):
             node.submit_task(task)
 
     def fetch_latest_reports(self, node, last_check):
+
         # Fetch the latest reports.
         for task in node.fetch_tasks("reported", since=last_check):
-            q = Task.query.filter_by(node_id=node.id, task_id=task["id"])
+            q = Task.query.filter_by(node_id=node.id,task_id=task["id"], finished=0)
             t = q.first()
 
             if t is None:
-                log.debug("Node %s task #%d has not been submitted by us!",
-                          node.name, task["id"])
+                #log.debug("Node %s task #%d has not been submitted by us!",
+                #          node.name, task["id"])
                 continue
 
             # Update the last_check value of the Node for the next iteration.
@@ -275,20 +314,52 @@ class StatusThread(threading.Thread):
                     continue
 
                 path = os.path.join(dirpath, "report.%s" % report_format)
-                with open(path, "wb") as f:
-                    for chunk in report.iter_content(chunk_size=1024*1024):
-                        f.write(chunk)
+
+                temp_f = ''
+                for chunk in report.iter_content(chunk_size=1024*1024):
+                        temp_f += chunk
+                if temp_f:
+                    # mongo will be stored to mongo db only, we don't need it as file
+                    if HAVE_MONGO and report_format == "mongo":
+                        # import in start once only?
+                        try:
+                            fileobj = StringIO.StringIO(temp_f)
+                            temp_f = gzip.GzipFile("temp", "rb", 9, fileobj).read()
+                            temp_f = loads(temp_f)
+
+                            mongo_db = ''
+                            repconf = Config("reporting")
+                            if repconf.mongodb.enabled:
+                                conn = MongoClient(repconf.mongodb.host, repconf.mongodb.port)
+                                mongo_db = conn[repconf.mongodb.db]
+                            if mongo_db:
+                                #patch info.id to have the same id as in main db if task was not executed in master
+                                if node.name != "master":
+                                    temp_f["info"]["id"] = t.main_task_id
+                                mongo_db.analysis.save(temp_f)
+                                if node.name != "master":
+                                    #check leak sessions
+                                    main_db.set_status(t.main_task_id, TASK_REPORTED)
+                        except Exception as e:
+                            log.info(e)
+                    else:
+                        f = open(path, "wb")
+                        f.write(temp_f)
+                        f.close()
+
+                    del temp_f
 
             t.finished = True
 
             # Delete the task and all its associated files.
             # (It will still remain in the nodes' database, though.)
-            node.delete_task(t.task_id)
+            #node.delete_task(t.task_id)
 
             db.session.commit()
             db.session.refresh(t)
 
     def run(self):
+        global main_db
         global STATUSES
         while RUNNING:
             with app.app_context():
@@ -434,7 +505,7 @@ class TaskApi(TaskBaseApi):
         task = Task.query.get(task_id)
         if task is None:
             abort(404, message="Task not found")
-
+        # return correct id node id from master id
         return dict(tasks={task.id: dict(
             task_id=task.id, path=task.path, package=task.package,
             timeout=task.timeout, priority=task.priority,
@@ -509,7 +580,7 @@ class TaskRootApi(TaskBaseApi):
         task = Task(path=path, **args)
         db.session.add(task)
         db.session.commit()
-        return dict(task_id=task.id)
+        return dict(task_id=task.main_task_id)
 
 
 class ReportApi(RestResource):
@@ -631,6 +702,7 @@ if __name__ == "__main__":
         os.makedirs(args.reports_directory)
 
     RUNNING, STATUSES = True, {}
+    main_db = Database()
 
     app = create_app(database_connection=args.db)
     app.config["SAMPLES_DIRECTORY"] = args.samples_directory
@@ -641,5 +713,5 @@ if __name__ == "__main__":
     t = StatusThread()
     t.daemon = True
     t.start()
-
+    
     app.run(host=args.host, port=args.port)
