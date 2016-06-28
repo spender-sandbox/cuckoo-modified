@@ -112,8 +112,8 @@ class MISP(Report):
 
         if results.get("target", {}).get("url", "") and results["target"]["url"] not in whitelist:                    
             self.iocs.append(results["target"]["url"])
-            iocs.append({"uri": results["target"]["uri"]})
-            filtered_iocs.append(results["target"]["uri"])
+            iocs.append({"uri": results["target"]["url"]})
+            filtered_iocs.append(results["target"]["url"])
 
         if self.options.get("network", False) and "network" in results.keys():
             for block in results["network"].get("hosts", []):
