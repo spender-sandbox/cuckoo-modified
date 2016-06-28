@@ -164,6 +164,7 @@ class Node(db.Model):
             files = dict(file=open(task.path, "rb"))
             r = requests.post(url, data=data, files=files)
             task.node_id = self.id
+            #task.task_ids <- see how to loop it and store all ids, because by default it nto saving it, or saving as list which trigger errors
             task.task_id = r.json()["task_ids"][0]
             task.main_task_id = main_task_id
             # ToDo reserve ID here
@@ -580,7 +581,8 @@ class TaskRootApi(TaskBaseApi):
         task = Task(path=path, **args)
         db.session.add(task)
         db.session.commit()
-        return dict(task_id=task.main_task_id)
+        #main_task_id must be created and returned
+        return dict(task_id=task.id)
 
 
 class ReportApi(RestResource):
