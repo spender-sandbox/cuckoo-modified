@@ -95,6 +95,26 @@ class MISP(Report):
         filtered_iocs = deque()
         threads_list = list()
 
+        if results.get("target", {}).get("file", {}).get("md5", "") and results["target"]["file"]["md5"] not in whitelist:
+            self.iocs.append(results["target"]["file"]["md5"])
+            iocs.append({"md5": results["target"]["file"]["md5"]})
+            filtered_iocs.append(results["target"]["file"]["md5"])
+
+        if results.get("target", {}).get("file", {}).get("sha1", "") and results["target"]["file"]["sha1"] not in whitelist:
+            self.iocs.append(results["target"]["file"]["sha1"])
+            iocs.append({"sha1": results["target"]["file"]["sha1"]})
+            filtered_iocs.append(results["target"]["file"]["sha1"])
+
+        if results.get("target", {}).get("file", {}).get("sha256", "") and results["target"]["file"]["sha256"] not in whitelist:                    
+            self.iocs.append(results["target"]["file"]["sha256"])
+            iocs.append({"sha256": results["target"]["file"]["sha256"]})
+            filtered_iocs.append(results["target"]["file"]["sha256"])
+
+        if results.get("target", {}).get("url", "") and results["target"]["url"] not in whitelist:                    
+            self.iocs.append(results["target"]["url"])
+            iocs.append({"uri": results["target"]["url"]})
+            filtered_iocs.append(results["target"]["url"])
+
         if self.options.get("network", False) and "network" in results.keys():
             for block in results["network"].get("hosts", []):
                 if block.get("hostname", "") and (block["hostname"] not in whitelist and block["hostname"] not in filtered_iocs):
