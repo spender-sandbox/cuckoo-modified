@@ -359,7 +359,7 @@ You may want to disable some processing modules, such as ``virustotal``.
 conf/reporting.conf
 ^^^^^^^^^^^^^^^^^^^
 
-You must activate ``slave`` in mongodb seccion, on all slaves only, not master.
+You must activate ``slave`` in mongodb section, on all slaves only, not master.
 
 Depending on which report(s) are required for integration with your system it
 might make sense to only make those report(s) that you're going to use. Thus
