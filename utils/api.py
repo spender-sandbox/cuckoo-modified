@@ -21,6 +21,7 @@ except ImportError:
 
 sys.path.append(os.path.join(os.path.abspath(os.path.dirname(__file__)), ".."))
 
+from lib.cuckoo.common.config import Config
 from lib.cuckoo.common.constants import CUCKOO_VERSION, CUCKOO_ROOT
 from lib.cuckoo.common.utils import store_temp_file, delete_folder
 from lib.cuckoo.common.email_utils import find_attachments_in_email
@@ -28,6 +29,17 @@ from lib.cuckoo.core.database import Database, TASK_RUNNING, Task
 
 # Global DB pointer.
 db = Database()
+repconf = Config("reporting")
+
+# this required for Iocs API
+FULL_DB = False
+if repconf.mongodb.enabled:
+    import pymongo
+    results_db = pymongo.MongoClient(
+                     repconf.mongodb.host,
+                     repconf.mongodb.port
+                 )[repconf.mongodb.db]
+    FULL_DB = True
 
 # Increase request size limit
 BaseRequest.MEMFILE_MAX = 1024 * 1024 * 4
@@ -299,17 +311,16 @@ def tasks_report(task_id, report_format="json"):
 def tasks_iocs(task_id, detail=False):
 
     buf = {}
-    #ToDo
-    # not return all data, investigate
-    #db.tasks_view(task_id)
-    #buf = buf.to_dict()
-
-    jfile = os.path.join(CUCKOO_ROOT, "storage", "analyses",
+    if FULL_DB:
+        buf = results_db.analysis.find_one({"info.id": task_id})
+    
+    if not buf:
+        jfile = os.path.join(CUCKOO_ROOT, "storage", "analyses",
                              "%s" % task_id, "reports", "report.json")
 
-    if os.path.exists(jfile):
-        with open(jfile, "r") as jdata:
-            buf = json.load(jdata)
+        if os.path.exists(jfile):
+            with open(jfile, "r") as jdata:
+                buf = json.load(jdata)
 
     if buf is None:
         resp = {"error": True, "error_value": "Sample not found in database"}

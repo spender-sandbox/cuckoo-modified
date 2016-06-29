@@ -17,11 +17,8 @@ from datetime import datetime
 import gzip
 import StringIO
 from bson.json_util import loads
-# CUCKOO_ROOT not works here
-#from lib.cuckoo.common.constants import CUCKOO_ROOT
-_current_dir = os.path.abspath(os.path.dirname(__file__))
-CUCKOO_ROOT = os.path.normpath(os.path.join(_current_dir, ".."))
-sys.path.append(CUCKOO_ROOT)
+
+sys.path.append(os.path.join(os.path.abspath(os.path.dirname(__file__)), ".."))
 
 from lib.cuckoo.common.config import Config
 from lib.cuckoo.core.database import Database, TASK_REPORTED, TASK_RUNNING
@@ -619,13 +616,12 @@ class ReportingBaseApi(RestResource):
 
         return node.url
 
+
 class IocApi(ReportingBaseApi):
 
     def get(self, task_id):
         task = Task.query.get(task_id)
-
         url = self.get_node_url(task.node_id)
-
         res = self.get_iocs(url, task.main_task_id)
         
         if res and res.status_code == 200:
@@ -652,17 +648,7 @@ class ReportApi(ReportingBaseApi):
 
     def get(self, task_id, report="json"):
         task = Task.query.get(task_id)
-
-        """
-        node = Node.query.filter_by(id = task.node_id)
-        node = node.first()
-
-        if not node:
-            abort(404, message="Node not found")
-        """
-
         url = self.get_node_url(task.node_id)
-
 
         if not task:
             abort(404, message="Task not found")
