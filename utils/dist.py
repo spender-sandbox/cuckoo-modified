@@ -152,7 +152,7 @@ class Node(db.Model):
             files = dict(file=open(task.path, "rb"))
             r = requests.post(url, data=data, files=files)
             task.node_id = self.id
-            #ToDo
+
             #task.task_ids <- see how to loop it and store all ids, because by default it nto saving it, or saving as list which trigger errors
             task.task_id = r.json()["task_ids"][0]
 
@@ -605,10 +605,46 @@ class TaskRootApi(TaskBaseApi):
         return dict(task_id=task.id)
 
 
-class ReportApi(RestResource):
+class ReportingBaseApi(RestResource):
+    def __init__(self, *args, **kwargs):
+        RestResource.__init__(self, *args, **kwargs)
 
-    # ToDo
-    # proxy for id reports
+    def get_node_url(self, node_id):
+
+        node = Node.query.filter_by(id = node_id)
+        node = node.first()
+
+        if not node:
+            abort(404, message="Node not found")
+
+        return node.url
+
+class IocApi(ReportingBaseApi):
+
+    def get(self, task_id):
+        task = Task.query.get(task_id)
+
+        url = self.get_node_url(task.node_id)
+
+        res = self.get_iocs(url, task.main_task_id)
+        
+        if res and res.status_code == 200:
+            return res.json()
+        else:
+            abort(404, message="Iocs report not found")
+
+    def get_iocs(self, url, task_id, stream=False):
+        try:
+            url = os.path.join(url, "tasks", "iocs",
+                               "%d" % task_id)
+            return requests.get(url, stream=stream)
+        except Exception as e:
+            log.critical("Error fetching report (task #%d, node %s): %s",
+                         task_id, self.url, e)
+
+
+
+class ReportApi(ReportingBaseApi):
 
     report_formats = {
         "json": "json",
@@ -617,14 +653,16 @@ class ReportApi(RestResource):
     def get(self, task_id, report="json"):
         task = Task.query.get(task_id)
 
-        log.info(dir(task.node_id))
-        # getting data of node which contains our data,
+        """
         node = Node.query.filter_by(id = task.node_id)
         node = node.first()
+
         if not node:
             abort(404, message="Node not found")
+        """
 
-        log.info(dir(node.url))
+        url = self.get_node_url(task.node_id)
+
 
         if not task:
             abort(404, message="Task not found")
@@ -632,22 +670,12 @@ class ReportApi(RestResource):
         if not task.finished:
             abort(404, message="Task not finished yet")
 
-        # make req here to report to master server 
-        # add posibility to iocs retrieve
-
-        #path = os.path.join(app.config["REPORTS_DIRECTORY"],
-        #                    "%d" % task_id, "report.%s" % report)
-        #if not os.path.isfile(path):
-        #    abort(404, message="Report format not found")
-        #f = open(path, "rb")
-
         if self.report_formats[report] == "json":
-            res = self.get_report(node.url, task.main_task_id, report)
+            res = self.get_report(url, task.main_task_id, report)
             if res and res.status_code == 200:
                 return res.json()
-
-        #if self.report_formats[report] == "xml":
-        #    return f.read()
+            else:
+                abort(404, message="Report format not found")
 
         abort(404, message="Invalid report format")
 
@@ -680,14 +708,10 @@ def output_json(data, code, headers=None):
     resp.headers.extend(headers or {})
     return resp
 
-"""
 def output_xml(data, code, headers=None):
-    log.info(data)
-    log.info(code)
     resp = make_response(data, code)
     resp.headers.extend(headers or {})
     return resp
-"""
 
 class DistRestApi(RestApi):
     def __init__(self, *args, **kwargs):
@@ -712,6 +736,8 @@ def create_app(database_connection):
     restapi.add_resource(ReportApi,
                          "/report/<int:task_id>",
                          "/report/<int:task_id>/<string:report>")
+    restapi.add_resource(IocApi,
+                         "/iocs/<int:task_id>")
     restapi.add_resource(StatusRootApi, "/status")
 
     db.init_app(app)

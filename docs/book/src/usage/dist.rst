@@ -115,6 +115,8 @@ Following are all RESTful resources. Also make sure to check out the
 +-----------------------------------+---------------------------------------------------------------+
 | ``GET`` :ref:`report_get`         + Fetch an analysis report.                                     |
 +-----------------------------------+---------------------------------------------------------------+
+| ``GET`` :ref:`iocs_get`           + Fetch an analysis iocs.                                       |
++-----------------------------------+---------------------------------------------------------------+
 
 .. _node_root_get:
 
@@ -290,6 +292,15 @@ Fetch a report for the given task in the specified format::
 
     # Get an XML report.
     $ curl http://localhost:9003/report/2/maec -H "Accept: application/xml"
+
+.. _iocs_get:
+
+GET /iocs/<id>
+-------------------------
+
+Fetch iocs for the given task::
+
+    $ curl http://localhost:9003/iocs/2
 
 .. _quick-usage:
 
