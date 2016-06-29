@@ -301,7 +301,9 @@ For practical usage the following few commands will be most interesting.
 Register a Cuckoo node - a Cuckoo REST API running on the same machine in this
 case::
 
-    $ curl http://localhost:9003/node -F name=localhost -F url=http://localhost:8090/
+    $ curl http://localhost:9003/node -F name=master -F url=http://localhost:8090/
+    * Master server must be called master, the rest of names we don't care
+
 
 Disable a Cuckoo node::
 
@@ -356,6 +358,8 @@ You may want to disable some processing modules, such as ``virustotal``.
 
 conf/reporting.conf
 ^^^^^^^^^^^^^^^^^^^
+
+You must activate ``slave`` in mongodb seccion, on all slaves only, not master.
 
 Depending on which report(s) are required for integration with your system it
 might make sense to only make those report(s) that you're going to use. Thus

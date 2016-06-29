@@ -7,7 +7,6 @@ import os
 import gzip
 import json
 
-from bson import BSON
 from bson import json_util
 
 from lib.cuckoo.common.abstracts import Report
@@ -209,7 +208,9 @@ class MongoDB(Report):
         # Store the report and retrieve its object id.
         try:
             self.db.analysis.save(report)
-            self.save_mongo_to_file(report)
+            # we only need this on slaves
+            if self.options.get("slave", False):
+                self.save_mongo_to_file(report)
         except InvalidDocument as e:
             parent_key, psize = self.debug_dict_size(report)[0]
             child_key, csize = self.debug_dict_size(report[parent_key])[0]
@@ -227,7 +228,9 @@ class MongoDB(Report):
                     del report[parent_key][child_key]
                     try:
                         self.db.analysis.save(report)
-                        self.save_mongo_to_file(report)
+                        # we only need this on slaves
+                        if self.options.get("slave", False):
+                            self.save_mongo_to_file(report)
                         error_saved = False
                     except InvalidDocument as e:
                         parent_key, psize = self.debug_dict_size(report)[0]

@@ -17,13 +17,16 @@ from datetime import datetime
 import gzip
 import StringIO
 from bson.json_util import loads
-#patch it
+# CUCKOO_ROOT not works here
 #from lib.cuckoo.common.constants import CUCKOO_ROOT
-sys.path.append("/opt/cuckoo-modified/")
+_current_dir = os.path.abspath(os.path.dirname(__file__))
+CUCKOO_ROOT = os.path.normpath(os.path.join(_current_dir, ".."))
+sys.path.append(CUCKOO_ROOT)
+
 from lib.cuckoo.common.config import Config
 from lib.cuckoo.core.database import Database, TASK_REPORTED, TASK_RUNNING
 
-# im not including ES, as it oficially not maintained
+# ElasticSearch not included, as it not officially maintained
 try:
     from pymongo import MongoClient
     from pymongo.errors import ConnectionFailure, InvalidDocument
@@ -31,8 +34,10 @@ try:
 except ImportError:
     HAVE_MONGO = False
 
-# we need original db to reserve ID in db, to store later report, from master or slave
+# we need original db to reserve ID in db, 
+# to store later report, from master or slave
 cuckoo_conf = Config("cuckoo")
+reporting_conf = Config("reporting")
 
 INTERVAL = 30
 MINIMUMQUEUE = 500
@@ -144,7 +149,15 @@ class Node(db.Model):
                 db.session.refresh(task)
                 return
 
-            # we don't need create extra id in master ;)
+            files = dict(file=open(task.path, "rb"))
+            r = requests.post(url, data=data, files=files)
+            task.node_id = self.id
+            #ToDo
+            #task.task_ids <- see how to loop it and store all ids, because by default it nto saving it, or saving as list which trigger errors
+            task.task_id = r.json()["task_ids"][0]
+
+            # we don't need create extra id in master
+            # reserving id in main db, to later store in mongo with the same id
             if self.name != "master":
                 main_task_id = main_db.add_path(
                     file_path=task.path,
@@ -158,16 +171,12 @@ class Node(db.Model):
                     enforce_timeout=task.enforce_timeout,
                     tags=task.tags
                 )
-                # reserving id in main db, to later store in mongo with the same id
                 main_db.set_status(main_task_id, TASK_RUNNING)
-
-            files = dict(file=open(task.path, "rb"))
-            r = requests.post(url, data=data, files=files)
-            task.node_id = self.id
-            #task.task_ids <- see how to loop it and store all ids, because by default it nto saving it, or saving as list which trigger errors
-            task.task_id = r.json()["task_ids"][0]
-            task.main_task_id = main_task_id
-            # ToDo reserve ID here
+            else:
+                task.main_task_id = task.task_id
+                
+                
+                
 
             # We have to refresh() the task object because otherwise we get
             # the unmodified object back in further sql queries..
@@ -283,9 +292,11 @@ class StatusThread(threading.Thread):
 
     def fetch_latest_reports(self, node, last_check):
 
+        #ToDo check if master, to not retrieve data from the same host
+
         # Fetch the latest reports.
         for task in node.fetch_tasks("reported", since=last_check):
-            q = Task.query.filter_by(node_id=node.id,task_id=task["id"], finished=0)
+            q = Task.query.filter_by(node_id=node.id, task_id=task["id"], finished=0)
             t = q.first()
 
             if t is None:
@@ -305,50 +316,55 @@ class StatusThread(threading.Thread):
             if not os.path.isdir(dirpath):
                 os.makedirs(dirpath)
 
-            # Fetch each requested report.
-            for report_format in app.config["REPORT_FORMATS"]:
-                report = node.get_report(t.task_id, report_format,
-                                         stream=True)
-                if report is None or report.status_code != 200:
-                    log.debug("Error fetching %s report for task #%d",
-                              report_format, t.task_id)
-                    continue
+            # we already have reports on master
+            # so we don't need duplicate work
+            log.info("master")
+            if node.name != "master":
 
-                path = os.path.join(dirpath, "report.%s" % report_format)
+                # Fetch each requested report.
+                for report_format in app.config["REPORT_FORMATS"]:
+                    report = node.get_report(t.task_id, report_format,
+                                             stream=True)
+                    if report is None or report.status_code != 200:
+                        log.debug("Error fetching %s report for task #%d",
+                                  report_format, t.task_id)
+                        continue
 
-                temp_f = ''
-                for chunk in report.iter_content(chunk_size=1024*1024):
-                        temp_f += chunk
-                if temp_f:
-                    # mongo will be stored to mongo db only, we don't need it as file
-                    if HAVE_MONGO and report_format == "mongo":
-                        # import in start once only?
-                        try:
-                            fileobj = StringIO.StringIO(temp_f)
-                            temp_f = gzip.GzipFile("temp", "rb", 9, fileobj).read()
-                            temp_f = loads(temp_f)
+                    path = os.path.join(dirpath, "report.%s" % report_format)
 
-                            mongo_db = ''
-                            repconf = Config("reporting")
-                            if repconf.mongodb.enabled:
-                                conn = MongoClient(repconf.mongodb.host, repconf.mongodb.port)
-                                mongo_db = conn[repconf.mongodb.db]
-                            if mongo_db:
-                                #patch info.id to have the same id as in main db if task was not executed in master
-                                if node.name != "master":
-                                    temp_f["info"]["id"] = t.main_task_id
-                                mongo_db.analysis.save(temp_f)
-                                if node.name != "master":
-                                    #check leak sessions
-                                    main_db.set_status(t.main_task_id, TASK_REPORTED)
-                        except Exception as e:
-                            log.info(e)
-                    else:
-                        f = open(path, "wb")
-                        f.write(temp_f)
-                        f.close()
+                    temp_f = ''
+                    for chunk in report.iter_content(chunk_size=1024*1024):
+                            temp_f += chunk
+                    if temp_f:
+                        # mongo will be stored to mongo db only, we don't need it as file
+                        if HAVE_MONGO and report_format == "mongo":
+                            log.info("return")
+                            try:
+                                fileobj = StringIO.StringIO(temp_f)
+                                temp_f = gzip.GzipFile("temp", "rb", 9, fileobj).read()
+                                temp_f = loads(temp_f)
 
-                    del temp_f
+                                mongo_db = ''
+                                # import in start once only?
+                                if reporting_conf.mongodb.enabled:
+                                    conn = MongoClient(reporting_conf.mongodb.host, reporting_conf.mongodb.port)
+                                    mongo_db = conn[reporting_conf.mongodb.db]
+                                if mongo_db:
+                                    #patch info.id to have the same id as in main db if task was not executed in master
+                                    if node.name != "master":
+                                        temp_f["info"]["id"] = t.main_task_id
+                                    mongo_db.analysis.save(temp_f)
+                                    if node.name != "master":
+                                        #check leak sessions
+                                        main_db.set_status(t.main_task_id, TASK_REPORTED)
+                            except Exception as e:
+                                log.info(e)
+                        else:
+                            f = open(path, "wb")
+                            f.write(temp_f)
+                            f.close()
+
+                        del temp_f
 
             t.finished = True
 
@@ -506,7 +522,7 @@ class TaskApi(TaskBaseApi):
         task = Task.query.get(task_id)
         if task is None:
             abort(404, message="Task not found")
-        # return correct id node id from master id
+
         return dict(tasks={task.id: dict(
             task_id=task.id, path=task.path, package=task.package,
             timeout=task.timeout, priority=task.priority,
@@ -533,6 +549,7 @@ class TaskApi(TaskBaseApi):
         if os.path.isfile(task.path):
             os.unlink(task.path)
 
+        # DOne no?
         # TODO Don't delete the task, but instead change its state to deleted.
         db.session.delete(task)
         db.session.commit()
@@ -558,6 +575,7 @@ class TaskRootApi(TaskBaseApi):
         tasks = q.all()
 
         ret = {}
+
         for task in tasks:
             ret[task.id] = dict(
                 id=task.id, path=task.path, package=task.package,
@@ -568,9 +586,11 @@ class TaskRootApi(TaskBaseApi):
                 clock=task.clock, enforce_timeout=task.enforce_timeout,
                 task_id=task.task_id, node_id=task.node_id,
             )
+        log.info(ret)
         return dict(tasks=ret)
 
     def post(self):
+        log.info(dir(self))
         args = self._parser.parse_args()
         f = request.files["file"]
 
@@ -581,37 +601,64 @@ class TaskRootApi(TaskBaseApi):
         task = Task(path=path, **args)
         db.session.add(task)
         db.session.commit()
-        #main_task_id must be created and returned
+
         return dict(task_id=task.id)
 
 
 class ReportApi(RestResource):
+
+    # ToDo
+    # proxy for id reports
+
     report_formats = {
         "json": "json",
     }
 
     def get(self, task_id, report="json"):
         task = Task.query.get(task_id)
+
+        log.info(dir(task.node_id))
+        # getting data of node which contains our data,
+        node = Node.query.filter_by(id = task.node_id)
+        node = node.first()
+        if not node:
+            abort(404, message="Node not found")
+
+        log.info(dir(node.url))
+
         if not task:
             abort(404, message="Task not found")
 
         if not task.finished:
             abort(404, message="Task not finished yet")
 
-        path = os.path.join(app.config["REPORTS_DIRECTORY"],
-                            "%d" % task_id, "report.%s" % report)
-        if not os.path.isfile(path):
-            abort(404, message="Report format not found")
+        # make req here to report to master server 
+        # add posibility to iocs retrieve
 
-        f = open(path, "rb")
+        #path = os.path.join(app.config["REPORTS_DIRECTORY"],
+        #                    "%d" % task_id, "report.%s" % report)
+        #if not os.path.isfile(path):
+        #    abort(404, message="Report format not found")
+        #f = open(path, "rb")
 
         if self.report_formats[report] == "json":
-            return json.load(f)
+            res = self.get_report(node.url, task.main_task_id, report)
+            if res and res.status_code == 200:
+                return res.json()
 
-        if self.report_formats[report] == "xml":
-            return f.read()
+        #if self.report_formats[report] == "xml":
+        #    return f.read()
 
         abort(404, message="Invalid report format")
+
+    def get_report(self, url, task_id, fmt, stream=False):
+        try:
+            url = os.path.join(url, "tasks", "report",
+                               "%d" % task_id, fmt)
+            return requests.get(url, stream=stream)
+        except Exception as e:
+            log.critical("Error fetching report (task #%d, node %s): %s",
+                         task_id, self.url, e)
 
 
 class StatusRootApi(RestResource):
@@ -633,18 +680,20 @@ def output_json(data, code, headers=None):
     resp.headers.extend(headers or {})
     return resp
 
-
+"""
 def output_xml(data, code, headers=None):
+    log.info(data)
+    log.info(code)
     resp = make_response(data, code)
     resp.headers.extend(headers or {})
     return resp
-
+"""
 
 class DistRestApi(RestApi):
     def __init__(self, *args, **kwargs):
         RestApi.__init__(self, *args, **kwargs)
         self.representations = {
-            "application/xml": output_xml,
+            #"application/xml": output_xml,
             "application/json": output_json,
         }
 
@@ -652,6 +701,7 @@ class DistRestApi(RestApi):
 def create_app(database_connection):
     app = Flask("Distributed Cuckoo")
     app.config["SQLALCHEMY_DATABASE_URI"] = database_connection
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
     app.config["SECRET_KEY"] = os.urandom(32)
 
     restapi = DistRestApi(app)
