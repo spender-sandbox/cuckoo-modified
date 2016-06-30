@@ -26,7 +26,7 @@ CURRENT_STATUS = STATUS_INIT
 
 ERROR_MESSAGE = ""
 ANALYZER_FOLDER = ""
-RESULTS_FOLDER = ""
+COMPLETION_KEY = ""
 
 class Agent:
     """Cuckoo agent, it runs inside guest."""
@@ -39,11 +39,12 @@ class Agent:
     def _initialize(self):
         global ERROR_MESSAGE
         global ANALYZER_FOLDER
+        global COMPLETION_KEY
 
         if not ANALYZER_FOLDER:
             random.seed(time.time())
             container = "".join(random.choice(string.ascii_lowercase) for x in range(random.randint(5, 10)))
-
+            COMPLETION_KEY = "".join(random.choice(string.ascii_lowercase) for x in range(random.randint(16, 20)))
             if self.system == "windows":
                 system_drive = os.environ["SYSTEMDRIVE"] + os.sep
                 ANALYZER_FOLDER = os.path.join(system_drive, container)
@@ -125,7 +126,7 @@ class Agent:
                         pass
 
                 config.set("analysis", key, value)
-
+            config.set("analysis", "completion_key", COMPLETION_KEY)
             config_path = os.path.join(ANALYZER_FOLDER, "analysis.conf")
 
             with open(config_path, "wb") as config_file:
@@ -142,6 +143,9 @@ class Agent:
         @return: operation status.
         """
         data = data.data
+
+        if CURRENT_STATUS != STATUS_INIT:
+            return False
 
         if not self._initialize():
             return False
@@ -166,6 +170,9 @@ class Agent:
         global ERROR_MESSAGE
         global CURRENT_STATUS
 
+        if CURRENT_STATUS != STATUS_INIT:
+            return False
+
         if not self.analyzer_path or not os.path.exists(self.analyzer_path):
             return False
 
@@ -189,6 +196,9 @@ class Agent:
         global ERROR_MESSAGE
         global CURRENT_STATUS
         global RESULTS_FOLDER
+
+        if results != COMPLETION_KEY:
+            return False
 
         if success:
             CURRENT_STATUS = STATUS_COMPLETED
