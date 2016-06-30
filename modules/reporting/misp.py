@@ -38,13 +38,12 @@ class MISP(Report):
         while iocs:
 
             ioc = iocs.pop()
-
-            if ioc.get("md5", ""):
-                self.misp.add_hashes(event, md5=ioc["md5"])
-            elif ioc.get("sha1", ""):
-                self.misp.add_hashes(event, sha1=ioc["sha1"])
-            elif ioc.get("sha256", ""):
-                self.misp.add_hashes(event, sha256=ioc["sha256"])
+            if ioc.get("md5"):
+                self.misp.add_hashes(event,
+                                 md5=ioc["md5"],
+                                 sha1=ioc["sha1"],
+                                 sha256=ioc["sha256"]
+                )
             elif ioc.get("domain", ""):
                 self.misp.add_domain(event, ioc["domain"])
             elif ioc.get("ip", ""):
@@ -58,60 +57,24 @@ class MISP(Report):
             elif ioc.get("regkey", ""):
                 self.misp.add_regkey(event, ioc["regkey"])
 
-            # additional key to extend if needed
-            # 'add_email_attachment',
-            # 'add_email_dst',
-            # 'add_email_src',
-            # 'add_email_subject',
-            # 'add_filename',
-            # 'add_hostname',
-            # 'add_internal_comment',
-            # 'add_internal_link',
-            # 'add_internal_other',
-            # 'add_internal_text',
-            # 'add_ipsrc',
-            # 'add_pattern',
-            # 'add_pipe',
-            # 'add_snort',
-            # 'add_tag',
-            # 'add_target_email',
-            # 'add_target_external',
-            # 'add_target_location',
-            # 'add_target_machine',
-            # 'add_target_org',
-            # 'add_target_user',
-            # 'add_threat_actor',
-            # 'add_traffic_pattern',
-
     def cuckoo2misp(self, results, whitelist):
 
         distribution = int(self.options.get("distribution", 0))
         threat_level_id = int(self.options.get("threat_level_id", 2))
         analysis = int(self.options.get("analysis", 2))
 
-        comment = "{} {}".format(self.options.get("title", ""), results.get('info', {}).get('id'))
-        
         iocs = deque()
+        malfamily = ""
         filtered_iocs = deque()
         threads_list = list()
 
-        if results.get("target", {}).get("file", {}).get("md5", "") and results["target"]["file"]["md5"] not in whitelist:
-            self.iocs.append(results["target"]["file"]["md5"])
-            iocs.append({"md5": results["target"]["file"]["md5"]})
-            filtered_iocs.append(results["target"]["file"]["md5"])
+        if results.get("malfamily", ""):
+            malfamily = " - {}".format(results["malfamily"])
 
-        if results.get("target", {}).get("file", {}).get("sha1", "") and results["target"]["file"]["sha1"] not in whitelist:
-            self.iocs.append(results["target"]["file"]["sha1"])
-            iocs.append({"sha1": results["target"]["file"]["sha1"]})
-            filtered_iocs.append(results["target"]["file"]["sha1"])
+        comment = "{} {}{}".format(self.options.get("title", ""), results.get('info', {}).get('id'), malfamily)
+        
 
-        if results.get("target", {}).get("file", {}).get("sha256", "") and results["target"]["file"]["sha256"] not in whitelist:                    
-            self.iocs.append(results["target"]["file"]["sha256"])
-            iocs.append({"sha256": results["target"]["file"]["sha256"]})
-            filtered_iocs.append(results["target"]["file"]["sha256"])
-
-        if results.get("target", {}).get("url", "") and results["target"]["url"] not in whitelist:                    
-            self.iocs.append(results["target"]["url"])
+        if results.get("target", {}).get("url", "") and results["target"]["url"] not in whitelist:                      
             iocs.append({"uri": results["target"]["url"]})
             filtered_iocs.append(results["target"]["url"])
 
@@ -135,15 +98,10 @@ class MISP(Report):
         if self.options.get("ids_files", False) and "suricata" in results.keys():
             for surifile in results["suricata"]["files"]:
                 if "file_info" in surifile.keys():
-                    if surifile["file_info"]["md5"] and surifile["file_info"]["md5"] not in filtered_iocs:
-                        iocs.append({"md5": surifile["file_info"]["md5"]})
-                        filtered_iocs.append(surifile["file_info"]["md5"])
-                    if surifile["file_info"]["sha1"] and surifile["file_info"]["sha1"] not in filtered_iocs:
-                        iocs.append({"sha1": surifile["file_info"]["sha1"]})
-                        filtered_iocs.append(surifile["file_info"]["sha1"])
-                    if surifile["file_info"]["sha256"] and surifile["file_info"]["sha256"] not in filtered_iocs:
-                        iocs.append({"sha256": surifile["file_info"]["sha256"]})
-                        filtered_iocs.append(surifile["file_info"]["sha256"])
+                    iocs.append({"md5": surifile["file_info"]["md5"],
+                                "sha1": surifile["file_info"]["sha1"],
+                                "sha256": surifile["file_info"]["sha256"]
+                    })
 
         if self.options.get("mutexes", False) and "behavior" in results and "summary" in results["behavior"]:
             if "mutexes" in results.get("behavior", {}).get("summary", {}):
@@ -154,12 +112,13 @@ class MISP(Report):
 
         if self.options.get("dropped", False) and "dropped" in results:
             for entry in results["dropped"]:
-                if entry["sha256"] and entry["sha256"] not in filtered_iocs:
-                    iocs.append({"sha256": entry["sha256"]})
-                    filtered_iocs.append(entry["sha256"])
-                if entry["md5"] and entry["md5"] not in filtered_iocs:
-                    iocs.append({"md5": entry["md5"]})
+                if entry["md5"] and (entry["md5"] not in filtered_iocs and entry["md5"] not in whitelist):
                     filtered_iocs.append(entry["md5"])
+                    iocs.append({"md5": entry["md5"],
+                                "sha1": entry["sha1"],
+                                "sha256": entry["sha256"]
+                    })
+                    
 
         if self.options.get("registry", False) and "behavior" in results and "summary" in results["behavior"]:
             if "read_keys" in results["behavior"].get("summary", {}):
@@ -171,6 +130,15 @@ class MISP(Report):
         if iocs:
           
             event = self.misp.new_event(distribution, threat_level_id, analysis, comment, date=datetime.now().strftime('%Y-%m-%d'), published=True)
+
+            # Add Payload delivery hash about the details of the analyzed file
+            self.misp.add_hashes(event, category='Payload delivery',
+                                        filename=results.get('target').get('file').get('name'),
+                                        md5=results.get('target').get('file').get('md5'),
+                                        sha1=results.get('target').get('file').get('sha1'),
+                                        sha256=results.get('target').get('file').get('sha256'),
+                                        ssdeep=results.get('target').get('file').get('ssdeep'),
+                                        comment='File: {} uploaded to cuckoo'.format(results.get('target').get('file').get('name')))
           
             for thread_id in xrange(int(self.threads)):
                 thread = threading.Thread(target=self.cuckoo2misp_thread, args=(iocs, event))
