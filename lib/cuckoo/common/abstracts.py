@@ -1239,8 +1239,9 @@ class Signature(object):
         @param pid: a Process PID observed in the analysis
         @return: basestring name of the process or None
         """
-        if pid and pid.isdigit():
-            pid = int(pid)
+        if pid:
+            if isinstance(pid, str) and pid.isdigit():
+                pid = int(pid)
             if self.results.get("behavior", {}).get("processes", []):
                 for proc in self.results["behavior"]["processes"]:
                     if proc["process_id"] == pid:
