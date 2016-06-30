@@ -171,6 +171,15 @@ class MISP(Report):
         if iocs:
           
             event = self.misp.new_event(distribution, threat_level_id, analysis, comment, date=datetime.now().strftime('%Y-%m-%d'), published=True)
+
+            # Add Payload delivery hash about the details of the analyzed file
+            self.misp.add_hashes(event, category='Payload delivery',
+                                        filename=results.get('target').get('file').get('name'),
+                                        md5=results.get('target').get('file').get('md5'),
+                                        sha1=results.get('target').get('file').get('sha1'),
+                                        sha256=results.get('target').get('file').get('sha256'),
+                                        ssdeep=results.get('target').get('file').get('ssdeep'),
+                                        comment='File: {} uploaded to cuckoo'.format(results.get('target').get('file').get('name')))
           
             for thread_id in xrange(int(self.threads)):
                 thread = threading.Thread(target=self.cuckoo2misp_thread, args=(iocs, event))
