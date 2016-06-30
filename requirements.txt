@@ -4,7 +4,7 @@ markupsafe
 libvirt-python 
 pymongo
 bottle
-pefile
+#pefile
 django
 chardet
 pygal
@@ -28,3 +28,4 @@ http://pefile.googlecode.com/files/pefile-1.2.10-139.tar.gz#egg=pefile
 git+https://github.com/crackinglandia/pype32.git
 git+https://github.com/jsocol/django-ratelimit
 git+https://github.com/kbandla/pydeep.git
+
