@@ -89,13 +89,31 @@ class MISP(Report):
         threat_level_id = int(self.options.get("threat_level_id", 2))
         analysis = int(self.options.get("analysis", 2))
 
-        comment = "{} {}".format(results.get('info', {}).get('id'))
-
-        event = self.misp.new_event(distribution, threat_level_id, analysis, comment, date=datetime.now().strftime('%Y-%m-%d'), published=True)
-
+        comment = "{} {}".format(self.options.get("title", ""), results.get('info', {}).get('id'))
+        
         iocs = deque()
         filtered_iocs = deque()
         threads_list = list()
+
+        if results.get("target", {}).get("file", {}).get("md5", "") and results["target"]["file"]["md5"] not in whitelist:
+            self.iocs.append(results["target"]["file"]["md5"])
+            iocs.append({"md5": results["target"]["file"]["md5"]})
+            filtered_iocs.append(results["target"]["file"]["md5"])
+
+        if results.get("target", {}).get("file", {}).get("sha1", "") and results["target"]["file"]["sha1"] not in whitelist:
+            self.iocs.append(results["target"]["file"]["sha1"])
+            iocs.append({"sha1": results["target"]["file"]["sha1"]})
+            filtered_iocs.append(results["target"]["file"]["sha1"])
+
+        if results.get("target", {}).get("file", {}).get("sha256", "") and results["target"]["file"]["sha256"] not in whitelist:                    
+            self.iocs.append(results["target"]["file"]["sha256"])
+            iocs.append({"sha256": results["target"]["file"]["sha256"]})
+            filtered_iocs.append(results["target"]["file"]["sha256"])
+
+        if results.get("target", {}).get("url", "") and results["target"]["url"] not in whitelist:                    
+            self.iocs.append(results["target"]["url"])
+            iocs.append({"uri": results["target"]["url"]})
+            filtered_iocs.append(results["target"]["url"])
 
         if self.options.get("network", False) and "network" in results.keys():
             for block in results["network"].get("hosts", []):
@@ -151,6 +169,18 @@ class MISP(Report):
                         filtered_iocs.append(regkey)
 
         if iocs:
+          
+            event = self.misp.new_event(distribution, threat_level_id, analysis, comment, date=datetime.now().strftime('%Y-%m-%d'), published=True)
+
+            # Add Payload delivery hash about the details of the analyzed file
+            self.misp.add_hashes(event, category='Payload delivery',
+                                        filename=results.get('target').get('file').get('name'),
+                                        md5=results.get('target').get('file').get('md5'),
+                                        sha1=results.get('target').get('file').get('sha1'),
+                                        sha256=results.get('target').get('file').get('sha256'),
+                                        ssdeep=results.get('target').get('file').get('ssdeep'),
+                                        comment='File: {} uploaded to cuckoo'.format(results.get('target').get('file').get('name')))
+          
             for thread_id in xrange(int(self.threads)):
                 thread = threading.Thread(target=self.cuckoo2misp_thread, args=(iocs, event))
                 thread.daemon = True
@@ -267,7 +297,7 @@ class MISP(Report):
                     full_report.write(json.dumps(self.misp_full_report))
                     full_report.close()
 
-            if self.options.get("upload_iocs", ""):
+            if self.options.get("upload_iocs", False) and results.get("malscore", 0) >= self.options.get("min_malscore", 0):
                 self.cuckoo2misp(results, whitelist)
 
         except Exception as e:

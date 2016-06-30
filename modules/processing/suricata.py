@@ -90,6 +90,29 @@ class Suricata(Processing):
         SURICATA_FILE_LOG_FULL_PATH = "%s/%s" % (self.logs_path, SURICATA_FILE_LOG)
         SURICATA_FILES_DIR_FULL_PATH = "%s/%s" % (self.logs_path, SURICATA_FILES_DIR)
 
+        separate_log_paths = [
+            ("alert_log_full_path", SURICATA_ALERT_LOG_FULL_PATH),
+            ("tls_log_full_path", SURICATA_TLS_LOG_FULL_PATH),
+            ("http_log_full_path", SURICATA_HTTP_LOG_FULL_PATH),
+            ("ssh_log_full_path", SURICATA_SSH_LOG_FULL_PATH),
+            ("dns_log_full_path", SURICATA_DNS_LOG_FULL_PATH)
+        ]
+
+        # handle reprocessing
+        all_log_paths = [x[1] for x in separate_log_paths] + \
+            [SURICATA_EVE_LOG_FULL_PATH, SURICATA_FILE_LOG_FULL_PATH]
+        for log_path in all_log_paths:
+            if os.path.exists(log_path):
+                try:
+                    os.unlink(log_path)
+                except:
+                    pass
+        if os.path.isdir(SURICATA_FILES_DIR_FULL_PATH):
+            try:
+                shutil.rmtree(SURICATA_FILES_DIR_FULL_PATH, ignore_errors=True)
+            except:
+                pass
+
         if not os.path.exists(SURICATA_CONF):
             log.warning("Unable to Run Suricata: Conf File %s Does Not Exist" % (SURICATA_CONF))
             return suricata["alerts"]
@@ -174,14 +197,7 @@ class Suricata(Processing):
             with open(SURICATA_EVE_LOG_FULL_PATH, "rb") as eve_log:
                 datalist.append(eve_log.read())
         else:
-            paths = [
-                ("alert_log_full_path", SURICATA_ALERT_LOG_FULL_PATH),
-                ("tls_log_full_path", SURICATA_TLS_LOG_FULL_PATH),
-                ("http_log_full_path", SURICATA_HTTP_LOG_FULL_PATH),
-                ("ssh_log_full_path", SURICATA_SSH_LOG_FULL_PATH),
-                ("dns_log_full_path", SURICATA_DNS_LOG_FULL_PATH)
-            ]
-            for path in paths:
+            for path in separate_log_paths:
                 if os.path.exists(path[1]):
                     suricata[path[0]] = path[1]
                     with open(path[1], "rb") as the_log:

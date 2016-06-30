@@ -356,7 +356,7 @@ class LibVirtMachinery(Machinery):
                   "been turned off {0}".format(label)
             raise CuckooMachineError(msg)
 
-        conn = self._connect()
+        conn = self._connect(label)
 
         vm_info = self.db.view_machine_by_label(label)
 
@@ -408,7 +408,7 @@ class LibVirtMachinery(Machinery):
                                      "machine {0}".format(label))
 
         # Force virtual machine shutdown.
-        conn = self._connect()
+        conn = self._connect(label)
         try:
             if not self.vms[label].isActive():
                 log.debug("Trying to stop an already stopped machine %s. "
@@ -436,7 +436,7 @@ class LibVirtMachinery(Machinery):
         """
         log.debug("Dumping memory for machine %s", label)
 
-        conn = self._connect()
+        conn = self._connect(label)
         try:
             # create the memory dump file ourselves first so it doesn't end up root/root 0600
             # it'll still be owned by root, so we can't delete it, but at least we can read it
@@ -467,7 +467,7 @@ class LibVirtMachinery(Machinery):
         # VIR_DOMAIN_CRASHED = 6
         # VIR_DOMAIN_PMSUSPENDED = 7
 
-        conn = self._connect()
+        conn = self._connect(label)
         try:
             state = self.vms[label].state(flags=0)
         except libvirt.libvirtError as e:
@@ -494,7 +494,7 @@ class LibVirtMachinery(Machinery):
             raise CuckooMachineError("Unable to get status for "
                                      "{0}".format(label))
 
-    def _connect(self):
+    def _connect(self, label=None):
         """Connects to libvirt subsystem.
         @raise CuckooMachineError: when unable to connect to libvirt.
         """
@@ -532,7 +532,7 @@ class LibVirtMachinery(Machinery):
         @param label: virtual machine name.
         @raise CuckooMachineError: if virtual machine is not found.
         """
-        conn = self._connect()
+        conn = self._connect(label)
         try:
             vm = conn.lookupByName(label)
         except libvirt.libvirtError:
@@ -580,7 +580,7 @@ class LibVirtMachinery(Machinery):
             return xml.findtext("./creationTime")
 
         snapshot = None
-        conn = self._connect()
+        conn = self._connect(label)
         try:
             vm = self.vms[label]
 
@@ -1239,8 +1239,9 @@ class Signature(object):
         @param pid: a Process PID observed in the analysis
         @return: basestring name of the process or None
         """
-        if pid and pid.isdigit():
-            pid = int(pid)
+        if pid:
+            if isinstance(pid, str) and pid.isdigit():
+                pid = int(pid)
             if self.results.get("behavior", {}).get("processes", []):
                 for proc in self.results["behavior"]["processes"]:
                     if proc["process_id"] == pid:
