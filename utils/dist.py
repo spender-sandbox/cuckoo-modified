@@ -56,13 +56,13 @@ except ImportError:
     required("requests")
 
 try:
-    from flask.ext.restful import abort, reqparse
-    from flask.ext.restful import Api as RestApi, Resource as RestResource
+    from flask_restful import abort, reqparse
+    from flask_restful import Api as RestApi, Resource as RestResource
 except ImportError:
     required("flask-restful")
 
 try:
-    from flask.ext.sqlalchemy import SQLAlchemy
+    from flask_sqlalchemy import SQLAlchemy
     db = SQLAlchemy(session_options=dict(autoflush=True))
 except ImportError:
     required("flask-sqlalchemy")
@@ -295,7 +295,7 @@ class StatusThread(threading.Thread):
 
         # Fetch the latest reports.
         for task in node.fetch_tasks("reported", since=last_check):
-            q = Task.query.filter_by(node_id=node.id, task_id=task["id"], finished=0)
+            q = Task.query.filter_by(node_id=node.id, task_id=task["id"], finished=False)
             t = q.first()
 
             if t is None:
