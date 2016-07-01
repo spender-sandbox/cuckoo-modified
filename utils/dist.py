@@ -37,7 +37,8 @@ cuckoo_conf = Config("cuckoo")
 reporting_conf = Config("reporting")
 
 INTERVAL = 30
-MINIMUMQUEUE = 500
+#MINIMUMQUEUE = 500
+MINIMUMQUEUE = 5
 RESET_LASTCHECK = 100
 
 def required(package):
@@ -169,6 +170,7 @@ class Node(db.Model):
                     tags=task.tags
                 )
                 main_db.set_status(main_task_id, TASK_RUNNING)
+                task.main_task_id = main_task_id
             else:
                 task.main_task_id = task.task_id
                 
@@ -644,6 +646,7 @@ class ReportApi(ReportingBaseApi):
 
     report_formats = {
         "json": "json",
+        "mongo": "mongo",
     }
 
     def get(self, task_id, report="json"):
@@ -656,7 +659,7 @@ class ReportApi(ReportingBaseApi):
         if not task.finished:
             abort(404, message="Task not finished yet")
 
-        if self.report_formats[report] == "json":
+        if self.report_formats[report]:
             res = self.get_report(url, task.main_task_id, report)
             if res and res.status_code == 200:
                 return res.json()
