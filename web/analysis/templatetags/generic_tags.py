@@ -29,7 +29,7 @@ def proctreetolist(tree):
                         cmdline = " ".join(splitcmdline).strip()
                     else:
                         cmdline = node["environ"]["CommandLine"]
-                else:
+                elif cmdline:
                     splitcmdline = cmdline.split()
                     argv0 = splitcmdline[0].lower()
                     if node["module_path"].lower() in argv0:
