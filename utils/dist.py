@@ -18,7 +18,8 @@ import gzip
 import StringIO
 from bson.json_util import loads
 
-sys.path.append(os.path.join(os.path.abspath(os.path.dirname(__file__)), ".."))
+CUCKOO_ROOT = os.path.join(os.path.abspath(os.path.dirname(__file__)), "..")
+sys.path.append(CUCKOO_ROOT)
 
 from lib.cuckoo.common.config import Config
 from lib.cuckoo.core.database import Database, TASK_REPORTED, TASK_RUNNING
@@ -288,8 +289,6 @@ class StatusThread(threading.Thread):
 
     def fetch_latest_reports(self, node, last_check):
 
-        #ToDo check if master, to not retrieve data from the same host
-
         # Fetch the latest reports.
         for task in node.fetch_tasks("reported", since=last_check):
             q = Task.query.filter_by(node_id=node.id, task_id=task["id"], finished=False)
@@ -306,12 +305,6 @@ class StatusThread(threading.Thread):
             if not node.last_check or completed_on > node.last_check:
                 node.last_check = completed_on
 
-            dirpath = os.path.join(app.config["REPORTS_DIRECTORY"],
-                                   "%d" % t.id)
-
-            if not os.path.isdir(dirpath):
-                os.makedirs(dirpath)
-
             # we already have reports on master
             # so we don't need duplicate work
             log.info("master")
@@ -325,8 +318,6 @@ class StatusThread(threading.Thread):
                         log.debug("Error fetching %s report for task #%d",
                                   report_format, t.task_id)
                         continue
-
-                    path = os.path.join(dirpath, "report.%s" % report_format)
 
                     temp_f = ''
                     for chunk in report.iter_content(chunk_size=1024*1024):
@@ -356,6 +347,15 @@ class StatusThread(threading.Thread):
                             except Exception as e:
                                 log.info(e)
                         else:
+                            # Save it inside of cuckoo's original structure
+                            dirpath = os.path.join(CUCKOO_ROOT, "storage", "analyses",
+                                                   "{}".format(t.main_task_id), "reports")
+
+                            if not os.path.isdir(dirpath):
+                                os.makedirs(dirpath)
+
+                            path = os.path.join(dirpath, "report.%s" % report_format)
+
                             f = open(path, "wb")
                             f.write(temp_f)
                             f.close()
@@ -533,19 +533,10 @@ class TaskApi(TaskBaseApi):
         if task is None:
             abort(404, "Task not found")
 
-        # Remove all available reports.
-        dirpath = os.path.join(app.config["REPORTS_DIRECTORY"],
-                               "%d" % task_id)
-        for report_format in app.config["REPORT_FORMATS"]:
-            path = os.path.join(dirpath, "report.%s" % report_format)
-            if os.path.isfile(path):
-                os.unlink(path)
-
         # Remove the sample related to this task.
         if os.path.isfile(task.path):
             os.unlink(task.path)
 
-        # DOne no?
         # TODO Don't delete the task, but instead change its state to deleted.
         db.session.delete(task)
         db.session.commit()
@@ -732,7 +723,6 @@ def create_app(database_connection):
 
     return app
 
-
 if __name__ == "__main__":
     p = argparse.ArgumentParser()
     p.add_argument("host", nargs="?", default="0.0.0.0", help="Host to listen on")
@@ -742,7 +732,6 @@ if __name__ == "__main__":
     p.add_argument("--samples-directory", type=str, required=True, help="Samples directory")
     p.add_argument("--uptime-logfile", type=str, help="Uptime logfile path")
     p.add_argument("--report-formats", type=str, required=True, help="Reporting formats to fetch")
-    p.add_argument("--reports-directory", type=str, required=True, help="Reports directory")
     args = p.parse_args()
 
     if args.debug:
@@ -761,9 +750,6 @@ if __name__ == "__main__":
     if not os.path.isdir(args.samples_directory):
         os.makedirs(args.samples_directory)
 
-    if not os.path.isdir(args.reports_directory):
-        os.makedirs(args.reports_directory)
-
     RUNNING, STATUSES = True, {}
     main_db = Database()
 
@@ -771,7 +757,6 @@ if __name__ == "__main__":
     app.config["SAMPLES_DIRECTORY"] = args.samples_directory
     app.config["UPTIME_LOGFILE"] = args.uptime_logfile
     app.config["REPORT_FORMATS"] = report_formats
-    app.config["REPORTS_DIRECTORY"] = args.reports_directory
 
     t = StatusThread()
     t.daemon = True
