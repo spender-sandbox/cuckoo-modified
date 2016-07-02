@@ -4,7 +4,6 @@
 
 import os
 import sys
-import time
 import socket
 import struct
 import random
@@ -878,7 +877,6 @@ class Analyzer:
         @return: operation status.
         """
         self.prepare()
-        timeout_time = time.time() + int(self.config.timeout)
 
         log.debug("Starting analyzer from: %s", os.getcwd())
         log.debug("Storing results at: %s", PATHS["root"])
@@ -1001,6 +999,7 @@ class Analyzer:
             log.info("Enabled timeout enforce, running for the full timeout.")
             pid_check = False
 
+        time_counter = 0
         kernel_analysis = self.config.get_options().get("kernel_analysis", False)
 
         if kernel_analysis != False:
@@ -1009,7 +1008,8 @@ class Analyzer:
         emptytime = None
 
         while True:
-            if time.time() > timeout_time:
+            time_counter += 1
+            if time_counter == int(self.config.timeout):
                 log.info("Analysis timeout hit, terminating analysis.")
                 break
 
@@ -1172,4 +1172,5 @@ if __name__ == "__main__":
     finally:
         # Establish connection with the agent XMLRPC server.
         server = xmlrpclib.Server("http://127.0.0.1:8000")
-        server.complete(success, error, PATHS["root"])
+        completion_key = self.config.get_options().get("completion_key", "")
+        server.complete(success, error, completion_key)
