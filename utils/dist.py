@@ -174,9 +174,6 @@ class Node(db.Model):
             else:
                 task.main_task_id = task.task_id
                 
-                
-                
-
             # We have to refresh() the task object because otherwise we get
             # the unmodified object back in further sql queries..
             # TODO Commit once, refresh() all at once. This could potentially
@@ -589,7 +586,6 @@ class TaskRootApi(TaskBaseApi):
         return dict(tasks=ret)
 
     def post(self):
-        log.info(dir(self))
         args = self._parser.parse_args()
         f = request.files["file"]
 
