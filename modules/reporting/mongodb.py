@@ -105,7 +105,6 @@ class MongoDB(Report):
         f = open(os.path.join(self.analysis_path, "reports", "report.mongo"), "wb")
         zf = zipfile.ZipFile(f, "w", zipfile.ZIP_DEFLATED)
 
-
         if not HAVE_MONGO:
             raise CuckooDependencyError("Unable to import pymongo "
                                         "(install with `pip install pymongo`)")
@@ -151,7 +150,17 @@ class MongoDB(Report):
         # issue with the oversized reports exceeding MongoDB's boundaries.
         # Also allows paging of the reports.
         if "behavior" in report and "processes" in report["behavior"]:
+            behaviour_rep = os.path.join(self.analysis_path, "reports",
+                                         "behavior.report")
+            behavior = open(behaviour_rep, "wb")
+            behavior.write(json.dumps(report["behavior"]))
+            behavior.close()
+
+            zf.write(behaviour_rep, "behavior.report")
+            os.remove(behaviour_rep)
+
             new_processes = []
+            
             for process in report["behavior"]["processes"]:
                 new_process = dict(process)
 

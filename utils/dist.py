@@ -38,7 +38,6 @@ cuckoo_conf = Config("cuckoo")
 reporting_conf = Config("reporting")
 
 INTERVAL = 30
-#MINIMUMQUEUE = 500
 MINIMUMQUEUE = 5
 RESET_LASTCHECK = 100
 
@@ -288,6 +287,54 @@ class StatusThread(threading.Thread):
         for task in q.limit(MINIMUMQUEUE).all():
             node.submit_task(task)
 
+    def do_mongo(self, mongo_report, behaviour_report, mongo_db, t, node):
+
+        if "processes" in behaviour_report:
+
+            new_processes = []
+            
+            for process in behaviour_report.get("processes", []):
+                new_process = dict(process)
+
+                chunk = []
+                chunks_ids = []
+                # Loop on each process call.
+                for index, call in enumerate(process["calls"]):
+                    # If the chunk size is 100 or if the loop is completed then
+                    # store the chunk in MongoDB.
+                    if len(chunk) == 100:
+                        to_insert = {"pid": process["process_id"],
+                                     "calls": chunk}
+                        chunk_id = mongo_db.calls.insert(to_insert)
+                        chunks_ids.append(chunk_id)
+                        # Reset the chunk.
+                        chunk = []
+
+                    # Append call to the chunk.
+                    chunk.append(call)
+
+                # Store leftovers.
+                if chunk:
+                    to_insert = {"pid": process["process_id"], "calls": chunk}
+                    chunk_id = mongo_db.calls.insert(to_insert)
+                    chunks_ids.append(chunk_id)
+
+                # Add list of chunks.
+                new_process["calls"] = chunks_ids
+                new_processes.append(new_process)
+
+            # Store the results in the report.
+            mongo_report["behavior"] = dict(behaviour_report)
+            mongo_report["behavior"]["processes"] = new_processes
+
+        #patch info.id to have the same id as in main db
+        mongo_report["info"]["id"] = t.main_task_id
+        # add url to original analysis
+        original_url = os.path.join(node.url.replace(":8090", ":8000"), "analysis", str(t.task_id))
+        mongo_report.setdefault("original_url", original_url)
+        mongo_db.analysis.save(mongo_report)
+        main_db.set_status(t.main_task_id, TASK_REPORTED)
+
     def fetch_latest_reports(self, node, last_check):
 
         finished = False
@@ -333,7 +380,6 @@ class StatusThread(threading.Thread):
                                 fileobj = StringIO.StringIO(temp_f)
                                 file = zipfile.ZipFile(fileobj, "r")
                                 for name in file.namelist():
-                                    log.info(name)
                                     if name.startswith("shots"):
                                         if not os.path.exists(os.path.join(report_path, "shots")):
                                             os.makedirs(os.path.join(report_path, "shots"))
@@ -344,18 +390,19 @@ class StatusThread(threading.Thread):
                                         except Exception as e:
                                             log.info(e)
 
-                                    elif name == "report.mongo" and reporting_conf.mongodb.enabled:
+                                if reporting_conf.mongodb.enabled:
                                         conn = MongoClient(reporting_conf.mongodb.host, reporting_conf.mongodb.port)
                                         mongo_db = conn[reporting_conf.mongodb.db]
-                                        temp = file.read(name)
-                                        temp = loads(temp)
-                                        #patch info.id to have the same id as in main db
-                                        temp["info"]["id"] = t.main_task_id
-                                        # add url to original analysis
-                                        original_url = os.path.join(node.url.replace(":8090", ":8000"), "analysis", str(t.task_id))
-                                        temp.setdefault("original_url", original_url)
-                                        mongo_db.analysis.save(temp)
-                                        main_db.set_status(t.main_task_id, TASK_REPORTED)
+                                        report = ""
+                                        behaviour = ""
+                                        if "report.mongo" in file.namelist():
+                                            report = file.read("report.mongo")
+                                            report = loads(report)
+                                        if "behavior.report" in file.namelist():
+                                            behaviour = file.read("behavior.report")
+                                            behaviour = loads(behaviour)
+
+                                        self.do_mongo(report, behaviour, mongo_db, t, node)
                                         finished = True
                                         conn.close()
                             except Exception as e:
@@ -779,4 +826,3 @@ if __name__ == "__main__":
     t.start()
     
     app.run(host=args.host, port=args.port)
-
