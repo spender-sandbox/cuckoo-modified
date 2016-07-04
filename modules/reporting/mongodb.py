@@ -2,10 +2,10 @@
 # This file is part of Cuckoo Sandbox - http://www.cuckoosandbox.org
 # See the file 'docs/LICENSE' for copying permission.
 
-import logging
 import os
-import gzip
 import json
+import zipfile
+import logging
 
 from bson import json_util
 
@@ -65,7 +65,7 @@ class MongoDB(Report):
 
         return sorted(totals.items(), key=lambda item: item[1], reverse=True)
 
-    def save_mongo_to_file(self, report):
+    def save_mongo_to_file(self, report, zf, f):
 
         """
             Save mongo data to dist to retreive from distributed cuckoo
@@ -79,8 +79,12 @@ class MongoDB(Report):
             return False
 
         try:
-            with gzip.open(os.path.join(self.analysis_path, "reports", "report.mongo"), "wb") as f:
-                f.write(report)
+            mng = open(os.path.join(self.analysis_path, "reports", "tmp_report.mongo"), "wb")
+            mng.write(report)
+            mng.close()
+
+            zf.write(os.path.join(self.analysis_path, "reports", "tmp_report.mongo"), "report.mongo")
+            os.remove(os.path.join(self.analysis_path, "reports", "tmp_report.mongo"))
 
         except Exception as e:
             log.exception(e)
@@ -97,6 +101,11 @@ class MongoDB(Report):
         """
         # We put the raise here and not at the import because it would
         # otherwise trigger even if the module is not enabled in the config.
+        
+        f = open(os.path.join(self.analysis_path, "reports", "report.mongo"), "wb")
+        zf = zipfile.ZipFile(f, "w", zipfile.ZIP_DEFLATED)
+
+
         if not HAVE_MONGO:
             raise CuckooDependencyError("Unable to import pymongo "
                                         "(install with `pip install pymongo`)")
@@ -133,6 +142,8 @@ class MongoDB(Report):
                 if screenshot.valid():
                     # Strip the extension as it's added later 
                     # in the Django view
+                    if self.options.get("slave", False):
+                        zf.write(shot_path, "shots/{}".format(shot_file))                    
                     report["shots"].append(shot_file.replace(".jpg", ""))
 
         # Store chunks of API calls in a different collection and reference
@@ -210,7 +221,7 @@ class MongoDB(Report):
             self.db.analysis.save(report)
             # we only need this on slaves
             if self.options.get("slave", False):
-                self.save_mongo_to_file(report)
+                self.save_mongo_to_file(report, zf, f)
         except InvalidDocument as e:
             parent_key, psize = self.debug_dict_size(report)[0]
             child_key, csize = self.debug_dict_size(report[parent_key])[0]
@@ -230,7 +241,7 @@ class MongoDB(Report):
                         self.db.analysis.save(report)
                         # we only need this on slaves
                         if self.options.get("slave", False):
-                            self.save_mongo_to_file(report)
+                            self.save_mongo_to_file(report, zf, f)
                         error_saved = False
                     except InvalidDocument as e:
                         parent_key, psize = self.debug_dict_size(report)[0]
@@ -239,4 +250,7 @@ class MongoDB(Report):
                         log.error("Largest parent key: %s (%d MB)" % (parent_key, int(psize) / 1048576))
                         log.error("Largest child key: %s (%d MB)" % (child_key, int(csize) / 1048576))
 
+        zf.close()
+        f.close()
         self.conn.close()
+        

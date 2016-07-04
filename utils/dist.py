@@ -14,7 +14,7 @@ import threading
 import time
 from datetime import datetime
 
-import gzip
+import zipfile
 import StringIO
 from bson.json_util import loads
 
@@ -152,7 +152,9 @@ class Node(db.Model):
             r = requests.post(url, data=data, files=files)
             task.node_id = self.id
 
-            #task.task_ids <- see how to loop it and store all ids, because by default it nto saving it, or saving as list which trigger errors
+            # task.task_ids <- see how to loop it and store all ids, 
+            # because by default it nto saving it, 
+            # or saving as list which trigger errors
             task.task_id = r.json()["task_ids"][0]
 
             # we don't need create extra id in master
@@ -283,11 +285,12 @@ class StatusThread(threading.Thread):
         q = q.filter_by(priority=1)
 
         # TODO Select only the tasks with appropriate tags selection.
-
         for task in q.limit(MINIMUMQUEUE).all():
             node.submit_task(task)
 
     def fetch_latest_reports(self, node, last_check):
+
+        finished = False
 
         # Fetch the latest reports.
         for task in node.fetch_tasks("reported", since=last_check):
@@ -295,8 +298,6 @@ class StatusThread(threading.Thread):
             t = q.first()
 
             if t is None:
-                #log.debug("Node %s task #%d has not been submitted by us!",
-                #          node.name, task["id"])
                 continue
 
             # Update the last_check value of the Node for the next iteration.
@@ -307,7 +308,6 @@ class StatusThread(threading.Thread):
 
             # we already have reports on master
             # so we don't need duplicate work
-            log.info("master")
             if node.name != "master":
 
                 # Fetch each requested report.
@@ -322,28 +322,42 @@ class StatusThread(threading.Thread):
                     temp_f = ''
                     for chunk in report.iter_content(chunk_size=1024*1024):
                             temp_f += chunk
+
+                    report_path = os.path.join(CUCKOO_ROOT, "storage", "analyses", "{}".format(t.main_task_id))
+                    if not os.path.isdir(report_path):
+                        os.makedirs(report_path)
                     if temp_f:
-                        # mongo will be stored to mongo db only, we don't need it as file
+                        # will be stored to mongo db only, we don't need it as file
                         if HAVE_MONGO and report_format == "mongo":
-                            log.info("return")
                             try:
                                 fileobj = StringIO.StringIO(temp_f)
-                                temp_f = gzip.GzipFile("temp", "rb", 9, fileobj).read()
-                                temp_f = loads(temp_f)
+                                file = zipfile.ZipFile(fileobj, "r")
+                                for name in file.namelist():
+                                    log.info(name)
+                                    if name.startswith("shots"):
+                                        if not os.path.exists(os.path.join(report_path, "shots")):
+                                            os.makedirs(os.path.join(report_path, "shots"))
+                                        try:
+                                            screen = open(os.path.join(report_path, name), "wb")
+                                            screen.write(file.read(name))
+                                            screen.close()
+                                        except Exception as e:
+                                            log.info(e)
 
-                                mongo_db = ''
-                                # import in start once only?
-                                if reporting_conf.mongodb.enabled:
-                                    conn = MongoClient(reporting_conf.mongodb.host, reporting_conf.mongodb.port)
-                                    mongo_db = conn[reporting_conf.mongodb.db]
-                                if mongo_db:
-                                    #patch info.id to have the same id as in main db if task was not executed in master
-                                    if node.name != "master":
-                                        temp_f["info"]["id"] = t.main_task_id
-                                    mongo_db.analysis.save(temp_f)
-                                    if node.name != "master":
-                                        #check leak sessions
+                                    elif name == "report.mongo" and reporting_conf.mongodb.enabled:
+                                        conn = MongoClient(reporting_conf.mongodb.host, reporting_conf.mongodb.port)
+                                        mongo_db = conn[reporting_conf.mongodb.db]
+                                        temp = file.read(name)
+                                        temp = loads(temp)
+                                        #patch info.id to have the same id as in main db
+                                        temp["info"]["id"] = t.main_task_id
+                                        # add url to original analysis
+                                        original_url = os.path.join(node.url.replace(":8090", ":8000"), "analysis", str(t.task_id))
+                                        temp.setdefault("original_url", original_url)
+                                        mongo_db.analysis.save(temp)
                                         main_db.set_status(t.main_task_id, TASK_REPORTED)
+                                        finished = True
+                                        conn.close()
                             except Exception as e:
                                 log.info(e)
                         else:
@@ -359,18 +373,20 @@ class StatusThread(threading.Thread):
                             f = open(path, "wb")
                             f.write(temp_f)
                             f.close()
+                            finished = True
 
                         del temp_f
 
-            t.finished = True
+            if finished:
+                t.finished = True
+                db.session.commit()
+                db.session.refresh(t)
 
-            # Delete the task and all its associated files.
-            # (It will still remain in the nodes' database, though.)
-            #node.delete_task(t.task_id)
+                # Delete the task and all its associated files.
+                # (It will still remain in the nodes' database, though.)
+                #node.delete_task(t.task_id)
 
-            db.session.commit()
-            db.session.refresh(t)
-
+ 
     def run(self):
         global main_db
         global STATUSES
@@ -763,3 +779,4 @@ if __name__ == "__main__":
     t.start()
     
     app.run(host=args.host, port=args.port)
+
