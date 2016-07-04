@@ -140,9 +140,9 @@ class MongoDB(Report):
                 screenshot = File(shot_path)
                 if screenshot.valid():
                     # Strip the extension as it's added later 
-                    # in the Django view
+                    # in the Django view  
                     if self.options.get("slave", False):
-                        zf.write(shot_path, "shots/{}".format(shot_file))                    
+                        zf.write(shot_path, "shots/{}".format(shot_file))                  
                     report["shots"].append(shot_file.replace(".jpg", ""))
 
         # Store chunks of API calls in a different collection and reference
@@ -258,6 +258,20 @@ class MongoDB(Report):
                         log.error(str(e))
                         log.error("Largest parent key: %s (%d MB)" % (parent_key, int(psize) / 1048576))
                         log.error("Largest child key: %s (%d MB)" % (child_key, int(csize) / 1048576))
+
+        if self.options.get("slave", False):
+            # Get all
+            """
+            for dirname, subdirs, files in os.walk(self.analysis_path):
+                if os.path.basename(dirname):
+                    for filename in files:
+                        zf.write(os.path.join(dirname, filename), filename)
+            for filename in files:
+                zf.write(os.path.join(dirname, filename), os.path.join(os.path.basename(dirname), filename))
+            """
+            json_path = os.path.join(self.analysis_path, "reports", "report.json")
+            if os.path.exists(json_path):
+                zf.write(json_path, os.path.join("reports", "report.json"))
 
         zf.close()
         f.close()

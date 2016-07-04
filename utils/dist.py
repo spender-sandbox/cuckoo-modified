@@ -380,16 +380,16 @@ class StatusThread(threading.Thread):
                                 fileobj = StringIO.StringIO(temp_f)
                                 file = zipfile.ZipFile(fileobj, "r")
                                 for name in file.namelist():
-                                    if name.startswith("shots"):
-                                        if not os.path.exists(os.path.join(report_path, "shots")):
-                                            os.makedirs(os.path.join(report_path, "shots"))
+                                    if name.startswith("shots") or name == "reports/report.json":
+                                        correct_dir = name.split(os.sep)[0]
+                                        if not os.path.exists(os.path.join(report_path, correct_dir)):
+                                            os.makedirs(os.path.join(report_path, correct_dir))
                                         try:
                                             screen = open(os.path.join(report_path, name), "wb")
                                             screen.write(file.read(name))
                                             screen.close()
                                         except Exception as e:
                                             log.info(e)
-
                                 if reporting_conf.mongodb.enabled:
                                         conn = MongoClient(reporting_conf.mongodb.host, reporting_conf.mongodb.port)
                                         mongo_db = conn[reporting_conf.mongodb.db]
