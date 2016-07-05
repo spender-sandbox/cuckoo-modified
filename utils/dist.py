@@ -22,7 +22,6 @@ CUCKOO_ROOT = os.path.join(os.path.abspath(os.path.dirname(__file__)), "..")
 sys.path.append(CUCKOO_ROOT)
 
 from lib.cuckoo.common.config import Config
-from lib.cuckoo.common.utils import store_temp_file
 from lib.cuckoo.core.database import Database, TASK_COMPLETED, TASK_REPORTED, TASK_RUNNING
 
 # ElasticSearch not included, as it not officially maintained
@@ -648,7 +647,9 @@ class TaskRootApi(TaskBaseApi):
         args = self._parser.parse_args()
         f = request.files["file"]
 
-        path = store_temp_file(f.read(), f.filename, path=app.config["SAMPLES_DIRECTORY"])
+        fd, path = tempfile.mkstemp(dir=app.config["SAMPLES_DIRECTORY"])
+        f.save(path)
+        os.close(fd)
 
         task = Task(path=path, **args)
         db.session.add(task)
