@@ -1204,8 +1204,7 @@ def tasks_report(request, task_id, report_format="json"):
         "htmlsummary": "summary-report.html",
         "pdf": "report.pdf",
         "maec": "report.maec-4.1.xml",
-        "metadata": "report.metadata.xml",
-        "mongo": "report.mongo"
+        "metadata": "report.metadata.xml"
     }
 
     if report_format.lower() in formats:

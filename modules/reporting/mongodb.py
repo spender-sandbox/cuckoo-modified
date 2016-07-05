@@ -8,7 +8,7 @@ import zipfile
 import logging
 
 from bson import json_util
-
+import StringIO
 from lib.cuckoo.common.abstracts import Report
 from lib.cuckoo.common.exceptions import CuckooDependencyError
 from lib.cuckoo.common.exceptions import CuckooReportError
@@ -76,24 +76,19 @@ class MongoDB(Report):
             report = json.dumps(report, indent=4, default=json_util.default)
         except Exception as e:
             log.exception(e)
-            return False
-
+            return zf, f
+        
         try:
-            mng = open(os.path.join(self.analysis_path, "reports", "tmp_report.mongo"), "wb")
-            mng.write(report)
-            mng.close()
-
-            zf.write(os.path.join(self.analysis_path, "reports", "tmp_report.mongo"), "report.mongo")
-            os.remove(os.path.join(self.analysis_path, "reports", "tmp_report.mongo"))
+            behavior = StringIO.StringIO(report)
+            zf.writestr("report.mongo", behavior.getvalue())
 
         except Exception as e:
             log.exception(e)
-            return False
+            return zf, f
 
-        return True
+        return zf, f
             
-                
-
+            
     def run(self, results):
         """Writes report.
         @param results: analysis results dictionary.
@@ -102,7 +97,7 @@ class MongoDB(Report):
         # We put the raise here and not at the import because it would
         # otherwise trigger even if the module is not enabled in the config.
         
-        f = open(os.path.join(self.analysis_path, "reports", "report.mongo"), "wb")
+        f = open(os.path.join(self.analysis_path, "reports", "report.distributed"), "wb")
         zf = zipfile.ZipFile(f, "w", zipfile.ZIP_DEFLATED)
 
         if not HAVE_MONGO:
@@ -142,7 +137,8 @@ class MongoDB(Report):
                     # Strip the extension as it's added later 
                     # in the Django view  
                     if self.options.get("slave", False):
-                        zf.write(shot_path, "shots/{}".format(shot_file))                  
+                        zf.write(shot_path, "shots/{}".format(shot_file)) 
+
                     report["shots"].append(shot_file.replace(".jpg", ""))
 
         # Store chunks of API calls in a different collection and reference
@@ -150,14 +146,10 @@ class MongoDB(Report):
         # issue with the oversized reports exceeding MongoDB's boundaries.
         # Also allows paging of the reports.
         if "behavior" in report and "processes" in report["behavior"]:
-            behaviour_rep = os.path.join(self.analysis_path, "reports",
-                                         "behavior.report")
-            behavior = open(behaviour_rep, "wb")
-            behavior.write(json.dumps(report["behavior"]))
-            behavior.close()
+            #behaviour_rep = os.path.join(self.analysis_path, "reports", "behavior.report")
 
-            zf.write(behaviour_rep, "behavior.report")
-            os.remove(behaviour_rep)
+            behavior = StringIO.StringIO(json.dumps(report["behavior"]))
+            zf.writestr("behavior.report", behavior.getvalue())
 
             new_processes = []
             
@@ -230,7 +222,7 @@ class MongoDB(Report):
             self.db.analysis.save(report)
             # we only need this on slaves
             if self.options.get("slave", False):
-                self.save_mongo_to_file(report, zf, f)
+                zf, f = self.save_mongo_to_file(report, zf, f)
         except InvalidDocument as e:
             parent_key, psize = self.debug_dict_size(report)[0]
             child_key, csize = self.debug_dict_size(report[parent_key])[0]
@@ -250,7 +242,7 @@ class MongoDB(Report):
                         self.db.analysis.save(report)
                         # we only need this on slaves
                         if self.options.get("slave", False):
-                            self.save_mongo_to_file(report, zf, f)
+                            zf, f = self.save_mongo_to_file(report, zf, f)
                         error_saved = False
                     except InvalidDocument as e:
                         parent_key, psize = self.debug_dict_size(report)[0]

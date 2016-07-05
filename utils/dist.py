@@ -331,7 +331,8 @@ class StatusThread(threading.Thread):
         #patch info.id to have the same id as in main db
         mongo_report["info"]["id"] = t.main_task_id
         # add url to original analysis
-        original_url = os.path.join(node.url.replace(":8090", ":8000"), "analysis", str(t.task_id))
+        original_url = os.path.join(node.url.replace(str(reporting_conf.distributed.slave_api_port), str(reporting_conf.distributed.master_webgui_port)),
+                                    "analysis", str(t.task_id))
         mongo_report.setdefault("original_url", original_url)
         mongo_db.analysis.save(mongo_report)
 
@@ -363,69 +364,57 @@ class StatusThread(threading.Thread):
             if node.name != "master":
 
                 # Fetch each requested report.
-                for report_format in app.config["REPORT_FORMATS"]:
-                    report = node.get_report(t.task_id, report_format,
+                report = node.get_report(t.task_id, "distributed",
                                              stream=True)
-                    if report is None or report.status_code != 200:
-                        log.debug("Error fetching %s report for task #%d",
-                                  report_format, t.task_id)
-                        continue
+                if report is None or report.status_code != 200:
+                    log.debug("Error fetching %s report for task #%d",
+                                "distributed", t.task_id)
+                    continue
 
-                    temp_f = ''
-                    for chunk in report.iter_content(chunk_size=1024*1024):
-                            temp_f += chunk
+                temp_f = ''
+                for chunk in report.iter_content(chunk_size=1024*1024):
+                    temp_f += chunk
 
-                    report_path = os.path.join(CUCKOO_ROOT, "storage", "analyses", "{}".format(t.main_task_id))
-                    if not os.path.isdir(report_path):
-                        os.makedirs(report_path)
-                    if temp_f:
-                        # will be stored to mongo db only, we don't need it as file
-                        if HAVE_MONGO and report_format == "mongo":
-                            try:
-                                fileobj = StringIO.StringIO(temp_f)
-                                file = zipfile.ZipFile(fileobj, "r")
-                                for name in file.namelist():
-                                    if name.startswith("shots") or name == "reports/report.json":
-                                        correct_dir = name.split(os.sep)[0]
-                                        if not os.path.exists(os.path.join(report_path, correct_dir)):
-                                            os.makedirs(os.path.join(report_path, correct_dir))
-                                        try:
-                                            screen = open(os.path.join(report_path, name), "wb")
-                                            screen.write(file.read(name))
-                                            screen.close()
-                                        except Exception as e:
-                                            log.info(e)
-                                if reporting_conf.mongodb.enabled:
-                                        conn = MongoClient(reporting_conf.mongodb.host, reporting_conf.mongodb.port)
-                                        mongo_db = conn[reporting_conf.mongodb.db]
-                                        report = ""
-                                        behaviour = ""
-                                        if "report.mongo" in file.namelist():
-                                            report = file.read("report.mongo")
-                                            report = loads(report)
-                                        if "behavior.report" in file.namelist():
-                                            behaviour = file.read("behavior.report")
-                                            behaviour = loads(behaviour)
+                report_path = os.path.join(CUCKOO_ROOT, "storage", "analyses", "{}".format(t.main_task_id))
+                if not os.path.isdir(report_path):
+                    os.makedirs(report_path)
 
-                                        self.do_mongo(report, behaviour, mongo_db, t, node)
-                                        finished = True
-                                        conn.close()
-                            except Exception as e:
-                                log.info(e)
-                        else:
-                            # Save it inside of cuckoo's original structure
-                            dirpath = os.path.join(CUCKOO_ROOT, "storage", "analyses",
-                                                   "{}".format(t.main_task_id), "reports")
+                if temp_f:
+                    # will be stored to mongo db only
+                    # we don't need it as file
+                    if HAVE_MONGO:
+                        if True:#try:
+                            fileobj = StringIO.StringIO(temp_f)
+                            file = zipfile.ZipFile(fileobj, "r")
+                            for name in file.namelist():
+                                if name.startswith("shots") or name == "reports/report.json":
+                                    correct_dir = name.split(os.sep)[0]
+                                    if not os.path.exists(os.path.join(report_path, correct_dir)):
+                                        os.makedirs(os.path.join(report_path, correct_dir))
+                                    try:
+                                        unziped_file = open(os.path.join(report_path, name), "wb")
+                                        unziped_file.write(file.read(name))
+                                        unziped_file.close()
+                                    except Exception as e:
+                                        log.info(e)
 
-                            if not os.path.isdir(dirpath):
-                                os.makedirs(dirpath)
+                            if reporting_conf.mongodb.enabled:
+                                    conn = MongoClient(reporting_conf.mongodb.host, reporting_conf.mongodb.port)
+                                    mongo_db = conn[reporting_conf.mongodb.db]
+                                    report = ""
+                                    behaviour = ""
+                                    if "report.mongo" in file.namelist():
+                                        report = file.read("report.mongo")
+                                        report = loads(report)
+                                    if "behavior.report" in file.namelist():
+                                        behaviour = file.read("behavior.report")
+                                        behaviour = loads(behaviour)
+                                    self.do_mongo(report, behaviour, mongo_db, t, node)
+                                    finished = True
+                                    conn.close()
 
-                            path = os.path.join(dirpath, "report.%s" % report_format)
-
-                            f = open(path, "wb")
-                            f.write(temp_f)
-                            f.close()
-                            finished = True
+                        #except Exception as e:
+                        #    log.info(e)
 
                         del temp_f
 
@@ -436,7 +425,8 @@ class StatusThread(threading.Thread):
 
                 # Delete the task and all its associated files.
                 # (It will still remain in the nodes' database, though.)
-                #node.delete_task(t.task_id)
+                if reporting_conf.distributed.remove_task_on_slave:
+                    node.delete_task(t.task_id)
 
  
     def run(self):
@@ -698,8 +688,7 @@ class IocApi(ReportingBaseApi):
 class ReportApi(ReportingBaseApi):
 
     report_formats = {
-        "json": "json",
-        "mongo": "mongo",
+        "distributed": "distributed",
     }
 
     def get(self, task_id, report="json"):
@@ -797,7 +786,6 @@ if __name__ == "__main__":
     p.add_argument("--db", type=str, default="sqlite:///dist.db", help="Database connection string")
     p.add_argument("--samples-directory", type=str, required=True, help="Samples directory")
     p.add_argument("--uptime-logfile", type=str, help="Uptime logfile path")
-    p.add_argument("--report-formats", type=str, required=True, help="Reporting formats to fetch")
     args = p.parse_args()
 
     if args.debug:
@@ -809,10 +797,6 @@ if __name__ == "__main__":
     logging.getLogger("urllib3").setLevel(logging.WARNING)
     log = logging.getLogger("cuckoo.distributed")
 
-    report_formats = []
-    for report_format in args.report_formats.split(","):
-        report_formats.append(report_format.strip())
-
     if not os.path.isdir(args.samples_directory):
         os.makedirs(args.samples_directory)
 
@@ -822,10 +806,10 @@ if __name__ == "__main__":
     app = create_app(database_connection=args.db)
     app.config["SAMPLES_DIRECTORY"] = args.samples_directory
     app.config["UPTIME_LOGFILE"] = args.uptime_logfile
-    app.config["REPORT_FORMATS"] = report_formats
 
     t = StatusThread()
     t.daemon = True
     t.start()
     
     app.run(host=args.host, port=args.port)
+
