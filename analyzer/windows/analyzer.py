@@ -872,6 +872,9 @@ class Analyzer:
         # Hell yeah.
         log.info("Analysis completed.")
 
+    def get_completion_key(self):
+        return self.config.get_options().get("completion_key", "")
+
     def run(self):
         """Run analysis.
         @return: operation status.
@@ -1141,13 +1144,13 @@ class Analyzer:
 if __name__ == "__main__":
     success = False
     error = ""
-
+    completion_key = ""
     try:
         # Initialize the main analyzer class.
         analyzer = Analyzer()
-
         # Run it and wait for the response.
         success = analyzer.run()
+        completion_key = analyzer.get_completion_key()
 
     # This is not likely to happen.
     except KeyboardInterrupt:
@@ -1172,5 +1175,4 @@ if __name__ == "__main__":
     finally:
         # Establish connection with the agent XMLRPC server.
         server = xmlrpclib.Server("http://127.0.0.1:8000")
-        completion_key = self.config.get_options().get("completion_key", "")
         server.complete(success, error, completion_key)
