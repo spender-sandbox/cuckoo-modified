@@ -1036,14 +1036,14 @@ def perform_search(term, value):
         "imphash" : "static.pe.imphash",
         "surihttp" : "suricata.http",
         "suritls" : "suricata.tls",
-        "surisid" : "suricata.alerts.signature_id",
+        "surisid" : "suricata.alerts.sid",
         "surialert" : "suricata.alerts.signature",
         "surimsg" : "suricata.alerts.signature",
-        "suriurl" : "suricata.http.url",
-        "suriua" : "suricata.http.http_user_agent",
-        "surireferer" : "suricata.http.http_refer",
+        "suriurl" : "suricata.http.uri",
+        "suriua" : "suricata.http.ua",
+        "surireferer" : "suricata.http.referrer",
         "suritlssubject" : "suricata.tls.subject",
-        "suritlsissuerdn" : "suricata.tls.issuerdn",
+        "suritlsissuerdn" : "suricata.tls.issuer",
         "suritlsfingerprint" : "suricata.tls.fingerprint",
         "clamav" : "target.file.clamav",
         "yaraname" : "target.file.yara.name",
@@ -1062,6 +1062,11 @@ def perform_search(term, value):
     }
 
     query_val =  { "$regex" : value, "$options" : "-i"}
+    if term == "surisid":
+        try:
+            query_val = int(value)
+        except:
+            pass
     if not term:
         value = value.lower()
         query_val = value
