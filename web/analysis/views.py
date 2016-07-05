@@ -1062,6 +1062,11 @@ def perform_search(term, value):
     }
 
     query_val =  { "$regex" : value, "$options" : "-i"}
+    if term == "surisid":
+        try:
+            query_val = int(value)
+        except:
+            pass
     if not term:
         value = value.lower()
         query_val = value
