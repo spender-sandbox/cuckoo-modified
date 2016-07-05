@@ -22,7 +22,7 @@ CUCKOO_ROOT = os.path.join(os.path.abspath(os.path.dirname(__file__)), "..")
 sys.path.append(CUCKOO_ROOT)
 
 from lib.cuckoo.common.config import Config
-from lib.cuckoo.core.database import Database, TASK_REPORTED, TASK_RUNNING
+from lib.cuckoo.core.database import Database, TASK_COMPLETED, TASK_REPORTED, TASK_RUNNING
 
 # ElasticSearch not included, as it not officially maintained
 try:
@@ -333,6 +333,10 @@ class StatusThread(threading.Thread):
         original_url = os.path.join(node.url.replace(":8090", ":8000"), "analysis", str(t.task_id))
         mongo_report.setdefault("original_url", original_url)
         mongo_db.analysis.save(mongo_report)
+
+        # set complated_on time
+        main_db.set_status(t.main_task_id, TASK_COMPLETED)
+        # set reported time
         main_db.set_status(t.main_task_id, TASK_REPORTED)
 
     def fetch_latest_reports(self, node, last_check):
