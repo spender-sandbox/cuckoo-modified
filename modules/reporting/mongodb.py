@@ -146,10 +146,10 @@ class MongoDB(Report):
         # issue with the oversized reports exceeding MongoDB's boundaries.
         # Also allows paging of the reports.
         if "behavior" in report and "processes" in report["behavior"]:
-            #behaviour_rep = os.path.join(self.analysis_path, "reports", "behavior.report")
 
-            behavior = StringIO.StringIO(json.dumps(report["behavior"]))
-            zf.writestr("behavior.report", behavior.getvalue())
+            if self.options.get("slave", False):
+                behavior = StringIO.StringIO(json.dumps(report["behavior"]))
+                zf.writestr("behavior.report", behavior.getvalue())
 
             new_processes = []
             
