@@ -370,7 +370,6 @@ class PipeHandler(Thread):
                         si.wShowWindow = 0
                         log.info("Stopping WMI Service")
                         subprocess.call(['net', 'stop', 'winmgmt', '/y'], startupinfo=si)
-                        dummyvar = p.communicate(input='Y\n')
                         log.info("Stopped WMI Service")
                         subprocess.call("sc config winmgmt type= own", startupinfo=si)
 
