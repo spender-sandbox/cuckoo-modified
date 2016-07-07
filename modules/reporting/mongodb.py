@@ -223,6 +223,8 @@ class MongoDB(Report):
             # we only need this on slaves
             if self.options.get("slave", False):
                 zf, f = self.save_mongo_to_file(report, zf, f)
+            if self.options.get("remove_on_slave", False):
+                self.db.analysis.remove({"info.id": report["info"]["id"]})
         except InvalidDocument as e:
             parent_key, psize = self.debug_dict_size(report)[0]
             child_key, csize = self.debug_dict_size(report[parent_key])[0]
@@ -244,6 +246,8 @@ class MongoDB(Report):
                         if self.options.get("slave", False):
                             zf, f = self.save_mongo_to_file(report, zf, f)
                         error_saved = False
+                        if self.options.get("remove_on_slave", False):
+                            self.db.analysis.remove({"info.id": report["info"]["id"]})
                     except InvalidDocument as e:
                         parent_key, psize = self.debug_dict_size(report)[0]
                         child_key, csize = self.debug_dict_size(report[parent_key])[0]
