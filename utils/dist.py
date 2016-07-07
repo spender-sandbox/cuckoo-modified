@@ -23,7 +23,7 @@ sys.path.append(CUCKOO_ROOT)
 
 from lib.cuckoo.common.config import Config
 from lib.cuckoo.common.utils import store_temp_file
-from lib.cuckoo.core.database import Database, TASK_COMPLETED, TASK_REPORTED, TASK_RUNNING
+from lib.cuckoo.core.database import Database, TASK_COMPLETED, TASK_REPORTED, TASK_RUNNING, TASK_PENDING
 
 # ElasticSearch not included, as it not officially maintained
 try:
@@ -38,7 +38,7 @@ except ImportError:
 cuckoo_conf = Config("cuckoo")
 reporting_conf = Config("reporting")
 
-INTERVAL = 30
+INTERVAL = 10
 MINIMUMQUEUE = 5
 RESET_LASTCHECK = 100
 
@@ -61,6 +61,11 @@ try:
     from flask_restful import Api as RestApi, Resource as RestResource
 except ImportError:
     required("flask-restful")
+
+try:
+    from sqlalchemy import DateTime
+except ImportError:
+    required("sqlalchemy")
 
 try:
     from flask_sqlalchemy import SQLAlchemy
@@ -157,9 +162,11 @@ class Node(db.Model):
             # or saving as list which trigger errors
             task.task_id = r.json()["task_ids"][0]
 
+            if task.main_task_id:
+                main_db.set_status(task.main_task_id, TASK_RUNNING)
             # we don't need create extra id in master
             # reserving id in main db, to later store in mongo with the same id
-            if self.name != "master":
+            elif self.name != "master":
                 main_task_id = main_db.add_path(
                     file_path=task.path,
                     package=task.package,
@@ -244,7 +251,9 @@ class Task(db.Model):
     tags = db.Column(db.Text)
     custom = db.Column(db.Text)
     memory = db.Column(db.Text)
-    clock = db.Column(db.Integer)
+    clock = db.Column(DateTime(timezone=False),
+                   default=datetime.now(),
+                   nullable=False)
     enforce_timeout = db.Column(db.Text)
 
     # Cuckoo node and Task ID this has been submitted to.
@@ -254,7 +263,7 @@ class Task(db.Model):
     main_task_id = db.Column(db.Integer)   
   
     def __init__(self, path, package, timeout, priority, options, machine,
-                 platform, tags, custom, memory, clock, enforce_timeout):
+                 platform, tags, custom, memory, clock, enforce_timeout, main_task_id=None):
         self.path = path
         self.package = package
         self.timeout = timeout
@@ -269,20 +278,31 @@ class Task(db.Model):
         self.enforce_timeout = enforce_timeout
         self.node_id = None
         self.task_id = None
+        self.main_task_id = main_task_id
         self.finished = False
 
 
 class StatusThread(threading.Thread):
     def submit_tasks(self, node):
-        # Only get nodes that have not been pushed yet.
+        # Get tasks from main_db submitted through web interface
+        for t in main_db.list_tasks(status=TASK_PENDING):
+            if not Task.query.filter_by(main_task_id=t.id).all():
+                # Convert array of tags into comma separated list
+                tags = ','.join([tag.name for tag in t.tags])
+                args = dict( package=t.package, timeout=t.timeout, priority=t.priority, 
+                             options=t.options, machine=t.machine, platform=t.platform,
+                             tags=tags, custom=t.custom, memory=t.memory, clock=t.clock,
+                             enforce_timeout=t.enforce_timeout, main_task_id=t.id )
+                task = Task(path=t.target, **args)
+                db.session.add(task)
+
+        db.session.commit()
+
+        # Only get tasks that have not been pushed yet.
         q = Task.query.filter_by(node_id=None, finished=False)
 
-        # Order by task ID.
-        q = q.order_by(Task.id)
-
-        # Only handle priority one cases here. TODO Other
-        # priorities are handled right away upon submission.
-        q = q.filter_by(priority=1)
+        # Order by task priority and task id.
+        q = q.order_by(-Task.priority, -Task.id)
 
         # TODO Select only the tasks with appropriate tags selection.
         for task in q.limit(MINIMUMQUEUE).all():
