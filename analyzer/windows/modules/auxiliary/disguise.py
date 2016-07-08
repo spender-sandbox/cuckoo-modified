@@ -94,7 +94,7 @@ class Disguise(Auxiliary):
                             baseId = "T01D1C" + rString
                         else:
                             baseId = "T01D1D" + rString
-                        setVal = "[F00000000]{0}[O00000000]*{1}{2}.{3}".format(
+                        setVal = "[F00000000][{0}][O00000000]*{1}{2}.{3}".format(
                             baseId, basePaths[randint(0, len(basePaths)-1)],
                             random_string(minimum=3, maximum=15,
                                 charset="abcdefghijkLMNOPQURSTUVwxyz_0369"),
