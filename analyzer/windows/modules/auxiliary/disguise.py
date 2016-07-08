@@ -48,22 +48,25 @@ class Disguise(Auxiliary):
             "Excel": ["xls", "xlsx", "csv"],
             "PowerPoint": ["ppt", "pptx"],
         }
+        try:
+            officeKey = OpenKey(HKEY_CURRENT_USER, baseOfficeKeyPath, 0, KEY_READ)
+            for currentKey in xrange(0, QueryInfoKey(officeKey)[0]):
+                isVersion = True
+                officeVersion = EnumKey(officeKey, currentKey)
+                if "." in officeVersion:
+                    for intCheck in officeVersion.split("."):
+                        if not intCheck.isdigit():
+                            isVersion = False
+                            break
 
-        officeKey = OpenKey(HKEY_CURRENT_USER, baseOfficeKeyPath, 0, KEY_READ)
-        for currentKey in xrange(0, QueryInfoKey(officeKey)[0]):
-            isVersion = True
-            officeVersion = EnumKey(officeKey, currentKey)
-            if "." in officeVersion:
-                for intCheck in officeVersion.split("."):
-                    if not intCheck.isdigit():
-                        isVersion = False
-                        break
+                    if isVersion:
+                        installedVersions.append(officeVersion)
 
-                if isVersion:
-                    installedVersions.append(officeVersion)
-
-        CloseKey(officeKey)
-
+            CloseKey(officeKey)
+        except WindowsError:
+                # Office isn't installed at all
+                return
+        
         for oVersion in installedVersions:
             for software in extensions:
                 values = list()
