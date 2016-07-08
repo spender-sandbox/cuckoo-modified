@@ -96,7 +96,8 @@ class MongoDB(Report):
         """
         # We put the raise here and not at the import because it would
         # otherwise trigger even if the module is not enabled in the config.
-        
+        global_chunks_ids = list()
+
         f = open(os.path.join(self.analysis_path, "reports", "report.distributed"), "wb")
         zf = zipfile.ZipFile(f, "w", zipfile.ZIP_DEFLATED)
 
@@ -166,6 +167,7 @@ class MongoDB(Report):
                         to_insert = {"pid": process["process_id"],
                                      "calls": chunk}
                         chunk_id = self.db.calls.insert(to_insert)
+                        global_chunks_ids.append(chunk_id)
                         chunks_ids.append(chunk_id)
                         # Reset the chunk.
                         chunk = []
@@ -223,8 +225,6 @@ class MongoDB(Report):
             # we only need this on slaves
             if self.options.get("slave", False):
                 zf, f = self.save_mongo_to_file(report, zf, f)
-            if self.options.get("remove_on_slave", False):
-                self.db.analysis.remove({"info.id": report["info"]["id"]})
         except InvalidDocument as e:
             parent_key, psize = self.debug_dict_size(report)[0]
             child_key, csize = self.debug_dict_size(report[parent_key])[0]
@@ -246,8 +246,6 @@ class MongoDB(Report):
                         if self.options.get("slave", False):
                             zf, f = self.save_mongo_to_file(report, zf, f)
                         error_saved = False
-                        if self.options.get("remove_on_slave", False):
-                            self.db.analysis.remove({"info.id": report["info"]["id"]})
                     except InvalidDocument as e:
                         parent_key, psize = self.debug_dict_size(report)[0]
                         child_key, csize = self.debug_dict_size(report[parent_key])[0]
@@ -268,6 +266,18 @@ class MongoDB(Report):
             json_path = os.path.join(self.analysis_path, "reports", "report.json")
             if os.path.exists(json_path):
                 zf.write(json_path, os.path.join("reports", "report.json"))
+
+        if self.options.get("remove_on_slave", False):
+            try:
+                self.db.analysis.remove({"info.id": report["info"]["id"]})
+            except Exception as e:
+                log.error("Error removing mongo report")
+
+            for chunk_id in global_chunks_ids:
+                try:
+                    self.db.calls.remove(chunk_id)
+                except:
+                    log.error("Error removing mongo calls report")
 
         zf.close()
         f.close()
