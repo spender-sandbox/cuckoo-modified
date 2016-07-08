@@ -1824,11 +1824,11 @@ def tasks_fullmemory(request, task_id):
     if check["error"]:
         return jsonize(check, response=True)
 
-    file_path = os.path.join(CUCKOO_ROOT, "storage", "analyses", str(analysis_number), "memory.dmp")
+    file_path = os.path.join(CUCKOO_ROOT, "storage", "analyses", str(task_id), "memory.dmp")
     if os.path.exists(file_path):
         filename = os.path.basename(file_path)
     else:
-        file_path = os.path.join(CUCKOO_ROOT, "storage", "analyses", str(analysis_number), "memory.dmp.zip")
+        file_path = os.path.join(CUCKOO_ROOT, "storage", "analyses", str(task_id), "memory.dmp.zip")
         if os.path.exists(file_path):
             filename = os.path.basename(file_path)
     if filename:
