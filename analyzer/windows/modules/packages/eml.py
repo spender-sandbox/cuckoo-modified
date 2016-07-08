@@ -9,6 +9,7 @@ class EML(Package):
     PATHS = [
         ("ProgramFiles", "Microsoft Office", "OUTLOOK.EXE"),
         ("ProgramFiles", "Microsoft Office", "Office*", "OUTLOOK.EXE"),
+        ("ProgramFiles", "Microsoft Office*", "root", "Office*", "OUTLOOK.EXE"),
     ]
 
     def start(self, path):
