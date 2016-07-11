@@ -13,6 +13,7 @@ import tempfile
 import threading
 import time
 from datetime import datetime
+from itertools import combinations
 
 import zipfile
 import StringIO
@@ -64,6 +65,7 @@ except ImportError:
 
 try:
     from sqlalchemy import DateTime
+    from sqlalchemy import or_, and_
 except ImportError:
     required("sqlalchemy")
 
@@ -297,16 +299,43 @@ class StatusThread(threading.Thread):
                 db.session.add(task)
 
         db.session.commit()
-
+        
         # Only get tasks that have not been pushed yet.
         q = Task.query.filter_by(node_id=None, finished=False)
 
         # Order by task priority and task id.
         q = q.order_by(-Task.priority, -Task.id)
 
-        # TODO Select only the tasks with appropriate tags selection.
+        # Get available node tags
+        machines = Machine.query.filter_by(node_id=node.id).all()
+
+        # Get available tag combinations
+        ta = set()
+        for m in machines:
+            for i in xrange(1, len(m.tags)+1):
+                for t in combinations(m.tags, i):
+                    ta.add(','.join(t))
+        ta = list(ta)
+
+        # Create filter query from tasks in ta
+        tags = [ getattr(Task, "tags")=="" ] 
+        for t in ta:
+            if len(t.split(',')) == 1:
+                tags.append(getattr(Task, "tags")==t)
+            else:
+                t = t.split(',')
+                # ie. LIKE '%,%,%'
+                t_combined = [ getattr(Task, "tags").like("%s" % ('%,'*len(t))[:-1] ) ]
+                for tag in t:
+                    t_combined.append(getattr(Task, "tags").like("%%%s%%" % tag))
+                tags.append( and_(*t_combined) )
+
+        # Filter by available tags
+        q = q.filter(or_(*tags))
+
+        # Submit appropriate tasks to node
         for task in q.limit(MINIMUMQUEUE).all():
-            node.submit_task(task)
+           node.submit_task(task)
 
     def do_mongo(self, mongo_report, behaviour_report, mongo_db, t, node):
 
