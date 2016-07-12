@@ -34,7 +34,7 @@ try:
 except ImportError:
     HAVE_MONGO = False
 
-# we need original db to reserve ID in db, 
+# we need original db to reserve ID in db,
 # to store later report, from master or slave
 cuckoo_conf = Config("cuckoo")
 reporting_conf = Config("reporting")
@@ -164,8 +164,8 @@ class Node(db.Model):
             r = requests.post(url, data=data, files=files)
             task.node_id = self.id
 
-            # task.task_ids <- see how to loop it and store all ids, 
-            # because by default it nto saving it, 
+            # task.task_ids <- see how to loop it and store all ids,
+            # because by default it nto saving it,
             # or saving as list which trigger errors
             task.task_id = r.json()["task_ids"][0]
 
@@ -190,7 +190,7 @@ class Node(db.Model):
                 task.main_task_id = main_task_id
             else:
                 task.main_task_id = task.task_id
-                
+
             # We have to refresh() the task object because otherwise we get
             # the unmodified object back in further sql queries..
             # TODO Commit once, refresh() all at once. This could potentially
@@ -267,8 +267,8 @@ class Task(db.Model):
     node_id = db.Column(db.Integer, db.ForeignKey("node.id"))
     task_id = db.Column(db.Integer)
     finished = db.Column(db.Boolean, nullable=False)
-    main_task_id = db.Column(db.Integer)   
-  
+    main_task_id = db.Column(db.Integer)
+
     def __init__(self, path, package, timeout, priority, options, machine,
                  platform, tags, custom, memory, clock, enforce_timeout, main_task_id=None):
         self.path = path
@@ -295,10 +295,10 @@ class StatusThread(threading.Thread):
         for t in main_db.list_tasks(status=TASK_PENDING):
             if not Task.query.filter_by(main_task_id=t.id).all():
                 # Convert array of tags into comma separated list
-                tags = ','.join([tag.name for tag in t.tags]) 
+                tags = ','.join([tag.name for tag in t.tags])
                 # Append a comma, to make LIKE searches more precise
                 if tags: tags += ','
-                args = dict( package=t.package, timeout=t.timeout, priority=t.priority, 
+                args = dict( package=t.package, timeout=t.timeout, priority=t.priority,
                              options=t.options, machine=t.machine, platform=t.platform,
                              tags=tags, custom=t.custom, memory=t.memory, clock=t.clock,
                              enforce_timeout=t.enforce_timeout, main_task_id=t.id )
@@ -306,7 +306,7 @@ class StatusThread(threading.Thread):
                 db.session.add(task)
 
         db.session.commit()
-        
+
         # Only get tasks that have not been pushed yet.
         q = Task.query.filter_by(node_id=None, finished=False)
 
@@ -325,7 +325,7 @@ class StatusThread(threading.Thread):
         ta = list(ta)
 
         # Create filter query from tasks in ta
-        tags = [ getattr(Task, "tags")=="" ] 
+        tags = [ getattr(Task, "tags")=="" ]
         for t in ta:
             if len(t.split(',')) == 1:
                 tags.append(getattr(Task, "tags")==(t+','))
@@ -349,7 +349,7 @@ class StatusThread(threading.Thread):
         if "processes" in behaviour_report:
 
             new_processes = []
-            
+
             for process in behaviour_report.get("processes", []):
                 new_process = dict(process)
 
@@ -484,7 +484,7 @@ class StatusThread(threading.Thread):
                 if reporting_conf.distributed.remove_task_on_slave:
                     node.delete_task(t.task_id)
 
- 
+
     def run(self):
         global main_db
         global STATUSES
@@ -617,10 +617,10 @@ class TaskBaseApi(RestResource):
         self._parser.add_argument("package", type=str)
         self._parser.add_argument("timeout", type=int)
         self._parser.add_argument("priority", type=int, default=1)
-        self._parser.add_argument("options", type=str)
+        self._parser.add_argument("options", type=str, default="")
         self._parser.add_argument("machine", type=str)
         self._parser.add_argument("platform", type=str, default="windows")
-        self._parser.add_argument("tags", type=str)
+        self._parser.add_argument("tags", type=str, default="")
         self._parser.add_argument("custom", type=str)
         self._parser.add_argument("memory", type=str)
         self._parser.add_argument("clock", type=int)
@@ -696,12 +696,14 @@ class TaskRootApi(TaskBaseApi):
 
         path = store_temp_file(f.read(), f.filename, path=app.config["SAMPLES_DIRECTORY"])
 
+        main_task_id = main_db.demux_sample_and_add_to_db(file_path=path, **args)
+
+        if main_task_id: args["main_task_id"] = main_task_id[0]
         task = Task(path=path, **args)
         db.session.add(task)
         db.session.commit()
 
         return dict(task_id=task.id)
-
 
 class ReportingBaseApi(RestResource):
     def __init__(self, *args, **kwargs):
@@ -724,7 +726,7 @@ class IocApi(ReportingBaseApi):
         task = Task.query.get(task_id)
         url = self.get_node_url(task.node_id)
         res = self.get_iocs(url, task.main_task_id)
-        
+
         if res and res.status_code == 200:
             return res.json()
         else:
@@ -866,6 +868,6 @@ if __name__ == "__main__":
     t = StatusThread()
     t.daemon = True
     t.start()
-    
+
     app.run(host=args.host, port=args.port)
 
