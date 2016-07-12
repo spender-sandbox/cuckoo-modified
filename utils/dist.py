@@ -342,7 +342,7 @@ class StatusThread(threading.Thread):
 
         # Submit appropriate tasks to node
         for task in q.limit(MINIMUMQUEUE).all():
-           node.submit_task(task)
+            node.submit_task(task)
 
     def do_mongo(self, mongo_report, behaviour_report, mongo_db, t, node):
 
