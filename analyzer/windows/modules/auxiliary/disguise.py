@@ -9,7 +9,7 @@ from _winreg import (OpenKey, SetValueEx, CloseKey, QueryInfoKey, EnumKey,
 from random import randint
 
 from lib.common.abstracts import Auxiliary
-from lib.common.rand import random_integer
+from lib.common.rand import random_integer, random_string
 
 log = logging.getLogger(__name__)
 
