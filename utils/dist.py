@@ -139,6 +139,11 @@ class Node(db.Model):
     def submit_task(self, task):
         try:
             url = os.path.join(self.url, "tasks", "create", "file")
+
+            # Remove the earlier appended comma
+            if task.tags:
+                if task.tags[-1] == ',': task.tags = task.tags[:-1]
+
             data = dict(
                 package=task.package, timeout=task.timeout,
                 priority=task.priority, options=task.options,
@@ -290,7 +295,9 @@ class StatusThread(threading.Thread):
         for t in main_db.list_tasks(status=TASK_PENDING):
             if not Task.query.filter_by(main_task_id=t.id).all():
                 # Convert array of tags into comma separated list
-                tags = ','.join([tag.name for tag in t.tags])
+                tags = ','.join([tag.name for tag in t.tags]) 
+                # Append a comma, to make LIKE searches more precise
+                if tags: tags += ','
                 args = dict( package=t.package, timeout=t.timeout, priority=t.priority, 
                              options=t.options, machine=t.machine, platform=t.platform,
                              tags=tags, custom=t.custom, memory=t.memory, clock=t.clock,
@@ -321,13 +328,13 @@ class StatusThread(threading.Thread):
         tags = [ getattr(Task, "tags")=="" ] 
         for t in ta:
             if len(t.split(',')) == 1:
-                tags.append(getattr(Task, "tags")==t)
+                tags.append(getattr(Task, "tags")==(t+','))
             else:
                 t = t.split(',')
-                # ie. LIKE '%,%,%'
-                t_combined = [ getattr(Task, "tags").like("%s" % ('%,'*len(t))[:-1] ) ]
+                # ie. LIKE '%,%,%,'
+                t_combined = [ getattr(Task, "tags").like("%s" % ('%,'*len(t)) ) ]
                 for tag in t:
-                    t_combined.append(getattr(Task, "tags").like("%%%s%%" % tag))
+                    t_combined.append(getattr(Task, "tags").like("%%%s%%" % (tag+',') ))
                 tags.append( and_(*t_combined) )
 
         # Filter by available tags
@@ -335,7 +342,7 @@ class StatusThread(threading.Thread):
 
         # Submit appropriate tasks to node
         for task in q.limit(MINIMUMQUEUE).all():
-            node.submit_task(task)
+           node.submit_task(task)
 
     def do_mongo(self, mongo_report, behaviour_report, mongo_db, t, node):
 
