@@ -54,8 +54,14 @@ except ImportError:
 
 try:
     import requests
+    from requests.auth import HTTPBasicAuth
 except ImportError:
     required("requests")
+
+try:
+    requests.packages.urllib3.disable_warnings()
+except AttributeError:
+    pass
 
 try:
     from flask_restful import abort, reqparse
@@ -106,17 +112,23 @@ class Node(db.Model):
     name = db.Column(db.Text, nullable=False)
     url = db.Column(db.Text, nullable=False)
     enabled = db.Column(db.Boolean, nullable=False)
+    ht_user = db.Column(db.String(255), nullable=False)
+    ht_pass = db.Column(db.String(255), nullable=False)
     last_check = db.Column(db.DateTime(timezone=False))
     machines = db.relationship("Machine", backref="node", lazy="dynamic")
 
-    def __init__(self, name, url, enabled=True):
+    def __init__(self, name, url, ht_user="", ht_pass="", enabled=True):
         self.name = name
         self.url = url
         self.enabled = enabled
+        self.ht_user = ht_user
+        self.ht_pass = ht_pass
 
     def list_machines(self):
         try:
-            r = requests.get(os.path.join(self.url, "machines", "list"))
+            r = requests.get(os.path.join(self.url, "machines", "list"),
+                            auth = HTTPBasicAuth(self.ht_user, self.ht_pass),
+                            verify = False)
 
             for machine in r.json()["machines"]:
                 yield Machine(name=machine["name"],
@@ -128,7 +140,9 @@ class Node(db.Model):
 
     def status(self):
         try:
-            r = requests.get(os.path.join(self.url, "cuckoo", "status"))
+            r = requests.get(os.path.join(self.url, "cuckoo", "status"),
+                            auth = HTTPBasicAuth(self.ht_user, self.ht_pass),
+                            verify = False)
             return r.json()["tasks"]
         except Exception as e:
             log.critical("Possible invalid Cuckoo node (%s): %s",
@@ -161,7 +175,9 @@ class Node(db.Model):
                 return
 
             files = dict(file=open(task.path, "rb"))
-            r = requests.post(url, data=data, files=files)
+            r = requests.post(url, data=data, files=files,
+                            auth = HTTPBasicAuth(self.ht_user, self.ht_pass),
+                            verify = False)
             task.node_id = self.id
 
             # task.task_ids <- see how to loop it and store all ids,
@@ -205,7 +221,9 @@ class Node(db.Model):
         try:
             url = os.path.join(self.url, "tasks", "list")
             params = dict(status=status)#completed_after=since,
-            r = requests.get(url, params=params)
+            r = requests.get(url, params=params,
+                            auth = HTTPBasicAuth(self.ht_user, self.ht_pass),
+                            verify = False)
             return r.json()["tasks"]
         except Exception as e:
             log.critical("Error listing completed tasks (node %s): %s",
@@ -217,7 +235,9 @@ class Node(db.Model):
         try:
             url = os.path.join(self.url, "tasks", "report",
                                "%d" % task_id, fmt)
-            return requests.get(url, stream=stream)
+            return requests.get(url, stream=stream,
+                                auth = HTTPBasicAuth(self.ht_user, self.ht_pass),
+                                verify = False)
         except Exception as e:
             log.critical("Error fetching report (task #%d, node %s): %s",
                          task_id, self.url, e)
@@ -225,7 +245,9 @@ class Node(db.Model):
     def delete_task(self, task_id):
         try:
             url = os.path.join(self.url, "tasks", "delete", "%d" % task_id)
-            return requests.get(url).status_code == 200
+            return requests.get(url,
+                                auth = HTTPBasicAuth(self.ht_user, self.ht_pass),
+                                verify = False).status_code == 200
         except Exception as e:
             log.critical("Error deleting task (task #%d, node %s): %s",
                          task_id, self.name, e)
@@ -551,6 +573,8 @@ class NodeBaseApi(RestResource):
         self._parser = reqparse.RequestParser()
         self._parser.add_argument("name", type=str)
         self._parser.add_argument("url", type=str)
+        self._parser.add_argument("ht_user", type=str, default="")
+        self._parser.add_argument("ht_pass", type=str, default="")
 
 
 class NodeRootApi(NodeBaseApi):
@@ -574,7 +598,8 @@ class NodeRootApi(NodeBaseApi):
 
     def post(self):
         args = self._parser.parse_args()
-        node = Node(name=args["name"], url=args["url"])
+        node = Node(name=args["name"], url=args["url"], ht_user=args["ht_user"],
+                ht_pass=args["ht_pass"])
 
         machines = []
         for machine in node.list_machines():
@@ -598,9 +623,12 @@ class NodeApi(NodeBaseApi):
 
     def put(self, name):
         args = self._parser.parse_args()
-        node = Node.query.filter_by(name=name)
-        node.name = args["name"]
-        node.url = args["url"]
+        node = Node.query.filter_by(name=name).limit(1).all()
+        if not node: return dict(error=True, error_value="Node doesn't exist")
+        
+        for k,v in args.items():
+            if v:
+                setattr(node[0], k, v)
         db.session.commit()
 
     def delete(self, name):
@@ -736,7 +764,9 @@ class IocApi(ReportingBaseApi):
         try:
             url = os.path.join(url, "tasks", "iocs",
                                "%d" % task_id)
-            return requests.get(url, stream=stream)
+            return requests.get(url, stream=stream,
+                                auth = HTTPBasicAuth(self.ht_user, self.ht_pass),
+                                verify = False)
         except Exception as e:
             log.critical("Error fetching report (task #%d, node %s): %s",
                          task_id, self.url, e)
@@ -772,7 +802,9 @@ class ReportApi(ReportingBaseApi):
         try:
             url = os.path.join(url, "tasks", "report",
                                "%d" % task_id, fmt)
-            return requests.get(url, stream=stream)
+            return requests.get(url, stream=stream,
+                                auth = HTTPBasicAuth(self.ht_user, self.ht_pass),
+                                verify = False)
         except Exception as e:
             log.critical("Error fetching report (task #%d, node %s): %s",
                          task_id, self.url, e)
