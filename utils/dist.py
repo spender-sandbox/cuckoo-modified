@@ -575,7 +575,7 @@ class NodeBaseApi(RestResource):
         self._parser.add_argument("url", type=str)
         self._parser.add_argument("ht_user", type=str, default="")
         self._parser.add_argument("ht_pass", type=str, default="")
-
+        self._parser.add_argument("enabled", action='store_true')
 
 class NodeRootApi(NodeBaseApi):
     def get(self):
@@ -624,8 +624,10 @@ class NodeApi(NodeBaseApi):
     def put(self, name):
         args = self._parser.parse_args()
         node = Node.query.filter_by(name=name).limit(1).all()
+
         if not node: return dict(error=True, error_value="Node doesn't exist")
-        
+
+
         for k,v in args.items():
             if v:
                 setattr(node[0], k, v)
