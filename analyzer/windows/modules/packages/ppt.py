@@ -9,6 +9,7 @@ class PPT(Package):
     PATHS = [
         ("ProgramFiles", "Microsoft Office", "POWERPNT.EXE"),
         ("ProgramFiles", "Microsoft Office", "Office*", "POWERPNT.EXE"),
+        ("ProgramFiles", "Microsoft Office*", "root", "Office*", "POWERPNT.EXE"),
     ]
 
     def start(self, path):

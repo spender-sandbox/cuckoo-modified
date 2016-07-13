@@ -10,6 +10,7 @@ class XLS(Package):
     PATHS = [
         ("ProgramFiles", "Microsoft Office", "EXCEL.EXE"),
         ("ProgramFiles", "Microsoft Office", "Office*", "EXCEL.EXE"),
+        ("ProgramFiles", "Microsoft Office*", "root", "Office*", "EXCEL.EXE"),
     ]
 
     def start(self, path):

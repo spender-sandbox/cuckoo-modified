@@ -369,8 +369,7 @@ class PipeHandler(Thread):
                         # SW_HIDE
                         si.wShowWindow = 0
                         log.info("Stopping WMI Service")
-                        p = subprocess.Popen(['net', 'stop', 'winmgmt'], startupinfo=si, stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.STDOUT)
-                        dummyvar = p.communicate(input='Y\n')
+                        subprocess.call(['net', 'stop', 'winmgmt', '/y'], startupinfo=si)
                         log.info("Stopped WMI Service")
                         subprocess.call("sc config winmgmt type= own", startupinfo=si)
 
@@ -409,8 +408,7 @@ class PipeHandler(Thread):
                         # SW_HIDE
                         si.wShowWindow = 0
                         log.info("Stopping Task Scheduler Service")
-                        p = subprocess.Popen(['net', 'stop', 'schedule'], startupinfo=si, stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.STDOUT)
-                        dummyvar = p.communicate(input='Y\n')
+                        subprocess.call(['net', 'stop', 'schedule', '/y'], startupinfo=si)
                         log.info("Stopped Task Scheduler Service")
                         subprocess.call("sc config schedule type= own", startupinfo=si)
 
@@ -437,8 +435,7 @@ class PipeHandler(Thread):
                         # SW_HIDE
                         si.wShowWindow = 0
                         log.info("Stopping BITS Service")
-                        p = subprocess.Popen(['net', 'stop', 'BITS'], startupinfo=si, stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.STDOUT)
-                        dummyvar = p.communicate(input='Y\n')
+                        subprocess.call(['net', 'stop', 'BITS', '/y'], startupinfo=si)
                         log.info("Stopped BITS Service")
                         subprocess.call("sc config BITS type= own", startupinfo=si)
 
