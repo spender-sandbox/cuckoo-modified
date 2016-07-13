@@ -848,6 +848,26 @@ class DistRestApi(RestApi):
         }
 
 
+def update_machine_table(app, node_name):
+    with app.app_context():
+        node = Node.query.filter_by(name=node_name).first()
+        
+        # get new vms
+        new_machines = node.list_machines()
+
+        # delete all old vms
+        machines = Machine.query.filter_by(node_id=node.id).delete()
+
+        # replace with new vms
+        for machine in new_machines:
+            node.machines.append(machine)
+            db.session.add(machine)
+
+        db.session.commit()
+
+        log.info("Updated the machine table for node: %s" % node_name)
+
+
 def create_app(database_connection):
     app = Flask("Distributed Cuckoo")
     app.config["SQLALCHEMY_DATABASE_URI"] = database_connection
@@ -879,9 +899,15 @@ if __name__ == "__main__":
     p.add_argument("port", nargs="?", type=int, default=9003, help="Port to listen on")
     p.add_argument("-d", "--debug", action="store_true", help="Enable debug logging")
     p.add_argument("--db", type=str, default="sqlite:///dist.db", help="Database connection string")
-    p.add_argument("--samples-directory", type=str, required=True, help="Samples directory")
+    p.add_argument("--samples-directory", type=str, help="Samples directory")
     p.add_argument("--uptime-logfile", type=str, help="Uptime logfile path")
+    p.add_argument("--node", type=str, help="Node name to update in distributed DB")
     args = p.parse_args()
+
+    if (not args.samples_directory) & (not args.node):
+        p.error("Either --samples_directory or --node argument is required")
+    elif (args.samples_directory is not None) & (args.node is not None):
+        p.error("Either one --samples_directory or --node argument is required")
 
     if args.debug:
         logging.basicConfig(level=logging.DEBUG)
@@ -892,19 +918,23 @@ if __name__ == "__main__":
     logging.getLogger("urllib3").setLevel(logging.WARNING)
     log = logging.getLogger("cuckoo.distributed")
 
-    if not os.path.isdir(args.samples_directory):
-        os.makedirs(args.samples_directory)
-
     RUNNING, STATUSES = True, {}
     main_db = Database()
 
     app = create_app(database_connection=args.db)
-    app.config["SAMPLES_DIRECTORY"] = args.samples_directory
-    app.config["UPTIME_LOGFILE"] = args.uptime_logfile
 
-    t = StatusThread()
-    t.daemon = True
-    t.start()
+    if args.node:
+        update_machine_table(app, args.node)
+    elif args.samples_directory:
+        if not os.path.isdir(args.samples_directory):
+            os.makedirs(args.samples_directory)
 
-    app.run(host=args.host, port=args.port)
+        app.config["SAMPLES_DIRECTORY"] = args.samples_directory
+        app.config["UPTIME_LOGFILE"] = args.uptime_logfile
+
+        t = StatusThread()
+        t.daemon = True
+        t.start()
+
+        app.run(host=args.host, port=args.port)
 
