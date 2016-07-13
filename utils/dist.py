@@ -623,15 +623,14 @@ class NodeApi(NodeBaseApi):
 
     def put(self, name):
         args = self._parser.parse_args()
-        node = Node.query.filter_by(name=name).limit(1).all()
+        node = Node.query.filter_by(name=name).first()
 
         if not node: return dict(error=True, error_value="Node doesn't exist")
 
-
         for k,v in args.items():
-            if v:
-                setattr(node[0], k, v)
+            if v: setattr(node, k, v)
         db.session.commit()
+        return dict(error=False, error_value="Successfully modified node: %s" % node.name)
 
     def delete(self, name):
         node = Node.query.filter_by(name=name).first()
@@ -644,17 +643,17 @@ class TaskBaseApi(RestResource):
         RestResource.__init__(self, *args, **kwargs)
 
         self._parser = reqparse.RequestParser()
-        self._parser.add_argument("package", type=str)
-        self._parser.add_argument("timeout", type=int)
+        self._parser.add_argument("package", type=str, default="")
+        self._parser.add_argument("timeout", type=int, default=0)
         self._parser.add_argument("priority", type=int, default=1)
         self._parser.add_argument("options", type=str, default="")
-        self._parser.add_argument("machine", type=str)
+        self._parser.add_argument("machine", type=str, default="")
         self._parser.add_argument("platform", type=str, default="windows")
         self._parser.add_argument("tags", type=str, default="")
-        self._parser.add_argument("custom", type=str)
-        self._parser.add_argument("memory", type=str)
+        self._parser.add_argument("custom", type=str, default="")
+        self._parser.add_argument("memory", type=str, default="0")
         self._parser.add_argument("clock", type=int)
-        self._parser.add_argument("enforce_timeout", type=bool)
+        self._parser.add_argument("enforce_timeout", type=bool, default=0)
 
 
 class TaskApi(TaskBaseApi):
@@ -669,7 +668,7 @@ class TaskApi(TaskBaseApi):
             options=task.options, machine=task.machine,
             platform=task.platform, tags=task.tags,
             custom=task.custom, memory=task.memory,
-            clock=task.clock, enforce_timeout=task.enforce_timeout
+            clock=task.clock.strftime("%Y-%m-%d %H:%M:%S"), enforce_timeout=task.enforce_timeout
         )})
 
     def delete(self, task_id):
@@ -739,7 +738,7 @@ class ReportingBaseApi(RestResource):
     def __init__(self, *args, **kwargs):
         RestResource.__init__(self, *args, **kwargs)
 
-    def get_node_url(self, node_id):
+    def get_node(self, node_id):
 
         node = Node.query.filter_by(id = node_id)
         node = node.first()
@@ -747,31 +746,34 @@ class ReportingBaseApi(RestResource):
         if not node:
             abort(404, message="Node not found")
 
-        return node.url
+        return node.url, node.ht_user, node.ht_pass
 
 
 class IocApi(ReportingBaseApi):
 
     def get(self, task_id):
         task = Task.query.get(task_id)
-        url = self.get_node_url(task.node_id)
-        res = self.get_iocs(url, task.main_task_id)
+        if task is None:
+            abort(404, message="Task not found")
+        url,ht_user,ht_pass = self.get_node(task.node_id)
+        res = self.get_iocs(url, ht_user, ht_pass, task.task_id)
 
         if res and res.status_code == 200:
             return res.json()
         else:
             abort(404, message="Iocs report not found")
 
-    def get_iocs(self, url, task_id, stream=False):
+    def get_iocs(self, url, ht_user, ht_pass, task_id, stream=False):
         try:
             url = os.path.join(url, "tasks", "iocs",
                                "%d" % task_id)
+            log.info(url)
             return requests.get(url, stream=stream,
-                                auth = HTTPBasicAuth(self.ht_user, self.ht_pass),
+                                auth = HTTPBasicAuth(ht_user, ht_pass),
                                 verify = False)
         except Exception as e:
             log.critical("Error fetching report (task #%d, node %s): %s",
-                         task_id, self.url, e)
+                         task_id, url, e)
 
 
 
@@ -779,11 +781,12 @@ class ReportApi(ReportingBaseApi):
 
     report_formats = {
         "distributed": "distributed",
+        "json"       : "json"
     }
 
     def get(self, task_id, report="json"):
         task = Task.query.get(task_id)
-        url = self.get_node_url(task.node_id)
+        url,ht_user,ht_pass = self.get_node(task.node_id)
 
         if not task:
             abort(404, message="Task not found")
@@ -792,7 +795,7 @@ class ReportApi(ReportingBaseApi):
             abort(404, message="Task not finished yet")
 
         if self.report_formats[report]:
-            res = self.get_report(url, task.main_task_id, report)
+            res = self.get_report(url, ht_user, ht_pass, task.task_id, report)
             if res and res.status_code == 200:
                 return res.json()
             else:
@@ -800,16 +803,16 @@ class ReportApi(ReportingBaseApi):
 
         abort(404, message="Invalid report format")
 
-    def get_report(self, url, task_id, fmt, stream=False):
+    def get_report(self, url, ht_user, ht_pass, task_id, fmt, stream=False):
         try:
             url = os.path.join(url, "tasks", "report",
                                "%d" % task_id, fmt)
             return requests.get(url, stream=stream,
-                                auth = HTTPBasicAuth(self.ht_user, self.ht_pass),
+                                auth = HTTPBasicAuth(ht_user, ht_pass),
                                 verify = False)
         except Exception as e:
             log.critical("Error fetching report (task #%d, node %s): %s",
-                         task_id, self.url, e)
+                         task_id, url, e)
 
 
 class StatusRootApi(RestResource):
