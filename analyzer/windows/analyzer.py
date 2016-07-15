@@ -870,7 +870,10 @@ class Analyzer:
         log.info("Analysis completed.")
 
     def get_completion_key(self):
-        return self.config.get_options().get("completion_key", "")
+        if hasattr(self.config, "completion_key"):
+            return self.config.completion_key
+        else:
+            return ""
 
     def run(self):
         """Run analysis.
