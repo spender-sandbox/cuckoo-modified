@@ -3,15 +3,17 @@
 # This file is part of Cuckoo Sandbox - http://www.cuckoosandbox.org
 # See the file 'docs/LICENSE' for copying permission.
 
-import argparse
-import hashlib
-import json
-import logging
 import os
 import sys
-import tempfile
-import threading
 import time
+import json
+import shutil
+import hashlib
+import logging
+import tempfile
+import argparse
+import threading
+
 from datetime import datetime
 from itertools import combinations
 
@@ -42,6 +44,9 @@ reporting_conf = Config("reporting")
 INTERVAL = 10
 MINIMUMQUEUE = 5
 RESET_LASTCHECK = 100
+
+# controller of dead nodes
+failed_count = dict()
 
 def required(package):
     sys.exit("The %s package is required: pip install %s" %
@@ -181,6 +186,7 @@ class Node(db.Model):
             task.node_id = self.id
 
             # task.task_ids <- see how to loop it and store all ids,
+            # Still not saw more then one id returned(test with zip and many files inside)
             # because by default it nto saving it,
             # or saving as list which trigger errors
             task.task_id = r.json()["task_ids"][0]
@@ -461,7 +467,7 @@ class StatusThread(threading.Thread):
                     # will be stored to mongo db only
                     # we don't need it as file
                     if HAVE_MONGO:
-                        if True:#try:
+                        try:
                             fileobj = StringIO.StringIO(temp_f)
                             file = zipfile.ZipFile(fileobj, "r")
                             for name in file.namelist():
@@ -477,24 +483,38 @@ class StatusThread(threading.Thread):
                                         log.info(e)
 
                             if reporting_conf.mongodb.enabled:
-                                    conn = MongoClient(reporting_conf.mongodb.host, reporting_conf.mongodb.port)
-                                    mongo_db = conn[reporting_conf.mongodb.db]
-                                    report = ""
-                                    behaviour = ""
-                                    if "report.mongo" in file.namelist():
-                                        report = file.read("report.mongo")
-                                        report = loads(report)
-                                    if "behavior.report" in file.namelist():
-                                        behaviour = file.read("behavior.report")
-                                        behaviour = loads(behaviour)
-                                    self.do_mongo(report, behaviour, mongo_db, t, node)
-                                    finished = True
-                                    conn.close()
+                                conn = MongoClient(reporting_conf.mongodb.host, reporting_conf.mongodb.port)
+                                mongo_db = conn[reporting_conf.mongodb.db]
+                                report = ""
+                                behaviour = ""
+                                if "report.mongo" in file.namelist():
+                                    report = file.read("report.mongo")
+                                    report = loads(report)
+                                if "behavior.report" in file.namelist():
+                                    behaviour = file.read("behavior.report")
+                                    behaviour = loads(behaviour)
+                                self.do_mongo(report, behaviour, mongo_db, t, node)
+                                finished = True
+                                #ToDo move file here from slaves
 
-                        #except Exception as e:
-                        #    log.info(e)
+                                try:
+                                    sample = open(t.path, "rb").read()
+                                    sample_sha256 = hashlib.sha256(sample).hexdigest()
+                                    destination = os.path.join(CUCKOO_ROOT, "storage", "binaries", sample_sha256)
+                                    if not os.path.exists(destination):
+                                        shutil.move(t.path, destination)
+                                    shutil.delete(t.path)
+                                    # creating link to analysis folder
+                                    os.symlink(destination, os.path.join(report_path, "binary"))
+                                except Exception as e:
+                                    logging.error(e)
 
-                        del temp_f
+                                conn.close()
+
+                        except Exception as e:
+                            log.info(e)
+
+                del temp_f
 
             if finished:
                 t.finished = True
@@ -506,10 +526,15 @@ class StatusThread(threading.Thread):
                 if reporting_conf.distributed.remove_task_on_slave:
                     node.delete_task(t.task_id)
 
-
     def run(self):
         global main_db
         global STATUSES
+
+        if reporting_conf.distributed.dead_count:
+            dead_count = dist_conf.distributed.dead_count
+        else:
+            dead_count = 5
+
         while RUNNING:
             with app.app_context():
                 start = datetime.now()
@@ -519,8 +544,20 @@ class StatusThread(threading.Thread):
                 for node in Node.query.filter_by(enabled=True).all():
                     status = node.status()
                     if not status:
+                        failed_count.setdefault(node.name, 0)
+                        failed_count[node.name] += 1
+
+                        # ToDo number to config
+                        # This will declare slave as dead after X failed connections checks
+                        if failed_count[node.name] == dead_count:
+                            log.info('[-] {} dead'.format(node.name))
+                            node_data = Node.query.filter_by(name=node.name).first()
+                            node_data.enabled = False
+                            db.session.commit()
+
                         continue
 
+                    failed_count[node.name] = 0
                     log.debug("Status.. %s -> %s", node.name, status)
 
                     statuses[node.name] = status
@@ -576,6 +613,7 @@ class NodeBaseApi(RestResource):
         self._parser.add_argument("ht_user", type=str, default="")
         self._parser.add_argument("ht_pass", type=str, default="")
         self._parser.add_argument("enabled", action='store_true')
+
 
 class NodeRootApi(NodeBaseApi):
     def get(self):
@@ -904,11 +942,6 @@ if __name__ == "__main__":
     p.add_argument("--node", type=str, help="Node name to update in distributed DB")
     args = p.parse_args()
 
-    if (not args.samples_directory) & (not args.node):
-        p.error("Either --samples_directory or --node argument is required")
-    elif (args.samples_directory is not None) & (args.node is not None):
-        p.error("Either one --samples_directory or --node argument is required")
-
     if args.debug:
         logging.basicConfig(level=logging.DEBUG)
     else:
@@ -921,16 +954,36 @@ if __name__ == "__main__":
     RUNNING, STATUSES = True, {}
     main_db = Database()
 
-    app = create_app(database_connection=args.db)
+    arg_db = args.db
+    if reporting_conf.distributed.db:
+        arg_db = reporting_conf.distributed.db
+
+    app = create_app(database_connection=arg_db)
 
     if args.node:
         update_machine_table(app, args.node)
-    elif args.samples_directory:
-        if not os.path.isdir(args.samples_directory):
-            os.makedirs(args.samples_directory)
 
-        app.config["SAMPLES_DIRECTORY"] = args.samples_directory
-        app.config["UPTIME_LOGFILE"] = args.uptime_logfile
+    elif args.samples_directory or reporting_conf.distributed.samples_directory:
+        
+        if args.samples_directory:
+            samples_directory = args.samples_directory
+
+        elif reporting_conf.distributed.samples_directory:
+            samples_directory = reporting_conf.distributed.samples_directory
+
+        if not samples_directory:
+                p.error("Either --samples_directory or or conf/reporting.conf distributed section requiered")
+
+        if not os.path.isdir(samples_directory):
+            os.makedirs(samples_directory)
+        
+        if reporting_conf.distributed.samples_directory:
+            app.config["SAMPLES_DIRECTORY"] = reporting_conf.distributed.samples_directory
+            app.config["UPTIME_LOGFILE"] = reporting_conf.distributed.uptime_logfile
+
+        elif args.samples_directory:
+            app.config["SAMPLES_DIRECTORY"] = args.samples_directory
+            app.config["UPTIME_LOGFILE"] = args.uptime_logfile
 
         t = StatusThread()
         t.daemon = True
@@ -938,3 +991,5 @@ if __name__ == "__main__":
 
         app.run(host=args.host, port=args.port)
 
+    else:
+        p.error("Either --samples_directory or conf/reporting.conf distributed section requiered")
