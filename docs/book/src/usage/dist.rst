@@ -189,7 +189,7 @@ Update basic information of a Cuckoo node::
         False or True to activate or deactivate slave node
 
     Additional arguments
-         Ii basic auth activated in slaves api, you must specify this options too
+         If basic auth activated in slaves api, you must specify this options too
              * ht_user 
              * ht_pass
 
