@@ -380,6 +380,9 @@ Depending on which report(s) are required for integration with your system it
 might make sense to only make those report(s) that you're going to use. Thus
 disable the other ones.
 
+Check also [distribution] section, where you can set database, path for samples,
+and few more values
+
 conf/virtualbox.conf
 ^^^^^^^^^^^^^^^^^^^^
 
