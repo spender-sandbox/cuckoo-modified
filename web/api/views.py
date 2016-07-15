@@ -1198,13 +1198,14 @@ def tasks_report(request, task_id, report_format="json"):
     if len(os.listdir(srcdir)) == 0:
         resp = {"error": True,
                 "error_value": "No reports created for task %s" % task_id}
+
     formats = {
         "json": "report.json",
         "html": "report.html",
         "htmlsummary": "summary-report.html",
         "pdf": "report.pdf",
         "maec": "report.maec-4.1.xml",
-        "metadata": "report.metadata.xml"
+        "metadata": "report.metadata.xml",
     }
 
     if report_format.lower() in formats:
@@ -1215,9 +1216,6 @@ def tasks_report(request, task_id, report_format="json"):
             if report_format == "json":
                 content = "application/json; charset=UTF-8"
                 ext = "json"
-            elif report_format == "mongo":
-                content = "application/json; charset=UTF-8"
-                ext = "mongo"
             elif report_format.startswith("html"):
                 content = "text/html"
                 ext = "html"
