@@ -268,7 +268,7 @@ def tasks_report(task_id, report_format="json"):
     bz_formats = {
         "all": {"type": "-", "files": ["memory.dmp"]},
         "dropped": {"type": "+", "files": ["files"]},
-        "dist_report" : {"type": "+", "files": ["shots", "reports/report_mongo.json"]},
+        "dist_report" : {"type": "+", "files": ["shots", "report_mongo.json"]},
         "dist": {"type": "-", "files": []},
     }
 
@@ -288,15 +288,6 @@ def tasks_report(task_id, report_format="json"):
                                   "analyses", "%d" % task_id)
             s = StringIO()
 
-            if report_format.lower() == "dist_report": 
-                buf = results_db.analysis.find_one({"info.id": task_id})
-                with open(os.path.join(srcdir, "reports", "report.json"), "r") as r:
-                    rep = json.load(r)
-                    buf["behavior"] = rep["behavior"]
-            with open(os.path.join(srcdir, "reports", "report_mongo.json"), "w") as report:
-                rep = StringIO.StringIO(buf)
-                report.write(rep.getvalue())
-
             # By default go for bz2 encoded tar files (for legacy reasons.)
             tarmode = tar_formats.get(request.GET.get("tar"), "w:bz2")
 
@@ -306,6 +297,17 @@ def tasks_report(task_id, report_format="json"):
                     tar.add(os.path.join(srcdir, filedir), arcname=filedir)
                 if bzf["type"] == "+" and filedir in bzf["files"]:
                     tar.add(os.path.join(srcdir, filedir), arcname=filedir)
+
+            if report_format.lower() == "dist_report": 
+                buf = results_db.analysis.find_one({"info.id": task_id})
+                with open(os.path.join(srcdir, "reports", "report.json"), "r") as r:
+                    rep = json.load(r)
+                    buf["behavior"] = rep["behavior"]
+                with open(os.path.join(srcdir, "reports", "report_mongo.json"), "w") as report:
+                    rep = StringIO(buf)
+                    report.write(rep.getvalue())
+                tar.add(os.path.join(srcdir, "reports", "report_mongo.json"), arcname="reports")
+
             tar.close()
             response.content_type = "application/x-tar; charset=UTF-8"
             return s.getvalue()
