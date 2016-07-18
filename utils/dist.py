@@ -548,11 +548,11 @@ class StatusThread(threading.Thread):
                                 report = ""
                                 with open(os.path.join(report_path, "reports", "report_mongo.json"), "r") as f:
                                     report = loads(f.read())
-                                self.do_mongo(report, mongo_db, t, node)
+                                    self.do_mongo(report, mongo_db, t, node)
                                 finished = True
                                 
                                 # move file here from slaves
-                                retrieve.queue.put(t.id, t.task_id, t.node_id, t.main_task_id)
+                                retrieve.queue.put((t.id, t.task_id, t.node_id, t.main_task_id))
 
                                 try:
                                     sample = open(t.path, "rb").read()
