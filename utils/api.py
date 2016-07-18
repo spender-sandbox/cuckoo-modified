@@ -11,6 +11,7 @@ import sys
 import tarfile
 from datetime import datetime
 from StringIO import StringIO
+from bson import json_util
 from zipfile import ZipFile, ZIP_STORED
 
 try:
@@ -304,7 +305,8 @@ def tasks_report(task_id, report_format="json"):
                     rep = json.load(r)
                     buf["behavior"] = rep["behavior"]
                 with open(os.path.join(srcdir, "reports", "report_mongo.json"), "w") as report:
-                    rep = StringIO(buf)
+                    rep = json.dumps(buf, indent=4, default=json_util.default)
+                    rep = StringIO(rep)
                     report.write(rep.getvalue())
                 tar.add(os.path.join(srcdir, "reports", "report_mongo.json"),
                         arcname="reports/report_mongo.json")
