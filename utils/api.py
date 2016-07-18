@@ -270,7 +270,7 @@ def tasks_report(task_id, report_format="json"):
         "all": {"type": "-", "files": ["memory.dmp"]},
         "dropped": {"type": "+", "files": ["files"]},
         "dist_report" : {"type": "+", "files": ["shots", "report_mongo.json"]},
-        "dist": {"type": "-", "files": []},
+        "dist": {"type": "-", "files": ["shots", "reports/report.json"]},
     }
 
     tar_formats = {
