@@ -306,7 +306,8 @@ def tasks_report(task_id, report_format="json"):
                 with open(os.path.join(srcdir, "reports", "report_mongo.json"), "w") as report:
                     rep = StringIO(buf)
                     report.write(rep.getvalue())
-                tar.add(os.path.join(srcdir, "reports", "report_mongo.json"), arcname="reports")
+                tar.add(os.path.join(srcdir, "reports", "report_mongo.json"),
+                        arcname="reports/report_mongo.json")
 
             tar.close()
             response.content_type = "application/x-tar; charset=UTF-8"
