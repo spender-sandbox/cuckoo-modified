@@ -3,15 +3,19 @@
 # This file is part of Cuckoo Sandbox - http://www.cuckoosandbox.org
 # See the file 'docs/LICENSE' for copying permission.
 
-import argparse
-import hashlib
-import json
-import logging
 import os
 import sys
-import tempfile
-import threading
 import time
+import json
+import shutil
+import hashlib
+import logging
+import tarfile
+import tempfile
+import argparse
+import threading
+import Queue
+
 from datetime import datetime
 from itertools import combinations
 
@@ -42,6 +46,9 @@ reporting_conf = Config("reporting")
 INTERVAL = 10
 MINIMUMQUEUE = 5
 RESET_LASTCHECK = 100
+
+# controller of dead nodes
+failed_count = dict()
 
 def required(package):
     sys.exit("The %s package is required: pip install %s" %
@@ -94,6 +101,74 @@ def sha256(path):
         h.update(buf)
     return h.hexdigest()
 
+
+class Retriever(object):
+
+    def __init__(self, queue, threads_number):
+        self.queue = queue
+        self.threads_number = threads_number
+
+    # need to add monitoring for this is isAlive
+    def background(self):
+        thread = threading.Thread(target=self.starter, args=())
+        thread.daemon = True
+        thread.start()
+
+    def starter(self):
+        """ Method that runs forever """
+        threads = []
+        while True:
+            if not self.queue.empty() and len(threads) < self.threads_number:
+                task = self.queue.get()
+                if self.threads_number - len(threads):
+                    for num in xrange(self.threads_number - len(threads)):
+                        thread = threading.Thread(target=self.downloader, args=(task))
+                        #thread.daemon = True
+                        thread.start()
+
+                        threads.append(thread)
+
+                    for thread in threads:
+                        thread.join()
+                        threads.remove(thread)
+
+            time.sleep(10)
+                
+
+    def downloader(self, task):
+        try:
+            #report = node.get_report(task_id, "distributed",
+            #                         stream=True)
+
+            # this should get correct node url api automatically
+            report = ReportApi.get(task.task_id, "dist", True)
+
+            if report and report.status_code == 200:
+                log.debug("Error fetching %s report for task #%d",
+                          "dist", task_id)
+
+                report_path = os.path.join(CUCKOO_ROOT, "storage", "analyses", "{}".format(task.main_task_id))
+
+                all_files_tar = ''
+                for chunk in report.iter_content(chunk_size=1024*1024):
+                    all_files_tar += chunk
+
+                all_files_tar = StringIO.StringIO(all_files_tar)
+                all_files = tarfile.open(fileobj=all_files_tar, mode="r:bz2")
+                all_files.extractall(report_path)
+
+                #close? 
+                all_files.close()
+                all_files_tar.close()
+
+                task.retrieved = True
+                db.commit()
+                db.session.refresh(task)
+
+        except Exception as e:
+            logging.info(e)
+
+        return
 
 class StringList(db.TypeDecorator):
     """List of comma-separated strings as field."""
@@ -181,6 +256,7 @@ class Node(db.Model):
             task.node_id = self.id
 
             # task.task_ids <- see how to loop it and store all ids,
+            # Still not saw more then one id returned(test with zip and many files inside)
             # because by default it nto saving it,
             # or saving as list which trigger errors
             task.task_id = r.json()["task_ids"][0]
@@ -290,9 +366,10 @@ class Task(db.Model):
     task_id = db.Column(db.Integer)
     finished = db.Column(db.Boolean, nullable=False)
     main_task_id = db.Column(db.Integer)
+    retrieved = db.Column(db.Boolean, nullable=False)
 
     def __init__(self, path, package, timeout, priority, options, machine,
-                 platform, tags, custom, memory, clock, enforce_timeout, main_task_id=None):
+                 platform, tags, custom, memory, clock, enforce_timeout, main_task_id=None, retrieved=False):
         self.path = path
         self.package = package
         self.timeout = timeout
@@ -309,6 +386,7 @@ class Task(db.Model):
         self.task_id = None
         self.main_task_id = main_task_id
         self.finished = False
+        self.retrieved = False
 
 
 class StatusThread(threading.Thread):
@@ -461,7 +539,7 @@ class StatusThread(threading.Thread):
                     # will be stored to mongo db only
                     # we don't need it as file
                     if HAVE_MONGO:
-                        if True:#try:
+                        try:
                             fileobj = StringIO.StringIO(temp_f)
                             file = zipfile.ZipFile(fileobj, "r")
                             for name in file.namelist():
@@ -477,24 +555,43 @@ class StatusThread(threading.Thread):
                                         log.info(e)
 
                             if reporting_conf.mongodb.enabled:
-                                    conn = MongoClient(reporting_conf.mongodb.host, reporting_conf.mongodb.port)
-                                    mongo_db = conn[reporting_conf.mongodb.db]
-                                    report = ""
-                                    behaviour = ""
-                                    if "report.mongo" in file.namelist():
-                                        report = file.read("report.mongo")
-                                        report = loads(report)
-                                    if "behavior.report" in file.namelist():
-                                        behaviour = file.read("behavior.report")
-                                        behaviour = loads(behaviour)
-                                    self.do_mongo(report, behaviour, mongo_db, t, node)
-                                    finished = True
-                                    conn.close()
+                                conn = MongoClient(reporting_conf.mongodb.host, reporting_conf.mongodb.port)
+                                mongo_db = conn[reporting_conf.mongodb.db]
+                                report = ""
+                                behaviour = ""
+                                if "report.mongo" in file.namelist():
+                                    report = file.read("report.mongo")
+                                    report = loads(report)
+                                if "behavior.report" in file.namelist():
+                                    behaviour = file.read("behavior.report")
+                                    behaviour = loads(behaviour)
+                                self.do_mongo(report, behaviour, mongo_db, t, node)
+                                finished = True
+                                
+                                # move file here from slaves
+                                retriever.queue.put(t)
 
-                        #except Exception as e:
-                        #    log.info(e)
+                                try:
+                                    sample = open(t.path, "rb").read()
+                                    sample_sha256 = hashlib.sha256(sample).hexdigest()
+                                    destination = os.path.join(CUCKOO_ROOT, "storage", "binaries", sample_sha256)
+                                    if not os.path.exists(destination):
+                                        shutil.move(t.path, destination)
+                                    shutil.delete(t.path)
+                                    # creating link to analysis folder
+                                    os.symlink(destination, os.path.join(report_path, "binary"))
+                                except Exception as e:
+                                    logging.error(e)
 
-                        del temp_f
+                                conn.close()
+
+                            # closing StringIO objects
+                            fileobj.close()
+
+                        except Exception as e:
+                            log.info(e)
+
+                del temp_f
 
             if finished:
                 t.finished = True
@@ -506,10 +603,25 @@ class StatusThread(threading.Thread):
                 if reporting_conf.distributed.remove_task_on_slave:
                     node.delete_task(t.task_id)
 
-
     def run(self):
         global main_db
         global STATUSES
+        global queue
+        global retrieve
+
+        # ToDo from config
+        threads_number = 5
+        # Check me
+        retrieve = Retriever(queue, threads_number)
+        retrieve.background()
+
+        
+
+        if reporting_conf.distributed.dead_count:
+            dead_count = reporting_conf.distributed.dead_count
+        else:
+            dead_count = 5
+
         while RUNNING:
             with app.app_context():
                 start = datetime.now()
@@ -519,8 +631,20 @@ class StatusThread(threading.Thread):
                 for node in Node.query.filter_by(enabled=True).all():
                     status = node.status()
                     if not status:
+                        failed_count.setdefault(node.name, 0)
+                        failed_count[node.name] += 1
+
+                        # ToDo number to config
+                        # This will declare slave as dead after X failed connections checks
+                        if failed_count[node.name] == dead_count:
+                            log.info('[-] {} dead'.format(node.name))
+                            node_data = Node.query.filter_by(name=node.name).first()
+                            node_data.enabled = False
+                            db.session.commit()
+
                         continue
 
+                    failed_count[node.name] = 0
                     log.debug("Status.. %s -> %s", node.name, status)
 
                     statuses[node.name] = status
@@ -576,6 +700,7 @@ class NodeBaseApi(RestResource):
         self._parser.add_argument("ht_user", type=str, default="")
         self._parser.add_argument("ht_pass", type=str, default="")
         self._parser.add_argument("enabled", action='store_true')
+
 
 class NodeRootApi(NodeBaseApi):
     def get(self):
@@ -734,6 +859,7 @@ class TaskRootApi(TaskBaseApi):
 
         return dict(task_id=task.id)
 
+
 class ReportingBaseApi(RestResource):
     def __init__(self, *args, **kwargs):
         RestResource.__init__(self, *args, **kwargs)
@@ -776,15 +902,15 @@ class IocApi(ReportingBaseApi):
                          task_id, url, e)
 
 
-
 class ReportApi(ReportingBaseApi):
 
     report_formats = {
         "distributed": "distributed",
-        "json"       : "json"
+        "json" : "json",
+        "dist" : "dist",
     }
 
-    def get(self, task_id, report="json"):
+    def get(self, task_id, report="json", stream=False):
         task = Task.query.get(task_id)
         url,ht_user,ht_pass = self.get_node(task.node_id)
 
@@ -795,7 +921,7 @@ class ReportApi(ReportingBaseApi):
             abort(404, message="Task not finished yet")
 
         if self.report_formats[report]:
-            res = self.get_report(url, ht_user, ht_pass, task.task_id, report)
+            res = self.get_report(url, ht_user, ht_pass, task.task_id, report, stream)
             if res and res.status_code == 200:
                 return res.json()
             else:
@@ -839,6 +965,7 @@ def output_xml(data, code, headers=None):
     resp.headers.extend(headers or {})
     return resp
 
+
 class DistRestApi(RestApi):
     def __init__(self, *args, **kwargs):
         RestApi.__init__(self, *args, **kwargs)
@@ -847,6 +974,11 @@ class DistRestApi(RestApi):
             "application/json": output_json,
         }
 
+def check_pending_retrieves(app):
+    with app.app_context():
+        tasks = Task.query.filter_by(retrieved=False, finished=True).all()
+        for task in tasks:
+            retrieve.queue.put(task)
 
 def update_machine_table(app, node_name):
     with app.app_context():
@@ -866,7 +998,6 @@ def update_machine_table(app, node_name):
         db.session.commit()
 
         log.info("Updated the machine table for node: %s" % node_name)
-
 
 def create_app(database_connection):
     app = Flask("Distributed Cuckoo")
@@ -904,11 +1035,6 @@ if __name__ == "__main__":
     p.add_argument("--node", type=str, help="Node name to update in distributed DB")
     args = p.parse_args()
 
-    if (not args.samples_directory) & (not args.node):
-        p.error("Either --samples_directory or --node argument is required")
-    elif (args.samples_directory is not None) & (args.node is not None):
-        p.error("Either one --samples_directory or --node argument is required")
-
     if args.debug:
         logging.basicConfig(level=logging.DEBUG)
     else:
@@ -920,21 +1046,47 @@ if __name__ == "__main__":
 
     RUNNING, STATUSES = True, {}
     main_db = Database()
+    queue = Queue.Queue()
 
-    app = create_app(database_connection=args.db)
+    arg_db = args.db
+    if reporting_conf.distributed.db:
+        arg_db = reporting_conf.distributed.db
+
+    app = create_app(database_connection=arg_db)
 
     if args.node:
         update_machine_table(app, args.node)
-    elif args.samples_directory:
-        if not os.path.isdir(args.samples_directory):
-            os.makedirs(args.samples_directory)
 
-        app.config["SAMPLES_DIRECTORY"] = args.samples_directory
-        app.config["UPTIME_LOGFILE"] = args.uptime_logfile
+    elif args.samples_directory or reporting_conf.distributed.samples_directory:
+        
+        if args.samples_directory:
+            samples_directory = args.samples_directory
+
+        elif reporting_conf.distributed.samples_directory:
+            samples_directory = reporting_conf.distributed.samples_directory
+
+        if not samples_directory:
+                p.error("Either --samples_directory or or conf/reporting.conf distributed section requiered")
+
+        if not os.path.isdir(samples_directory):
+            os.makedirs(samples_directory)
+        
+        if reporting_conf.distributed.samples_directory:
+            app.config["SAMPLES_DIRECTORY"] = reporting_conf.distributed.samples_directory
+            app.config["UPTIME_LOGFILE"] = reporting_conf.distributed.uptime_logfile
+
+        elif args.samples_directory:
+            app.config["SAMPLES_DIRECTORY"] = args.samples_directory
+            app.config["UPTIME_LOGFILE"] = args.uptime_logfile
 
         t = StatusThread()
         t.daemon = True
         t.start()
 
+        # will generate queue with all pend retrieve tasks
+        check_pending_retrieves(app)
+
         app.run(host=args.host, port=args.port)
 
+    else:
+        p.error("Either --samples_directory or conf/reporting.conf distributed section requiered")

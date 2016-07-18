@@ -52,10 +52,6 @@ Following is a listing of all available commandline options::
                                 Samples directory
         --uptime-logfile UPTIME_LOGFILE
                                 Uptime logfile path
-        --report-formats REPORT_FORMATS
-                                Reporting formats to fetch
-        --reports-directory REPORTS_DIRECTORY
-                                Reports directory
 
 In particular the ``--report-formats``, ``--samples-directory``, and
 ``--reports-directory`` are required.
@@ -189,6 +185,14 @@ Update basic information of a Cuckoo node::
         -F url=http://1.2.3.4:8090/
     null
 
+    * enabled
+        False or True to activate or deactivate slave node
+
+    Additional arguments
+         If basic auth activated in slaves api, you must specify this options too
+             * ht_user 
+             * ht_pass
+
 .. _node_delete:
 
 DELETE /node/<name>
@@ -313,7 +317,7 @@ Register a Cuckoo node - a Cuckoo REST API running on the same machine in this
 case::
 
     $ curl http://localhost:9003/node -F name=master -F url=http://localhost:8090/
-    * Master server must be called master, the rest of names we don't care
+    Master server must be called master, the rest of names we don't care
 
 
 Disable a Cuckoo node::
@@ -375,6 +379,9 @@ You must activate ``slave`` in mongodb section, on all slaves only, not master.
 Depending on which report(s) are required for integration with your system it
 might make sense to only make those report(s) that you're going to use. Thus
 disable the other ones.
+
+Check also [distribution] section, where you can set database, path for samples,
+and few more values
 
 conf/virtualbox.conf
 ^^^^^^^^^^^^^^^^^^^^

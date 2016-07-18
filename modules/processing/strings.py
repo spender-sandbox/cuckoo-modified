@@ -3,8 +3,10 @@
 # See the file 'docs/LICENSE' for copying permission.
 
 import os.path
+HAVE_RE2 = False
 try:
     import re2 as re
+    HAVE_RE2 = True
 except ImportError:
     import re
 
@@ -33,12 +35,16 @@ class Strings(Processing):
             nulltermonly = self.options.get("nullterminated_only", True)
             minchars = self.options.get("minchars", 5)
 
+            endlimit = ""
+            if not HAVE_RE2:
+                endlimit = "8192"
+
             if nulltermonly:
-                apat = "([\x20-\x7e]{" + str(minchars) + ",})\x00"
-                upat = "((?:[\x20-\x7e][\x00]){" + str(minchars) + ",})\x00\x00"
+                apat = "([\x20-\x7e]{" + str(minchars) + "," + endlimit + "})\x00"
+                upat = "((?:[\x20-\x7e][\x00]){" + str(minchars) + "," + endlimit + "})\x00\x00"
             else:
-                apat = "[\x20-\x7e]{" + str(minchars) + ",}"
-                upat = "(?:[\x20-\x7e][\x00]){" + str(minchars) + ",}"
+                apat = "[\x20-\x7e]{" + str(minchars) + "," + endlimit + "}"
+                upat = "(?:[\x20-\x7e][\x00]){" + str(minchars) + "," + endlimit + "}"
 
             strings = re.findall(apat, data)
             for ws in re.findall(upat, data):

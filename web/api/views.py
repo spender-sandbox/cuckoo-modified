@@ -1198,13 +1198,14 @@ def tasks_report(request, task_id, report_format="json"):
     if len(os.listdir(srcdir)) == 0:
         resp = {"error": True,
                 "error_value": "No reports created for task %s" % task_id}
+
     formats = {
         "json": "report.json",
         "html": "report.html",
         "htmlsummary": "summary-report.html",
         "pdf": "report.pdf",
         "maec": "report.maec-4.1.xml",
-        "metadata": "report.metadata.xml"
+        "metadata": "report.metadata.xml",
     }
 
     if report_format.lower() in formats:
@@ -1215,9 +1216,6 @@ def tasks_report(request, task_id, report_format="json"):
             if report_format == "json":
                 content = "application/json; charset=UTF-8"
                 ext = "json"
-            elif report_format == "mongo":
-                content = "application/json; charset=UTF-8"
-                ext = "mongo"
             elif report_format.startswith("html"):
                 content = "text/html"
                 ext = "html"
@@ -1826,11 +1824,11 @@ def tasks_fullmemory(request, task_id):
     if check["error"]:
         return jsonize(check, response=True)
 
-    file_path = os.path.join(CUCKOO_ROOT, "storage", "analyses", str(analysis_number), "memory.dmp")
+    file_path = os.path.join(CUCKOO_ROOT, "storage", "analyses", str(task_id), "memory.dmp")
     if os.path.exists(file_path):
         filename = os.path.basename(file_path)
     else:
-        file_path = os.path.join(CUCKOO_ROOT, "storage", "analyses", str(analysis_number), "memory.dmp.zip")
+        file_path = os.path.join(CUCKOO_ROOT, "storage", "analyses", str(task_id), "memory.dmp.zip")
         if os.path.exists(file_path):
             filename = os.path.basename(file_path)
     if filename:
