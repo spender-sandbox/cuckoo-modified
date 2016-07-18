@@ -205,4 +205,3 @@ class MongoDB(Report):
                         log.error("Largest child key: %s (%d MB)" % (child_key, int(csize) / 1048576))
 
         self.conn.close()
-        
