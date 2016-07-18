@@ -10,9 +10,11 @@ import json
 import shutil
 import hashlib
 import logging
+import tarfile
 import tempfile
 import argparse
 import threading
+import Queue
 
 from datetime import datetime
 from itertools import combinations
@@ -99,6 +101,74 @@ def sha256(path):
         h.update(buf)
     return h.hexdigest()
 
+
+class Retriever(object):
+
+    def __init__(self, queue, threads_number):
+        self.queue = queue
+        self.threads_number = threads_number
+
+    # need to add monitoring for this is isAlive
+    def background(self):
+        thread = threading.Thread(target=self.starter, args=())
+        thread.daemon = True
+        thread.start()
+
+    def starter(self):
+        """ Method that runs forever """
+        threads = []
+        while True:
+            if not self.queue.empty() and len(threads) < self.threads_number:
+                task = self.queue.get()
+                if self.threads_number - len(threads):
+                    for num in xrange(self.threads_number - len(threads)):
+                        thread = threading.Thread(target=self.downloader, args=(task))
+                        #thread.daemon = True
+                        thread.start()
+
+                        threads.append(thread)
+
+                    for thread in threads:
+                        thread.join()
+                        threads.remove(thread)
+
+            time.sleep(10)
+                
+
+    def downloader(self, task):
+        try:
+            #report = node.get_report(task_id, "distributed",
+            #                         stream=True)
+
+            # this should get correct node url api automatically
+            report = ReportApi.get(task.task_id, "dist", True)
+
+            if report and report.status_code == 200:
+                log.debug("Error fetching %s report for task #%d",
+                          "dist", task_id)
+
+                report_path = os.path.join(CUCKOO_ROOT, "storage", "analyses", "{}".format(task.main_task_id))
+
+                all_files_tar = ''
+                for chunk in report.iter_content(chunk_size=1024*1024):
+                    all_files_tar += chunk
+
+                all_files_tar = StringIO.StringIO(all_files_tar)
+                all_files = tarfile.open(fileobj=all_files_tar, mode="r:bz2")
+                all_files.extractall(report_path)
+
+                #close? 
+                all_files.close()
+                all_files_tar.close()
+
+                task.retrieved = True
+                db.commit()
+                db.session.refresh(task)
+
+        except Exception as e:
+            logging.info(e)
+
+        return
 
 class StringList(db.TypeDecorator):
     """List of comma-separated strings as field."""
@@ -296,9 +366,10 @@ class Task(db.Model):
     task_id = db.Column(db.Integer)
     finished = db.Column(db.Boolean, nullable=False)
     main_task_id = db.Column(db.Integer)
+    retrieved = db.Column(db.Boolean, nullable=False)
 
     def __init__(self, path, package, timeout, priority, options, machine,
-                 platform, tags, custom, memory, clock, enforce_timeout, main_task_id=None):
+                 platform, tags, custom, memory, clock, enforce_timeout, main_task_id=None, retrieved=False):
         self.path = path
         self.package = package
         self.timeout = timeout
@@ -315,6 +386,7 @@ class Task(db.Model):
         self.task_id = None
         self.main_task_id = main_task_id
         self.finished = False
+        self.retrieved = False
 
 
 class StatusThread(threading.Thread):
@@ -495,7 +567,9 @@ class StatusThread(threading.Thread):
                                     behaviour = loads(behaviour)
                                 self.do_mongo(report, behaviour, mongo_db, t, node)
                                 finished = True
-                                #ToDo move file here from slaves
+                                
+                                # move file here from slaves
+                                retriever.queue.put(t)
 
                                 try:
                                     sample = open(t.path, "rb").read()
@@ -510,6 +584,9 @@ class StatusThread(threading.Thread):
                                     logging.error(e)
 
                                 conn.close()
+
+                            # closing StringIO objects
+                            fileobj.close()
 
                         except Exception as e:
                             log.info(e)
@@ -529,9 +606,19 @@ class StatusThread(threading.Thread):
     def run(self):
         global main_db
         global STATUSES
+        global queue
+        global retrieve
+
+        # ToDo from config
+        threads_number = 5
+        # Check me
+        retrieve = Retriever(queue, threads_number)
+        retrieve.background()
+
+        
 
         if reporting_conf.distributed.dead_count:
-            dead_count = dist_conf.distributed.dead_count
+            dead_count = reporting_conf.distributed.dead_count
         else:
             dead_count = 5
 
@@ -772,6 +859,7 @@ class TaskRootApi(TaskBaseApi):
 
         return dict(task_id=task.id)
 
+
 class ReportingBaseApi(RestResource):
     def __init__(self, *args, **kwargs):
         RestResource.__init__(self, *args, **kwargs)
@@ -814,15 +902,15 @@ class IocApi(ReportingBaseApi):
                          task_id, url, e)
 
 
-
 class ReportApi(ReportingBaseApi):
 
     report_formats = {
         "distributed": "distributed",
-        "json"       : "json"
+        "json" : "json",
+        "dist" : "dist",
     }
 
-    def get(self, task_id, report="json"):
+    def get(self, task_id, report="json", stream=False):
         task = Task.query.get(task_id)
         url,ht_user,ht_pass = self.get_node(task.node_id)
 
@@ -833,7 +921,7 @@ class ReportApi(ReportingBaseApi):
             abort(404, message="Task not finished yet")
 
         if self.report_formats[report]:
-            res = self.get_report(url, ht_user, ht_pass, task.task_id, report)
+            res = self.get_report(url, ht_user, ht_pass, task.task_id, report, stream)
             if res and res.status_code == 200:
                 return res.json()
             else:
@@ -877,6 +965,7 @@ def output_xml(data, code, headers=None):
     resp.headers.extend(headers or {})
     return resp
 
+
 class DistRestApi(RestApi):
     def __init__(self, *args, **kwargs):
         RestApi.__init__(self, *args, **kwargs)
@@ -885,6 +974,11 @@ class DistRestApi(RestApi):
             "application/json": output_json,
         }
 
+def check_pending_retrieves(app):
+    with app.app_context():
+        tasks = Task.query.filter_by(retrieved=False, finished=True).all()
+        for task in tasks:
+            retrieve.queue.put(task)
 
 def update_machine_table(app, node_name):
     with app.app_context():
@@ -904,7 +998,6 @@ def update_machine_table(app, node_name):
         db.session.commit()
 
         log.info("Updated the machine table for node: %s" % node_name)
-
 
 def create_app(database_connection):
     app = Flask("Distributed Cuckoo")
@@ -953,6 +1046,7 @@ if __name__ == "__main__":
 
     RUNNING, STATUSES = True, {}
     main_db = Database()
+    queue = Queue.Queue()
 
     arg_db = args.db
     if reporting_conf.distributed.db:
@@ -988,6 +1082,9 @@ if __name__ == "__main__":
         t = StatusThread()
         t.daemon = True
         t.start()
+
+        # will generate queue with all pend retrieve tasks
+        check_pending_retrieves(app)
 
         app.run(host=args.host, port=args.port)
 
