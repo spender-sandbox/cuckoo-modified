@@ -11,6 +11,7 @@ import sys
 import tarfile
 from datetime import datetime
 from StringIO import StringIO
+from bson import json_util
 from zipfile import ZipFile, ZIP_STORED
 
 try:
@@ -268,6 +269,7 @@ def tasks_report(task_id, report_format="json"):
     bz_formats = {
         "all": {"type": "-", "files": ["memory.dmp"]},
         "dropped": {"type": "+", "files": ["files"]},
+        "dist_report" : {"type": "+", "files": ["shots", "report_mongo.json"]},
         "dist": {"type": "-", "files": []},
     }
 
@@ -296,6 +298,19 @@ def tasks_report(task_id, report_format="json"):
                     tar.add(os.path.join(srcdir, filedir), arcname=filedir)
                 if bzf["type"] == "+" and filedir in bzf["files"]:
                     tar.add(os.path.join(srcdir, filedir), arcname=filedir)
+
+            if report_format.lower() == "dist_report": 
+                buf = results_db.analysis.find_one({"info.id": task_id})
+                with open(os.path.join(srcdir, "reports", "report.json"), "r") as r:
+                    rep = json.load(r)
+                    buf["behavior"] = rep["behavior"]
+                with open(os.path.join(srcdir, "reports", "report_mongo.json"), "w") as report:
+                    rep = json.dumps(buf, indent=4, default=json_util.default)
+                    rep = StringIO(rep)
+                    report.write(rep.getvalue())
+                tar.add(os.path.join(srcdir, "reports", "report_mongo.json"),
+                        arcname="reports/report_mongo.json")
+
             tar.close()
             response.content_type = "application/x-tar; charset=UTF-8"
             return s.getvalue()

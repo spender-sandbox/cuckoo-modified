@@ -444,7 +444,7 @@ class StatusThread(threading.Thread):
         for task in q.limit(MINIMUMQUEUE).all():
             node.submit_task(task)
 
-    def do_mongo(self, mongo_report, behaviour_report, mongo_db, t, node):
+    def do_mongo(self, report, mongo_db, t, node):
 
         if "processes" in behaviour_report:
 
@@ -520,7 +520,7 @@ class StatusThread(threading.Thread):
             if node.name != "master":
 
                 # Fetch each requested report.
-                report = node.get_report(t.task_id, "distributed",
+                report = node.get_report(t.task_id, "dist_report",
                                              stream=True)
                 if report is None or report.status_code != 200:
                     log.debug("Error fetching %s report for task #%d",
@@ -541,31 +541,16 @@ class StatusThread(threading.Thread):
                     if HAVE_MONGO:
                         try:
                             fileobj = StringIO.StringIO(temp_f)
-                            file = zipfile.ZipFile(fileobj, "r")
-                            for name in file.namelist():
-                                if name.startswith("shots") or name == "reports/report.json":
-                                    correct_dir = name.split(os.sep)[0]
-                                    if not os.path.exists(os.path.join(report_path, correct_dir)):
-                                        os.makedirs(os.path.join(report_path, correct_dir))
-                                    try:
-                                        unziped_file = open(os.path.join(report_path, name), "wb")
-                                        unziped_file.write(file.read(name))
-                                        unziped_file.close()
-                                    except Exception as e:
-                                        log.info(e)
+                            file = tarfile.open(fileobj=fileobj, mode="r:bz2")
+                            file.extractall(report_path)
 
                             if reporting_conf.mongodb.enabled:
                                 conn = MongoClient(reporting_conf.mongodb.host, reporting_conf.mongodb.port)
                                 mongo_db = conn[reporting_conf.mongodb.db]
                                 report = ""
-                                behaviour = ""
-                                if "report.mongo" in file.namelist():
-                                    report = file.read("report.mongo")
-                                    report = loads(report)
-                                if "behavior.report" in file.namelist():
-                                    behaviour = file.read("behavior.report")
-                                    behaviour = loads(behaviour)
-                                self.do_mongo(report, behaviour, mongo_db, t, node)
+                                with open(os.path.join(report_path, "reports", "report_mongo.json"), "r") as f:
+                                    report = loads(f)
+                                    self.do_mongo(report, mongo_db, t, node)
                                 finished = True
                                 
                                 # move file here from slaves
