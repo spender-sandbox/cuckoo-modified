@@ -268,6 +268,7 @@ def tasks_report(task_id, report_format="json"):
     bz_formats = {
         "all": {"type": "-", "files": ["memory.dmp"]},
         "dropped": {"type": "+", "files": ["files"]},
+        "dist_report" : {"type": "+", "files": ["shots", "reports/report_mongo.json"]},
         "dist": {"type": "-", "files": []},
     }
 
@@ -286,6 +287,15 @@ def tasks_report(task_id, report_format="json"):
             srcdir = os.path.join(CUCKOO_ROOT, "storage",
                                   "analyses", "%d" % task_id)
             s = StringIO()
+
+            if report_format.lower() == "dist_report": 
+                buf = results_db.analysis.find_one({"info.id": task_id})
+                with open(os.path.join(srcdir, "reports", "report.json"), "r") as r:
+                    rep = json.load(r)
+                    buf["behavior"] = rep["behavior"]
+            with open(os.path.join(srcdir, "reports", "report_mongo.json"), "w") as report:
+                rep = StringIO.StringIO(buf)
+                report.write(rep.getvalue())
 
             # By default go for bz2 encoded tar files (for legacy reasons.)
             tarmode = tar_formats.get(request.GET.get("tar"), "w:bz2")
