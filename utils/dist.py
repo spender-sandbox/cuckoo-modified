@@ -7,7 +7,6 @@ import os
 import sys
 import time
 import json
-import shutil
 import hashlib
 import logging
 import tarfile
@@ -44,7 +43,7 @@ cuckoo_conf = Config("cuckoo")
 reporting_conf = Config("reporting")
 
 INTERVAL = 10
-MINIMUMQUEUE = 5
+MINIMUMQUEUE = 1
 RESET_LASTCHECK = 100
 
 # controller of dead nodes
@@ -104,7 +103,7 @@ def sha256(path):
 
 class Retriever(object):
 
-    def __init__(self, queue, threads_number):
+    def __init__(self, queue, threads_number, app):
         self.queue = queue
         self.threads_number = threads_number
 
@@ -119,54 +118,58 @@ class Retriever(object):
         threads = []
         while True:
             if not self.queue.empty() and len(threads) < self.threads_number:
-                task = self.queue.get()
-                if self.threads_number - len(threads):
-                    for num in xrange(self.threads_number - len(threads)):
-                        thread = threading.Thread(target=self.downloader, args=(task))
-                        #thread.daemon = True
-                        thread.start()
+                dist_id, task_id, node_id, main_task_id = self.queue.get()
+                thread = threading.Thread(target=self.downloader, args=(dist_id, task_id, node_id, main_task_id))
+                #thread.daemon = True
+                thread.start()
 
-                        threads.append(thread)
+                threads.append(thread)
 
-                    for thread in threads:
-                        thread.join()
-                        threads.remove(thread)
-
-            time.sleep(10)
+                thread.join()
+                threads.remove(thread)
+            else:
+                time.sleep(10)
                 
+    def downloader(self, dist_id, task_id, node_id, main_task_id):
+        with app.app_context():
+            try:
+                #report = node.get_report(task_id, "distributed",
+                #                         stream=True)
 
-    def downloader(self, task):
-        try:
-            #report = node.get_report(task_id, "distributed",
-            #                         stream=True)
+                # this should get correct node url api automatically
+                
+                report = ReportApi().get(dist_id, "dist", True, True)
 
-            # this should get correct node url api automatically
-            report = ReportApi.get(task.task_id, "dist", True)
+                if report and report.status_code == 200:
 
-            if report and report.status_code == 200:
-                log.debug("Error fetching %s report for task #%d",
-                          "dist", task_id)
+                    report_path = os.path.join(CUCKOO_ROOT, "storage", "analyses", "{}".format(main_task_id))
 
-                report_path = os.path.join(CUCKOO_ROOT, "storage", "analyses", "{}".format(task.main_task_id))
+                    all_files_tar = ''
+                    for chunk in report.iter_content(chunk_size=1024*1024):
+                        all_files_tar += chunk
 
-                all_files_tar = ''
-                for chunk in report.iter_content(chunk_size=1024*1024):
-                    all_files_tar += chunk
+                    all_files_tar = StringIO.StringIO(all_files_tar)
+                    all_files = tarfile.open(fileobj=all_files_tar, mode="r:bz2")
+                    all_files.extractall(report_path)
+                    print os.listdir(report_path)
+                    #close? 
+                    all_files.close()
+                    all_files_tar.close()
 
-                all_files_tar = StringIO.StringIO(all_files_tar)
-                all_files = tarfile.open(fileobj=all_files_tar, mode="r:bz2")
-                all_files.extractall(report_path)
+                    q = Task.query.filter_by(node_id=node_id, task_id=task_id, finished=True)
+                    t = q.first()
+                    if t:
+                        t.retrieved = True
 
-                #close? 
-                all_files.close()
-                all_files_tar.close()
+                        db.session.commit()
+                        db.session.refresh(t)
+                else:
+                    log.debug("Error fetching %s report for task #%d",
+                              "dist", task.task_id)
 
-                task.retrieved = True
-                db.commit()
-                db.session.refresh(task)
-
-        except Exception as e:
-            logging.info(e)
+            except Exception as e:
+                log.info(1)
+                logging.info(e)
 
         return
 
@@ -486,10 +489,7 @@ class StatusThread(threading.Thread):
 
         #patch info.id to have the same id as in main db
         mongo_report["info"]["id"] = t.main_task_id
-        # add url to original analysis
-        original_url = os.path.join(node.url.replace(str(reporting_conf.distributed.slave_api_port), str(reporting_conf.distributed.master_webgui_port)),
-                                    "analysis", str(t.task_id))
-        mongo_report.setdefault("original_url", original_url)
+
         mongo_db.analysis.save(mongo_report)
 
         # set complated_on time
@@ -554,15 +554,15 @@ class StatusThread(threading.Thread):
                                 finished = True
                                 
                                 # move file here from slaves
-                                retriever.queue.put(t)
+                                retrieve.queue.put(t.id, t.task_id, t.node_id, t.main_task_id)
 
                                 try:
                                     sample = open(t.path, "rb").read()
                                     sample_sha256 = hashlib.sha256(sample).hexdigest()
                                     destination = os.path.join(CUCKOO_ROOT, "storage", "binaries", sample_sha256)
                                     if not os.path.exists(destination):
-                                        shutil.move(t.path, destination)
-                                    shutil.delete(t.path)
+                                        os.rename(t.path, destination)
+                                    os.remove(t.path)
                                     # creating link to analysis folder
                                     os.symlink(destination, os.path.join(report_path, "binary"))
                                 except Exception as e:
@@ -597,10 +597,8 @@ class StatusThread(threading.Thread):
         # ToDo from config
         threads_number = 5
         # Check me
-        retrieve = Retriever(queue, threads_number)
+        retrieve = Retriever(queue, threads_number, app)
         retrieve.background()
-
-        
 
         if reporting_conf.distributed.dead_count:
             dead_count = reporting_conf.distributed.dead_count
@@ -895,10 +893,10 @@ class ReportApi(ReportingBaseApi):
         "dist" : "dist",
     }
 
-    def get(self, task_id, report="json", stream=False):
+    def get(self, task_id, report="json", stream=False, raw=False):
         task = Task.query.get(task_id)
         url,ht_user,ht_pass = self.get_node(task.node_id)
-
+        log.info(url)
         if not task:
             abort(404, message="Task not found")
 
@@ -908,7 +906,10 @@ class ReportApi(ReportingBaseApi):
         if self.report_formats[report]:
             res = self.get_report(url, ht_user, ht_pass, task.task_id, report, stream)
             if res and res.status_code == 200:
-                return res.json()
+                if raw:
+                    return res
+                else:
+                    return res.json()
             else:
                 abort(404, message="Report format not found")
 
@@ -963,7 +964,7 @@ def check_pending_retrieves(app):
     with app.app_context():
         tasks = Task.query.filter_by(retrieved=False, finished=True).all()
         for task in tasks:
-            retrieve.queue.put(task)
+            retrieve.queue.put((task.id, task.task_id, task.node_id, task.main_task_id))
 
 def update_machine_table(app, node_name):
     with app.app_context():

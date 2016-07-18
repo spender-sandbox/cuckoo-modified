@@ -2,13 +2,9 @@
 # This file is part of Cuckoo Sandbox - http://www.cuckoosandbox.org
 # See the file 'docs/LICENSE' for copying permission.
 
-import os
-import json
-import zipfile
 import logging
+import os
 
-from bson import json_util
-import StringIO
 from lib.cuckoo.common.abstracts import Report
 from lib.cuckoo.common.exceptions import CuckooDependencyError
 from lib.cuckoo.common.exceptions import CuckooReportError
@@ -65,30 +61,6 @@ class MongoDB(Report):
 
         return sorted(totals.items(), key=lambda item: item[1], reverse=True)
 
-    def save_mongo_to_file(self, report, zf, f):
-
-        """
-            Save mongo data to dist to retreive from distributed cuckoo
-        """
-
-        success = False
-        try:
-            report = json.dumps(report, indent=4, default=json_util.default)
-        except Exception as e:
-            log.exception(e)
-            return zf, f
-        
-        try:
-            behavior = StringIO.StringIO(report)
-            zf.writestr("report.mongo", behavior.getvalue())
-
-        except Exception as e:
-            log.exception(e)
-            return zf, f
-
-        return zf, f
-            
-            
     def run(self, results):
         """Writes report.
         @param results: analysis results dictionary.
@@ -96,11 +68,6 @@ class MongoDB(Report):
         """
         # We put the raise here and not at the import because it would
         # otherwise trigger even if the module is not enabled in the config.
-        global_chunks_ids = list()
-
-        f = open(os.path.join(self.analysis_path, "reports", "report.distributed"), "wb")
-        zf = zipfile.ZipFile(f, "w", zipfile.ZIP_DEFLATED)
-
         if not HAVE_MONGO:
             raise CuckooDependencyError("Unable to import pymongo "
                                         "(install with `pip install pymongo`)")
@@ -136,10 +103,7 @@ class MongoDB(Report):
                 screenshot = File(shot_path)
                 if screenshot.valid():
                     # Strip the extension as it's added later 
-                    # in the Django view  
-                    if self.options.get("slave", False):
-                        zf.write(shot_path, "shots/{}".format(shot_file)) 
-
+                    # in the Django view
                     report["shots"].append(shot_file.replace(".jpg", ""))
 
         # Store chunks of API calls in a different collection and reference
@@ -147,13 +111,7 @@ class MongoDB(Report):
         # issue with the oversized reports exceeding MongoDB's boundaries.
         # Also allows paging of the reports.
         if "behavior" in report and "processes" in report["behavior"]:
-
-            if self.options.get("slave", False):
-                behavior = StringIO.StringIO(json.dumps(report["behavior"]))
-                zf.writestr("behavior.report", behavior.getvalue())
-
             new_processes = []
-            
             for process in report["behavior"]["processes"]:
                 new_process = dict(process)
 
@@ -167,7 +125,6 @@ class MongoDB(Report):
                         to_insert = {"pid": process["process_id"],
                                      "calls": chunk}
                         chunk_id = self.db.calls.insert(to_insert)
-                        global_chunks_ids.append(chunk_id)
                         chunks_ids.append(chunk_id)
                         # Reset the chunk.
                         chunk = []
@@ -222,9 +179,6 @@ class MongoDB(Report):
         # Store the report and retrieve its object id.
         try:
             self.db.analysis.save(report)
-            # we only need this on slaves
-            if self.options.get("slave", False):
-                zf, f = self.save_mongo_to_file(report, zf, f)
         except InvalidDocument as e:
             parent_key, psize = self.debug_dict_size(report)[0]
             child_key, csize = self.debug_dict_size(report[parent_key])[0]
@@ -242,9 +196,6 @@ class MongoDB(Report):
                     del report[parent_key][child_key]
                     try:
                         self.db.analysis.save(report)
-                        # we only need this on slaves
-                        if self.options.get("slave", False):
-                            zf, f = self.save_mongo_to_file(report, zf, f)
                         error_saved = False
                     except InvalidDocument as e:
                         parent_key, psize = self.debug_dict_size(report)[0]
@@ -253,33 +204,4 @@ class MongoDB(Report):
                         log.error("Largest parent key: %s (%d MB)" % (parent_key, int(psize) / 1048576))
                         log.error("Largest child key: %s (%d MB)" % (child_key, int(csize) / 1048576))
 
-        if self.options.get("slave", False):
-            # Get all
-            """
-            for dirname, subdirs, files in os.walk(self.analysis_path):
-                if os.path.basename(dirname):
-                    for filename in files:
-                        zf.write(os.path.join(dirname, filename), filename)
-            for filename in files:
-                zf.write(os.path.join(dirname, filename), os.path.join(os.path.basename(dirname), filename))
-            """
-            json_path = os.path.join(self.analysis_path, "reports", "report.json")
-            if os.path.exists(json_path):
-                zf.write(json_path, os.path.join("reports", "report.json"))
-
-        if self.options.get("remove_on_slave", False):
-            try:
-                self.db.analysis.remove({"info.id": report["info"]["id"]})
-            except Exception as e:
-                log.error("Error removing mongo report")
-
-            for chunk_id in global_chunks_ids:
-                try:
-                    self.db.calls.remove(chunk_id)
-                except:
-                    log.error("Error removing mongo calls report")
-
-        zf.close()
-        f.close()
         self.conn.close()
-        
