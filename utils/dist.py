@@ -449,11 +449,11 @@ class StatusThread(threading.Thread):
 
     def do_mongo(self, report, mongo_db, t, node):
 
-        if "processes" in report:
+        if "processes" in report.get("behavior", {}):
 
             new_processes = []
 
-            for process in report.get("processes", []):
+            for process in report.get("behavior", {}).get("processes", []):
                 new_process = dict(process)
 
                 chunk = []
