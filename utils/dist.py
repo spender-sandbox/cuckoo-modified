@@ -120,24 +120,22 @@ class Retriever(object):
             if not self.queue.empty() and len(threads) < self.threads_number:
                 dist_id, task_id, node_id, main_task_id = self.queue.get()
                 thread = threading.Thread(target=self.downloader, args=(dist_id, task_id, node_id, main_task_id))
-                #thread.daemon = True
                 thread.start()
 
                 threads.append(thread)
 
-                thread.join()
-                threads.remove(thread)
             else:
                 time.sleep(10)
+                for thread in threads:
+                    if not thread.isAlive():
+                        thread.join()
+                        threads.remove(thread)
+
                 
     def downloader(self, dist_id, task_id, node_id, main_task_id):
         with app.app_context():
             try:
-                #report = node.get_report(task_id, "distributed",
-                #                         stream=True)
 
-                # this should get correct node url api automatically
-                
                 report = ReportApi().get(dist_id, "dist", True, True)
 
                 if report and report.status_code == 200:
