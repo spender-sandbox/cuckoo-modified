@@ -380,8 +380,11 @@ Depending on which report(s) are required for integration with your system it
 might make sense to only make those report(s) that you're going to use. Thus
 disable the other ones.
 
-Check also [distribution] section, where you can set database, path for samples,
+Check also "[distribution]" section, where you can set database, path for samples,
 and few more values
+
+Activate "[compression]" to compress dump by "process.py" and save time with retrieve
+
 
 conf/virtualbox.conf
 ^^^^^^^^^^^^^^^^^^^^
@@ -433,20 +436,20 @@ found in the :ref:`quick-usage` section.
 Production good practice
 ---------------------
 
-Instalation of ``uwsgi``
+Installation of "uwsgi"
     # pip install uwsgi
 
-Instalation of ``Gunicorn``
+Installation of "Gunicorn"
     # pip install gunicorn
 
-Is better if you run ``api.py`` as uwsgi/gunicorn application
+Is better if you run "api.py" as uwsgi/gunicorn application
 
-Examples done with Uwsgi
-StandAlone:
-    * uwsgi --socket 0.0.0.0:8090 --protocol=http -w api:application --threads 5 --workers 5 --lazy
-    * see uwsgi -h for argument expalantion
+Examples done with Uwsgi StandAlone:
+    $ uwsgi --socket 0.0.0.0:8090 --protocol=http -w api:application --threads 5 --workers 5 --lazy
+    see uwsgi -h for argument explanation
 
-With ``config``, for example you have file ``/opt/cuckoo/utils/api.ini`` with this context
+With "config", for example you have file "/opt/cuckoo/utils/api.ini" with this context::
+
     [uwsgi]
         plugins = python
         callable = application
@@ -468,15 +471,15 @@ With ``config``, for example you have file ``/opt/cuckoo/utils/api.ini`` with th
         gui = cuckoo
         uid = cuckoo
 
-To run your api with confing just execute as:
+To run your api with config just execute as:
     uwsgi --ini /opt/cuckoo/utils/api.ini
 
-To add your aplication to auto start after boot, move your config file to
+To add your application to auto start after boot, move your config file to
     mv /opt/cuckoo/utils/api.ini /etc/uwsgi/apps-available/cuckoo_api.ini
-    ``ln -s /etc/uwsgi/apps-available/cuckoo_api.ini /etc/uwsgi/apps-enabled``
+    ln -s /etc/uwsgi/apps-available/cuckoo_api.ini /etc/uwsgi/apps-enabled
 
-    Point your ini to ``/etc/uwsgi/apps-enabled/cuckoo_api.ini``
-        ``sudo ln -s /etc/uwsgi/apps-available/cuckoo_api.ini /etc/uwsgi/apps-enabled/cuckoo_api.ini``
+    Point your ini to /etc/uwsgi/apps-enabled/cuckoo_api.ini
+    sudo ln -s /etc/uwsgi/apps-available/cuckoo_api.ini /etc/uwsgi/apps-enabled/cuckoo_api.ini
 
     For more information, see any of these files on your system:
         /etc/uwsgi/apps-available/README
@@ -485,53 +488,3 @@ To add your aplication to auto start after boot, move your config file to
         /etc/default/uwsgi
 
     sudo service uwsgi restart
-
-Nginx + Uwsgi
-    sudo apt-get install nginx uwsgi uwsgi-plugin-python
-
-    Nginx config
-        sudo vim /etc/nginx/site-available/cuckoo_api.conf
-
-        server {
-            listen 8090;
-            server_name 127.0.0.1;
-
-            location / {
-                include         uwsgi_params;
-                uwsgi_pass  :8091;
-                uwsgi_read_timeout 300;
-            }
-        }
-
-    Uwsgi must be activated for auto start, but config change a bit
-    [uwsgi]
-        plugins = python
-        callable = application
-        ;change this patch if is different
-        chdir = /opt/cuckoo/utils
-        master = true
-        mount = /=api.py
-        processes = 5
-        workers = 5
-        manage-script-name = true
-        socket = 127.0.0.1:8091
-        ; one socket file for all apps
-        ; Unix sockets are a little bit faster as you don't have the tcp-overhead. 
-        ; If you realize this performance loss is a question of server load. 
-        ; If you don't have very high server load you won't recognize it.
-        ; socket = /tmp/myapp.sock
-        socket = :8091
-        pidfile = /tmp/api.pid
-        enable-threads = true
-
-        chmod-socket = 664
-        chown-socket = cuckoo:cuckoo
-        gui = cuckoo
-        uid = cuckoo
-
-
-Hacks
----------------------
-Activate ``[compression]`` in reporting.conf to compress dump by `process.py` and save time with retrieve
-
-
