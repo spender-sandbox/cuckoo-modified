@@ -263,7 +263,6 @@ def tasks_report(task_id, report_format="json"):
         "pdf": "report.pdf",
         "maec": "report.maec-4.1.xml",
         "metadata": "report.metadata.xml",
-        "distributed": "report.distributed"
     }
 
     bz_formats = {
