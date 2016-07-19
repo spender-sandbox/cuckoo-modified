@@ -149,8 +149,7 @@ class Retriever(object):
                     all_files_tar = StringIO.StringIO(all_files_tar)
                     all_files = tarfile.open(fileobj=all_files_tar, mode="r:bz2")
                     all_files.extractall(report_path)
-                    print os.listdir(report_path)
-                    #close? 
+ 
                     all_files.close()
                     all_files_tar.close()
 
@@ -447,6 +446,9 @@ class StatusThread(threading.Thread):
 
     def do_mongo(self, report_mongo, report, mongo_db, t, node):
 
+        conn = MongoClient(reporting_conf.mongodb.host, reporting_conf.mongodb.port)
+        mongo_db = conn[reporting_conf.mongodb.db]
+
         if "processes" in report.get("behavior", {}):
 
             new_processes = []
@@ -492,6 +494,8 @@ class StatusThread(threading.Thread):
         main_db.set_status(t.main_task_id, TASK_COMPLETED)
         # set reported time
         main_db.set_status(t.main_task_id, TASK_REPORTED)
+
+        conn.close()
 
     def fetch_latest_reports(self, node, last_check):
 
@@ -553,15 +557,13 @@ class StatusThread(threading.Thread):
                             file.extractall(report_path, members=to_extract)
 
                             if reporting_conf.mongodb.enabled:
-                                conn = MongoClient(reporting_conf.mongodb.host, reporting_conf.mongodb.port)
-                                mongo_db = conn[reporting_conf.mongodb.db]
                                 report = ""
 
                                 with open(os.path.join(report_path, "reports", "report.json"), "r") as f:
                                     report = loads(f.read())
 
                                 if report_mongo and report:
-                                    self.do_mongo(report_mongo, report, mongo_db, t, node)
+                                    self.do_mongo(report_mongo, report, t, node)
                                     finished = True
                                 
                                     # move file here from slaves
@@ -578,8 +580,6 @@ class StatusThread(threading.Thread):
                                         os.symlink(destination, os.path.join(report_path, "binary"))
                                     except Exception as e:
                                         logging.error(e)
-
-                                conn.close()
 
                             # closing StringIO objects
                             fileobj.close()
