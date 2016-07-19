@@ -539,7 +539,6 @@ class StatusThread(threading.Thread):
                             fileobj = StringIO.StringIO(temp_f)
                             file = tarfile.open(fileobj=fileobj, mode="r:bz2") # errorlevel=0
                             report_mongo = ""
-                            #mongo_data = a.extractfile(dict(zip(file.getnames(), file.getmembers()))['mongo.json']).read()
                             report_mongo = file.extractfile("mongo.json")
                             report_mongo = report_mongo.read()
                             report_mongo = loads(report_mongo)
