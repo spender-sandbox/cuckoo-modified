@@ -436,15 +436,16 @@ found in the :ref:`quick-usage` section.
 Production good practice
 ---------------------
 
-Installation of "uwsgi"
+Installation of "uwsgi"::
     # pip install uwsgi
 
-Installation of "Gunicorn"
+Installation of "Gunicorn"::
     # pip install gunicorn
 
 Is better if you run "api.py" as uwsgi/gunicorn application
 
-Examples done with Uwsgi StandAlone:
+Examples done with Uwsgi StandAlone::
+
     $ uwsgi --socket 0.0.0.0:8090 --protocol=http -w api:application --threads 5 --workers 5 --lazy
     see uwsgi -h for argument explanation
 
@@ -471,17 +472,17 @@ With "config", for example you have file "/opt/cuckoo/utils/api.ini" with this c
         gui = cuckoo
         uid = cuckoo
 
-To run your api with config just execute as:
+To run your api with config just execute as::
     uwsgi --ini /opt/cuckoo/utils/api.ini
 
-To add your application to auto start after boot, move your config file to
+To add your application to auto start after boot, move your config file to::
     mv /opt/cuckoo/utils/api.ini /etc/uwsgi/apps-available/cuckoo_api.ini
     ln -s /etc/uwsgi/apps-available/cuckoo_api.ini /etc/uwsgi/apps-enabled
 
-    Point your ini to /etc/uwsgi/apps-enabled/cuckoo_api.ini
+Point your ini to /etc/uwsgi/apps-enabled/cuckoo_api.ini::
     sudo ln -s /etc/uwsgi/apps-available/cuckoo_api.ini /etc/uwsgi/apps-enabled/cuckoo_api.ini
 
-    For more information, see any of these files on your system:
+For more information, see any of these files on your system::
         /etc/uwsgi/apps-available/README
         /etc/uwsgi/apps-enabled/README
         /usr/share/doc/uwsgi/README.Debian.gz
