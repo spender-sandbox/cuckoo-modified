@@ -268,8 +268,8 @@ def tasks_report(task_id, report_format="json"):
     bz_formats = {
         "all": {"type": "-", "files": ["memory.dmp"]},
         "dropped": {"type": "+", "files": ["files"]},
-        "dist" : {"type": "+", "files": ["shots", "report_mongo.json"]},
-        "dist2": {"type": "-", "files": ["shots", "reports/report.json"]},
+        "dist" : {"type": "+", "files": ["shots", "reports"]},
+        "dist2": {"type": "-", "files": ["shots", "reports"]},
     }
 
     tar_formats = {
@@ -300,10 +300,11 @@ def tasks_report(task_id, report_format="json"):
 
             if report_format.lower() == "dist": 
                 buf = results_db.analysis.find_one({"info.id": task_id})
-                with open(os.path.join(srcdir, "reports", "report_mongo.json"), "w") as report:
-                    report.write(json_util.dumps(buf, indent=4))
-                tar.add(os.path.join(srcdir, "reports", "report_mongo.json"),
-                        arcname="reports/report_mongo.json")
+                tarinfo = tarfile.TarInfo("mongo.json")
+                buf_dumped = json_util.dumps(buf)
+                tarinfo.size = len(buf_dumped)
+                buf = StringIO(buf_dumped)
+                tar.addfile(tarinfo, buf)
 
             tar.close()
             response.content_type = "application/x-tar; charset=UTF-8"

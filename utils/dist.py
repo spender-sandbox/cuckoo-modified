@@ -537,34 +537,48 @@ class StatusThread(threading.Thread):
                     if HAVE_MONGO:
                         try:
                             fileobj = StringIO.StringIO(temp_f)
-                            file = tarfile.open(fileobj=fileobj, mode="r:bz2")
-                            file.extractall(report_path)
+                            file = tarfile.open(fileobj=fileobj, mode="r:bz2") # errorlevel=0
+                            report_mongo = ""
+                            #mongo_data = a.extractfile(dict(zip(file.getnames(), file.getmembers()))['mongo.json']).read()
+                            report_mongo = file.extractfile("mongo.json")
+                            report_mongo = report_mongo.read()
+                            report_mongo = loads(report_mongo)
+                            
+                            to_extract = file.getmembers()
+                            to_extract = [to_extract.remove(file_inside) 
+                                            if file_inside.name == 'mongo.json' else file_inside 
+                                            for file_inside in to_extract]
+                            to_extract = filter(None, to_extract)
+
+                            # Ignore mongo.json, it will loaded only into memory
+                            file.extractall(report_path, members=to_extract)
 
                             if reporting_conf.mongodb.enabled:
                                 conn = MongoClient(reporting_conf.mongodb.host, reporting_conf.mongodb.port)
                                 mongo_db = conn[reporting_conf.mongodb.db]
                                 report = ""
-                                with open(os.path.join(report_path, "reports", "report_mongo.json"), "r") as f:
-                                    report_mongo = loads(f.read())
-                                    with open(os.path.join(report_path, "reports", "report.json"), "r") as r:
-                                        report = loads(f.read())
-                                        self.do_mongo(report_mongo, report, mongo_db, t, node)
-                                finished = True
-                                
-                                # move file here from slaves
-                                retrieve.queue.put((t.id, t.task_id, t.node_id, t.main_task_id))
 
-                                try:
-                                    sample = open(t.path, "rb").read()
-                                    sample_sha256 = hashlib.sha256(sample).hexdigest()
-                                    destination = os.path.join(CUCKOO_ROOT, "storage", "binaries", sample_sha256)
-                                    if not os.path.exists(destination):
-                                        os.rename(t.path, destination)
-                                    os.remove(t.path)
-                                    # creating link to analysis folder
-                                    os.symlink(destination, os.path.join(report_path, "binary"))
-                                except Exception as e:
-                                    logging.error(e)
+                                with open(os.path.join(report_path, "reports", "report.json"), "r") as f:
+                                    report = loads(f.read())
+
+                                if report_mongo and report:
+                                    self.do_mongo(report_mongo, report, mongo_db, t, node)
+                                    finished = True
+                                
+                                    # move file here from slaves
+                                    retrieve.queue.put((t.id, t.task_id, t.node_id, t.main_task_id))
+
+                                    try:
+                                        sample = open(t.path, "rb").read()
+                                        sample_sha256 = hashlib.sha256(sample).hexdigest()
+                                        destination = os.path.join(CUCKOO_ROOT, "storage", "binaries", sample_sha256)
+                                        if not os.path.exists(destination):
+                                            os.rename(t.path, destination)
+                                        os.remove(t.path)
+                                        # creating link to analysis folder
+                                        os.symlink(destination, os.path.join(report_path, "binary"))
+                                    except Exception as e:
+                                        logging.error(e)
 
                                 conn.close()
 
@@ -886,9 +900,9 @@ class IocApi(ReportingBaseApi):
 class ReportApi(ReportingBaseApi):
 
     report_formats = {
-        "distributed": "distributed",
         "json" : "json",
         "dist" : "dist",
+        "dist2" : "dist2",
     }
 
     def get(self, task_id, report="json", stream=False, raw=False):
