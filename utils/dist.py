@@ -449,11 +449,11 @@ class StatusThread(threading.Thread):
 
     def do_mongo(self, report, mongo_db, t, node):
 
-        if "processes" in behaviour_report:
+        if "processes" in report:
 
             new_processes = []
 
-            for process in behaviour_report.get("processes", []):
+            for process in report.get("processes", []):
                 new_process = dict(process)
 
                 chunk = []
@@ -484,13 +484,11 @@ class StatusThread(threading.Thread):
                 new_processes.append(new_process)
 
             # Store the results in the report.
-            mongo_report["behavior"] = dict(behaviour_report)
-            mongo_report["behavior"]["processes"] = new_processes
+            report["behavior"]["processes"] = new_processes
 
         #patch info.id to have the same id as in main db
-        mongo_report["info"]["id"] = t.main_task_id
-
-        mongo_db.analysis.save(mongo_report)
+        report["info"]["id"] = t.main_task_id
+        mongo_db.analysis.save(report)
 
         # set complated_on time
         main_db.set_status(t.main_task_id, TASK_COMPLETED)
@@ -549,12 +547,12 @@ class StatusThread(threading.Thread):
                                 mongo_db = conn[reporting_conf.mongodb.db]
                                 report = ""
                                 with open(os.path.join(report_path, "reports", "report_mongo.json"), "r") as f:
-                                    report = loads(f)
+                                    report = loads(f.read())
                                     self.do_mongo(report, mongo_db, t, node)
                                 finished = True
                                 
                                 # move file here from slaves
-                                retrieve.queue.put(t.id, t.task_id, t.node_id, t.main_task_id)
+                                retrieve.queue.put((t.id, t.task_id, t.node_id, t.main_task_id))
 
                                 try:
                                     sample = open(t.path, "rb").read()

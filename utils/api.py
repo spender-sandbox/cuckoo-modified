@@ -305,9 +305,7 @@ def tasks_report(task_id, report_format="json"):
                     rep = json.load(r)
                     buf["behavior"] = rep["behavior"]
                 with open(os.path.join(srcdir, "reports", "report_mongo.json"), "w") as report:
-                    rep = json.dumps(buf, indent=4, default=json_util.default)
-                    rep = StringIO(rep)
-                    report.write(rep.getvalue())
+                    report.write(json_util.dumps(buf, indent=4))
                 tar.add(os.path.join(srcdir, "reports", "report_mongo.json"),
                         arcname="reports/report_mongo.json")
 
