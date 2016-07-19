@@ -85,8 +85,8 @@ class AnalysisManager(threading.Thread):
         # If the analysis storage folder already exists, we need to abort the
         # analysis or previous results will be overwritten and lost.
         if os.path.exists(self.storage):
-            log.error("Analysis results folder already exists at path \"%s\","
-                      " analysis aborted", self.storage)
+            log.error("Task #{0}: Analysis results folder already exists at path '{1}', "
+                      "analysis aborted".format(self.task.id, self.storage))
             return False
 
         # If we're not able to create the analysis storage folder, we have to
@@ -94,7 +94,7 @@ class AnalysisManager(threading.Thread):
         try:
             create_folder(folder=self.storage)
         except CuckooOperationalError:
-            log.error("Unable to create analysis folder %s", self.storage)
+            log.error("Task #{0}: Unable to create analysis folder {1}".format(self.task.id, self.storage))
             return False
 
         return True
@@ -105,7 +105,8 @@ class AnalysisManager(threading.Thread):
 
         sha256 = File(self.task.target).get_sha256()
         if sha256 != sample.sha256:
-            log.error("Target file has been modified after submission: \"%s\"", self.task.target)
+            log.error("Task #{0}: Target file has been modified after submission: "
+                      "'{1}'".format(self.task.id, self.task.target))
             return False
 
         return True
@@ -113,23 +114,23 @@ class AnalysisManager(threading.Thread):
     def store_file(self):
         """Store a copy of the file being analyzed."""
         if not os.path.exists(self.task.target):
-            log.error("The file to analyze does not exist at path \"%s\", "
-                      "analysis aborted", self.task.target)
+            log.error("Task #{0}: The file to analyze does not exist at path '{1}', "
+                      "analysis aborted".format(self.task.id, self.task.target))
             return False
 
         sha256 = File(self.task.target).get_sha256()
         self.binary = os.path.join(CUCKOO_ROOT, "storage", "binaries", sha256)
 
         if os.path.exists(self.binary):
-            log.info("File already exists at \"%s\"", self.binary)
+            log.info("Task #{0}: File already exists at '{1}'".format(self.task.id, self.binary))
         else:
             # TODO: do we really need to abort the analysis in case we are not
             # able to store a copy of the file?
             try:
                 shutil.copy(self.task.target, self.binary)
             except (IOError, shutil.Error) as e:
-                log.error("Unable to store file from \"%s\" to \"%s\", "
-                          "analysis aborted", self.task.target, self.binary)
+                log.error("Task #{0}: Unable to store file from '{1}' to '{2}', "
+                          "analysis aborted".format(self.task.id, self.task.target, self.binary))
                 return False
 
         try:
@@ -140,8 +141,8 @@ class AnalysisManager(threading.Thread):
             else:
                 shutil.copy(self.binary, new_binary_path)
         except (AttributeError, OSError) as e:
-            log.error("Unable to create symlink/copy from \"%s\" to "
-                      "\"%s\": %s", self.binary, self.storage, e)
+            log.error("Task #{0}: Unable to create symlink/copy from '{1}' to "
+                      "'{2}': {3}".format(self.task.id, self.binary, self.storage, e))
 
         return True
 
@@ -171,11 +172,12 @@ class AnalysisManager(threading.Thread):
             # and try again.
             if not machine:
                 machine_lock.release()
-                log.debug("Task #%d: no machine available yet", self.task.id)
+                log.debug("Task #{0}: no machine available yet".format(self.task.id))
                 time.sleep(1)
             else:
-                log.info("Task #%d: acquired machine %s (label=%s)",
-                         self.task.id, machine.name, machine.label)
+                log.info("Task #{0}: acquired machine {1} (label={2})".format(
+                             self.task.id, machine.name, machine.label)
+                        )
                 break
 
         self.machine = machine
@@ -226,8 +228,9 @@ class AnalysisManager(threading.Thread):
         succeeded = False
         dead_machine = False
 
-        log.info("Starting analysis of %s \"%s\" (task=%d)",
-                 self.task.category.upper(), self.task.target, self.task.id)
+        log.info("Task #{0}: Starting analysis of {1} '{2}'".format(
+                 self.task.id, self.task.category.upper(), self.task.target)
+                )
 
         # Initialize the analysis folders.
         if not self.init_storage():
@@ -264,7 +267,7 @@ class AnalysisManager(threading.Thread):
             self.acquire_machine()
         except CuckooOperationalError as e:
             machine_lock.release()
-            log.error("Cannot acquire machine: {0}".format(e))
+            log.error("Task #{0}: Cannot acquire machine: {1}".format(self.task.id, e))
             return False
 
         # Generate the analysis configuration file.
@@ -324,18 +327,21 @@ class AnalysisManager(threading.Thread):
                 try:
                     dump_path = os.path.join(self.storage, "memory.dmp")
                     machinery.dump_memory(self.machine.label, dump_path)
+
                 except NotImplementedError:
                     log.error("The memory dump functionality is not available "
                               "for the current machine manager.")
+
                 except CuckooMachineError as e:
                     log.error(e)
 
             try:
                 # Stop the analysis machine.
                 machinery.stop(self.machine.label)
+
             except CuckooMachineError as e:
-                log.warning("Unable to stop machine %s: %s",
-                            self.machine.label, e)
+                log.warning("Task #{0}: Unable to stop machine {1}: {2}".format(
+                            self.task.id, self.machine.label, e))
 
             # Mark the machine in the database as stopped. Unless this machine
             # has been marked as dead, we just keep it as "started" in the
@@ -365,10 +371,11 @@ class AnalysisManager(threading.Thread):
                 # Release the analysis machine. But only if the machine has
                 # not turned dead yet.
                 machinery.release(self.machine.label)
+
             except CuckooMachineError as e:
-                log.error("Unable to release machine %s, reason %s. "
-                          "You might need to restore it manually.",
-                          self.machine.label, e)
+                log.error("Task #{0}: Unable to release machine {1}, reason "
+                          "{2}. You might need to restore it manually.".format(
+                          self.task.id, self.machine.label, e))
 
         return succeeded
 
@@ -393,28 +400,35 @@ class AnalysisManager(threading.Thread):
         # delete the original copy.
         if self.task.category == "file" and self.cfg.cuckoo.delete_original:
             if not os.path.exists(self.task.target):
-                log.warning("Original file does not exist anymore: \"%s\": "
-                            "File not found.", self.task.target)
+                log.warning("Task #{0}: Original file does not exist anymore: "
+                            "'{1}': File not found.".format(self.task.id, self.task.target)
+                           )
             else:
                 try:
                     os.remove(self.task.target)
+
                 except OSError as e:
-                    log.error("Unable to delete original file at path "
-                              "\"%s\": %s", self.task.target, e)
+                    log.error("Task #{0}: Unable to delete original file at "
+                              "path '{1}': {2}".format(self.task.id, self.task.target, e)
+                             )
 
         # If the target is a file and the user enabled the delete copy of
         # the binary option, then delete the copy.
         if self.task.category == "file" and self.cfg.cuckoo.delete_bin_copy:
             if not os.path.exists(self.binary):
-                log.warning("Copy of the original file does not exist anymore: \"%s\": File not found", self.binary)
+                log.warning("Task #{0}: Copy of the original file does not exist anymore: '{1}': "
+                            "File not found".format(self.task.id, self.binary)
+                           )
             else:
                 try:
                     os.remove(self.binary)
                 except OSError as e:
-                    log.error("Unable to delete the copy of the original file at path \"%s\": %s", self.binary, e)
+                    log.error("Task #{0}: Unable to delete the copy of the original file at path "
+                              "'{1}': {2}".format(self.task.id, self.binary, e))
 
-        log.info("Task #%d: reports generation completed (path=%s)",
-                 self.task.id, self.storage)
+        log.info("Task #{0}: reports generation completed (path={1})".format(
+                    self.task.id, self.storage)
+                )
 
         return True
 
@@ -439,8 +453,7 @@ class AnalysisManager(threading.Thread):
             # turn thrown an exception in the analysisinfo processing module.
             self.task = self.db.view_task(self.task.id) or self.task
 
-            log.debug("Released database task #%d with status %s",
-                      self.task.id, success)
+            log.debug("Task #{0}: Released database task with status {1}".format(self.task.id, success))
 
             if self.cfg.cuckoo.process_results:
                 self.process_results()
@@ -465,13 +478,13 @@ class AnalysisManager(threading.Thread):
 
                     os.symlink(self.storage, latest)
                 except OSError as e:
-                    log.warning("Error pointing latest analysis symlink: %s" % e)
+                    log.warning("Task #{0}: Error pointing latest analysis symlink: {1}".format(self.task.id, e))
                 finally:
                     latest_symlink_lock.release()
 
-            log.info("Task #%d: analysis procedure completed", self.task.id)
+            log.info("Task #{0}: analysis procedure completed".format(self.task.id))
         except Exception as e:
-            log.exception("Failure in AnalysisManager.run: %s" % e)
+            log.exception("Task #{0}: Failure in AnalysisManager.run: {1}".format(self.task.id, e))
 
         active_analysis_count -= 1
 
@@ -544,7 +557,7 @@ class Scheduler:
 
         if len(machinery.machines()) > 1 and self.db.engine.name == "sqlite":
             log.warning("As you've configured Cuckoo to execute parallel "
-                        "analyses, we recommend you to switch to a MySQL " 
+                        "analyses, we recommend you to switch to a MySQL "
                         "a PostgreSQL database as SQLite might cause some "
                         "issues.")
 
@@ -634,7 +647,7 @@ class Scheduler:
                 else:
                     task = self.db.fetch()
                 if task:
-                    log.debug("Processing task #%s", task.id)
+                    log.debug("Task #{0}: Processing task".format(task.id))
                     self.total_analysis_count += 1
                     # Initialize and start the analysis manager.
                     analysis = AnalysisManager(task, errors)
