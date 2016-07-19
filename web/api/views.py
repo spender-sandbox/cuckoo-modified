@@ -994,7 +994,7 @@ def tasks_list(request, offset=None, limit=None, window=None):
 
     completed_after = request.GET.get("completed_after")
     if completed_after:
-        completed_after = fromtimestamp(int(completed_after))
+        completed_after = datetime.fromtimestamp(int(completed_after))
 
     if not completed_after and window:
         maxwindow = apiconf.tasklist.get("maxwindow")
