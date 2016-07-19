@@ -409,7 +409,7 @@ class StatusThread(threading.Thread):
         db.session.commit()
 
         # Only get tasks that have not been pushed yet.
-        q = Task.query.filter_by(node_id=None, finished=False)
+        q = Task.query.filter(or_(Task.node_id==None, Task.task_id==None), Task.finished==False)
 
         # Order by task priority and task id.
         q = q.order_by(-Task.priority, -Task.id)
@@ -445,7 +445,7 @@ class StatusThread(threading.Thread):
         for task in q.limit(MINIMUMQUEUE).all():
             node.submit_task(task)
 
-    def do_mongo(self, report, mongo_db, t, node):
+    def do_mongo(self, report_mongo, report, mongo_db, t, node):
 
         if "processes" in report.get("behavior", {}):
 
@@ -482,11 +482,11 @@ class StatusThread(threading.Thread):
                 new_processes.append(new_process)
 
             # Store the results in the report.
-            report["behavior"]["processes"] = new_processes
+            report_mongo["behavior"]["processes"] = new_processes
 
         #patch info.id to have the same id as in main db
-        report["info"]["id"] = t.main_task_id
-        mongo_db.analysis.save(report)
+        report_mongo["info"]["id"] = t.main_task_id
+        mongo_db.analysis.save(report_mongo)
 
         # set complated_on time
         main_db.set_status(t.main_task_id, TASK_COMPLETED)
@@ -545,8 +545,10 @@ class StatusThread(threading.Thread):
                                 mongo_db = conn[reporting_conf.mongodb.db]
                                 report = ""
                                 with open(os.path.join(report_path, "reports", "report_mongo.json"), "r") as f:
-                                    report = loads(f.read())
-                                    self.do_mongo(report, mongo_db, t, node)
+                                    report_mongo = loads(f.read())
+                                    with open(os.path.join(report_path, "reports", "report.json"), "r") as r:
+                                        report = loads(f.read())
+                                        self.do_mongo(report_mongo, report, mongo_db, t, node)
                                 finished = True
                                 
                                 # move file here from slaves

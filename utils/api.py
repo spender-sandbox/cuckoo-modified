@@ -298,11 +298,8 @@ def tasks_report(task_id, report_format="json"):
                 if bzf["type"] == "+" and filedir in bzf["files"]:
                     tar.add(os.path.join(srcdir, filedir), arcname=filedir)
 
-            if report_format.lower() == "dist_report": 
+            if report_format.lower() == "dist": 
                 buf = results_db.analysis.find_one({"info.id": task_id})
-                with open(os.path.join(srcdir, "reports", "report.json"), "r") as r:
-                    rep = json.load(r)
-                    buf["behavior"] = rep["behavior"]
                 with open(os.path.join(srcdir, "reports", "report_mongo.json"), "w") as report:
                     report.write(json_util.dumps(buf, indent=4))
                 tar.add(os.path.join(srcdir, "reports", "report_mongo.json"),
