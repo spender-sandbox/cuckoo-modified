@@ -432,8 +432,9 @@ found in the :ref:`quick-usage` section.
 
 Production good practice
 ---------------------
+
 Instalation of ``uwsgi``
-    #pip install uwsgi
+    # pip install uwsgi
 
 Instalation of ``Gunicorn``
     # pip install gunicorn
