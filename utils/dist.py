@@ -136,7 +136,7 @@ class Retriever(object):
         with app.app_context():
             try:
 
-                report = ReportApi().get(dist_id, "dist", True, True)
+                report = ReportApi().get(dist_id, "dist2", True, True)
 
                 if report and report.status_code == 200:
 
@@ -516,7 +516,7 @@ class StatusThread(threading.Thread):
             if node.name != "master":
 
                 # Fetch each requested report.
-                report = node.get_report(t.task_id, "dist_report",
+                report = node.get_report(t.task_id, "dist",
                                              stream=True)
                 if report is None or report.status_code != 200:
                     log.debug("Error fetching %s report for task #%d",
