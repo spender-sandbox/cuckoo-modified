@@ -876,33 +876,6 @@ class ReportingBaseApi(RestResource):
         return node.url, node.ht_user, node.ht_pass
 
 
-class IocApi(ReportingBaseApi):
-
-    def get(self, task_id):
-        task = Task.query.get(task_id)
-        if task is None:
-            abort(404, message="Task not found")
-        url,ht_user,ht_pass = self.get_node(task.node_id)
-        res = self.get_iocs(url, ht_user, ht_pass, task.task_id)
-
-        if res and res.status_code == 200:
-            return res.json()
-        else:
-            abort(404, message="Iocs report not found")
-
-    def get_iocs(self, url, ht_user, ht_pass, task_id, stream=False):
-        try:
-            url = os.path.join(url, "tasks", "iocs",
-                               "%d" % task_id)
-            log.info(url)
-            return requests.get(url, stream=stream,
-                                auth = HTTPBasicAuth(ht_user, ht_pass),
-                                verify = False)
-        except Exception as e:
-            log.critical("Error fetching report (task #%d, node %s): %s",
-                         task_id, url, e)
-
-
 class ReportApi(ReportingBaseApi):
 
     report_formats = {
@@ -914,7 +887,7 @@ class ReportApi(ReportingBaseApi):
     def get(self, task_id, report="json", stream=False, raw=False):
         task = Task.query.get(task_id)
         url,ht_user,ht_pass = self.get_node(task.node_id)
-        log.info(url)
+        
         if not task:
             abort(404, message="Task not found")
 
@@ -1017,8 +990,6 @@ def create_app(database_connection):
     restapi.add_resource(ReportApi,
                          "/report/<int:task_id>",
                          "/report/<int:task_id>/<string:report>")
-    restapi.add_resource(IocApi,
-                         "/iocs/<int:task_id>")
     restapi.add_resource(StatusRootApi, "/status")
 
     db.init_app(app)
