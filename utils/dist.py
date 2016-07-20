@@ -572,7 +572,11 @@ class StatusThread(threading.Thread):
                                     try:
                                         sample = open(t.path, "rb").read()
                                         sample_sha256 = hashlib.sha256(sample).hexdigest()
-                                        destination = os.path.join(CUCKOO_ROOT, "storage", "binaries", sample_sha256)
+                                        destination = os.path.join(CUCKOO_ROOT, "storage", "binaries")
+                                        if not os.path.exists(destination):
+                                            os.mkdir(destination)
+
+                                        destination = os.path.join(destination, sample_sha256)
                                         if not os.path.exists(destination):
                                             os.rename(t.path, destination)
                                         os.remove(t.path)

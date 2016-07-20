@@ -86,10 +86,10 @@ def tasks_create_file():
     shrike_sid = request.forms.get("shrike_sid", None)
     shrike_refer = request.forms.get("shrike_refer", None)
 
-    if memory:
+    if int(memory):
         memory = True
     enforce_timeout = request.forms.get("enforce_timeout", False)
-    if enforce_timeout:
+    if int(enforce_timeout):
         enforce_timeout = True
 
     temp_file_path = store_temp_file(data.file.read(), data.filename)
@@ -119,10 +119,10 @@ def tasks_create_url():
     shrike_sid = request.forms.get("shrike_sid", None)
     shrike_refer = request.forms.get("shrike_refer", None)
 
-    if memory:
+    if int(memory):
         memory = True
     enforce_timeout = request.forms.get("enforce_timeout", False)
-    if enforce_timeout:
+    if int(enforce_timeout):
         enforce_timeout = True
     clock = request.forms.get("clock", None)
 
@@ -270,7 +270,7 @@ def tasks_report(task_id, report_format="json"):
         "all": {"type": "-", "files": ["memory.dmp"]},
         "dropped": {"type": "+", "files": ["files"]},
         "dist" : {"type": "+", "files": ["shots", "reports"]},
-        "dist2": {"type": "-", "files": ["shots", "reports"]},
+        "dist2": {"type": "-", "files": ["shots", "reports", "binary"]},
     }
 
     tar_formats = {
