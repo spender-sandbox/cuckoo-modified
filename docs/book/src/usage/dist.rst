@@ -489,3 +489,6 @@ For more information, see any of these files on your system::
         /etc/default/uwsgi
 
     sudo service uwsgi restart
+
+If you need extra help, check this 
+    http://vladikk.com/2013/09/12/serving-flask-with-nginx-on-ubuntu/

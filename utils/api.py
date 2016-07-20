@@ -32,6 +32,7 @@ from lib.cuckoo.core.database import Database, TASK_RUNNING, Task
 db = Database()
 repconf = Config("reporting")
 
+# http://api.mongodb.com/python/current/faq.html#using-pymongo-with-multiprocessing
 # this required for Iocs API
 FULL_DB = False
 if repconf.mongodb.enabled:
@@ -298,7 +299,7 @@ def tasks_report(task_id, report_format="json"):
                 if bzf["type"] == "+" and filedir in bzf["files"]:
                     tar.add(os.path.join(srcdir, filedir), arcname=filedir)
 
-            if report_format.lower() == "dist": 
+            if report_format.lower() == "dist" and FULL_DB: 
                 buf = results_db.analysis.find_one({"info.id": task_id})
                 tarinfo = tarfile.TarInfo("mongo.json")
                 buf_dumped = json_util.dumps(buf)

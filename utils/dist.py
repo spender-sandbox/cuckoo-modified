@@ -255,11 +255,11 @@ class Node(db.Model):
                             verify = False)
             task.node_id = self.id
 
-            # task.task_ids <- see how to loop it and store all ids,
-            # Still not saw more then one id returned(test with zip and many files inside)
-            # because by default it nto saving it,
-            # or saving as list which trigger errors
+            # This return only one id
+            # If many files inside of zip for example
+            # It creates additional tasks, but ids not returned
             task.task_id = r.json()["task_ids"][0]
+            log.info(task.task_id)
 
             if task.main_task_id:
                 main_db.set_status(task.main_task_id, TASK_RUNNING)
@@ -444,12 +444,12 @@ class StatusThread(threading.Thread):
         for task in q.limit(MINIMUMQUEUE).all():
             node.submit_task(task)
 
-    def do_mongo(self, report_mongo, report, mongo_db, t, node):
+    def do_mongo(self, report_mongo, report, t, node):
 
-        conn = MongoClient(reporting_conf.mongodb.host, reporting_conf.mongodb.port)
-        mongo_db = conn[reporting_conf.mongodb.db]
+        if HAVE_MONGO and "processes" in report.get("behavior", {}):
+            conn = MongoClient(reporting_conf.mongodb.host, reporting_conf.mongodb.port)
+            mongo_db = conn[reporting_conf.mongodb.db]
 
-        if "processes" in report.get("behavior", {}):
 
             new_processes = []
 
@@ -605,8 +605,11 @@ class StatusThread(threading.Thread):
         global queue
         global retrieve
 
-        # ToDo from config
-        threads_number = 5
+        if reporting_conf.distributed.retriever_threads:
+            threads_number = int(reporting_conf.distributed.retriever_threads)
+        else:
+            threads_number = 5
+
         # Check me
         retrieve = Retriever(queue, threads_number, app)
         retrieve.background()
