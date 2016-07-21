@@ -297,18 +297,20 @@ tasks and fetch reports once finished. Documentation on these commands can be
 found in the :ref:`quick-usage` section.
 
 
-Production good practice
+Good practice for production
 ---------------------
 
-Installation of "uwsgi"::
+Number of retrieved threads from reporting.conf should be less then general threads in uwsgi/gunicorn for api.py
+
+Installation of "uwsgi":
     # pip install uwsgi
 
-Installation of "Gunicorn"::
+Installation of "Gunicorn":
     # pip install gunicorn
 
-Is better if you run "api.py" as uwsgi/gunicorn application
+Is better if you run "api.py" and "dist.py" as uwsgi/gunicorn application
 
-Examples done with Uwsgi StandAlone::
+Examples done with Uwsgi StandAlone:
 
     $ uwsgi --socket 0.0.0.0:8090 --protocol=http -w api:application --threads 5 --workers 5 --lazy
     see uwsgi -h for argument explanation
@@ -330,29 +332,32 @@ With "config", for example you have file "/opt/cuckoo/utils/api.ini" with this c
         protocol=http
         enable-threads = true
         lazy-apps = true
-
+        timeout = 600
         chmod-socket = 664
         chown-socket = cuckoo:cuckoo
         gui = cuckoo
         uid = cuckoo
 
-To run your api with config just execute as::
-    uwsgi --ini /opt/cuckoo/utils/api.ini
+To run your api with config just execute as:
 
-To add your application to auto start after boot, move your config file to::
-    mv /opt/cuckoo/utils/api.ini /etc/uwsgi/apps-available/cuckoo_api.ini
-    ln -s /etc/uwsgi/apps-available/cuckoo_api.ini /etc/uwsgi/apps-enabled
+    $ uwsgi --ini /opt/cuckoo/utils/api.ini
+
+To add your application to auto start after boot, move your config file to:
+
+    # mv /opt/cuckoo/utils/api.ini /etc/uwsgi/apps-available/cuckoo_api.ini
+    # ln -s /etc/uwsgi/apps-available/cuckoo_api.ini /etc/uwsgi/apps-enabled
 
 Point your ini to /etc/uwsgi/apps-enabled/cuckoo_api.ini::
-    sudo ln -s /etc/uwsgi/apps-available/cuckoo_api.ini /etc/uwsgi/apps-enabled/cuckoo_api.ini
-
-For more information, see any of these files on your system::
-        /etc/uwsgi/apps-available/README
-        /etc/uwsgi/apps-enabled/README
-        /usr/share/doc/uwsgi/README.Debian.gz
-        /etc/default/uwsgi
-
-    sudo service uwsgi restart
+    # ln -s /etc/uwsgi/apps-available/cuckoo_api.ini /etc/uwsgi/apps-enabled/cuckoo_api.ini
+    # service uwsgi restart
 
 If you need extra help, check this 
+    
+    See any of these files on your system
+    /etc/uwsgi/apps-available/README
+    /etc/uwsgi/apps-enabled/README
+    /usr/share/doc/uwsgi/README.Debian.gz
+    /etc/default/uwsgi
+
+    Online
     http://vladikk.com/2013/09/12/serving-flask-with-nginx-on-ubuntu/
