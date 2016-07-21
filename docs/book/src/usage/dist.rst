@@ -35,9 +35,7 @@ Following is a listing of all available commandline options::
 
     $ ./utils/dist.py -h
 
-    usage: dist.py [-h] [-d] [--db DB] --samples-directory SAMPLES_DIRECTORY
-                [--uptime-logfile UPTIME_LOGFILE] --report-formats
-                REPORT_FORMATS --reports-directory REPORTS_DIRECTORY
+    usage: dist.py [-h] [-d] [--db DB] [--uptime-logfile UPTIME_LOGFILE]
                 [host] [port]
 
     positional arguments:
@@ -47,40 +45,10 @@ Following is a listing of all available commandline options::
     optional arguments:
         -h, --help            show this help message and exit
         -d, --debug           Enable debug logging
-        --db DB               Database connection string
-        --samples-directory SAMPLES_DIRECTORY
                                 Samples directory
         --uptime-logfile UPTIME_LOGFILE
                                 Uptime logfile path
 
-In particular the ``--report-formats``, ``--samples-directory``, and
-``--reports-directory`` are required.
-
-Report Formats
---------------
-
-The reporting formats denote which reports you'd like to retrieve later on.
-Note that all task-related data will be removed from the Cuckoo nodes once the
-related reports have been fetches so that the machines are not running out of
-disk space. This does, however, force you to specify all the report formats
-that you're interested in, because otherwise that information will be lost.
-
-Reporting formats include, but are not limited to and may also include your
-own reporting formats, ``json``, ``html``, etc.
-
-Samples Directory
------------------
-
-The samples directory denotes the directory where the submitted samples will
-be stored *temporarily*, until they're passed on to a Cuckoo node and
-processed.
-
-Reports Directory
------------------
-
-Much like the ``Samples Directory`` the Reports Directory defines the
-directory where reports will be stored until they're fetched and deleted from
-the Distributed REST API.
 
 RESTful resources
 =================
@@ -104,14 +72,6 @@ Following are all RESTful resources. Also make sure to check out the
 | ``GET`` :ref:`task_root_get`      | Get a list of all (or a part) of the tasks in the database.   |
 +-----------------------------------+---------------------------------------------------------------+
 | ``POST`` :ref:`task_root_post`    | Create a new analysis task.                                   |
-+-----------------------------------+---------------------------------------------------------------+
-| ``GET`` :ref:`task_get`           | Get basic information about a task.                           |
-+-----------------------------------+---------------------------------------------------------------+
-| ``DELETE`` :ref:`task_delete`     | Delete all associated information of a task.                  |
-+-----------------------------------+---------------------------------------------------------------+
-| ``GET`` :ref:`report_get`         + Fetch an analysis report.                                     |
-+-----------------------------------+---------------------------------------------------------------+
-| ``GET`` :ref:`iocs_get`           + Fetch an analysis iocs.                                       |
 +-----------------------------------+---------------------------------------------------------------+
 
 .. _node_root_get:
@@ -204,35 +164,6 @@ keep its history in the Distributed's database::
     $ curl -XDELETE http://localhost:9003/node/localhost
     null
 
-.. _task_root_get:
-
-GET /task
----------
-
-Get a list of all tasks in the database (an offset and limit parameter have
-yet to be added)::
-
-    $ curl http://localhost:9003/task
-    {
-        "tasks": {
-            "1": {
-                "clock": null,
-                "custom": null,
-                "enforce_timeout": null,
-                "machine": null,
-                "memory": null,
-                "options": null,
-                "package": null,
-                "path": "/tmp/dist-samples/tmphal8mS",
-                "platform": "windows",
-                "priority": 1,
-                "tags": null,
-                "task_id": 1,
-                "timeout": null
-            }
-        }
-    }
-
 .. _task_root_post:
 
 POST /task
@@ -246,65 +177,6 @@ Submit a new file or URL to be analyzed::
     }
 
 .. _task_get:
-
-GET /task/<id>
---------------
-
-Get basic information about a particular task::
-
-    $ curl http://localhost:9003/task/2
-    {
-        "tasks": {
-            "2": {
-                "clock": null,
-                "custom": null,
-                "enforce_timeout": null,
-                "machine": null,
-                "memory": null,
-                "options": null,
-                "package": null,
-                "path": "/tmp/tmpPwUeXm",
-                "platform": "windows",
-                "priority": 1,
-                "tags": null,
-                "task_id": 2,
-                "timeout": null
-            }
-        }
-    }
-
-.. _task_delete:
-
-DELETE /task/<id>
------------------
-
-Delete all associated data of a task, namely the binary and the reports::
-
-    $ curl -XDELETE http://localhost:9003/task/2
-    null
-
-.. _report_get:
-
-GET /report/<id>/<format>
--------------------------
-
-Fetch a report for the given task in the specified format::
-
-    # Defaults to the JSON report.
-    $ curl http://localhost:9003/report/2
-    ...
-
-    # Get an XML report.
-    $ curl http://localhost:9003/report/2/maec -H "Accept: application/xml"
-
-.. _iocs_get:
-
-GET /iocs/<id>
--------------------------
-
-Fetch iocs for the given task::
-
-    $ curl http://localhost:9003/iocs/2
 
 .. _quick-usage:
 
@@ -329,22 +201,14 @@ Cuckoo ``tags``, a particular machine, etc)::
 
     $ curl http://localhost:9003/task -F file=@/path/to/sample.exe
 
-Get the report of a task has been finished (if it hasn't finished you'll get
-a 404 page). Following example will default to the ``JSON`` report::
-
-    $ curl http://localhost:9003/report/1
-
-In order to fetch an XML report such as a MAEC report, use the following
-instead::
-
-    $ curl http://localhost:9003/report/1/maec -H 'Accept: application/xml'
+Get the report of a task should be requested throw master node integrated /api/ or api.py
 
 Proposed setup
 ==============
 
 The following description depicts a Distributed Cuckoo setup with two Cuckoo
-machines, **cuckoo0** and **cuckoo1**. In this setup the first machine,
-cuckoo0, also hosts the Distributed Cuckoo REST API.
+machines, **master** and **slave**. In this setup the first machine,
+master, also hosts the Distributed Cuckoo REST API.
 
 Configuration settings
 ----------------------
@@ -425,8 +289,8 @@ Register Cuckoo nodes
 As outlined in :ref:`quick-usage` the Cuckoo nodes have to be registered with
 the Distributed Cuckoo script::
 
-    $ curl http://localhost:9003/node -F name=cuckoo0 -F url=http://localhost:8090/
-    $ curl http://1.2.3.4:9003/node -F name=cuckoo1 -F url=http://1.2.3.4:8090/
+    $ curl http://localhost:9003/node -F name=master -F url=http://localhost:8090/
+    $ curl http://localhost:9003/node -F name=slave -F url=http://1.2.3.4:8090/
 
 Having registered the Cuckoo nodes all that's left to do now is to submit
 tasks and fetch reports once finished. Documentation on these commands can be
