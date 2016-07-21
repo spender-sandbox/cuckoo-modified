@@ -157,6 +157,7 @@ class Retriever(object):
 
         return
 
+
 class StringList(db.TypeDecorator):
     """List of comma-separated strings as field."""
     impl = db.Text
@@ -772,35 +773,6 @@ class TaskBaseApi(RestResource):
         self._parser.add_argument("enforce_timeout", type=bool, default=0)
 
 
-class TaskApi(TaskBaseApi):
-    def get(self, task_id):
-        task = Task.query.get(task_id)
-        if task is None:
-            abort(404, message="Task not found")
-
-        return dict(tasks={task.id: dict(
-            task_id=task.id, path=task.path, package=task.package,
-            timeout=task.timeout, priority=task.priority,
-            options=task.options, machine=task.machine,
-            platform=task.platform, tags=task.tags,
-            custom=task.custom, memory=task.memory,
-            clock=task.clock.strftime("%Y-%m-%d %H:%M:%S"), enforce_timeout=task.enforce_timeout
-        )})
-
-    def delete(self, task_id):
-        task = Task.query.get(task_id)
-        if task is None:
-            abort(404, "Task not found")
-
-        # Remove the sample related to this task.
-        if os.path.isfile(task.path):
-            os.unlink(task.path)
-
-        # TODO Don't delete the task, but instead change its state to deleted.
-        db.session.delete(task)
-        db.session.commit()
-
-
 class TaskRootApi(TaskBaseApi):
     def get(self):
         offset = request.args.get("offset")
@@ -966,7 +938,6 @@ def create_app(database_connection):
     restapi.add_resource(NodeRootApi, "/node")
     restapi.add_resource(NodeApi, "/node/<string:name>")
     restapi.add_resource(TaskRootApi, "/task")
-    restapi.add_resource(TaskApi, "/task/<int:task_id>")
     restapi.add_resource(StatusRootApi, "/status")
 
     db.init_app(app)
