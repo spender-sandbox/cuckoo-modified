@@ -1559,6 +1559,7 @@ def get_vt_consensus(namelist):
         "zusy",
         "dynamer",
         "obfsstrm",
+        "krypt",
     ]
 
     finaltoks = defaultdict(int)
