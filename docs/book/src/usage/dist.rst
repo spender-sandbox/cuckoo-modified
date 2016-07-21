@@ -344,21 +344,21 @@ To run your api with config just execute as:
 
 To add your application to auto start after boot, move your config file to:
 
-    # mv /opt/cuckoo/utils/api.ini /etc/uwsgi/apps-available/cuckoo_api.ini
-    # ln -s /etc/uwsgi/apps-available/cuckoo_api.ini /etc/uwsgi/apps-enabled
+    mv /opt/cuckoo/utils/api.ini /etc/uwsgi/apps-available/cuckoo_api.ini
+    ln -s /etc/uwsgi/apps-available/cuckoo_api.ini /etc/uwsgi/apps-enabled
 
 Point your ini to /etc/uwsgi/apps-enabled/cuckoo_api.ini:
 
-    # ln -s /etc/uwsgi/apps-available/cuckoo_api.ini /etc/uwsgi/apps-enabled/cuckoo_api.ini
-    # service uwsgi restart
+    ln -s /etc/uwsgi/apps-available/cuckoo_api.ini /etc/uwsgi/apps-enabled/cuckoo_api.ini
+    service uwsgi restart
 
-If you need extra help, check this 
+If you need extra help, check this: 
     
-    See any of these files on your system
-    /etc/uwsgi/apps-available/README
-    /etc/uwsgi/apps-enabled/README
-    /usr/share/doc/uwsgi/README.Debian.gz
-    /etc/default/uwsgi
+See any of these files on your system
+/etc/uwsgi/apps-available/README
+/etc/uwsgi/apps-enabled/README
+/usr/share/doc/uwsgi/README.Debian.gz
+/etc/default/uwsgi
 
-    Online
-    http://vladikk.com/2013/09/12/serving-flask-with-nginx-on-ubuntu/
+Online:
+        http://vladikk.com/2013/09/12/serving-flask-with-nginx-on-ubuntu/
