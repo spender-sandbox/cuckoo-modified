@@ -214,8 +214,10 @@ class Node(db.Model):
 
         if jdec.decode(r.text)["status"] == "success":
             log.info("[Node %s] %s " % (self.name, jdec.decode(r.text)["data"]) )
+            return True
         else:
             log.info("[Node %s] Could not delete VM: %s" % (self.name, name) )
+            return False
 
     
 
@@ -956,11 +958,13 @@ def delete_vm_on_node(app, node_name, vm_name):
         if not vm:
             log.error("The selected VM does not exist")
             return
-        # delete vm in dist db
-        vm   = Machine.query.filter_by(name=vm_name, node_id=node.id).delete()
-        db.session.commit()
 
-        node.delete_machine(vm_name)
+        status = node.delete_machine(vm_name)
+
+        if status:
+            # delete vm in dist db
+            vm   = Machine.query.filter_by(name=vm_name, node_id=node.id).delete()
+            db.session.commit()
 
 def create_app(database_connection):
     app = Flask("Distributed Cuckoo")
