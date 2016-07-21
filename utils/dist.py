@@ -7,6 +7,8 @@ import os
 import sys
 import time
 import json
+jdec = json.JSONDecoder()
+
 import hashlib
 import logging
 import tarfile
@@ -200,6 +202,24 @@ class Node(db.Model):
         except Exception as e:
             abort(404,
                   message="Invalid Cuckoo node (%s): %s" % (self.name, e))
+
+    def delete_machine(self, name):
+        try:
+            r = requests.get(os.path.join(self.url, "machines", "delete", "%s" % name),
+                            auth = HTTPBasicAuth(self.ht_user, self.ht_pass),
+                            verify = False)
+        except Exception as e:
+            abort(404,
+                  message="Cuckoo failed machine deletion (%s): %s" % (self.name, e))
+
+        if jdec.decode(r.text)["status"] == "success":
+            log.info("[Node %s] %s " % (self.name, jdec.decode(r.text)["data"]) )
+            return True
+        else:
+            log.info("[Node %s] Could not delete VM: %s" % (self.name, name) )
+            return False
+
+    
 
     def status(self):
         try:
@@ -919,14 +939,38 @@ def update_machine_table(app, node_name):
         # delete all old vms
         machines = Machine.query.filter_by(node_id=node.id).delete()
 
+        log.info("Available VM's on %s:" % node_name)
         # replace with new vms
         for machine in new_machines:
+            log.info("-->\t%s" % machine.name)
             node.machines.append(machine)
             db.session.add(machine)
 
         db.session.commit()
 
         log.info("Updated the machine table for node: %s" % node_name)
+
+def delete_vm_on_node(app, node_name, vm_name):
+    with app.app_context():
+        node = Node.query.filter_by(name=node_name).first()
+        vm   = Machine.query.filter_by(name=vm_name, node_id=node.id).first()
+
+        if not vm:
+            log.error("The selected VM does not exist")
+            return
+
+        status = node.delete_machine(vm_name)
+
+        if status:
+            # delete vm in dist db
+            vm   = Machine.query.filter_by(name=vm_name, node_id=node.id).delete()
+            db.session.commit()
+
+def node_enabled(app, node_name, status):
+    with app.app_context():
+        node = Node.query.filter_by(name=node_name).first()
+        node.enabled = status
+        db.session.commit()
 
 def create_app(database_connection):
     app = Flask("Distributed Cuckoo")
@@ -965,6 +1009,9 @@ if __name__ == "__main__":
     p.add_argument("-d", "--debug", action="store_true", help="Enable debug logging")
     p.add_argument("--uptime-logfile", type=str, help="Uptime logfile path")
     p.add_argument("--node", type=str, help="Node name to update in distributed DB")
+    p.add_argument("--delete-vm", type=str, help="VM name to delete from Node")
+    p.add_argument("--disable", action="store_true", help="Disable Node provided in --node")
+    p.add_argument("--enable", action="store_true", help="Enable Node provided in --node")
     args = p.parse_args()
 
     if args.debug:
@@ -973,7 +1020,14 @@ if __name__ == "__main__":
         logging.basicConfig(level=logging.INFO)
 
     if args.node:
-        update_machine_table(app, args.node)
+        if args.delete_vm:
+            delete_vm_on_node(app, args.node, args.delete_vm)
+        if args.enable:
+            node_enabled(app, args.node, True)
+        if args.disable:
+            node_enabled(app, args.node, False)
+        if not args.delete_vm and not args.disable and not args.enable:
+            update_machine_table(app, args.node)
 
     elif reporting_conf.distributed.samples_directory:
         

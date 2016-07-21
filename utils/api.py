@@ -580,6 +580,18 @@ def machines_list():
 
     return jsonize(response)
 
+@route("/machines/delete/<machine_name>", method="GET")
+@route("/v1/machines/delete/<machine_name>", method="GET")
+def machines_delete(machine_name):
+    response = {}
+
+    status = db.delete_machine(machine_name)
+
+    response["status"] = status
+    if status == "success":
+        response["data"]  = "Deleted machine %s" % machine_name
+    return jsonize(response)
+
 @route("/cuckoo/status", method="GET")
 @route("/v1/cuckoo/status", method="GET")
 def cuckoo_status():
