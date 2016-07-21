@@ -354,11 +354,13 @@ Point your ini to /etc/uwsgi/apps-enabled/cuckoo_api.ini:
 
 If you need extra help, check this: 
     
-See any of these files on your system
-/etc/uwsgi/apps-available/README
-/etc/uwsgi/apps-enabled/README
-/usr/share/doc/uwsgi/README.Debian.gz
-/etc/default/uwsgi
+See any of these files on your system:
+
+    /etc/uwsgi/apps-available/README
+    /etc/uwsgi/apps-enabled/README
+    /usr/share/doc/uwsgi/README.Debian.gz
+    /etc/default/uwsgi
 
 Online:
+
         http://vladikk.com/2013/09/12/serving-flask-with-nginx-on-ubuntu/
