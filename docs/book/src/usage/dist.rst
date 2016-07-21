@@ -347,7 +347,8 @@ To add your application to auto start after boot, move your config file to:
     # mv /opt/cuckoo/utils/api.ini /etc/uwsgi/apps-available/cuckoo_api.ini
     # ln -s /etc/uwsgi/apps-available/cuckoo_api.ini /etc/uwsgi/apps-enabled
 
-Point your ini to /etc/uwsgi/apps-enabled/cuckoo_api.ini::
+Point your ini to /etc/uwsgi/apps-enabled/cuckoo_api.ini:
+
     # ln -s /etc/uwsgi/apps-available/cuckoo_api.ini /etc/uwsgi/apps-enabled/cuckoo_api.ini
     # service uwsgi restart
 
