@@ -966,6 +966,12 @@ def delete_vm_on_node(app, node_name, vm_name):
             vm   = Machine.query.filter_by(name=vm_name, node_id=node.id).delete()
             db.session.commit()
 
+def node_enabled(app, node_name, status):
+    with app.app_context():
+        node = Node.query.filter_by(name=node_name).first()
+        node.enabled = status
+        db.session.commit()
+
 def create_app(database_connection):
     app = Flask("Distributed Cuckoo")
     app.config["SQLALCHEMY_DATABASE_URI"] = database_connection
@@ -993,7 +999,8 @@ if __name__ == "__main__":
     p.add_argument("--uptime-logfile", type=str, help="Uptime logfile path")
     p.add_argument("--node", type=str, help="Node name to update in distributed DB")
     p.add_argument("--delete-vm", type=str, help="VM name to delete from Node")
-    p.add_argument("--add-vm", type=str, help="VM name to add to Node")
+    p.add_argument("--disable", action="store_true", help="Disable Node provided in --node")
+    p.add_argument("--enable", action="store_true", help="Enable Node provided in --node")
     args = p.parse_args()
 
     if args.debug:
@@ -1014,9 +1021,11 @@ if __name__ == "__main__":
     if args.node:
         if args.delete_vm:
             delete_vm_on_node(app, args.node, args.delete_vm)
-        if args.add_vm:
-            add_vm_on_node(app, args.node, args.add_vm)
-        if not args.delete_vm and not args.add_vm:
+        if args.enable:
+            node_enabled(app, args.node, True)
+        if args.disable:
+            node_enabled(app, args.node, False)
+        if not args.delete_vm and not args.disable and not args.enable:
             update_machine_table(app, args.node)
 
     elif reporting_conf.distributed.samples_directory:
