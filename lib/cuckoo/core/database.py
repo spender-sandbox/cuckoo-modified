@@ -488,10 +488,12 @@ class Database(object):
 
         session = self.Session()
         try:
-            session.query(Machine).filter_by(name=name).delete()
+            machine = session.query(Machine).filter_by(name=name).first()
+            session.delete(machine)
             session.commit()
+            return "success"
         except SQLAlchemyError as e:
-            log.debug("Database error deleting machine: {0}".format(e))
+            log.info("Database error deleting machine: {0}".format(e))
             session.rollback()
         finally:
             session.close()

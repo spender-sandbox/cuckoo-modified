@@ -212,10 +212,10 @@ class Node(db.Model):
             abort(404,
                   message="Cuckoo failed machine deletion (%s): %s" % (self.name, e))
 
-        if not jdec.decode(r.text)["error"]:
-            log.info("[Node %s]" % self.name, jdec.decode(r.text)["data"])
+        if jdec.decode(r.text)["status"] == "success":
+            log.info("[Node %s] %s " % (self.name, jdec.decode(r.text)["data"]) )
         else:
-            log.info("[Node %s] Could not delete VM: %s" % self.name, name )
+            log.info("[Node %s] Could not delete VM: %s" % (self.name, name) )
 
     
 
