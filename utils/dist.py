@@ -27,12 +27,13 @@ sys.path.append(CUCKOO_ROOT)
 
 from lib.cuckoo.common.config import Config
 from lib.cuckoo.common.utils import store_temp_file
+from lib.cuckoo.common.exceptions import CuckooReportError
 from lib.cuckoo.core.database import Database, TASK_COMPLETED, TASK_REPORTED, TASK_RUNNING, TASK_PENDING
 
 # ElasticSearch not included, as it not officially maintained
 try:
     from pymongo import MongoClient
-    from pymongo.errors import ConnectionFailure, InvalidDocument
+    from pymongo.errors import ConnectionFailure
     HAVE_MONGO = True
 except ImportError:
     HAVE_MONGO = False
@@ -86,19 +87,6 @@ try:
     db = SQLAlchemy(session_options=dict(autoflush=True))
 except ImportError:
     required("flask-sqlalchemy")
-
-
-def sha256(path):
-    """Returns the SHA256 hash for a file."""
-    f = open(path, "rb")
-    h = hashlib.sha256()
-    while True:
-        buf = f.read(1024 * 1024)
-        if not buf:
-            break
-
-        h.update(buf)
-    return h.hexdigest()
 
 
 class Retriever(object):
@@ -165,7 +153,6 @@ class Retriever(object):
                               "dist", task.task_id)
 
             except Exception as e:
-                log.info(1)
                 logging.info(e)
 
         return
@@ -255,14 +242,12 @@ class Node(db.Model):
                             verify = False)
             task.node_id = self.id
 
-            # This return only one id
-            # If many files inside of zip for example
-            # It creates additional tasks, but ids not returned
+            # Zip files preprocessed, so only one id
             task.task_id = r.json()["task_ids"][0]
-            log.info(task.task_id)
 
             if task.main_task_id:
                 main_db.set_status(task.main_task_id, TASK_RUNNING)
+
             # we don't need create extra id in master
             # reserving id in main db, to later store in mongo with the same id
             elif self.name != "master":
@@ -391,6 +376,7 @@ class Task(db.Model):
 
 class StatusThread(threading.Thread):
     def submit_tasks(self, node):
+
         # Get tasks from main_db submitted through web interface
         for t in main_db.list_tasks(status=TASK_PENDING):
             if not Task.query.filter_by(main_task_id=t.id).all():
@@ -401,7 +387,7 @@ class StatusThread(threading.Thread):
                 args = dict( package=t.package, timeout=t.timeout, priority=t.priority,
                              options=t.options, machine=t.machine, platform=t.platform,
                              tags=tags, custom=t.custom, memory=t.memory, clock=t.clock,
-                             enforce_timeout=t.enforce_timeout, main_task_id=t.id )
+                             enforce_timeout=t.enforce_timeout, main_task_id=t.id)
                 task = Task(path=t.target, **args)
                 db.session.add(task)
 
@@ -446,10 +432,15 @@ class StatusThread(threading.Thread):
 
     def do_mongo(self, report_mongo, report, t, node):
 
-        if HAVE_MONGO and "processes" in report.get("behavior", {}):
-            conn = MongoClient(reporting_conf.mongodb.host, reporting_conf.mongodb.port)
-            mongo_db = conn[reporting_conf.mongodb.db]
+        """This fucntion will store behavior and webgui report without reprocess"""
 
+        if HAVE_MONGO and "processes" in report.get("behavior", {}):
+            try:
+                conn = MongoClient(reporting_conf.mongodb.host, reporting_conf.mongodb.port)
+                mongo_db = conn[reporting_conf.mongodb.db]
+            except ConnectionFailure:
+                raise CuckooReportError("Cannot connect to MongoDB")
+                return
 
             new_processes = []
 
@@ -635,7 +626,6 @@ class StatusThread(threading.Thread):
                         failed_count.setdefault(node.name, 0)
                         failed_count[node.name] += 1
 
-                        # ToDo number to config
                         # This will declare slave as dead after X failed connections checks
                         if failed_count[node.name] == dead_count:
                             log.info('[-] {} dead'.format(node.name))
@@ -842,7 +832,6 @@ class TaskRootApi(TaskBaseApi):
                 clock=task.clock, enforce_timeout=task.enforce_timeout,
                 task_id=task.task_id, node_id=task.node_id,
             )
-        log.info(ret)
         return dict(tasks=ret)
 
     def post(self):
@@ -851,14 +840,11 @@ class TaskRootApi(TaskBaseApi):
 
         path = store_temp_file(f.read(), f.filename, path=app.config["SAMPLES_DIRECTORY"])
 
+        # this return list of tasks ids if archive
+        main_task_id = []
         main_task_id = main_db.demux_sample_and_add_to_db(file_path=path, **args)
 
-        if main_task_id: args["main_task_id"] = main_task_id[0]
-        task = Task(path=path, **args)
-        db.session.add(task)
-        db.session.commit()
-
-        return dict(task_id=task.id)
+        return dict(task_id=main_task_id)
 
 
 class ReportingBaseApi(RestResource):
@@ -887,7 +873,7 @@ class ReportApi(ReportingBaseApi):
     def get(self, task_id, report="json", stream=False, raw=False):
         task = Task.query.get(task_id)
         url,ht_user,ht_pass = self.get_node(task.node_id)
-        
+
         if not task:
             abort(404, message="Task not found")
 
@@ -937,17 +923,11 @@ def output_json(data, code, headers=None):
     resp.headers.extend(headers or {})
     return resp
 
-def output_xml(data, code, headers=None):
-    resp = make_response(data, code)
-    resp.headers.extend(headers or {})
-    return resp
-
 
 class DistRestApi(RestApi):
     def __init__(self, *args, **kwargs):
         RestApi.__init__(self, *args, **kwargs)
         self.representations = {
-            #"application/xml": output_xml,
             "application/json": output_json,
         }
 
@@ -987,9 +967,6 @@ def create_app(database_connection):
     restapi.add_resource(NodeApi, "/node/<string:name>")
     restapi.add_resource(TaskRootApi, "/task")
     restapi.add_resource(TaskApi, "/task/<int:task_id>")
-    restapi.add_resource(ReportApi,
-                         "/report/<int:task_id>",
-                         "/report/<int:task_id>/<string:report>")
     restapi.add_resource(StatusRootApi, "/status")
 
     db.init_app(app)
@@ -1004,8 +981,6 @@ if __name__ == "__main__":
     p.add_argument("host", nargs="?", default="0.0.0.0", help="Host to listen on")
     p.add_argument("port", nargs="?", type=int, default=9003, help="Port to listen on")
     p.add_argument("-d", "--debug", action="store_true", help="Enable debug logging")
-    p.add_argument("--db", type=str, default="sqlite:///dist.db", help="Database connection string")
-    p.add_argument("--samples-directory", type=str, help="Samples directory")
     p.add_argument("--uptime-logfile", type=str, help="Uptime logfile path")
     p.add_argument("--node", type=str, help="Node name to update in distributed DB")
     args = p.parse_args()
@@ -1023,36 +998,22 @@ if __name__ == "__main__":
     main_db = Database()
     queue = Queue.Queue()
 
-    arg_db = args.db
-    if reporting_conf.distributed.db:
-        arg_db = reporting_conf.distributed.db
-
-    app = create_app(database_connection=arg_db)
+    app = create_app(database_connection=reporting_conf.distributed.db)
 
     if args.node:
         update_machine_table(app, args.node)
 
-    elif args.samples_directory or reporting_conf.distributed.samples_directory:
+    elif reporting_conf.distributed.samples_directory:
         
-        if args.samples_directory:
-            samples_directory = args.samples_directory
+        if not reporting_conf.distributed.samples_directory:
+                p.error("Configure conf/reporting.conf distributed section please")
 
-        elif reporting_conf.distributed.samples_directory:
-            samples_directory = reporting_conf.distributed.samples_directory
-
-        if not samples_directory:
-                p.error("Either --samples_directory or or conf/reporting.conf distributed section requiered")
-
-        if not os.path.isdir(samples_directory):
-            os.makedirs(samples_directory)
+        if not os.path.isdir(reporting_conf.distributed.samples_directory):
+            os.makedirs(reporting_conf.distributed.samples_directory)
         
         if reporting_conf.distributed.samples_directory:
             app.config["SAMPLES_DIRECTORY"] = reporting_conf.distributed.samples_directory
             app.config["UPTIME_LOGFILE"] = reporting_conf.distributed.uptime_logfile
-
-        elif args.samples_directory:
-            app.config["SAMPLES_DIRECTORY"] = args.samples_directory
-            app.config["UPTIME_LOGFILE"] = args.uptime_logfile
 
         t = StatusThread()
         t.daemon = True
@@ -1064,4 +1025,4 @@ if __name__ == "__main__":
         app.run(host=args.host, port=args.port)
 
     else:
-        p.error("Either --samples_directory or conf/reporting.conf distributed section requiered")
+        p.error("Configure conf/reporting.conf distributed section please")
