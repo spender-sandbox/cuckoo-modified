@@ -35,19 +35,22 @@ Following is a listing of all available commandline options::
 
     $ ./utils/dist.py -h
 
-    usage: dist.py [-h] [-d] [--db DB] [--uptime-logfile UPTIME_LOGFILE]
-                [host] [port]
+    usage: dist.py [-h] [-d] [--uptime-logfile UPTIME_LOGFILE] [--node NODE]
+               [--delete-vm DELETE_VM] [--disable] [--enable]
+               [host] [port]
 
     positional arguments:
-        host                  Host to listen on
-        port                  Port to listen on
+    	host                 	 						Host to listen on
+    	port                  						Port to listen on
 
     optional arguments:
-        -h, --help            show this help message and exit
-        -d, --debug           Enable debug logging
-                                Samples directory
-        --uptime-logfile UPTIME_LOGFILE
-                                Uptime logfile path
+    	-h, --help            						show this help message and exit
+    	-d, --debug           						Enable debug logging
+    	--uptime-logfile UPTIME_LOGFILE 	Uptime logfile path
+    	--node NODE           						Node name to update in distributed DB
+    	--delete-vm DELETE_VM 						VM name to delete from Node
+    	--disable             						Disable Node provided in --node
+    	--enable              						Enable Node provided in --node
 
 
 RESTful resources
@@ -106,10 +109,11 @@ machines are returned::
 POST /node
 ----------
 
-Register a new Cuckoo node by providing the name and the URL::
+Register a new Cuckoo node by providing the name and the URL. Optionally the ht_user and ht_pass, 
+if your Node API is behing htaccess authentication::
 
     $ curl http://localhost:9003/node -F name=localhost \
-        -F url=http://localhost:8090/
+        -F url=http://localhost:8090/ -F ht_user=username -F ht_pass=password
     {
         "machines": [
             {
@@ -145,13 +149,14 @@ Update basic information of a Cuckoo node::
         -F url=http://1.2.3.4:8090/
     null
 
-    * enabled
-        False or True to activate or deactivate slave node
+    Additional Arguments:
 
-    Additional arguments
-         If basic auth activated in slaves api, you must specify this options too
-             * ht_user 
-             * ht_pass
+    * enabled
+        False=0 or True=1 to activate or deactivate slave node
+    * ht_user 
+        Username of htaccess authentication
+    * ht_pass
+        Passford of htaccess authentication
 
 .. _node_delete:
 
@@ -196,10 +201,19 @@ Disable a Cuckoo node::
 
     $ curl -XDELETE http://localhost:9003/node/<name>
 
+or::
+
+    $ curl -XPUT http://localhost:9003/node/localhost -F enable=0
+    null
+
+or::
+
+    $ ./dist.py --node NAME --disable
+
 Submit a new analysis task without any special requirements (e.g., using
 Cuckoo ``tags``, a particular machine, etc)::
 
-    $ curl http://localhost:9003/task -F file=@/path/to/sample.exe
+    $ curl http://localhost:9003/task -F file=@/path/to/sample.exe -F tags=Tag1
 
 Get the report of a task should be requested throw master node integrated /api/ or api.py
 
@@ -244,7 +258,7 @@ Depending on which report(s) are required for integration with your system it
 might make sense to only make those report(s) that you're going to use. Thus
 disable the other ones.
 
-Check also "[distribution]" section, where you can set database, path for samples,
+Check also "[distributed]" section, where you can set database, path for samples,
 and few more values
 
 Activate "[compression]" to compress dump by "process.py" and save time with retrieve
@@ -280,8 +294,7 @@ On the first machine start a separate ``screen(1)`` session for the
 Distributed Cuckoo script with all the required parameters (see the rest of
 the documentation on the parameters for this script)::
 
-    $ screen -S distributed ./utils/dist.py --samples-directory /a/b/samples \
-        --report-formats json --reports-directory /a/b/reports
+    $ screen -S distributed ./utils/dist.py
 
 Register Cuckoo nodes
 ---------------------
@@ -289,12 +302,49 @@ Register Cuckoo nodes
 As outlined in :ref:`quick-usage` the Cuckoo nodes have to be registered with
 the Distributed Cuckoo script::
 
+without htaccess::
+
     $ curl http://localhost:9003/node -F name=master -F url=http://localhost:8090/
-    $ curl http://localhost:9003/node -F name=slave -F url=http://1.2.3.4:8090/
+
+with htaccess::
+
+    $ curl http://localhost:9003/node -F name=slave -F url=http://1.2.3.4:8090/ \
+      -F ht_user=user -F ht_pass=password
 
 Having registered the Cuckoo nodes all that's left to do now is to submit
 tasks and fetch reports once finished. Documentation on these commands can be
 found in the :ref:`quick-usage` section.
+
+VM Maintenance
+--------------
+
+Ocasionally you might want to perform maintenance on VM's without shutting down your whole node.
+To do this, you need to remove the VM from being used by cuckoo in its execution, preferably without
+having to restart the ``./cuckoo.py`` daemon. 
+
+First get a list of available VM's that are running on the slave::
+
+   $ ./dist.py --node NAME
+
+Secondly you can remove VM's from being used by cuckoo with::
+
+   $ ./dist.py --node NAME --delete-vm VM_NAME
+
+When you are done editing your VM's you need to add them back to be used by cuckoo. The easiest
+way to do that, is to disable the node, so no more tasks get submitted to it::
+
+   $ ./dist.py --node NAME --disable
+
+Wait for all running VM's to finish their tasks, and then restart the slaves ``./cuckoo.py``, this will 
+re-insert the previously deleted VM's into the Database from ``conf/virtualbox.conf``.
+
+Update the VM list on the master::
+
+   $ ./dist.py --node NAME
+
+And enable the slave again::
+
+   $ ./dist.py --node NAME --enable
 
 
 Good practice for production
