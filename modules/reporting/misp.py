@@ -177,7 +177,7 @@ class MISP(Report):
                                     tmp_misp[eid].setdefault("iocs", list())
                                 tmp_misp[eid]["iocs"].append(ioc)
                                 tmp_misp[eid].setdefault("eid", eid)
-                                tmp_misp[eid].setdefault("url", url+"events/view/")
+                                tmp_misp[eid].setdefault("url", os.path.join(url, "events/view/"))
                                 tmp_misp[eid].setdefault("date", date)
                                 tmp_misp[eid].setdefault("level", event.get("threat_level_id",""))
                                 tmp_misp[eid].setdefault("info", event.get("info", "").strip())
