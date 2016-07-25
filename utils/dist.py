@@ -46,7 +46,7 @@ cuckoo_conf = Config("cuckoo")
 reporting_conf = Config("reporting")
 
 INTERVAL = 10
-MINIMUMQUEUE = 1
+MINIMUMQUEUE = 5
 RESET_LASTCHECK = 100
 
 # controller of dead nodes
