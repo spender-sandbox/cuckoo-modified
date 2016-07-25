@@ -342,7 +342,14 @@ class PortableExecutable(object):
             return None
 
         if hasattr(self.pe, "DIRECTORY_ENTRY_EXPORT"):
-            return convert_to_printable(self.pe.get_string_at_rva(self.pe.DIRECTORY_ENTRY_EXPORT.struct.Name))
+            dllname = self.pe.get_string_at_rva(self.pe.DIRECTORY_ENTRY_EXPORT.struct.Name)
+            # In recent versions of pefile, get_string_at_rva returns a Python3-style bytes object.
+            # Convert it to a Python2-style string to ensure expected behavior when iterating
+            # through it character by character.
+            if type(dllname) is not str:
+                dllname = "".join([chr(c) for c in dllname])
+
+            return convert_to_printable(dllname)
         return None
 
     def _get_exported_symbols(self):
@@ -726,7 +733,10 @@ class PortableExecutable(object):
                             sha1_fingerprint = cert.get_fingerprint('sha1').lower().rjust(40, '0')
                             md5_fingerprint = cert.get_fingerprint('md5').lower().rjust(32, '0')
                             subject_str = str(cert.get_subject())
-                            cn = subject_str[subject_str.index("/CN=")+len("/CN="):]
+                            try:
+                                cn = subject_str[subject_str.index("/CN=")+len("/CN="):]
+                            except:
+                                continue
                             retlist.append({
                                 "sn": str(sn),
                                 "cn": cn,

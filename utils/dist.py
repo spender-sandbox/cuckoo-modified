@@ -991,6 +991,17 @@ def create_app(database_connection):
 
     return app
 
+# init 
+logging.getLogger("requests").setLevel(logging.WARNING)
+logging.getLogger("urllib3").setLevel(logging.WARNING)
+log = logging.getLogger("cuckoo.distributed")
+
+app = create_app(database_connection=reporting_conf.distributed.db)
+
+RUNNING, STATUSES = True, {}
+main_db = Database()
+queue = Queue.Queue()
+
 if __name__ == "__main__":
     p = argparse.ArgumentParser()
     p.add_argument("host", nargs="?", default="0.0.0.0", help="Host to listen on")
@@ -1007,16 +1018,6 @@ if __name__ == "__main__":
         logging.basicConfig(level=logging.DEBUG)
     else:
         logging.basicConfig(level=logging.INFO)
-
-    logging.getLogger("requests").setLevel(logging.WARNING)
-    logging.getLogger("urllib3").setLevel(logging.WARNING)
-    log = logging.getLogger("cuckoo.distributed")
-
-    RUNNING, STATUSES = True, {}
-    main_db = Database()
-    queue = Queue.Queue()
-
-    app = create_app(database_connection=reporting_conf.distributed.db)
 
     if args.node:
         if args.delete_vm:
@@ -1051,3 +1052,20 @@ if __name__ == "__main__":
 
     else:
         p.error("Configure conf/reporting.conf distributed section please")
+else:
+    # this allows run it with gunicorn/uwsgi
+    logging.basicConfig(level=logging.DEBUG)
+
+    if not os.path.isdir(reporting_conf.distributed.samples_directory):
+        os.makedirs(reporting_conf.distributed.samples_directory)
+            
+    if reporting_conf.distributed.samples_directory:
+        app.config["SAMPLES_DIRECTORY"] = reporting_conf.distributed.samples_directory
+        app.config["UPTIME_LOGFILE"] = reporting_conf.distributed.uptime_logfile
+
+    t = StatusThread()
+    t.daemon = True
+    t.start()
+
+    # will generate queue with all pend retrieve tasks
+    check_pending_retrieves(app)
