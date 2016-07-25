@@ -40,17 +40,17 @@ Following is a listing of all available commandline options::
                [host] [port]
 
     positional arguments:
-    	host                 	 						Host to listen on
-    	port                  						Port to listen on
+    	host                              Host to listen on
+    	port                              Port to listen on
 
     optional arguments:
-    	-h, --help            						show this help message and exit
-    	-d, --debug           						Enable debug logging
-    	--uptime-logfile UPTIME_LOGFILE 	Uptime logfile path
-    	--node NODE           						Node name to update in distributed DB
-    	--delete-vm DELETE_VM 						VM name to delete from Node
-    	--disable             						Disable Node provided in --node
-    	--enable              						Enable Node provided in --node
+    	-h, --help                        show this help message and exit
+    	-d, --debug                       Enable debug logging
+    	--uptime-logfile UPTIME_LOGFILE   Uptime logfile path
+    	--node NODE                       Node name to update in distributed DB
+    	--delete-vm DELETE_VM             VM name to delete from Node
+    	--disable                         Disable Node provided in --node
+    	--enable                          Enable Node provided in --node
 
 
 RESTful resources
