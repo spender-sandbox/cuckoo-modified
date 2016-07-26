@@ -27,8 +27,7 @@ urlpatterns = [
     url(r"^tasks/get/iocs/(?P<task_id>\d+)/$", views.tasks_iocs),
     url(r"^tasks/get/iocs/(?P<task_id>\d+)/(?P<detail>detailed)/$", views.tasks_iocs),
     url(r"^tasks/get/screenshot/(?P<task_id>\d+)/$", views.tasks_screenshot),
-    url(r"^tasks/get/screenshot/(?P<task_id>\d+)/(?P<screenshot>\d{1,4})/$",
-    views.tasks_screenshot),
+    url(r"^tasks/get/screenshot/(?P<task_id>\d+)/(?P<screenshot>\d{1,4})/$", views.tasks_screenshot),
     url(r"^tasks/get/procmemory/(?P<task_id>\d+)/$", views.tasks_procmemory),
     url(r"^tasks/get/procmemory/(?P<task_id>\d+)/(?P<pid>\d{1,5})/$", views.tasks_procmemory),
     url(r"^tasks/get/fullmemory/(?P<task_id>\d+)/$", views.tasks_fullmemory),
@@ -48,6 +47,5 @@ urlpatterns = [
     url(r"^cuckoo/status/$", views.cuckoo_status),
     url(r"^tasks/get/rollingsuri/(?P<window>\d+)/$", views.tasks_rollingsuri),  
     url(r"^tasks/get/rollingshrike/(?P<window>\d+)/$", views.tasks_rollingshrike),
-    url(r"^tasks/get/rollingshrike/(?P<window>\d+)/(?P<msgfilter>[\w$-/:-?{-~!^_`\[\]\s\x5c]+)/$",
-    views.tasks_rollingshrike) 
+    url(r"^tasks/get/rollingshrike/(?P<window>\d+)/(?P<msgfilter>[\w$-/:-?{-~!^_`\[\]\s\x5c]+)/$", views.tasks_rollingshrike) 
 ]
