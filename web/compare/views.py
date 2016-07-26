@@ -8,6 +8,7 @@ from django.conf import settings
 from django.template import RequestContext
 from django.shortcuts import render_to_response
 from django.views.decorators.http import require_safe
+from django.contrib.auth.decorators import login_required
 
 sys.path.append(settings.CUCKOO_PATH)
 
@@ -38,7 +39,18 @@ if enabledconf["elasticsearchdb"]:
              timeout = 60
          )
 
+# Conditional decorator for web authentication
+class conditional_login_required(object):
+    def __init__(self, dec, condition):
+	self.decorator = dec
+	self.condition = condition
+    def __call__(self, func):
+	if not self.condition:
+	    return func
+	return self.decorator(func)
+
 @require_safe
+@conditional_login_required(login_required, settings.WEB_AUTHENTICATION)
 def left(request, left_id):
     if enabledconf["mongodb"]:
         left = results_db.analysis.find_one({"info.id": int(left_id)}, {"target": 1, "info": 1})
@@ -84,6 +96,7 @@ def left(request, left_id):
                               context_instance=RequestContext(request))
 
 @require_safe
+@conditional_login_required(login_required, settings.WEB_AUTHENTICATION)
 def hash(request, left_id, right_hash):
     if enabledconf["mongodb"]:
         left = results_db.analysis.find_one({"info.id": int(left_id)}, {"target": 1, "info": 1})
@@ -130,6 +143,7 @@ def hash(request, left_id, right_hash):
                               context_instance=RequestContext(request))
 
 @require_safe
+@conditional_login_required(login_required, settings.WEB_AUTHENTICATION)
 def both(request, left_id, right_id):
     if enabledconf["mongodb"]:
         left = results_db.analysis.find_one({"info.id": int(left_id)}, {"target": 1, "info": 1, "summary": 1})

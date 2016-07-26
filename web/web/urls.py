@@ -4,6 +4,8 @@
 
 from django.conf.urls import patterns, include, url
 
+from django.contrib import admin
+from django.contrib.auth import views as auth_views
 from dashboard import views as dashboard_views
 from analysis import views as analysis_views
 
@@ -15,6 +17,9 @@ from api import urls as api
 
 urlpatterns = [
     url(r"^$", dashboard_views.index),
+    url(r"^admin/", include(admin.site.urls)),
+    url(r"^accounts/login", auth_views.login, {'template_name': 'auth/login.html'}),
+    url(r"^accounts/logout", auth_views.logout, {'template_name': 'auth/logout.html'}),
     url(r"^analysis/", include(analysis)),
     url(r"^compare/", include(compare)),
     url(r"^submit/", include(submission)),

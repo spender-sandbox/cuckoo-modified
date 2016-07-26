@@ -3,7 +3,6 @@
 # See the file "docs/LICENSE" for copying permission.
 
 from django.conf.urls import patterns, url
-
 from analysis import views
 
 urlpatterns = [

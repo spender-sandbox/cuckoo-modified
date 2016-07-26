@@ -17,6 +17,7 @@ except ImportError:
 from django.conf import settings
 from django.shortcuts import redirect, render_to_response
 from django.template import RequestContext
+from django.contrib.auth.decorators import login_required
 
 sys.path.append(settings.CUCKOO_PATH)
 
@@ -25,6 +26,16 @@ from lib.cuckoo.common.utils import store_temp_file, validate_referer
 from lib.cuckoo.common.quarantine import unquarantine
 from lib.cuckoo.common.saztopcap import saz_to_pcap 
 from lib.cuckoo.core.database import Database
+
+# Conditional decorator for web authentication
+class conditional_login_required(object):
+    def __init__(self, dec, condition):
+        self.decorator = dec
+        self.condition = condition
+    def __call__(self, func):
+        if not self.condition:
+            return func
+        return self.decorator(func)
 
 def force_int(value):
     try:
@@ -46,6 +57,7 @@ def update_options(gw, orig_options):
 
     return options
 
+@conditional_login_required(login_required, settings.WEB_AUTHENTICATION)
 def index(request):
     if request.method == "POST":
         package = request.POST.get("package", "")
@@ -384,6 +396,7 @@ def index(request):
                                    "config": enabledconf},
                                   context_instance=RequestContext(request))
 
+@conditional_login_required(login_required, settings.WEB_AUTHENTICATION)
 def status(request, task_id):
     task = Database().view_task(task_id)
     if not task:

@@ -22,6 +22,7 @@ from django.http import HttpResponse, StreamingHttpResponse
 from django.shortcuts import redirect, render_to_response
 from django.views.decorators.http import require_safe
 from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.decorators import login_required
 
 from django.core.exceptions import PermissionDenied
 from urllib import quote
@@ -62,6 +63,17 @@ if enabledconf["elasticsearchdb"]:
          timeout = 60)
 
 maxsimilar = int(Config("reporting").malheur.maxsimilar)
+
+# Conditional decorator for web authentication
+class conditional_login_required(object):
+    def __init__(self, dec, condition):
+        self.decorator = dec
+        self.condition = condition
+    def __call__(self, func):
+        if not self.condition:
+            return func
+        return self.decorator(func)
+
 
 def get_analysis_info(db, id=-1, task=None):
     if not task:
@@ -147,6 +159,7 @@ def get_analysis_info(db, id=-1, task=None):
     return new
 
 @require_safe
+@conditional_login_required(login_required, settings.WEB_AUTHENTICATION)
 def index(request, page=1):
     page = int(page)
     db = Database()
@@ -266,6 +279,7 @@ def index(request, page=1):
             context_instance=RequestContext(request))
 
 @require_safe
+@conditional_login_required(login_required, settings.WEB_AUTHENTICATION)
 def pending(request):
     db = Database()
     tasks = db.list_tasks(status=TASK_PENDING)
@@ -279,6 +293,7 @@ def pending(request):
                               context_instance=RequestContext(request))
 
 @require_safe
+@conditional_login_required(login_required, settings.WEB_AUTHENTICATION)
 def chunk(request, task_id, pid, pagenum):
     try:
         pid, pagenum = int(pid), int(pagenum)-1
@@ -339,6 +354,7 @@ def chunk(request, task_id, pid, pagenum):
 
 
 @require_safe
+@conditional_login_required(login_required, settings.WEB_AUTHENTICATION)
 def filtered_chunk(request, task_id, pid, category, apilist):
     """Filters calls for call category.
     @param task_id: cuckoo task id
@@ -503,6 +519,7 @@ def gen_moloch_from_antivirus(virustotal):
     return virustotal
 
 @require_safe
+@conditional_login_required(login_required, settings.WEB_AUTHENTICATION)
 def surialert(request,task_id):
     report = results_db.analysis.find_one({"info.id": int(task_id)},{"suricata.alerts": 1},sort=[("_id", pymongo.DESCENDING)])
     if not report:
@@ -524,6 +541,7 @@ def surialert(request,task_id):
                               context_instance=RequestContext(request))
 
 @require_safe
+@conditional_login_required(login_required, settings.WEB_AUTHENTICATION)
 def shrike(request,task_id):
     shrike = results_db.analysis.find_one({"info.id": int(task_id)},{"info.shrike_url": 1,"info.shrike_msg": 1,"info.shrike_sid":1, "info.shrike_refer":1},sort=[("_id", pymongo.DESCENDING)])
     if not shrike:
@@ -536,6 +554,7 @@ def shrike(request,task_id):
                               context_instance=RequestContext(request))
 
 @require_safe
+@conditional_login_required(login_required, settings.WEB_AUTHENTICATION)
 def surihttp(request,task_id):
     report = results_db.analysis.find_one({"info.id": int(task_id)},{"suricata.http": 1},sort=[("_id", pymongo.DESCENDING)])
     if not report:
@@ -557,6 +576,7 @@ def surihttp(request,task_id):
                               context_instance=RequestContext(request))
 
 @require_safe
+@conditional_login_required(login_required, settings.WEB_AUTHENTICATION)
 def suritls(request,task_id):
     report = results_db.analysis.find_one({"info.id": int(task_id)},{"suricata.tls": 1},sort=[("_id", pymongo.DESCENDING)])
     if not report:
@@ -578,6 +598,7 @@ def suritls(request,task_id):
                               context_instance=RequestContext(request))
 
 @require_safe
+@conditional_login_required(login_required, settings.WEB_AUTHENTICATION)
 def surifiles(request,task_id):
     report = results_db.analysis.find_one({"info.id": int(task_id)},{"suricata.files": 1},sort=[("_id", pymongo.DESCENDING)])
     if not report:
@@ -599,6 +620,7 @@ def surifiles(request,task_id):
                               context_instance=RequestContext(request))
 
 @require_safe
+@conditional_login_required(login_required, settings.WEB_AUTHENTICATION)
 def antivirus(request,task_id):
     rtmp = results_db.analysis.find_one({"info.id": int(task_id)},{"virustotal": 1,"info.category": 1},sort=[("_id", pymongo.DESCENDING)])
     if not rtmp:
@@ -616,6 +638,7 @@ def antivirus(request,task_id):
                               context_instance=RequestContext(request))
 
 @csrf_exempt
+@conditional_login_required(login_required, settings.WEB_AUTHENTICATION)
 def search_behavior(request, task_id):
     if request.method == 'POST':
         query = request.POST.get('search')
@@ -702,6 +725,7 @@ def search_behavior(request, task_id):
         raise PermissionDenied
 
 @require_safe
+@conditional_login_required(login_required, settings.WEB_AUTHENTICATION)
 def report(request, task_id):
     db = Database()
     if enabledconf["mongodb"]:
@@ -796,6 +820,7 @@ def report(request, task_id):
                              context_instance=RequestContext(request))
 
 @require_safe
+@conditional_login_required(login_required, settings.WEB_AUTHENTICATION)
 def file(request, category, task_id, dlfile):
     file_name = dlfile
     cd = ""
@@ -878,6 +903,7 @@ def file(request, category, task_id, dlfile):
     return resp
 
 @require_safe
+@conditional_login_required(login_required, settings.WEB_AUTHENTICATION)
 def procdump(request, task_id, process_id, start, end):
     origname = process_id + ".dmp"
     tmpdir = None
@@ -945,6 +971,7 @@ def procdump(request, task_id, process_id, start, end):
                                   context_instance=RequestContext(request))
 
 @require_safe
+@conditional_login_required(login_required, settings.WEB_AUTHENTICATION)
 def filereport(request, task_id, category):
     formats = {
         "json": "report.json",
@@ -972,6 +999,7 @@ def filereport(request, task_id, category):
                               context_instance=RequestContext(request))
 
 @require_safe
+@conditional_login_required(login_required, settings.WEB_AUTHENTICATION)
 def full_memory_dump_file(request, analysis_number):
     file_path = os.path.join(CUCKOO_ROOT, "storage", "analyses", str(analysis_number), "memory.dmp")
     if os.path.exists(file_path):
@@ -992,6 +1020,7 @@ def full_memory_dump_file(request, analysis_number):
                                   {"error": "File not found"},
                                   context_instance=RequestContext(request))
 @require_safe
+@conditional_login_required(login_required, settings.WEB_AUTHENTICATION)
 def full_memory_dump_strings(request, analysis_number):
     file_path = os.path.join(CUCKOO_ROOT, "storage", "analyses", str(analysis_number), "memory.dmp.strings")
     filename = None
@@ -1092,6 +1121,7 @@ def perform_malscore_search(value):
     if enabledconf["mongodb"]:
         return results_db.analysis.find({"malscore" : query_val}).sort([["_id", -1]])
 
+@conditional_login_required(login_required, settings.WEB_AUTHENTICATION)
 def search(request):
     if "search" in request.POST:
         error = None
@@ -1159,6 +1189,7 @@ def search(request):
                                   context_instance=RequestContext(request))
 
 @require_safe
+@conditional_login_required(login_required, settings.WEB_AUTHENTICATION)
 def remove(request, task_id):
     """Remove an analysis.
     @todo: remove folder from storage.
@@ -1223,6 +1254,7 @@ def remove(request, task_id):
                               context_instance=RequestContext(request))
 
 @require_safe
+@conditional_login_required(login_required, settings.WEB_AUTHENTICATION)
 def pcapstream(request, task_id, conntuple):
     src, sport, dst, dport, proto = conntuple.split(",")
     sport, dport = int(sport), int(dport)
@@ -1275,6 +1307,7 @@ def pcapstream(request, task_id, conntuple):
 
     return HttpResponse(json.dumps(packets), content_type="application/json")
 
+@conditional_login_required(login_required, settings.WEB_AUTHENTICATION)
 def comments(request, task_id):
     if request.method == "POST" and settings.COMMENTS:
         comment = request.POST.get("commentbox", "")

@@ -18,6 +18,7 @@ from django.views.decorators.http import require_safe
 from ratelimit.decorators import ratelimit
 from StringIO import StringIO
 from bson.objectid import ObjectId
+from django.contrib.auth.decorators import login_required
 
 sys.path.append(settings.CUCKOO_PATH)
 from lib.cuckoo.common.config import Config
@@ -59,6 +60,16 @@ db = Database()
 rateblock = False
 raterps = None
 raterpm = None
+
+# Conditional decorator for web authentication
+class conditional_login_required(object):
+    def __init__(self, dec, condition):
+        self.decorator = dec
+        self.condition = condition
+    def __call__(self, func):
+        if not self.condition:
+            return func
+        return self.decorator(func)
 
 def force_int(value):
     try:
@@ -120,6 +131,7 @@ def createProcessTreeNode(process):
     return process_node_dict
 
 @require_safe
+@conditional_login_required(login_required, settings.WEB_AUTHENTICATION)
 def index(request):
     conf = apiconf.get_config()
     parsed = {}

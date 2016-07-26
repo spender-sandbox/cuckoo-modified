@@ -28,6 +28,9 @@ aux_cfg =  Config("auxiliary")
 vtdl_cfg = aux_cfg.virustotaldl
 tor_cfg = aux_cfg.tor
 
+# Enable Django authentication for website
+WEB_AUTHENTICATION = False
+
 # Get connection options from reporting.conf.
 MONGO_HOST = cfg.mongodb.get("host", "127.0.0.1")
 MONGO_PORT = cfg.mongodb.get("port", 27017)
@@ -73,7 +76,12 @@ COMMENTS = True
 DEBUG = True
 
 # Database settings. We don't need it.
-DATABASES = {}
+DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME'  : 'siteauth.sqlite'
+            }
+        }
 
 SITE_ID = 1
 
