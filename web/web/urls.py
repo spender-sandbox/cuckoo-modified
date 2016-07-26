@@ -16,7 +16,7 @@ from submission import urls as submission
 from api import urls as api
 
 urlpatterns = [
-    url(r"^$", dashboard_views.index),
+    url(r"^$", dashboard_views.index, name='dashboard'),
     url(r"^admin/", include(admin.site.urls)),
     url(r"^accounts/login", auth_views.login, {'template_name': 'auth/login.html'}),
     url(r"^accounts/logout", auth_views.logout, {'template_name': 'auth/logout.html'}),

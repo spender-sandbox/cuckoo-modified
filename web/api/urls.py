@@ -6,7 +6,7 @@ from django.conf.urls import patterns, url
 from api import views
 
 urlpatterns = [
-    url(r"^$", views.index),
+    url(r"^$", views.index, name='api'),
     url(r"^tasks/create/file/$", views.tasks_create_file),
     url(r"^tasks/create/url/$", views.tasks_create_url),
     url(r"^tasks/create/vtdl/$", views.tasks_vtdl),
