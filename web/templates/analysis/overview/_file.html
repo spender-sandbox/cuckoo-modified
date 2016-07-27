@@ -65,7 +65,7 @@
             <tr>
                 <th></th>
                 <td>
-                    <a class="btn btn-primary btn-small" href="{% url "analysis.views.file" "sample" analysis.info.id analysis.target.file.sha256 %}">Download</a>
+                    <a class="btn btn-primary btn-small" href="{% url "file" "sample" analysis.info.id analysis.target.file.sha256 %}">Download</a>
                 </td>
             </tr>
         </table>

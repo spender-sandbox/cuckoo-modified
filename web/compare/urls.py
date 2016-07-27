@@ -6,7 +6,7 @@ from django.conf.urls import patterns, url
 from compare import views
 
 urlpatterns = [
-    url(r"^(?P<left_id>\d+)/$", views.left),
-    url(r"^(?P<left_id>\d+)/(?P<right_id>\d+)/$", views.both),
-    url(r"^(?P<left_id>\d+)/(?P<right_hash>\w+)/$", views.hash),
+    url(r"^(?P<left_id>\d+)/$", views.left, name='compare_left'),
+    url(r"^(?P<left_id>\d+)/(?P<right_id>\d+)/$", views.both, name='compare_both'),
+    url(r"^(?P<left_id>\d+)/(?P<right_hash>\w+)/$", views.hash, name='compare_hash'),
 ]

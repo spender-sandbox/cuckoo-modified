@@ -41,7 +41,7 @@
                     </td>
                     <td style="word-wrap: break-word;">
                         {% if analysis.status == "reported" %}
-                            <a href="{% url "analysis.views.report" analysis.id %}">
+                            <a href="{% url "report" analysis.id %}">
                             {% if analysis.category == "url" %}
                                 <span class="mono">{{analysis.target}}</span>
                             {% else %}
