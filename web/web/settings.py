@@ -28,6 +28,9 @@ aux_cfg =  Config("auxiliary")
 vtdl_cfg = aux_cfg.virustotaldl
 tor_cfg = aux_cfg.tor
 
+# Enable Django authentication for website
+WEB_AUTHENTICATION = False
+
 # Get connection options from reporting.conf.
 MONGO_HOST = cfg.mongodb.get("host", "127.0.0.1")
 MONGO_PORT = cfg.mongodb.get("port", 27017)
@@ -71,10 +74,14 @@ OPT_ZER0M0N = False
 COMMENTS = True
 
 DEBUG = True
-TEMPLATE_DEBUG = DEBUG
 
 # Database settings. We don't need it.
-DATABASES = {}
+DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME'  : 'siteauth.sqlite'
+            }
+        }
 
 SITE_ID = 1
 
@@ -140,12 +147,32 @@ STATICFILES_FINDERS = (
 #    'django.contrib.staticfiles.finders.DefaultStorageFinder',
 )
 
-# List of callables that know how to import templates from various sources.
-TEMPLATE_LOADERS = (
-    'django.template.loaders.filesystem.Loader',
-    'django.template.loaders.app_directories.Loader',
-#     'django.template.loaders.eggs.Loader',
-)
+# Template class for starting w. django 1.10
+TEMPLATES = [
+    {
+        "BACKEND" : "django.template.backends.django.DjangoTemplates",
+        "DIRS" : [
+            "templates",
+        ],
+        "OPTIONS" : {
+            "debug": True,
+            "context_processors": [
+                'django.contrib.auth.context_processors.auth',
+                'django.template.context_processors.debug',
+                'django.template.context_processors.i18n',
+                'django.template.context_processors.media',
+                'django.template.context_processors.static',
+                'django.template.context_processors.tz',
+                'django.contrib.messages.context_processors.messages',
+            ],
+            "loaders": [
+                'django.template.loaders.filesystem.Loader',
+                'django.template.loaders.app_directories.Loader',
+            ]
+        },
+    },
+]
+
 
 MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',
@@ -162,10 +189,6 @@ ROOT_URLCONF = 'web.urls'
 
 # Python dotted path to the WSGI application used by Django's runserver.
 WSGI_APPLICATION = 'web.wsgi.application'
-
-TEMPLATE_DIRS = (
-    "templates",
-)
 
 RATELIMIT_VIEW = 'api.views.limit_exceeded'
 

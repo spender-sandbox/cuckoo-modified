@@ -15,8 +15,8 @@ except ImportError:
     import re
 
 from django.conf import settings
-from django.shortcuts import redirect, render_to_response
-from django.template import RequestContext
+from django.shortcuts import redirect, render
+from django.contrib.auth.decorators import login_required
 
 sys.path.append(settings.CUCKOO_PATH)
 
@@ -25,6 +25,16 @@ from lib.cuckoo.common.utils import store_temp_file, validate_referer
 from lib.cuckoo.common.quarantine import unquarantine
 from lib.cuckoo.common.saztopcap import saz_to_pcap 
 from lib.cuckoo.core.database import Database
+
+# Conditional decorator for web authentication
+class conditional_login_required(object):
+    def __init__(self, dec, condition):
+        self.decorator = dec
+        self.condition = condition
+    def __call__(self, func):
+        if not self.condition:
+            return func
+        return self.decorator(func)
 
 def force_int(value):
     try:
@@ -46,6 +56,7 @@ def update_options(gw, orig_options):
 
     return options
 
+@conditional_login_required(login_required, settings.WEB_AUTHENTICATION)
 def index(request):
     if request.method == "POST":
         package = request.POST.get("package", "")
@@ -135,13 +146,11 @@ def index(request):
                     if len(samples) != 1:
                         continue
 
-                    return render_to_response("error.html",
-                                              {"error": "You uploaded an empty file."},
-                                              context_instance=RequestContext(request))
+                    return render(request, "error.html",
+                                              {"error": "You uploaded an empty file."})
                 elif sample.size > settings.MAX_UPLOAD_SIZE:
-                    return render_to_response("error.html",
-                                              {"error": "You uploaded a file that exceeds the maximum allowed upload size specified in web/web/local_settings.py."},
-                                              context_instance=RequestContext(request))
+                    return render(request, "error.html",
+                                              {"error": "You uploaded a file that exceeds the maximum allowed upload size specified in web/web/local_settings.py."})
     
                 # Moving sample from django temporary file to Cuckoo temporary storage to
                 # let it persist between reboot (if user like to configure it in that way).
@@ -164,13 +173,11 @@ def index(request):
                     if len(samples) != 1:
                         continue
 
-                    return render_to_response("error.html",
-                                              {"error": "You uploaded an empty quarantine file."},
-                                              context_instance=RequestContext(request))
+                    return render(request, "error.html",
+                                              {"error": "You uploaded an empty quarantine file."})
                 elif sample.size > settings.MAX_UPLOAD_SIZE:
-                    return render_to_response("error.html",
-                                              {"error": "You uploaded a quarantine file that exceeds the maximum allowed upload size specified in web/web/local_settings.py."},
-                                              context_instance=RequestContext(request))
+                    return render(request, "error.html",
+                                              {"error": "You uploaded a quarantine file that exceeds the maximum allowed upload size specified in web/web/local_settings.py."})
     
                 # Moving sample from django temporary file to Cuckoo temporary storage to
                 # let it persist between reboot (if user like to configure it in that way).
@@ -184,9 +191,8 @@ def index(request):
                     pass
 
                 if not path:
-                    return render_to_response("error.html",
-                                              {"error": "You uploaded an unsupported quarantine file."},
-                                              context_instance=RequestContext(request))
+                    return render(request, "error.html",
+                                              {"error": "You uploaded an unsupported quarantine file."})
 
                 for gw in task_gateways:
                     options = update_options(gw, orig_options)
@@ -202,13 +208,11 @@ def index(request):
                     if len(samples) != 1:
                         continue
                     
-                    return render_to_response("error.html",
-                                              {"error": "You uploaded an empty PCAP file."},
-                                              context_instance=RequestContext(request))
+                    return render(request, "error.html",
+                                              {"error": "You uploaded an empty PCAP file."})
                 elif sample.size > settings.MAX_UPLOAD_SIZE:
-                    return render_to_response("error.html",
-                                              {"error": "You uploaded a PCAP file that exceeds the maximum allowed upload size specified in web/web/local_settings.py."},
-                                              context_instance=RequestContext(request))
+                    return render(request, "error.html",
+                                              {"error": "You uploaded a PCAP file that exceeds the maximum allowed upload size specified in web/web/local_settings.py."})
 
                 # Moving sample from django temporary file to Cuckoo temporary storage to
                 # let it persist between reboot (if user like to configure it in that way).
@@ -224,9 +228,8 @@ def index(request):
                             pass
                         path = saz
                     else:
-                        return render_to_response("error.html",
-                                                  {"error": "Conversion from SAZ to PCAP failed."},
-                                                  context_instance=RequestContext(request))
+                        return render(request, "error.html",
+                                                  {"error": "Conversion from SAZ to PCAP failed."})
        
                 task_id = db.add_pcap(file_path=path, priority=priority)
                 task_ids.append(task_id)
@@ -234,9 +237,8 @@ def index(request):
         elif "url" in request.POST and request.POST.get("url").strip():
             url = request.POST.get("url").strip()
             if not url:
-                return render_to_response("error.html",
-                                          {"error": "You specified an invalid URL!"},
-                                          context_instance=RequestContext(request))
+                return render(request, "error.html",
+                                          {"error": "You specified an invalid URL!"})
 
             url = url.replace("hxxps://", "https://").replace("hxxp://", "http://").replace("[.]", ".")
             for gw in task_gateways:
@@ -259,9 +261,8 @@ def index(request):
         elif settings.VTDL_ENABLED and "vtdl" in request.POST:
             vtdl = request.POST.get("vtdl").strip()
             if (not settings.VTDL_PRIV_KEY and not settings.VTDL_INTEL_KEY) or not settings.VTDL_PATH:
-                    return render_to_response("error.html",
-                                              {"error": "You specified VirusTotal but must edit the file and specify your VTDL_PRIV_KEY or VTDL_INTEL_KEY variable and VTDL_PATH base directory"},
-                                              context_instance=RequestContext(request))
+                    return render(request, "error.html",
+                                              {"error": "You specified VirusTotal but must edit the file and specify your VTDL_PRIV_KEY or VTDL_INTEL_KEY variable and VTDL_PATH base directory"})
             else:
                 base_dir = tempfile.mkdtemp(prefix='cuckoovtdl',dir=settings.VTDL_PATH)
                 hashlist = []
@@ -283,18 +284,16 @@ def index(request):
                     try:
                         r = requests.get(url, params=params, verify=True)
                     except requests.exceptions.RequestException as e:
-                        return render_to_response("error.html",
-                                              {"error": "Error completing connection to VirusTotal: {0}".format(e)},
-                                              context_instance=RequestContext(request))
+                        return render(request, "error.html",
+                                              {"error": "Error completing connection to VirusTotal: {0}".format(e)})
                     if r.status_code == 200:
                         try:
                             f = open(filename, 'wb')
                             f.write(r.content)
                             f.close()
                         except:
-                            return render_to_response("error.html",
-                                              {"error": "Error writing VirusTotal download file to temporary path"},
-                                              context_instance=RequestContext(request))
+                            return render(request, "error.html",
+                                              {"error": "Error writing VirusTotal download file to temporary path"})
 
                         onesuccess = True
 
@@ -306,28 +305,24 @@ def index(request):
                                                                              machine=entry, custom=custom, memory=memory, enforce_timeout=enforce_timeout, tags=tags, clock=clock)
                                 task_ids.extend(task_ids_new)
                     elif r.status_code == 403:
-                        return render_to_response("error.html",
-                                                  {"error": "API key provided is not a valid VirusTotal key or is not authorized for VirusTotal downloads"},
-                                                  context_instance=RequestContext(request))
+                        return render(request, "error.html",
+                                                  {"error": "API key provided is not a valid VirusTotal key or is not authorized for VirusTotal downloads"})
 
 
                 if not onesuccess:
-                    return render_to_response("error.html",
-                                              {"error": "Provided hash not found on VirusTotal"},
-                                              context_instance=RequestContext(request))
+                    return render(request, "error.html",
+                                              {"error": "Provided hash not found on VirusTotal"})
 
 
 
         tasks_count = len(task_ids)
         if tasks_count > 0:
-            return render_to_response("submission/complete.html",
+            return render(request, "submission/complete.html",
                                       {"tasks" : task_ids,
-                                       "tasks_count" : tasks_count},
-                                      context_instance=RequestContext(request))
+                                       "tasks_count" : tasks_count})
         else:
-            return render_to_response("error.html",
-                                      {"error": "Error adding task to Cuckoo's database."},
-                                      context_instance=RequestContext(request))
+            return render(request, "error.html",
+                                      {"error": "Error adding task to Cuckoo's database."})
     else:
         enabledconf = dict()
         enabledconf["vt"] = settings.VTDL_ENABLED
@@ -377,19 +372,18 @@ def index(request):
         machines.insert(0, ("", "First available"))
         machines.insert(1, ("all", "All"))
 
-        return render_to_response("submission/index.html",
+        return render(request, "submission/index.html",
                                   {"packages": sorted(packages),
                                    "machines": machines,
                                    "gateways": settings.GATEWAYS,
-                                   "config": enabledconf},
-                                  context_instance=RequestContext(request))
+                                   "config": enabledconf})
 
+@conditional_login_required(login_required, settings.WEB_AUTHENTICATION)
 def status(request, task_id):
     task = Database().view_task(task_id)
     if not task:
-        return render_to_response("error.html",
-                                  {"error": "The specified task doesn't seem to exist."},
-                                  context_instance=RequestContext(request))
+        return render(request, "error.html",
+                                  {"error": "The specified task doesn't seem to exist."})
 
     completed = False
     if task.status == "reported":
@@ -399,8 +393,7 @@ def status(request, task_id):
     if status == "completed":
         status = "processing"
 
-    return render_to_response("submission/status.html",
+    return render(request, "submission/status.html",
                               {"completed" : completed,
                                "status" : status,
-                               "task_id" : task_id},
-                              context_instance=RequestContext(request))
+                               "task_id" : task_id})
