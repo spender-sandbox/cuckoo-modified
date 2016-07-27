@@ -13,7 +13,7 @@
         <tr>
             <td>{{record.info.id}}</td>
             <td>{{record.target.file.name}}</td>
-            <td><a href="{% url "analysis.views.report" record.info.id %}">{{record.target.file.md5}}</a></td>
+            <td><a href="{% url "report" record.info.id %}">{{record.target.file.md5}}</a></td>
             <td>{{record.info.machine.name}}</td>
             <td>{{record.info.ended}}</td>
             <td>{{record.info.duration}} seconds</td>
