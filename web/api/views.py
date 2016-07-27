@@ -11,7 +11,7 @@ import requests
 from django.conf import settings
 from wsgiref.util import FileWrapper
 from django.http import HttpResponse, StreamingHttpResponse
-from django.shortcuts import render_to_response
+from django.shortcuts import render
 from django.template import RequestContext
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_safe
@@ -167,9 +167,8 @@ def index(request):
                 parsed[key]["rps"] = "None"
                 parsed[key]["rpm"] = "None"
 
-    return render_to_response("api/index.html",
-                             {"config": parsed},
-                             context_instance=RequestContext(request))
+    return render(request, "api/index.html",
+                             {"config": parsed})
 
 # Queue up a file for analysis
 if apiconf.filecreate.get("enabled"):
