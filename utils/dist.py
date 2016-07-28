@@ -678,8 +678,15 @@ class StatusThread(threading.Thread):
                     # parameter when more than 10 tasks have not been fetched,
                     # thus preventing running out of diskspace.
                     status = node.status()
-                    if status and status["reported"] > RESET_LASTCHECK:
-                        node.last_check = None
+
+                    # This required to speedup data retrieve
+                    # on nodes with high number of tasks
+                    if node.last_check is None and \
+                        status["pending"] == 0 and \
+                        status["running"] == 0 and \
+                        status["completed"] == 0: 
+                        
+                        node.last_check = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
                     # The last_check field of each node object has been
                     # updated as well as the finished field for each task that
