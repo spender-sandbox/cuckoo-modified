@@ -4,7 +4,7 @@
     <div class="col-md-6 col-md-offset-3 center">
         <p><img src="{{ STATIC_URL }}graphic/cuckoo.png" /></p>
 
-        <form class="form-inline" role="form" action="{% url "analysis.views.search" %}" enctype="multipart/form-data" method="post">{% csrf_token %}
+        <form class="form-inline" role="form" action="{% url "search" %}" enctype="multipart/form-data" method="post">{% csrf_token %}
             <p class="text-muted" style="margin-top: 5px;">For details on how to perform searches, get some <a href="#help" data-toggle="collapse">help</a>.</p>
 
             <div class="form-group">
@@ -274,7 +274,7 @@
                         </td>
                         <td style="word-wrap: break-word;">
                             {% if analysis.status == "reported" %}
-                                <a href="{% url "analysis.views.report" analysis.id %}">
+                                <a href="{% url "report" analysis.id %}">
                                 {% if analysis.category == "url" %}
                                     <span class="mono">{{analysis.target}}</span>
                                 {% else %}
@@ -363,7 +363,7 @@
                         {% if config.virustotal %}
                         <td>
                             {% if analysis.virustotal_summary %}
-                                <a href="{% url "analysis.views.antivirus" analysis.id %}" target="_blank"><span class="mono">{{analysis.virustotal_summary}}</span></a>
+                                <a href="{% url "antivirus" analysis.id %}" target="_blank"><span class="mono">{{analysis.virustotal_summary}}</span></a>
                             {% else %}
                                   <span class="mono">None</span>
                             {% endif %}
@@ -400,7 +400,7 @@
                         <td>
                             <span class="mono">
                             {% if analysis.pcap_sha256 %}
-                            <a href="{% url "analysis.views.file" "pcap" analysis.id analysis.pcap_sha256 %}" target="_blank">PCAP</a>
+                            <a href="{% url "file" "pcap" analysis.id analysis.pcap_sha256 %}" target="_blank">PCAP</a>
                             {% else %}
                             None
                             {% endif %}

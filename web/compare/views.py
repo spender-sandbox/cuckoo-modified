@@ -5,9 +5,9 @@
 import sys
 
 from django.conf import settings
-from django.template import RequestContext
-from django.shortcuts import render_to_response
+from django.shortcuts import render
 from django.views.decorators.http import require_safe
+from django.contrib.auth.decorators import login_required
 
 sys.path.append(settings.CUCKOO_PATH)
 
@@ -38,7 +38,18 @@ if enabledconf["elasticsearchdb"]:
              timeout = 60
          )
 
+# Conditional decorator for web authentication
+class conditional_login_required(object):
+    def __init__(self, dec, condition):
+	self.decorator = dec
+	self.condition = condition
+    def __call__(self, func):
+	if not self.condition:
+	    return func
+	return self.decorator(func)
+
 @require_safe
+@conditional_login_required(login_required, settings.WEB_AUTHENTICATION)
 def left(request, left_id):
     if enabledconf["mongodb"]:
         left = results_db.analysis.find_one({"info.id": int(left_id)}, {"target": 1, "info": 1})
@@ -53,9 +64,8 @@ def left(request, left_id):
         else:
             left = None
     if not left:
-        return render_to_response("error.html",
-                                  {"error": "No analysis found with specified ID"},
-                                  context_instance=RequestContext(request))
+        return render(request, "error.html",
+                                  {"error": "No analysis found with specified ID"})
 
     # Select all analyses with same file hash.
     if enabledconf["mongodb"]:
@@ -79,11 +89,11 @@ def left(request, left_id):
         for item in results:
             records.append(item["_source"])
 
-    return render_to_response("compare/left.html",
-                              {"left": left, "records": records},
-                              context_instance=RequestContext(request))
+    return render(request, "compare/left.html",
+                              {"left": left, "records": records})
 
 @require_safe
+@conditional_login_required(login_required, settings.WEB_AUTHENTICATION)
 def hash(request, left_id, right_hash):
     if enabledconf["mongodb"]:
         left = results_db.analysis.find_one({"info.id": int(left_id)}, {"target": 1, "info": 1})
@@ -98,9 +108,8 @@ def hash(request, left_id, right_hash):
         else:
             left = None
     if not left:
-        return render_to_response("error.html",
-                                  {"error": "No analysis found with specified ID"},
-                                  context_instance=RequestContext(request))
+        return render(request, "error.html",
+                                  {"error": "No analysis found with specified ID"})
 
     # Select all analyses with same file hash.
     if enabledconf["mongodb"]:
@@ -125,11 +134,11 @@ def hash(request, left_id, right_hash):
             records.append(item["_source"])
 
     # Select all analyses with specified file hash.
-    return render_to_response("compare/hash.html",
-                              {"left": left, "records": records, "hash": right_hash},
-                              context_instance=RequestContext(request))
+    return render(request, "compare/hash.html",
+                              {"left": left, "records": records, "hash": right_hash})
 
 @require_safe
+@conditional_login_required(login_required, settings.WEB_AUTHENTICATION)
 def both(request, left_id, right_id):
     if enabledconf["mongodb"]:
         left = results_db.analysis.find_one({"info.id": int(left_id)}, {"target": 1, "info": 1, "summary": 1})
@@ -151,7 +160,6 @@ def both(request, left_id, right_id):
         counts = compare.helper_percentages_elastic(es, left_id, right_id, fullidx)
         summary_compare = compare.summary_similarities(left, right)
 
-    return render_to_response("compare/both.html",
+    return render(request, "compare/both.html",
                               {"left": left, "right": right, "left_counts": counts[left_id],
-                               "right_counts": counts[right_id], "summary":summary_compare},
-                               context_instance=RequestContext(request))
+                               "right_counts": counts[right_id], "summary":summary_compare})
