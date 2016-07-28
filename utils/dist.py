@@ -150,6 +150,22 @@ class Retriever(object):
 
                         db.session.commit()
                         db.session.refresh(t)
+
+                        # Delete the task and all its associated files.
+                        # (It will still remain in the nodes' database, though.)
+                        if reporting_conf.distributed.remove_task_on_slave:
+                            node = Node.query.filter_by(id = t.node_id)
+                            node = node.first()
+                            if node:
+                                try:
+                                    url = os.path.join(node.url, "tasks", "delete", "%d" % t.task_id)
+                                    return requests.get(url,
+                                                        auth = HTTPBasicAuth(self.ht_user, self.ht_pass),
+                                                        verify = False).status_code == 200
+                                except Exception as e:
+                                    log.critical("Error deleting task (task #%d, node %s): %s",
+                                                 t.task_id, node.name, e)
+
                 else:
                     log.debug("Error fetching %s report for task #%d",
                               "dist", task.task_id)
@@ -302,7 +318,7 @@ class Node(db.Model):
     def fetch_tasks(self, status, since=None):
         try:
             url = os.path.join(self.url, "tasks", "list")
-            params = dict(status=status)#completed_after=since,
+            params = dict(status=status, completed_after=since, ids=True)
             r = requests.get(url, params=params,
                             auth = HTTPBasicAuth(self.ht_user, self.ht_pass),
                             verify = False)
@@ -323,16 +339,6 @@ class Node(db.Model):
         except Exception as e:
             log.critical("Error fetching report (task #%d, node %s): %s",
                          task_id, self.url, e)
-
-    def delete_task(self, task_id):
-        try:
-            url = os.path.join(self.url, "tasks", "delete", "%d" % task_id)
-            return requests.get(url,
-                                auth = HTTPBasicAuth(self.ht_user, self.ht_pass),
-                                verify = False).status_code == 200
-        except Exception as e:
-            log.critical("Error deleting task (task #%d, node %s): %s",
-                         task_id, self.name, e)
 
 
 class Machine(db.Model):
@@ -610,11 +616,6 @@ class StatusThread(threading.Thread):
                 db.session.commit()
                 db.session.refresh(t)
 
-                # Delete the task and all its associated files.
-                # (It will still remain in the nodes' database, though.)
-                if reporting_conf.distributed.remove_task_on_slave:
-                    node.delete_task(t.task_id)
-
     def run(self):
         global main_db
         global STATUSES
@@ -790,7 +791,7 @@ class TaskBaseApi(RestResource):
         self._parser.add_argument("custom", type=str, default="")
         self._parser.add_argument("memory", type=str, default="0")
         self._parser.add_argument("clock", type=int)
-        self._parser.add_argument("enforce_timeout", type=bool, default=0)
+        self._parser.add_argument("enforce_timeout", type=bool, default=False)
 
 
 class TaskRootApi(TaskBaseApi):
@@ -821,7 +822,7 @@ class TaskRootApi(TaskBaseApi):
                 options=task.options, machine=task.machine,
                 platform=task.platform, tags=task.tags,
                 custom=task.custom, memory=task.memory,
-                clock=task.clock, enforce_timeout=task.enforce_timeout,
+                clock=task.clock.strftime("%Y-%m-%d %H:%M:%S,%f"), enforce_timeout=task.enforce_timeout,
                 task_id=task.task_id, node_id=task.node_id,
             )
         return dict(tasks=ret)

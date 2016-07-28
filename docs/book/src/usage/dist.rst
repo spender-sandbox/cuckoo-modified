@@ -351,7 +351,7 @@ Good practice for production
 Number of retrieved threads from reporting.conf should be less then general threads in uwsgi/gunicorn for api.py
 
 Installation of "uwsgi":
-    # pip install uwsgi
+    # apt-get install uwsgi uwsgi-plugin-python
 
 Installation of "Gunicorn":
     # pip install gunicorn
@@ -363,7 +363,7 @@ Examples done with Uwsgi StandAlone:
     $ uwsgi --socket 0.0.0.0:8090 --protocol=http -w api:application --threads 5 --workers 5 --lazy
     see uwsgi -h for argument explanation
 
-With "config", for example you have file "/opt/cuckoo/utils/api.ini" with this context::
+With "config", for example you have file "/opt/cuckoo/utils/api.ini" with this context:
 
     [uwsgi]
         plugins = python
@@ -377,6 +377,7 @@ With "config", for example you have file "/opt/cuckoo/utils/api.ini" with this c
         manage-script-name = true
         socket = 0.0.0.0:8090
         pidfile = /tmp/api.pid
+        ; if you will use with nginx, comment next line
         protocol=http
         enable-threads = true
         lazy-apps = true
@@ -386,28 +387,54 @@ With "config", for example you have file "/opt/cuckoo/utils/api.ini" with this c
         gui = cuckoo
         uid = cuckoo
 
+uwsgi config for dist.py - /opt/cuckoo/utils/dist.ini
+
+    [uwsgi]
+        plugins = python
+        callable = app
+        ;change this patch if is different
+        chdir = /opt/cuckoo/utils
+        master = true
+        mount = /=dist.py
+        processes = 5
+        workers = 5
+        manage-script-name = true
+        ; if you will use with nginx, comment next line
+        socket = 0.0.0.0:9003
+        pidfile = /tmp/dist.pid
+        protocol=http
+        enable-threads = true
+        lazy-apps = false
+        timeout = 600
+        chmod-socket = 664
+        chown-socket = cuckoo:cuckoo
+        gui = cuckoo
+        uid = cuckoo
+
+
 To run your api with config just execute as:
 
     $ uwsgi --ini /opt/cuckoo/utils/api.ini
+    $ uwsgi --ini /opt/cuckoo/utils/dist.ini
 
 To add your application to auto start after boot, move your config file to:
 
     mv /opt/cuckoo/utils/api.ini /etc/uwsgi/apps-available/cuckoo_api.ini
     ln -s /etc/uwsgi/apps-available/cuckoo_api.ini /etc/uwsgi/apps-enabled
 
-Point your ini to /etc/uwsgi/apps-enabled/cuckoo_api.ini:
+    mv /opt/cuckoo/utils/dist.ini /etc/uwsgi/apps-available/cuckoo_dist.ini
+    ln -s /etc/uwsgi/apps-available/cuckoo_dist.ini /etc/uwsgi/apps-enabled
 
-    ln -s /etc/uwsgi/apps-available/cuckoo_api.ini /etc/uwsgi/apps-enabled/cuckoo_api.ini
     service uwsgi restart
 
 If you need extra help, check this: 
     
 See any of these files on your system:
 
-    /etc/uwsgi/apps-available/README
-    /etc/uwsgi/apps-enabled/README
-    /usr/share/doc/uwsgi/README.Debian.gz
-    /etc/default/uwsgi
+    $ /etc/uwsgi/apps-available/README
+    $ /etc/uwsgi/apps-enabled/README
+    $ /usr/share/doc/uwsgi/README.Debian.gz
+    $ /etc/default/uwsgi
 
 Online:
 

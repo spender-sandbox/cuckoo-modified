@@ -165,22 +165,29 @@ def tasks_list(limit=None, offset=None):
 
     status = request.GET.get("status")
 
+    # optimisation required for dist speedup
+    ids = request.GET.get("ids")
+
     for row in db.list_tasks(limit=limit, details=True, offset=offset,
                              completed_after=completed_after,
                              status=status, order_by=Task.completed_on.asc()):
         task = row.to_dict()
-        task["guest"] = {}
-        if row.guest:
-            task["guest"] = row.guest.to_dict()
+        if ids:
+            task = {"id":task["id"], "completed_on":task["completed_on"]}
 
-        task["errors"] = []
-        for error in row.errors:
-            task["errors"].append(error.message)
+        else:
+            task["guest"] = {}
+            if row.guest:
+                task["guest"] = row.guest.to_dict()
 
-        task["sample"] = {}
-        if row.sample_id:
-            sample = db.view_sample(row.sample_id)
-            task["sample"] = sample.to_dict()
+            task["errors"] = []
+            for error in row.errors:
+                task["errors"].append(error.message)
+
+            task["sample"] = {}
+            if row.sample_id:
+                sample = db.view_sample(row.sample_id)
+                task["sample"] = sample.to_dict()
 
         response["tasks"].append(task)
 
