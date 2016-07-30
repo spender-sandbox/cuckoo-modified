@@ -93,6 +93,9 @@ class VirusTotal(Processing):
             raise CuckooProcessingError("Unable to complete connection "
                                         "to VirusTotal: {0}".format(e))
 
+        if not response_data:
+            return virustotal
+
         try:
             virustotal = json.loads(response_data)
         except ValueError as e:
