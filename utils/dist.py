@@ -47,10 +47,12 @@ reporting_conf = Config("reporting")
 
 INTERVAL = 10
 MINIMUMQUEUE = 5
-RESET_LASTCHECK = 100
+RESET_LASTCHECK = 20
 
 # controller of dead nodes
 failed_count = dict()
+# status controler count to reset number
+status_count = dict()
 
 def required(package):
     sys.exit("The %s package is required: pip install %s" %
@@ -622,19 +624,16 @@ class StatusThread(threading.Thread):
         global queue
         global retrieve
 
+        threads_number = 5
         if reporting_conf.distributed.retriever_threads:
             threads_number = int(reporting_conf.distributed.retriever_threads)
-        else:
-            threads_number = 5
 
-        # Check me
-        retrieve = Retriever(queue, threads_number, app)
-        retrieve.background()
-
+        dead_count = 5
         if reporting_conf.distributed.dead_count:
             dead_count = reporting_conf.distributed.dead_count
-        else:
-            dead_count = 5
+
+        retrieve = Retriever(queue, threads_number, app)
+        retrieve.background()
 
         while RUNNING:
             with app.app_context():
@@ -643,6 +642,11 @@ class StatusThread(threading.Thread):
 
                 # Request a status update on all Cuckoo nodes.
                 for node in Node.query.filter_by(enabled=True).all():
+
+                    # Master doesn't need check himself 
+                    if node.name == "master":
+                        continue
+
                     status = node.status()
                     if not status:
                         failed_count.setdefault(node.name, 0)
@@ -656,6 +660,9 @@ class StatusThread(threading.Thread):
                             db.session.commit()
 
                         continue
+
+                    status_count.setdefault(node.name, 0)
+                    status_count[node.name] += 1
 
                     failed_count[node.name] = 0
                     log.debug("Status.. %s -> %s", node.name, status)
@@ -678,6 +685,8 @@ class StatusThread(threading.Thread):
                     # parameter when more than 10 tasks have not been fetched,
                     # thus preventing running out of diskspace.
                     status = node.status()
+                    if status and status_count[node.name] > RESET_LASTCHECK:
+                        node.last_check = None
 
                     # This required to speedup data retrieve
                     # on nodes with high number of tasks
