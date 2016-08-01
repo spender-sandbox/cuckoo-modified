@@ -68,7 +68,7 @@
                 {% if file.dropdir %}
                 <tr>
                     <th></th>
-                    <td><a href="{% url "analysis.views.file" "dropped" analysis.info.id file.dropdir %}" class="btn btn-primary btn-small">Download</a>
+                    <td><a href="{% url "file" "dropped" analysis.info.id file.dropdir %}" class="btn btn-primary btn-small">Download</a>
                         {% if file.data %}
                         &emsp;<a class="btn btn-primary btn-small" data-toggle="collapse" data-target="#{{file.sha256}}">Display Text</a>
                         {% endif %}
@@ -78,7 +78,7 @@
                 <tr>
                     <th></th>
                     <td>
-                        <a href="{% url "analysis.views.file" "dropped" analysis.info.id file.sha256 %}" class="btn btn-primary btn-small">Download</a>
+                        <a href="{% url "file" "dropped" analysis.info.id file.sha256 %}" class="btn btn-primary btn-small">Download</a>
                         {% if file.data %}
                         &emsp;<a class="btn btn-primary btn-small" data-toggle="collapse" data-target="#{{file.sha256}}">Display Text</a>
                         {% endif %}

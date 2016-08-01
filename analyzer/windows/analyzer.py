@@ -369,8 +369,7 @@ class PipeHandler(Thread):
                         # SW_HIDE
                         si.wShowWindow = 0
                         log.info("Stopping WMI Service")
-                        p = subprocess.Popen(['net', 'stop', 'winmgmt'], startupinfo=si, stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.STDOUT)
-                        dummyvar = p.communicate(input='Y\n')
+                        subprocess.call(['net', 'stop', 'winmgmt', '/y'], startupinfo=si)
                         log.info("Stopped WMI Service")
                         subprocess.call("sc config winmgmt type= own", startupinfo=si)
 
@@ -409,8 +408,7 @@ class PipeHandler(Thread):
                         # SW_HIDE
                         si.wShowWindow = 0
                         log.info("Stopping Task Scheduler Service")
-                        p = subprocess.Popen(['net', 'stop', 'schedule'], startupinfo=si, stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.STDOUT)
-                        dummyvar = p.communicate(input='Y\n')
+                        subprocess.call(['net', 'stop', 'schedule', '/y'], startupinfo=si)
                         log.info("Stopped Task Scheduler Service")
                         subprocess.call("sc config schedule type= own", startupinfo=si)
 
@@ -437,8 +435,7 @@ class PipeHandler(Thread):
                         # SW_HIDE
                         si.wShowWindow = 0
                         log.info("Stopping BITS Service")
-                        p = subprocess.Popen(['net', 'stop', 'BITS'], startupinfo=si, stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.STDOUT)
-                        dummyvar = p.communicate(input='Y\n')
+                        subprocess.call(['net', 'stop', 'BITS', '/y'], startupinfo=si)
                         log.info("Stopped BITS Service")
                         subprocess.call("sc config BITS type= own", startupinfo=si)
 
@@ -872,6 +869,12 @@ class Analyzer:
         # Hell yeah.
         log.info("Analysis completed.")
 
+    def get_completion_key(self):
+        if hasattr(self.config, "completion_key"):
+            return self.config.completion_key
+        else:
+            return ""
+
     def run(self):
         """Run analysis.
         @return: operation status.
@@ -1141,13 +1144,13 @@ class Analyzer:
 if __name__ == "__main__":
     success = False
     error = ""
-
+    completion_key = ""
     try:
         # Initialize the main analyzer class.
         analyzer = Analyzer()
-
         # Run it and wait for the response.
         success = analyzer.run()
+        completion_key = analyzer.get_completion_key()
 
     # This is not likely to happen.
     except KeyboardInterrupt:
@@ -1172,4 +1175,4 @@ if __name__ == "__main__":
     finally:
         # Establish connection with the agent XMLRPC server.
         server = xmlrpclib.Server("http://127.0.0.1:8000")
-        server.complete(success, error, PATHS["root"])
+        server.complete(success, error, completion_key)

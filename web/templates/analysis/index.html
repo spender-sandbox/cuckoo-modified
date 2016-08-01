@@ -14,19 +14,19 @@
         <nav>
            <ul class="pager">
            {% if paging.show_file_prev == "show" %}
-               <li><a href="{% url "analysis.views.index" %}page/{{paging.prev_page}}/">&larr; Newer</a></li>
+               <li><a href="{% url "analysis" %}page/{{paging.prev_page}}/">&larr; Newer</a></li>
            {% endif %}
            {% if paging.files_page_range %}
                {% for page in paging.files_page_range %}
                    {% if page == paging.current_page %}
                    <li><a style="background-color:#eee;">{{page}}</a></li>
                    {% else %}
-                   <li><a href="{% url "analysis.views.index" %}page/{{page}}/">{{page}}</a></li>
+                   <li><a href="{% url "analysis" %}page/{{page}}/">{{page}}</a></li>
                    {% endif %}
                {% endfor %}
            {% endif %}
            {% if paging.show_file_next == "show" %}
-               <li><a href="{% url "analysis.views.index" %}page/{{paging.next_page}}/">Older &rarr;</a></li>
+               <li><a href="{% url "analysis" %}page/{{paging.next_page}}/">Older &rarr;</a></li>
            {% endif %}
            </ul>
         </nav>
@@ -93,7 +93,7 @@
                         </td>
                         <td style="word-wrap: break-word;">
                             {% if analysis.status == "reported" %}
-                                <a href="{% url "analysis.views.report" analysis.id %}"><span class="mono">{{analysis.sample.md5}}</span></a>
+                                <a href="{% url "report" analysis.id %}"><span class="mono">{{analysis.sample.md5}}</span></a>
                             {% elif analysis.status == "running" or analysis.status == "completed" %}
                                 <a href="{% url "submission.views.status" analysis.id %}"><span class="mono">{{analysis.sample.md5}}</span></a>
                             {% else %}
@@ -160,7 +160,7 @@
                         {% if config.virustotal %}
                         <td>
                             {% if analysis.virustotal_summary %}
-                                <a href="{% url "analysis.views.antivirus" analysis.id %}" target="_blank"><span class="mono">{{analysis.virustotal_summary}}</span></a>
+                                <a href="{% url "antivirus" analysis.id %}" target="_blank"><span class="mono">{{analysis.virustotal_summary}}</span></a>
                             {% else %}
                                   <span class="mono">None</span>
                             {% endif %}
@@ -197,7 +197,7 @@
                         <td>
                             <span class="mono">
                             {% if analysis.pcap_sha256 %}
-                            <a href="{% url "analysis.views.file" "pcap" analysis.id analysis.pcap_sha256 %}" target="_blank">PCAP</a>
+                            <a href="{% url "file" "pcap" analysis.id analysis.pcap_sha256 %}" target="_blank">PCAP</a>
                             {% else %}
                             None
                             {% endif %}
@@ -266,19 +266,19 @@
         <nav>
            <ul class="pager">
            {% if paging.show_file_prev == "show" %}
-               <li><a href="{% url "analysis.views.index" %}page/{{paging.prev_page}}/">&larr; Newer</a></li>
+               <li><a href="{% url "analysis" %}page/{{paging.prev_page}}/">&larr; Newer</a></li>
            {% endif %}
                    {% if paging.files_page_range %}
                {% for page in paging.files_page_range %}
                    {% if page == paging.current_page %}
                    <li><a style="background-color:#eee;">{{page}}</a></li>
                    {% else %}
-                   <li><a href="{% url "analysis.views.index" %}page/{{page}}/">{{page}}</a></li>
+                   <li><a href="{% url "analysis" %}page/{{page}}/">{{page}}</a></li>
                    {% endif %}
                {% endfor %}
            {% endif %}
            {% if paging.show_file_next == "show" %}
-               <li><a href="{% url "analysis.views.index" %}page/{{paging.next_page}}/">Older &rarr;</a></li>
+               <li><a href="{% url "analysis" %}page/{{paging.next_page}}/">Older &rarr;</a></li>
            {% endif %}
            </ul>
         </nav>
@@ -290,19 +290,19 @@
         <nav>
            <ul class="pager">
            {% if paging.show_url_prev == "show" %}
-               <li><a href="{% url "analysis.views.index" %}page/{{paging.prev_page}}/">&larr; Newer</a></li>
+               <li><a href="{% url "analysis" %}page/{{paging.prev_page}}/">&larr; Newer</a></li>
            {% endif %}
                       {% if paging.urls_page_range %}
                {% for page in paging.urls_page_range %}
                    {% if page == paging.current_page %}
                    <li><a style="background-color:#eee;">{{page}}</a></li>
                    {% else %}
-                   <li><a href="{% url "analysis.views.index" %}page/{{page}}/">{{page}}</a></li>
+                   <li><a href="{% url "analysis" %}page/{{page}}/">{{page}}</a></li>
                    {% endif %}
                {% endfor %}
               {% endif %}
            {% if paging.show_url_next == "show" %}
-               <li><a href="{% url "analysis.views.index" %}page/{{paging.next_page}}/">Older &rarr;</a></li>
+               <li><a href="{% url "analysis" %}page/{{paging.next_page}}/">Older &rarr;</a></li>
            {% endif %}
            </ul>
         </nav>
@@ -362,7 +362,7 @@
                         </td>
                         <td style="word-wrap: break-word;">
                             {% if analysis.status == "reported" %}
-                                <a href="{% url "analysis.views.report" analysis.id %}"><span class="mono">{{analysis.target}}</span></a>
+                                <a href="{% url "report" analysis.id %}"><span class="mono">{{analysis.target}}</span></a>
                             {% elif analysis.status == "running" or analysis.status == "completed" %}
                                 <a href="{% url "submission.views.status" analysis.id %}"><span class="mono">{{analysis.target}}</span></a>
                             {% else %}
@@ -420,7 +420,7 @@
                         {% if config.virustotal %}
                         <td>
                             {% if analysis.virustotal_summary %}
-                                <a href="{% url "analysis.views.antivirus" analysis.id %}" target="_blank"><span class="mono">{{analysis.virustotal_summary}}</span></a>
+                                <a href="{% url "antivirus" analysis.id %}" target="_blank"><span class="mono">{{analysis.virustotal_summary}}</span></a>
                             {% else %}
                                   <span class="mono">None</span>
                             {% endif %}
@@ -457,7 +457,7 @@
                         <td>
                             <span class="mono">
                             {% if analysis.pcap_sha256 %}
-                            <a href="{% url "analysis.views.file" "pcap" analysis.id analysis.pcap_sha256 %}" target="_blank">PCAP</a>
+                            <a href="{% url "file" "pcap" analysis.id analysis.pcap_sha256 %}" target="_blank">PCAP</a>
                             {% else %}
                             None
                             {% endif %}
@@ -521,19 +521,19 @@
         <nav>
            <ul class="pager">
            {% if paging.show_url_prev == "show" %}
-               <li><a href="{% url "analysis.views.index" %}page/{{paging.prev_page}}/">&larr; Newer</a></li>
+               <li><a href="{% url "analysis" %}page/{{paging.prev_page}}/">&larr; Newer</a></li>
            {% endif %}
                       {% if paging.urls_page_range %}
                {% for page in paging.urls_page_range %}
                    {% if page == paging.current_page %}
                    <li><a style="background-color:#eee;">{{page}}</a></li>
                    {% else %}
-                   <li><a href="{% url "analysis.views.index" %}page/{{page}}/">{{page}}</a></li>
+                   <li><a href="{% url "analysis" %}page/{{page}}/">{{page}}</a></li>
                    {% endif %}
                {% endfor %}
            {% endif %}
            {% if paging.show_url_next == "show" %}
-               <li><a href="{% url "analysis.views.index" %}page/{{paging.next_page}}/">Older &rarr;</a></li>
+               <li><a href="{% url "analysis" %}page/{{paging.next_page}}/">Older &rarr;</a></li>
            {% endif %}
            </ul>
         </nav>
@@ -545,19 +545,19 @@
     <nav>
         <ul class="pager">
             {% if paging.show_pcap_prev == "show" %}
-            <li><a href="{% url "analysis.views.index" %}page/{{paging.prev_page}}/">&larr; Newer</a></li>
+            <li><a href="{% url "analysis" %}page/{{paging.prev_page}}/">&larr; Newer</a></li>
             {% endif %}
             {% if paging.pcaps_page_range %}
             {% for page in paging.pcaps_page_range %}
             {% if page == paging.current_page %}
             <li><a style="background-color:#eee;">{{page}}</a></li>
             {% else %}
-            <li><a href="{% url "analysis.views.index" %}page/{{page}}/">{{page}}</a></li>
+            <li><a href="{% url "analysis" %}page/{{page}}/">{{page}}</a></li>
             {% endif %}
             {% endfor %}
             {% endif %}
             {% if paging.show_pcap_next == "show" %}
-            <li><a href="{% url "analysis.views.index" %}page/{{paging.next_page}}/">Older &rarr;</a></li>
+            <li><a href="{% url "analysis" %}page/{{paging.next_page}}/">Older &rarr;</a></li>
             {% endif %}
         </ul>
     </nav>
@@ -615,7 +615,7 @@
                     </td>
                     <td style="word-wrap: break-word;">
                         {% if analysis.status == "reported" %}
-                        <a href="{% url "analysis.views.report" analysis.id %}"><span class="mono">{{analysis.sample.md5}}</span></a>
+                        <a href="{% url "report" analysis.id %}"><span class="mono">{{analysis.sample.md5}}</span></a>
                         {% elif analysis.status == "running" or analysis.status == "completed" %}
                         <a href="{% url "submission.views.status" analysis.id %}"><span class="mono">{{analysis.sample.md5}}</span></a>
                         {% else %}
@@ -703,7 +703,7 @@
                     <td>
                         <span class="mono">
                             {% if analysis.pcap_sha256 %}
-                            <a href="{% url "analysis.views.file" "pcap" analysis.id analysis.pcap_sha256 %}" target="_blank">PCAP</a>
+                            <a href="{% url "file" "pcap" analysis.id analysis.pcap_sha256 %}" target="_blank">PCAP</a>
                             {% else %}
                             None
                             {% endif %}
@@ -764,19 +764,19 @@
     <nav>
         <ul class="pager">
             {% if paging.show_pcap_prev == "show" %}
-            <li><a href="{% url "analysis.views.index" %}page/{{paging.prev_page}}/">&larr; Newer</a></li>
+            <li><a href="{% url "analysis" %}page/{{paging.prev_page}}/">&larr; Newer</a></li>
             {% endif %}
             {% if paging.pcaps_page_range %}
             {% for page in paging.pcaps_page_range %}
             {% if page == paging.current_page %}
             <li><a style="background-color:#eee;">{{page}}</a></li>
             {% else %}
-            <li><a href="{% url "analysis.views.index" %}page/{{page}}/">{{page}}</a></li>
+            <li><a href="{% url "analysis" %}page/{{page}}/">{{page}}</a></li>
             {% endif %}
             {% endfor %}
             {% endif %}
             {% if paging.show_pcap_next == "show" %}
-            <li><a href="{% url "analysis.views.index" %}page/{{paging.next_page}}/">Older &rarr;</a></li>
+            <li><a href="{% url "analysis" %}page/{{paging.next_page}}/">Older &rarr;</a></li>
             {% endif %}
         </ul>
     </nav>

@@ -121,6 +121,7 @@
     <Compile Include="analyzer\windows\modules\auxiliary\digisig.py" />
     <Compile Include="analyzer\windows\modules\auxiliary\usage.py" />
     <Compile Include="analyzer\windows\modules\packages\chrome.py" />
+    <Compile Include="analyzer\windows\modules\packages\hta.py" />
     <Compile Include="analyzer\windows\modules\packages\js.py" />
     <Compile Include="analyzer\windows\modules\packages\msg.py" />
     <Compile Include="analyzer\windows\modules\packages\eml.py" />

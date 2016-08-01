@@ -11,13 +11,14 @@ import requests
 from django.conf import settings
 from wsgiref.util import FileWrapper
 from django.http import HttpResponse, StreamingHttpResponse
-from django.shortcuts import render_to_response
+from django.shortcuts import render
 from django.template import RequestContext
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_safe
 from ratelimit.decorators import ratelimit
 from StringIO import StringIO
 from bson.objectid import ObjectId
+from django.contrib.auth.decorators import login_required
 
 sys.path.append(settings.CUCKOO_PATH)
 from lib.cuckoo.common.config import Config
@@ -59,6 +60,16 @@ db = Database()
 rateblock = False
 raterps = None
 raterpm = None
+
+# Conditional decorator for web authentication
+class conditional_login_required(object):
+    def __init__(self, dec, condition):
+        self.decorator = dec
+        self.condition = condition
+    def __call__(self, func):
+        if not self.condition:
+            return func
+        return self.decorator(func)
 
 def force_int(value):
     try:
@@ -120,6 +131,7 @@ def createProcessTreeNode(process):
     return process_node_dict
 
 @require_safe
+@conditional_login_required(login_required, settings.WEB_AUTHENTICATION)
 def index(request):
     conf = apiconf.get_config()
     parsed = {}
@@ -155,9 +167,8 @@ def index(request):
                 parsed[key]["rps"] = "None"
                 parsed[key]["rpm"] = "None"
 
-    return render_to_response("api/index.html",
-                             {"config": parsed},
-                             context_instance=RequestContext(request))
+    return render(request, "api/index.html",
+                             {"config": parsed})
 
 # Queue up a file for analysis
 if apiconf.filecreate.get("enabled"):
@@ -994,7 +1005,7 @@ def tasks_list(request, offset=None, limit=None, window=None):
 
     completed_after = request.GET.get("completed_after")
     if completed_after:
-        completed_after = fromtimestamp(int(completed_after))
+        completed_after = datetime.fromtimestamp(int(completed_after))
 
     if not completed_after and window:
         maxwindow = apiconf.tasklist.get("maxwindow")
@@ -1824,11 +1835,11 @@ def tasks_fullmemory(request, task_id):
     if check["error"]:
         return jsonize(check, response=True)
 
-    file_path = os.path.join(CUCKOO_ROOT, "storage", "analyses", str(analysis_number), "memory.dmp")
+    file_path = os.path.join(CUCKOO_ROOT, "storage", "analyses", str(task_id), "memory.dmp")
     if os.path.exists(file_path):
         filename = os.path.basename(file_path)
     else:
-        file_path = os.path.join(CUCKOO_ROOT, "storage", "analyses", str(analysis_number), "memory.dmp.zip")
+        file_path = os.path.join(CUCKOO_ROOT, "storage", "analyses", str(task_id), "memory.dmp.zip")
         if os.path.exists(file_path):
             filename = os.path.basename(file_path)
     if filename:

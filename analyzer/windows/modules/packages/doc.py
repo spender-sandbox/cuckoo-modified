@@ -9,6 +9,7 @@ class DOC(Package):
     PATHS = [
         ("ProgramFiles", "Microsoft Office", "WINWORD.EXE"),
         ("ProgramFiles", "Microsoft Office", "Office*", "WINWORD.EXE"),
+        ("ProgramFiles", "Microsoft Office*", "root", "Office*", "WINWORD.EXE"),
         ("ProgramFiles", "Microsoft Office", "WORDVIEW.EXE"),
     ]
 

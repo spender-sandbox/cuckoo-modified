@@ -6,10 +6,10 @@ import sys
 import time
 
 from django.conf import settings
-from django.template import RequestContext
 from django.http import HttpResponse
-from django.shortcuts import render_to_response
+from django.shortcuts import render
 from django.views.decorators.http import require_safe
+from django.contrib.auth.decorators import login_required
 
 sys.path.append(settings.CUCKOO_PATH)
 
@@ -18,12 +18,23 @@ from lib.cuckoo.core.database import TASK_COMPLETED, TASK_RECOVERED
 from lib.cuckoo.core.database import TASK_REPORTED, TASK_FAILED_ANALYSIS
 from lib.cuckoo.core.database import TASK_FAILED_PROCESSING, TASK_FAILED_REPORTING
 
+# Conditional decorator for web authentication
+class conditional_login_required(object):
+    def __init__(self, dec, condition):
+        self.decorator = dec
+        self.condition = condition
+    def __call__(self, func):
+        if not self.condition:
+            return func
+        return self.decorator(func)
+
 def timestamp(dt):
     """Returns the timestamp of a datetime object."""
     if not dt: return None
     return time.mktime(dt.timetuple())
 
 @require_safe
+@conditional_login_required(login_required, settings.WEB_AUTHENTICATION)
 def index(request):
     db = Database()
 
@@ -75,6 +86,5 @@ def index(request):
         report["estimate_hour"] = int(hourly)
         report["estimate_day"] = int(24 * hourly)
 
-    return render_to_response("dashboard/index.html",
-                              {"report" : report},
-                              context_instance=RequestContext(request))
+    return render(request, "dashboard/index.html",
+                              {"report" : report})

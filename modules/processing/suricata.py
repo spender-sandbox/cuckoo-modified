@@ -2,6 +2,7 @@
 # This file is part of Cuckoo Sandbox - http://www.cuckoosandbox.org
 # See the file 'docs/LICENSE' for copying permission.
 
+import datetime
 import json
 import logging
 import os
@@ -28,6 +29,21 @@ class Suricata(Processing):
         p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
         stdout,stderr = p.communicate()
         return (p.returncode, stdout, stderr)
+
+    def sort_by_timestamp(self, unsorted):
+        # Convert time string into a datetime object for sorting
+        for item in unsorted:
+            oldtime = item["timestamp"]
+            newtime = datetime.datetime.strptime(oldtime[:-5], "%Y-%m-%d %H:%M:%S.%f")
+            item["timestamp"] = newtime
+
+        tmp = sorted(unsorted, key=lambda k: k["timestamp"])
+        # Iterate sorted, converting datetime object back to string for display later
+        for item in tmp:
+            item["timestamp"] = datetime.datetime.strftime(item["timestamp"], "%Y-%m-%d %H:%M:%S.%f")[:-3]
+
+        return tmp
+
 
     def run(self):
         """Run Suricata.
@@ -57,7 +73,7 @@ class Suricata(Processing):
                 log.warning("Failed to compile suricata copy magic RE" % (SURICATA_FILE_COPY_MAGIC_RE))
                 SURICATA_FILE_COPY_MAGIC_RE = None
         # Socket
-        SURICATA_SOCKET_PATH = self.options.get("socket_file", None) 
+        SURICATA_SOCKET_PATH = self.options.get("socket_file", None)
         SURICATA_SOCKET_PYLIB = self.options.get("pylib_dir", None)
 
         # Command Line
@@ -362,4 +378,9 @@ class Suricata(Processing):
             ret,stdout,stderr = self.cmd_wrapper(cmd)
             if ret != 0:
                 log.warning("Suricata: Failed to create %s/files.zip" % (self.logs_path))
+
+        suricata["alerts"] = self.sort_by_timestamp(suricata["alerts"])
+        suricata["http"] = self.sort_by_timestamp(suricata["http"])
+        suricata["tls"] = self.sort_by_timestamp(suricata["tls"])
+
         return suricata

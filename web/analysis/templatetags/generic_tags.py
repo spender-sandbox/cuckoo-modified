@@ -29,13 +29,14 @@ def proctreetolist(tree):
                         cmdline = " ".join(splitcmdline).strip()
                     else:
                         cmdline = node["environ"]["CommandLine"]
-                else:
+                elif cmdline:
                     splitcmdline = cmdline.split()
-                    argv0 = splitcmdline[0].lower()
-                    if node["module_path"].lower() in argv0:
-                        cmdline = " ".join(splitcmdline[1:]).strip()
-                    else:
-                        cmdline = node["environ"]["CommandLine"]
+                    if splitcmdline:
+                        argv0 = splitcmdline[0].lower()
+                        if node["module_path"].lower() in argv0:
+                            cmdline = " ".join(splitcmdline[1:]).strip()
+                        else:
+                            cmdline = node["environ"]["CommandLine"]
                 if len(cmdline) >= 200 + 15:
                     cmdline = cmdline[:200] + " ...(truncated)"
                 newnode["commandline"] = cmdline

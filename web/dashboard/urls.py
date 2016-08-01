@@ -3,7 +3,8 @@
 # See the file "docs/LICENSE" for copying permission.
 
 from django.conf.urls import patterns, url
+from dashboard import views
 
-urlpatterns = patterns("",
-    url(r"^$", "dashboard.views.index"),
-)
+urlpatterns = [
+    url(r"^$", views.index),
+]

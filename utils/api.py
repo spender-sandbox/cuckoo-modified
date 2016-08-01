@@ -11,6 +11,7 @@ import sys
 import tarfile
 from datetime import datetime
 from StringIO import StringIO
+from bson import json_util
 from zipfile import ZipFile, ZIP_STORED
 
 try:
@@ -21,6 +22,7 @@ except ImportError:
 
 sys.path.append(os.path.join(os.path.abspath(os.path.dirname(__file__)), ".."))
 
+from lib.cuckoo.common.config import Config
 from lib.cuckoo.common.constants import CUCKOO_VERSION, CUCKOO_ROOT
 from lib.cuckoo.common.utils import store_temp_file, delete_folder
 from lib.cuckoo.common.email_utils import find_attachments_in_email
@@ -28,6 +30,18 @@ from lib.cuckoo.core.database import Database, TASK_RUNNING, Task
 
 # Global DB pointer.
 db = Database()
+repconf = Config("reporting")
+
+# http://api.mongodb.com/python/current/faq.html#using-pymongo-with-multiprocessing
+# this required for Distributed mode
+FULL_DB = False
+if repconf.mongodb.enabled:
+    import pymongo
+    results_db = pymongo.MongoClient(
+                     repconf.mongodb.host,
+                     repconf.mongodb.port
+                 )[repconf.mongodb.db]
+    FULL_DB = True
 
 # Increase request size limit
 BaseRequest.MEMFILE_MAX = 1024 * 1024 * 4
@@ -72,10 +86,10 @@ def tasks_create_file():
     shrike_sid = request.forms.get("shrike_sid", None)
     shrike_refer = request.forms.get("shrike_refer", None)
 
-    if memory:
+    if int(memory):
         memory = True
     enforce_timeout = request.forms.get("enforce_timeout", False)
-    if enforce_timeout:
+    if int(enforce_timeout):
         enforce_timeout = True
 
     temp_file_path = store_temp_file(data.file.read(), data.filename)
@@ -105,10 +119,10 @@ def tasks_create_url():
     shrike_sid = request.forms.get("shrike_sid", None)
     shrike_refer = request.forms.get("shrike_refer", None)
 
-    if memory:
+    if int(memory):
         memory = True
     enforce_timeout = request.forms.get("enforce_timeout", False)
-    if enforce_timeout:
+    if int(enforce_timeout):
         enforce_timeout = True
     clock = request.forms.get("clock", None)
 
@@ -151,22 +165,29 @@ def tasks_list(limit=None, offset=None):
 
     status = request.GET.get("status")
 
+    # optimisation required for dist speedup
+    ids = request.GET.get("ids")
+
     for row in db.list_tasks(limit=limit, details=True, offset=offset,
                              completed_after=completed_after,
                              status=status, order_by=Task.completed_on.asc()):
         task = row.to_dict()
-        task["guest"] = {}
-        if row.guest:
-            task["guest"] = row.guest.to_dict()
+        if ids:
+            task = {"id":task["id"], "completed_on":task["completed_on"]}
 
-        task["errors"] = []
-        for error in row.errors:
-            task["errors"].append(error.message)
+        else:
+            task["guest"] = {}
+            if row.guest:
+                task["guest"] = row.guest.to_dict()
 
-        task["sample"] = {}
-        if row.sample_id:
-            sample = db.view_sample(row.sample_id)
-            task["sample"] = sample.to_dict()
+            task["errors"] = []
+            for error in row.errors:
+                task["errors"].append(error.message)
+
+            task["sample"] = {}
+            if row.sample_id:
+                sample = db.view_sample(row.sample_id)
+                task["sample"] = sample.to_dict()
 
         response["tasks"].append(task)
 
@@ -255,6 +276,8 @@ def tasks_report(task_id, report_format="json"):
     bz_formats = {
         "all": {"type": "-", "files": ["memory.dmp"]},
         "dropped": {"type": "+", "files": ["files"]},
+        "dist" : {"type": "+", "files": ["shots", "reports"]},
+        "dist2": {"type": "-", "files": ["shots", "reports", "binary"]},
     }
 
     tar_formats = {
@@ -282,6 +305,15 @@ def tasks_report(task_id, report_format="json"):
                     tar.add(os.path.join(srcdir, filedir), arcname=filedir)
                 if bzf["type"] == "+" and filedir in bzf["files"]:
                     tar.add(os.path.join(srcdir, filedir), arcname=filedir)
+
+            if report_format.lower() == "dist" and FULL_DB: 
+                buf = results_db.analysis.find_one({"info.id": task_id})
+                tarinfo = tarfile.TarInfo("mongo.json")
+                buf_dumped = json_util.dumps(buf)
+                tarinfo.size = len(buf_dumped)
+                buf = StringIO(buf_dumped)
+                tar.addfile(tarinfo, buf)
+
             tar.close()
             response.content_type = "application/x-tar; charset=UTF-8"
             return s.getvalue()
@@ -292,6 +324,7 @@ def tasks_report(task_id, report_format="json"):
         return open(report_path, "rb").read()
     else:
         return HTTPError(404, "Report not found")
+
 
 @route("/files/view/md5/<md5>", method="GET")
 @route("/v1/files/view/md5/<md5>", method="GET")
@@ -357,6 +390,18 @@ def machines_list():
     for row in machines:
         response["machines"].append(row.to_dict())
 
+    return jsonize(response)
+
+@route("/machines/delete/<machine_name>", method="GET")
+@route("/v1/machines/delete/<machine_name>", method="GET")
+def machines_delete(machine_name):
+    response = {}
+
+    status = db.delete_machine(machine_name)
+
+    response["status"] = status
+    if status == "success":
+        response["data"]  = "Deleted machine %s" % machine_name
     return jsonize(response)
 
 @route("/cuckoo/status", method="GET")

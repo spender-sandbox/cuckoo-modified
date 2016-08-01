@@ -483,6 +483,23 @@ class Database(object):
             session.close()
 
     @classlock
+    def delete_machine(self, name):
+        """Delete a single machine entry from DB."""
+
+        session = self.Session()
+        try:
+            machine = session.query(Machine).filter_by(name=name).first()
+            session.delete(machine)
+            session.commit()
+            return "success"
+        except SQLAlchemyError as e:
+            log.info("Database error deleting machine: {0}".format(e))
+            session.rollback()
+        finally:
+            session.close()
+
+
+    @classlock
     def add_machine(self, name, label, ip, platform, tags, interface,
                     snapshot, resultserver_ip, resultserver_port):
         """Add a guest machine.
