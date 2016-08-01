@@ -807,53 +807,6 @@ class TaskBaseApi(RestResource):
         self._parser.add_argument("clock", type=int)
         self._parser.add_argument("enforce_timeout", type=bool, default=False)
 
-
-class TaskRootApi(TaskBaseApi):
-    def get(self):
-        offset = request.args.get("offset")
-        limit = request.args.get("limit")
-        finished = request.args.get("finished")
-
-        q = Task.query
-
-        if finished is not None:
-            q = q.filter_by(finished=int(finished))
-
-        if offset is not None:
-            q = q.offset(int(offset))
-
-        if limit is not None:
-            q = q.limit(int(limit))
-
-        tasks = q.all()
-
-        ret = {}
-
-        for task in tasks:
-            ret[task.id] = dict(
-                id=task.id, path=task.path, package=task.package,
-                timeout=task.timeout, priority=task.priority,
-                options=task.options, machine=task.machine,
-                platform=task.platform, tags=task.tags,
-                custom=task.custom, memory=task.memory,
-                clock=task.clock.strftime("%Y-%m-%d %H:%M:%S,%f"), enforce_timeout=task.enforce_timeout,
-                task_id=task.task_id, node_id=task.node_id,
-            )
-        return dict(tasks=ret)
-
-    def post(self):
-        args = self._parser.parse_args()
-        f = request.files["file"]
-
-        path = store_temp_file(f.read(), f.filename, path=app.config["SAMPLES_DIRECTORY"])
-
-        # this return list of tasks ids if archive
-        main_task_id = []
-        main_task_id = main_db.demux_sample_and_add_to_db(file_path=path, **args)
-
-        return dict(task_id=main_task_id)
-
-
 class ReportingBaseApi(RestResource):
     def __init__(self, *args, **kwargs):
         RestResource.__init__(self, *args, **kwargs)
@@ -996,7 +949,6 @@ def create_app(database_connection):
     restapi = DistRestApi(app)
     restapi.add_resource(NodeRootApi, "/node")
     restapi.add_resource(NodeApi, "/node/<string:name>")
-    restapi.add_resource(TaskRootApi, "/task")
     restapi.add_resource(StatusRootApi, "/status")
 
     db.init_app(app)
