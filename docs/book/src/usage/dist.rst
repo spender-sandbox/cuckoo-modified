@@ -358,11 +358,6 @@ Installation of "Gunicorn":
 
 Is better if you run "api.py" and "dist.py" as uwsgi/gunicorn application
 
-Examples done with Uwsgi StandAlone:
-
-    $ uwsgi --socket 0.0.0.0:8090 --protocol=http -w api:application --threads 5 --workers 5 --lazy
-    see uwsgi -h for argument explanation
-
 With "config", for example you have file "/opt/cuckoo/utils/api.ini" with this context:
 
     [uwsgi]
@@ -397,14 +392,12 @@ uwsgi config for dist.py - /opt/cuckoo/utils/dist.ini
         master = true
         mount = /=dist.py
         processes = 5
-        workers = 5
         manage-script-name = true
         ; if you will use with nginx, comment next line
         socket = 0.0.0.0:9003
         pidfile = /tmp/dist.pid
         protocol=http
         enable-threads = true
-        lazy-apps = false
         timeout = 600
         chmod-socket = 664
         chown-socket = cuckoo:cuckoo
