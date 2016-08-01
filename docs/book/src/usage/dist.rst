@@ -358,7 +358,7 @@ Installation of "Gunicorn":
 
 Is better if you run "api.py" and "dist.py" as uwsgi/gunicorn application
 
-With "config", for example you have file "/opt/cuckoo/utils/api.ini" with this context:
+With "config", for example you have file "/opt/cuckoo/utils/api.ini" with this context::
 
     [uwsgi]
         plugins = python
@@ -382,7 +382,7 @@ With "config", for example you have file "/opt/cuckoo/utils/api.ini" with this c
         gui = cuckoo
         uid = cuckoo
 
-uwsgi config for dist.py - /opt/cuckoo/utils/dist.ini
+uwsgi config for dist.py - /opt/cuckoo/utils/dist.ini::
 
     [uwsgi]
         plugins = python
@@ -405,12 +405,12 @@ uwsgi config for dist.py - /opt/cuckoo/utils/dist.ini
         uid = cuckoo
 
 
-To run your api with config just execute as:
+To run your api with config just execute as::
 
     $ uwsgi --ini /opt/cuckoo/utils/api.ini
     $ uwsgi --ini /opt/cuckoo/utils/dist.ini
 
-To add your application to auto start after boot, move your config file to:
+To add your application to auto start after boot, move your config file to::
 
     mv /opt/cuckoo/utils/api.ini /etc/uwsgi/apps-available/cuckoo_api.ini
     ln -s /etc/uwsgi/apps-available/cuckoo_api.ini /etc/uwsgi/apps-enabled
@@ -422,12 +422,13 @@ To add your application to auto start after boot, move your config file to:
 
 If you need extra help, check this: 
     
-See any of these files on your system:
+See any of these files on your system::
 
     $ /etc/uwsgi/apps-available/README
     $ /etc/uwsgi/apps-enabled/README
     $ /usr/share/doc/uwsgi/README.Debian.gz
     $ /etc/default/uwsgi
+
 
 Online:
 
