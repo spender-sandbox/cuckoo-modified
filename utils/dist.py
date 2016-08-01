@@ -122,8 +122,7 @@ class Retriever(object):
                     if not thread.isAlive():
                         thread.join()
                         threads.remove(thread)
-
-                
+         
     def downloader(self, dist_id, task_id, node_id, main_task_id):
         with app.app_context():
             try:
@@ -161,8 +160,9 @@ class Retriever(object):
                             if node:
                                 try:
                                     url = os.path.join(node.url, "tasks", "delete", "%d" % t.task_id)
+                                    logging.info("Removing task id: {0} - from node: {1}".format(t.task_id, node.name))
                                     return requests.get(url,
-                                                        auth = HTTPBasicAuth(self.ht_user, self.ht_pass),
+                                                        auth = HTTPBasicAuth(node.ht_user, node.ht_pass),
                                                         verify = False).status_code == 200
                                 except Exception as e:
                                     log.critical("Error deleting task (task #%d, node %s): %s",
@@ -275,15 +275,17 @@ class Node(db.Model):
                 db.session.refresh(task)
                 return
 
-            files = dict(file=open(task.path, "rb"))
-            r = requests.post(url, data=data, files=files,
-                            auth = HTTPBasicAuth(self.ht_user, self.ht_pass),
-                            verify = False)
+            if self.name != "master":
+                files = dict(file=open(task.path, "rb"))
+                r = requests.post(url, data=data, files=files,
+                                auth = HTTPBasicAuth(self.ht_user, self.ht_pass),
+                                verify = False)
+
+                # Zip files preprocessed, so only one id
+                task.task_id = r.json()["task_ids"][0]
+
             task.node_id = self.id
-
-            # Zip files preprocessed, so only one id
-            task.task_id = r.json()["task_ids"][0]
-
+            
             if task.main_task_id:
                 main_db.set_status(task.main_task_id, TASK_RUNNING)
 
@@ -304,8 +306,6 @@ class Node(db.Model):
                 )
                 main_db.set_status(main_task_id, TASK_RUNNING)
                 task.main_task_id = main_task_id
-            else:
-                task.main_task_id = task.task_id
 
             # We have to refresh() the task object because otherwise we get
             # the unmodified object back in further sql queries..
@@ -413,10 +413,10 @@ class StatusThread(threading.Thread):
                 tags = ','.join([tag.name for tag in t.tags])
                 # Append a comma, to make LIKE searches more precise
                 if tags: tags += ','
-                args = dict( package=t.package, timeout=t.timeout, priority=t.priority,
-                             options=t.options, machine=t.machine, platform=t.platform,
-                             tags=tags, custom=t.custom, memory=t.memory, clock=t.clock,
-                             enforce_timeout=t.enforce_timeout, main_task_id=t.id)
+                args = dict(package=t.package, timeout=t.timeout, priority=t.priority,
+                            options=t.options, machine=t.machine, platform=t.platform,
+                            tags=tags, custom=t.custom, memory=t.memory, clock=t.clock,
+                            enforce_timeout=t.enforce_timeout, main_task_id=t.id)
                 task = Task(path=t.target, **args)
                 db.session.add(task)
 
@@ -535,81 +535,77 @@ class StatusThread(threading.Thread):
             if not node.last_check or completed_on > node.last_check:
                 node.last_check = completed_on
 
-            # we already have reports on master
-            # so we don't need duplicate work
-            if node.name != "master":
-
-                # Fetch each requested report.
-                report = node.get_report(t.task_id, "dist",
+            # Fetch each requested report.
+            report = node.get_report(t.task_id, "dist",
                                              stream=True)
-                if report is None or report.status_code != 200:
-                    log.debug("Error fetching %s report for task #%d",
-                                "distributed", t.task_id)
-                    continue
+            if report is None or report.status_code != 200:
+                log.debug("Error fetching %s report for task #%d",
+                          "distributed", t.task_id)
+                continue
 
-                temp_f = ''
-                for chunk in report.iter_content(chunk_size=1024*1024):
-                    temp_f += chunk
+            temp_f = ''
+            for chunk in report.iter_content(chunk_size=1024*1024):
+                temp_f += chunk
 
-                report_path = os.path.join(CUCKOO_ROOT, "storage", "analyses", "{}".format(t.main_task_id))
-                if not os.path.isdir(report_path):
-                    os.makedirs(report_path)
+            report_path = os.path.join(CUCKOO_ROOT, "storage", "analyses", "{}".format(t.main_task_id))
+            if not os.path.isdir(report_path):
+                os.makedirs(report_path)
 
-                if temp_f:
-                    # will be stored to mongo db only
-                    # we don't need it as file
-                    if HAVE_MONGO:
-                        try:
-                            fileobj = StringIO.StringIO(temp_f)
-                            file = tarfile.open(fileobj=fileobj, mode="r:bz2") # errorlevel=0
-                            report_mongo = ""
-                            report_mongo = file.extractfile("mongo.json")
-                            report_mongo = report_mongo.read()
-                            report_mongo = loads(report_mongo)
+            if temp_f:
+                # will be stored to mongo db only
+                # we don't need it as file
+                if HAVE_MONGO:
+                    try:
+                        fileobj = StringIO.StringIO(temp_f)
+                        file = tarfile.open(fileobj=fileobj, mode="r:bz2") # errorlevel=0
+                        report_mongo = ""
+                        report_mongo = file.extractfile("mongo.json")
+                        report_mongo = report_mongo.read()
+                        report_mongo = loads(report_mongo)
                             
-                            to_extract = file.getmembers()
-                            to_extract = [to_extract.remove(file_inside) 
-                                            if file_inside.name == 'mongo.json' else file_inside 
-                                            for file_inside in to_extract]
-                            to_extract = filter(None, to_extract)
+                        to_extract = file.getmembers()
+                        to_extract = [to_extract.remove(file_inside) 
+                                        if file_inside.name == 'mongo.json' else file_inside 
+                                        for file_inside in to_extract]
+                        to_extract = filter(None, to_extract)
 
-                            # Ignore mongo.json, it will loaded only into memory
-                            file.extractall(report_path, members=to_extract)
+                        # Ignore mongo.json, it will loaded only into memory
+                        file.extractall(report_path, members=to_extract)
 
-                            if reporting_conf.mongodb.enabled:
-                                report = ""
+                        if reporting_conf.mongodb.enabled:
+                            report = ""
 
-                                with open(os.path.join(report_path, "reports", "report.json"), "r") as f:
-                                    report = loads(f.read())
+                            with open(os.path.join(report_path, "reports", "report.json"), "r") as f:
+                                report = loads(f.read())
 
-                                if report_mongo and report:
-                                    self.do_mongo(report_mongo, report, t, node)
-                                    finished = True
+                            if report_mongo and report:
+                                self.do_mongo(report_mongo, report, t, node)
+                                finished = True
                                 
-                                    # move file here from slaves
-                                    retrieve.queue.put((t.id, t.task_id, t.node_id, t.main_task_id))
+                                # move file here from slaves
+                                retrieve.queue.put((t.id, t.task_id, t.node_id, t.main_task_id))
 
-                                    try:
-                                        sample = open(t.path, "rb").read()
-                                        sample_sha256 = hashlib.sha256(sample).hexdigest()
-                                        destination = os.path.join(CUCKOO_ROOT, "storage", "binaries")
-                                        if not os.path.exists(destination):
-                                            os.mkdir(destination)
+                                try:
+                                    sample = open(t.path, "rb").read()
+                                    sample_sha256 = hashlib.sha256(sample).hexdigest()
+                                    destination = os.path.join(CUCKOO_ROOT, "storage", "binaries")
+                                    if not os.path.exists(destination):
+                                        os.mkdir(destination)
 
-                                        destination = os.path.join(destination, sample_sha256)
-                                        if not os.path.exists(destination):
-                                            os.rename(t.path, destination)
-                                        os.remove(t.path)
-                                        # creating link to analysis folder
-                                        os.symlink(destination, os.path.join(report_path, "binary"))
-                                    except Exception as e:
+                                    destination = os.path.join(destination, sample_sha256)
+                                    if not os.path.exists(destination):
+                                        os.rename(t.path, destination)
+                                    os.remove(t.path)
+                                    # creating link to analysis folder
+                                    os.symlink(destination, os.path.join(report_path, "binary"))
+                                except Exception as e:
                                         logging.error(e)
 
-                            # closing StringIO objects
-                            fileobj.close()
+                        # closing StringIO objects
+                        fileobj.close()
 
-                        except Exception as e:
-                            log.info(e)
+                    except Exception as e:
+                        log.info(e)
 
                 del temp_f
 
@@ -619,10 +615,12 @@ class StatusThread(threading.Thread):
                 db.session.refresh(t)
 
     def run(self):
-        global main_db
-        global STATUSES
+        
         global queue
+        global main_db
         global retrieve
+        global STATUSES
+        global RESET_LASTCHECK
 
         threads_number = 5
         if reporting_conf.distributed.retriever_threads:
@@ -642,10 +640,6 @@ class StatusThread(threading.Thread):
 
                 # Request a status update on all Cuckoo nodes.
                 for node in Node.query.filter_by(enabled=True).all():
-
-                    # Master doesn't need check himself 
-                    if node.name == "master":
-                        continue
 
                     status = node.status()
                     if not status:
@@ -677,25 +671,29 @@ class StatusThread(threading.Thread):
                     else:
                         last_check = 0
 
-                    self.fetch_latest_reports(node, last_check)
+                    if node.name != "master":
+                        self.fetch_latest_reports(node, last_check)
 
-                    # We just fetched all the "latest" tasks. However, it is
-                    # for some reason possible that some reports are never
-                    # fetched, and therefore we reset the "last_check"
-                    # parameter when more than 10 tasks have not been fetched,
-                    # thus preventing running out of diskspace.
                     status = node.status()
-                    if status and status_count[node.name] > RESET_LASTCHECK:
-                        node.last_check = None
 
                     # This required to speedup data retrieve
                     # on nodes with high number of tasks
                     if node.last_check is None and \
                         status["pending"] == 0 and \
                         status["running"] == 0 and \
-                        status["completed"] == 0: 
+                        status["completed"] == 0 and \
+                        status_count[node.name] < RESET_LASTCHECK: 
                         
                         node.last_check = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+                    # We just fetched all the "latest" tasks. However, it is
+                    # for some reason possible that some reports are never
+                    # fetched, and therefore we reset the "last_check"
+                    # parameter when more than 10 tasks have not been fetched,
+                    # thus preventing running out of diskspace.
+                    if status and status_count[node.name] > RESET_LASTCHECK:
+                        node.last_check = None
+                        status_count[node.name] = 0
 
                     # The last_check field of each node object has been
                     # updated as well as the finished field for each task that
