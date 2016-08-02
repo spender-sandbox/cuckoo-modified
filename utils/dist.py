@@ -629,9 +629,10 @@ class StatusThread(threading.Thread):
             # handle another user case, 
             # when master used to only store data and not process samples
             master_storage_only = False
-            master = Node.query.filter_by(name="master")
-            master = master.first()
-            if master is not None and Machine.query.filter_by(node_id=master.id).count() == 0:
+            master = Node.query.filter_by(name="master").first()
+            if master is None:
+                master_storage_only = True
+            elif Machine.query.filter_by(node_id=master.id).count() == 0:
                 master_storage_only = True
 
         threads_number = 5
