@@ -665,7 +665,7 @@ class StatusThread(threading.Thread):
 
                     statuses[node.name] = status
 
-                    # send tasks to slaves if master is queue has extra tasks
+                    # send tasks to slaves if master queue has extra tasks(pending)
                     if statuses.get("master", {}).get("pending", 0) > MINIMUMQUEUE and status["pending"] < MINIMUMQUEUE:
                         self.submit_tasks(node, MINIMUMQUEUE - status["pending"])
 
