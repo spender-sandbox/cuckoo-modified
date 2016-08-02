@@ -624,6 +624,16 @@ class StatusThread(threading.Thread):
         global STATUSES
         global RESET_LASTCHECK
 
+        # run once
+        with app.app_context():
+            # handle another user case, 
+            # when master used to only store data and not process samples
+            master_storage_only = False
+            master = Node.query.filter_by(name="master")
+            master = master.first()
+            if master is not None and Machine.query.filter_by(node_id=master.id).count() == 0:
+                master_storage_only = True
+
         threads_number = 5
         if reporting_conf.distributed.retriever_threads:
             threads_number = int(reporting_conf.distributed.retriever_threads)
@@ -665,8 +675,12 @@ class StatusThread(threading.Thread):
 
                     statuses[node.name] = status
 
+                    # If - master only used for storage, not check master queue
+                    # elif -  master also analyze samples, check master queue
                     # send tasks to slaves if master queue has extra tasks(pending)
-                    if statuses.get("master", {}).get("pending", 0) > MINIMUMQUEUE and status["pending"] < MINIMUMQUEUE:
+                    if master_storage_only:
+                        self.submit_tasks(node, MINIMUMQUEUE - status["pending"])
+                    elif statuses.get("master", {}).get("pending", 0) > MINIMUMQUEUE and status["pending"] < MINIMUMQUEUE:
                         self.submit_tasks(node, MINIMUMQUEUE - status["pending"])
 
                     if node.last_check:
