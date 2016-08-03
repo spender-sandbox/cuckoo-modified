@@ -7,5 +7,5 @@ from submission import views
 
 urlpatterns = [
     url(r"^$", views.index, name='submission'),
-    url(r"status/(?P<task_id>\d+)/$", views.status),
+    url(r"status/(?P<task_id>\d+)/$", views.status, name='submission_status'),
 ]

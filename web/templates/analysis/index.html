@@ -95,7 +95,7 @@
                             {% if analysis.status == "reported" %}
                                 <a href="{% url "report" analysis.id %}"><span class="mono">{{analysis.sample.md5}}</span></a>
                             {% elif analysis.status == "running" or analysis.status == "completed" %}
-                                <a href="{% url "submission.views.status" analysis.id %}"><span class="mono">{{analysis.sample.md5}}</span></a>
+                                <a href="{% url "submission_status" analysis.id %}"><span class="mono">{{analysis.sample.md5}}</span></a>
                             {% else %}
                                 <span class="mono">{{analysis.sample.md5}}</span>
                             {% endif %}
@@ -364,7 +364,7 @@
                             {% if analysis.status == "reported" %}
                                 <a href="{% url "report" analysis.id %}"><span class="mono">{{analysis.target}}</span></a>
                             {% elif analysis.status == "running" or analysis.status == "completed" %}
-                                <a href="{% url "submission.views.status" analysis.id %}"><span class="mono">{{analysis.target}}</span></a>
+                                <a href="{% url "submission_status" analysis.id %}"><span class="mono">{{analysis.target}}</span></a>
                             {% else %}
                                 <span class="mono">{{analysis.target}}</span>
                             {% endif %}
@@ -617,7 +617,7 @@
                         {% if analysis.status == "reported" %}
                         <a href="{% url "report" analysis.id %}"><span class="mono">{{analysis.sample.md5}}</span></a>
                         {% elif analysis.status == "running" or analysis.status == "completed" %}
-                        <a href="{% url "submission.views.status" analysis.id %}"><span class="mono">{{analysis.sample.md5}}</span></a>
+                        <a href="{% url "submission_status" analysis.id %}"><span class="mono">{{analysis.sample.md5}}</span></a>
                         {% else %}
                         <span class="mono">{{analysis.sample.md5}}</span>
                         {% endif %}
