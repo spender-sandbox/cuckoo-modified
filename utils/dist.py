@@ -404,23 +404,24 @@ class Task(db.Model):
 
 
 class StatusThread(threading.Thread):
-    def submit_tasks(self, node):
+    def submit_tasks(self, node, pend_tasks_num):
 
-        # Get tasks from main_db submitted through web interface
-        for t in main_db.list_tasks(status=TASK_PENDING):
-            if not Task.query.filter_by(main_task_id=t.id).all():
-                # Convert array of tags into comma separated list
-                tags = ','.join([tag.name for tag in t.tags])
-                # Append a comma, to make LIKE searches more precise
-                if tags: tags += ','
-                args = dict(package=t.package, timeout=t.timeout, priority=t.priority,
-                            options=t.options, machine=t.machine, platform=t.platform,
-                            tags=tags, custom=t.custom, memory=t.memory, clock=t.clock,
-                            enforce_timeout=t.enforce_timeout, main_task_id=t.id)
-                task = Task(path=t.target, **args)
-                db.session.add(task)
+        if node.name != "master":
+            # Get tasks from main_db submitted through web interface
+            for t in main_db.list_tasks(status=TASK_PENDING, limit=pend_tasks_num):
+                if not Task.query.filter_by(main_task_id=t.id).all():
+                    # Convert array of tags into comma separated list
+                    tags = ','.join([tag.name for tag in t.tags])
+                    # Append a comma, to make LIKE searches more precise
+                    if tags: tags += ','
+                    args = dict(package=t.package, timeout=t.timeout, priority=t.priority,
+                                options=t.options, machine=t.machine, platform=t.platform,
+                                tags=tags, custom=t.custom, memory=t.memory, clock=t.clock,
+                                enforce_timeout=t.enforce_timeout, main_task_id=t.id)
+                    task = Task(path=t.target, **args)
+                    db.session.add(task)
 
-        db.session.commit()
+            db.session.commit()
 
         # Only get tasks that have not been pushed yet.
         q = Task.query.filter(or_(Task.node_id==None, Task.task_id==None), Task.finished==False)
@@ -456,8 +457,9 @@ class StatusThread(threading.Thread):
         q = q.filter(or_(*tags))
 
         # Submit appropriate tasks to node
-        for task in q.limit(MINIMUMQUEUE).all():
-            node.submit_task(task)
+        if pend_tasks_num > 0:
+            for task in q.limit(pend_tasks_num).all():
+                node.submit_task(task)
 
     def do_mongo(self, report_mongo, report, t, node):
 
@@ -622,6 +624,17 @@ class StatusThread(threading.Thread):
         global STATUSES
         global RESET_LASTCHECK
 
+        # run once
+        with app.app_context():
+            # handle another user case, 
+            # when master used to only store data and not process samples
+            master_storage_only = False
+            master = Node.query.filter_by(name="master").first()
+            if master is None:
+                master_storage_only = True
+            elif Machine.query.filter_by(node_id=master.id).count() == 0:
+                master_storage_only = True
+
         threads_number = 5
         if reporting_conf.distributed.retriever_threads:
             threads_number = int(reporting_conf.distributed.retriever_threads)
@@ -663,8 +676,13 @@ class StatusThread(threading.Thread):
 
                     statuses[node.name] = status
 
-                    if status["pending"] < MINIMUMQUEUE:
-                        self.submit_tasks(node)
+                    # If - master only used for storage, not check master queue
+                    # elif -  master also analyze samples, check master queue
+                    # send tasks to slaves if master queue has extra tasks(pending)
+                    if master_storage_only:
+                        self.submit_tasks(node, MINIMUMQUEUE - status["pending"])
+                    elif statuses.get("master", {}).get("pending", 0) > MINIMUMQUEUE and status["pending"] < MINIMUMQUEUE:
+                        self.submit_tasks(node, MINIMUMQUEUE - status["pending"])
 
                     if node.last_check:
                         last_check = int(node.last_check.strftime("%s"))
