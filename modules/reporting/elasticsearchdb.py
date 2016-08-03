@@ -48,6 +48,7 @@ class ElasticsearchDB(Report):
 
         self.connect()
         index_prefix  = self.options.get("index", "cuckoo")
+        search_only   = self.options.get("searchonly", False)
 
         # Create a copy of the dictionary. This is done in order to not modify
         # the original dictionary and possibly compromise the following
@@ -57,77 +58,87 @@ class ElasticsearchDB(Report):
         idxdate = report["info"]["started"].split(" ")[0]
         self.index_name = '{0}-{1}'.format(index_prefix, idxdate)
 
-        if not "network" in report:
-            report["network"] = {}
+        if not search_only:
+            if not "network" in report:
+                report["network"] = {}
 
-        # Store API calls in chunks for pagination in Django
-        if "behavior" in report and "processes" in report["behavior"]:
-            new_processes = []
-            for process in report["behavior"]["processes"]:
-                new_process = dict(process)
-                chunk = []
-                chunks_ids = []
-                # Loop on each process call.
-                for index, call in enumerate(process["calls"]):
-                    # If the chunk size is 100 or if the loop is completed then
-                    # store the chunk in Elastcisearch.
-                    if len(chunk) == 100:
-                        to_insert = {"pid": process["process_id"],
-		                     "calls": chunk}
-                        pchunk = self.es.index(index=self.index_name,
-					       doc_type="calls", body=to_insert)
+            # Store API calls in chunks for pagination in Django
+            if "behavior" in report and "processes" in report["behavior"]:
+                new_processes = []
+                for process in report["behavior"]["processes"]:
+                    new_process = dict(process)
+                    chunk = []
+                    chunks_ids = []
+                    # Loop on each process call.
+                    for index, call in enumerate(process["calls"]):
+                        # If the chunk size is 100 or if the loop is completed then
+                        # store the chunk in Elastcisearch.
+                        if len(chunk) == 100:
+                            to_insert = {"pid": process["process_id"],
+                                         "calls": chunk}
+                            pchunk = self.es.index(index=self.index_name,
+                                                   doc_type="calls", body=to_insert)
+                            chunk_id = pchunk['_id']
+                            chunks_ids.append(chunk_id)
+                            # Reset the chunk.
+                            chunk = []
+
+                        # Append call to the chunk.
+                        chunk.append(call)
+
+                    # Store leftovers.
+                    if chunk:
+                        to_insert = {"pid": process["process_id"], "calls": chunk}
+                        pchunk = self.es.index(index=self.index_name, 
+                                               doc_type="calls", body=to_insert)
                         chunk_id = pchunk['_id']
                         chunks_ids.append(chunk_id)
-                        # Reset the chunk.
-                        chunk = []
 
-                    # Append call to the chunk.
-                    chunk.append(call)
+                    # Add list of chunks.
+                    new_process["calls"] = chunks_ids
+                    new_processes.append(new_process)
 
-                # Store leftovers.
-                if chunk:
-                    to_insert = {"pid": process["process_id"], "calls": chunk}
-                    pchunk = self.es.index(index=self.index_name, 
-					   doc_type="calls", body=to_insert)
-                    chunk_id = pchunk['_id']
-                    chunks_ids.append(chunk_id)
+                # Store the results in the report.
+                report["behavior"] = dict(report["behavior"])
+                report["behavior"]["processes"] = new_processes
 
-                # Add list of chunks.
-                new_process["calls"] = chunks_ids
-                new_processes.append(new_process)
+            # Add screenshot paths
+            report["shots"] = []
+            shots_path = os.path.join(self.analysis_path, "shots")
+            if os.path.exists(shots_path):
+                shots = [shot for shot in os.listdir(shots_path)
+                         if shot.endswith(".jpg")]
+                for shot_file in sorted(shots):
+                    shot_path = os.path.join(self.analysis_path, "shots",
+                                             shot_file)
+                    screenshot = File(shot_path)
+                    if screenshot.valid():
+                        # Strip the extension as it's added later 
+                        # in the Django view
+                        report["shots"].append(shot_file.replace(".jpg", ""))
 
-            # Store the results in the report.
-            report["behavior"] = dict(report["behavior"])
-            report["behavior"]["processes"] = new_processes
+            # Other info we want Quick access to from the web UI
+            if results.has_key("virustotal") and results["virustotal"] and results["virustotal"].has_key("positives") and results["virustotal"].has_key("total"):
+                report["virustotal_summary"] = "%s/%s" % (results["virustotal"]["positives"],results["virustotal"]["total"])
 
-        # Add screenshot paths
-        report["shots"] = []
-        shots_path = os.path.join(self.analysis_path, "shots")
-        if os.path.exists(shots_path):
-            shots = [shot for shot in os.listdir(shots_path)
-                     if shot.endswith(".jpg")]
-            for shot_file in sorted(shots):
-                shot_path = os.path.join(self.analysis_path, "shots",
-                                         shot_file)
-                screenshot = File(shot_path)
-                if screenshot.valid():
-                    # Strip the extension as it's added later 
-                    # in the Django view
-                    report["shots"].append(shot_file.replace(".jpg", ""))
-
-        # Other info we want Quick access to from the web UI
-        if results.has_key("virustotal") and results["virustotal"] and results["virustotal"].has_key("positives") and results["virustotal"].has_key("total"):
+            if results.has_key("suricata") and results["suricata"]:
+                if results["suricata"].has_key("tls") and len(results["suricata"]["tls"]) > 0:
+                    report["suri_tls_cnt"] = len(results["suricata"]["tls"])
+                if results["suricata"] and results["suricata"].has_key("alerts") and len(results["suricata"]["alerts"]) > 0:
+                    report["suri_alert_cnt"] = len(results["suricata"]["alerts"])
+                if results["suricata"].has_key("files") and len(results["suricata"]["files"]) > 0:
+                    report["suri_file_cnt"] = len(results["suricata"]["files"])
+                if results["suricata"].has_key("http") and len(results["suricata"]["http"]) > 0:
+                    report["suri_http_cnt"] = len(results["suricata"]["http"])
+        else:
+            report = {}
+            report["task_id"] = results["info"]["id"]
+            report["info"]    = results.get("info")
+            report["target"]  = results.get("target")
+            report["summary"] = results.get("behavior", {}).get("summary")
+            report["network"] = results.get("network")
+            report["virustotal"] = results.get("virustotal")
             report["virustotal_summary"] = "%s/%s" % (results["virustotal"]["positives"],results["virustotal"]["total"])
-
-        if results.has_key("suricata") and results["suricata"]:
-            if results["suricata"].has_key("tls") and len(results["suricata"]["tls"]) > 0:
-                report["suri_tls_cnt"] = len(results["suricata"]["tls"])
-            if results["suricata"] and results["suricata"].has_key("alerts") and len(results["suricata"]["alerts"]) > 0:
-                report["suri_alert_cnt"] = len(results["suricata"]["alerts"])
-            if results["suricata"].has_key("files") and len(results["suricata"]["files"]) > 0:
-                report["suri_file_cnt"] = len(results["suricata"]["files"])
-            if results["suricata"].has_key("http") and len(results["suricata"]["http"]) > 0:
-                report["suri_http_cnt"] = len(results["suricata"]["http"])
 
         # Store the report and retrieve its object id.
         self.es.index(index=self.index_name, doc_type="analysis", id=results["info"]["id"], body=report)

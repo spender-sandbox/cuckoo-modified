@@ -28,6 +28,7 @@ if enabledconf["mongodb"]:
 
 if enabledconf["elasticsearchdb"]:
     from elasticsearch import Elasticsearch
+    essearch = Config("reporting").elasticsearchdb.searchonly
     baseidx = Config("reporting").elasticsearchdb.index
     fullidx = baseidx + "-*"
     es = Elasticsearch(
@@ -53,7 +54,7 @@ class conditional_login_required(object):
 def left(request, left_id):
     if enabledconf["mongodb"]:
         left = results_db.analysis.find_one({"info.id": int(left_id)}, {"target": 1, "info": 1})
-    if enabledconf["elasticsearchdb"]:
+    if enabledconf["elasticsearchdb"] and not essearch:
         hits = es.search(
                    index=fullidx,
                    doc_type="analysis",
@@ -78,7 +79,7 @@ def left(request, left_id):
             },
             {"target": 1, "info": 1}
         )
-    if enabledconf["elasticsearchdb"]:
+    if enabledconf["elasticsearchdb"] and not essearch:
         records = list()
         results = es.search(
                       index=fullidx,
@@ -97,7 +98,7 @@ def left(request, left_id):
 def hash(request, left_id, right_hash):
     if enabledconf["mongodb"]:
         left = results_db.analysis.find_one({"info.id": int(left_id)}, {"target": 1, "info": 1})
-    if enabledconf["elasticsearchdb"]:
+    if enabledconf["elasticsearchdb"] and not essearch:
         hits = es.search(
                    index=fullidx,
                    doc_type="analysis",
@@ -122,7 +123,7 @@ def hash(request, left_id, right_hash):
             },
             {"target": 1, "info": 1}
         )
-    if enabledconf["elasticsearchdb"]:
+    if enabledconf["elasticsearchdb"] and not essearch:
         records = list()
         results = es.search(
                       index=fullidx,
@@ -146,7 +147,7 @@ def both(request, left_id, right_id):
         # Execute comparison.
         counts = compare.helper_percentages_mongo(results_db, left_id, right_id)
         summary_compare = compare.helper_summary_mongo(results_db, left_id, right_id)
-    if enabledconf["elasticsearchdb"]:
+    if enabledconf["elasticsearchdb"] and not essearch:
         left = es.search(
                    index=fullidx,
                    doc_type="analysis",

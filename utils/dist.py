@@ -40,6 +40,12 @@ try:
 except ImportError:
     HAVE_MONGO = False
 
+try:
+    from elasticsearch import Elasticsearch
+    HAVE_ELASTICSEARCH = True
+except ImportError as e:
+    HAVE_ELASTICSEARCH = False
+
 # we need original db to reserve ID in db,
 # to store later report, from master or slave
 cuckoo_conf = Config("cuckoo")
@@ -461,6 +467,37 @@ class StatusThread(threading.Thread):
             for task in q.limit(pend_tasks_num).all():
                 node.submit_task(task)
 
+    def do_es(self, results, t):
+        if HAVE_ELASTICSEARCH:
+            try:
+                es = Elasticsearch(
+                    hosts = [{
+                        'host': reporting_conf.elasticsearchdb.host,
+                        'port': reporting_conf.elasticsearchdb.port,
+                    }],
+                    timeout = 60
+                )
+            except Exception as e: 
+                raise CuckooReportError("Cannot connect to ElasticSearch DB")
+                return
+
+            index_prefix  = reporting_conf.elasticsearchdb.index
+
+            idxdate = results["info"]["started"].split(" ")[0]
+            index_name = '{0}-{1}'.format(index_prefix, idxdate)
+
+            report = {}
+            report["task_id"] = results["info"]["id"]
+            report["info"]    = results.get("info")
+            report["target"]  = results.get("target")
+            report["summary"] = results.get("behavior", {}).get("summary")
+            report["network"] = results.get("network")
+            report["virustotal"] = results.get("virustotal")
+            report["virustotal_summary"] = "%s/%s" % (results["virustotal"]["positives"],results["virustotal"]["total"])
+
+            # Store the report and retrieve its object id.
+            es.index(index=index_name, doc_type="analysis", id=results["info"]["id"], body=report)
+
     def do_mongo(self, report_mongo, report, t, node):
 
         """This fucntion will store behavior and webgui report without reprocess"""
@@ -582,6 +619,7 @@ class StatusThread(threading.Thread):
 
                             if report_mongo and report:
                                 self.do_mongo(report_mongo, report, t, node)
+                                if reporting_conf.elasticsearchdb.searchonly and reporting_conf.elasticsearchdb.enabled: self.do_es(report, t)
                                 finished = True
                                 
                                 # move file here from slaves
