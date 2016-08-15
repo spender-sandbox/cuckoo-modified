@@ -1015,6 +1015,7 @@ def create_app(database_connection):
     return app
 
 # init 
+logging.getLogger("elasticsearch").setLevel(logging.WARNING)
 logging.getLogger("requests").setLevel(logging.WARNING)
 logging.getLogger("urllib3").setLevel(logging.WARNING)
 log = logging.getLogger("cuckoo.distributed")

@@ -53,7 +53,9 @@ if enabledconf["mongodb"]:
 
 if enabledconf["elasticsearchdb"]:
     from elasticsearch import Elasticsearch
+    es_as_db = True
     essearch = Config("reporting").elasticsearchdb.searchonly
+    if essearch: es_as_db = False 
     baseidx = Config("reporting").elasticsearchdb.index
     fullidx = baseidx + "-*"
     es = Elasticsearch(hosts = [{
@@ -99,7 +101,7 @@ def get_analysis_info(db, id=-1, task=None):
                    }, sort=[("_id", pymongo.DESCENDING)]
                )
 
-    if enabledconf["elasticsearchdb"] and not essearch:
+    if es_as_db:
         rtmp = es.search(
                    index=fullidx,
                    doc_type="analysis",
@@ -311,7 +313,7 @@ def chunk(request, task_id, pid, pagenum):
                 }
             )
 
-        if enabledconf["elasticsearchdb"] and not essearch:
+        if es_as_db:
             record = es.search(
                         index=fullidx,
                         doc_type="analysis",
@@ -335,7 +337,7 @@ def chunk(request, task_id, pid, pagenum):
             if enabledconf["mongodb"]:
                 chunk = results_db.calls.find_one({"_id": ObjectId(objectid)})
 
-            if enabledconf["elasticsearchdb"] and not essearch:
+            if es_as_db:
                 chunk = es.search(
                             index=fullidx,
                             doc_type="calls",
@@ -366,7 +368,7 @@ def filtered_chunk(request, task_id, pid, category, apilist):
                 {"info.id": int(task_id), "behavior.processes.process_id": int(pid)},
                 {"behavior.processes.process_id": 1, "behavior.processes.calls": 1}
             )
-        if enabledconf["elasticsearchdb"] and not essearch:
+        if es_as_db:
             #print "info.id: \"%s\" and behavior.processes.process_id: \"%s\"" % (task_id, pid)
             record = es.search(
                          index=fullidx,
@@ -401,7 +403,7 @@ def filtered_chunk(request, task_id, pid, category, apilist):
         for call in process["calls"]:
             if enabledconf["mongodb"]:
                 chunk = results_db.calls.find_one({"_id": call})
-            if enabledconf["elasticsearchdb"] and not essearch:
+            if es_as_db:
                 chunk = es.search(
                             index=fullidx,
                             doc_type="calls",
@@ -650,7 +652,7 @@ def search_behavior(request, task_id):
             record = results_db.analysis.find_one(
                 {"info.id": int(task_id)}
             )
-        if enabledconf["elasticsearchdb"] and not essearch:
+        if es_as_db:
             esquery = es.search(
                           index=fullidx,
                           doc_type="analysis",
@@ -670,7 +672,7 @@ def search_behavior(request, task_id):
                 chunks = results_db.calls.find({
                     "_id": { "$in": process["calls"] }
                 })
-            if enabledconf["elasticsearchdb"] and not essearch:
+            if es_as_db:
                 # I don't believe ES has a similar function to MongoDB's $in
                 # so we'll just iterate the call list and query appropriately
                 chunks = list()
@@ -716,7 +718,7 @@ def report(request, task_id):
                      {"info.id": int(task_id)},
                      sort=[("_id", pymongo.DESCENDING)]
                  )
-    if enabledconf["elasticsearchdb"] and not essearch:
+    if es_as_db:
         query = es.search(
                     index=fullidx,
                     doc_type="analysis",
@@ -890,7 +892,7 @@ def procdump(request, task_id, process_id, start, end):
 
     if enabledconf["mongodb"]:
         analysis = results_db.analysis.find_one({"info.id": int(task_id)}, sort=[("_id", pymongo.DESCENDING)])
-    if enabledconf["elasticsearchdb"] and not essearch:
+    if es_as_db:
         analysis = es.search(
                    index=fullidx,
                    doc_type="analysis",
@@ -1089,7 +1091,7 @@ def perform_search(term, value):
 
     if enabledconf["mongodb"]:
         return results_db.analysis.find({term_map[term] : query_val}).sort([["_id", -1]])
-    if enabledconf["elasticsearchdb"] and not essearch:
+    if es_as_db:
         return es.search(index=fullidx, doc_type="analysis", q=term_map[term] + ": %s" % value)["hits"]["hits"]
 
 def perform_malscore_search(value):
@@ -1146,7 +1148,7 @@ def search(request):
                 new = get_analysis_info(db, id=int(result["_source"]["task_id"]))
             if enabledconf["mongodb"] and new is None:
                 new = get_analysis_info(db, id=int(result["info"]["id"]))
-            if enabledconf["elasticsearchdb"] and not essearch:
+            if es_as_db:
                 new = get_analysis_info(db, id=int(result["_source"]["info"]["id"]))
             if not new:
                 continue
@@ -1188,7 +1190,7 @@ def remove(request, task_id):
         else:
             return render(request, "error.html",
                                       {"error": "The specified analysis does not exist"})
-    if enabledconf["elasticsearchdb"] and not essearch:
+    if es_as_db:
         analyses = es.search(
                        index=fullidx,
                        doc_type="analysis",
@@ -1236,7 +1238,7 @@ def pcapstream(request, task_id, conntuple):
             { "network.tcp": 1, "network.udp": 1, "network.sorted_pcap_sha256": 1},
             sort=[("_id", pymongo.DESCENDING)])
 
-    if enabledconf["elasticsearchdb"] and not essearch:
+    if es_as_db:
         conndata = es.search(
                     index=fullidx,
                     doc_type="analysis",
@@ -1286,7 +1288,7 @@ def comments(request, task_id):
 
         if enabledconf["mongodb"]:
             report = results_db.analysis.find_one({"info.id": int(task_id)}, sort=[("_id", pymongo.DESCENDING)])
-        if enabledconf["elasticsearchdb"] and not essearch:
+        if es_as_db:
             query = es.search(
                         index=fullidx,
                         doc_type="analysis",
@@ -1315,7 +1317,7 @@ def comments(request, task_id):
         curcomments.insert(0, buf)
         if enabledconf["mongodb"]:
             results_db.analysis.update({"info.id": int(task_id)},{"$set":{"info.comments":curcomments}}, upsert=False, multi=True)
-        if enabledconf["elasticsearchdb"] and not essearch:
+        if es_as_db:
             es.update(
                     index=esidx,
                     doc_type="analysis",
