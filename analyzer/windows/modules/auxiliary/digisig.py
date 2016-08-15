@@ -138,7 +138,9 @@ class DigiSig(Auxiliary):
                 self.json_data["error"] = True
                 errmsg = " ".join("".join(err.split(":")[1:]).split())
                 self.json_data["error_desc"] = errmsg
-                if "No signature found" not in err:
+                if "file format cannot be verified" in err:
+                    log.debug("File format not recognized.")
+                elif "No signature found" not in err:
                     log.debug("File has an invalid signature.")
                     output = self.parse_digisig(out)
                     self.jsonify("Certificate Chain", self.cert_build)

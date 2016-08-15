@@ -158,12 +158,12 @@ class Moloch(Report):
                                tmpdict['expression'] = "ip==%s && ip==%s && port==%s && port==%s && tags==\"%s:%s\" && ip.protocol==%s" % (tmpdict['srcip'],tmpdict['dstip'],tmpdict['srcport'],tmpdict['dstport'],self.CUCKOO_INSTANCE_TAG,self.task_id,tmpdict['cproto'])
                                tmpdict['hash'] = tmpdict['nproto'] + struct.unpack('!L',socket.inet_aton(tmpdict['srcip']))[0] + tmpdict['srcport'] + struct.unpack('!L',socket.inet_aton(tmpdict['dstip']))[0] + tmpdict['dstport']
                            elif proto == "ICMP" or proto == "1":
-                               tmpdict['src'] = m.group('src')
-                               tmpdict['dst'] = m.group('dst')
+                               tmpdict['srcip'] = alert['srcip']
+                               tmpdict['dstip'] = alert['dstip']
                                tmpdict['cproto'] = "icmp"
                                tmpdict['nproto'] = 1
-                               tmpdict['expression'] = "ip==%s && ip==%s && tags==\"%s:%s\" && ip.protocol==%s" % (tmpdict['src_ip'],tmpdict['dest_ip'],self.CUCKOO_INSTANCE_TAG,self.task_id,tmpdict['cproto'])
-                               tmpdict['hash'] = tmpdict['nproto'] + struct.unpack('!L',socket.inet_aton(tmpdict['src_ip']))[0] + struct.unpack('!L',socket.inet_aton(tmpdict['dest_ip']))[0]
+                               tmpdict['expression'] = "ip==%s && ip==%s && tags==\"%s:%s\" && ip.protocol==%s" % (tmpdict['srcip'],tmpdict['dstip'],self.CUCKOO_INSTANCE_TAG,self.task_id,tmpdict['cproto'])
+                               tmpdict['hash'] = tmpdict['nproto'] + struct.unpack('!L',socket.inet_aton(tmpdict['srcip']))[0] + struct.unpack('!L',socket.inet_aton(tmpdict['dstip']))[0]
 
                            if self.alerthash.has_key(tmpdict['hash']):
                                if  alert["sid"] not in self.alerthash[tmpdict['hash']]['sids']:

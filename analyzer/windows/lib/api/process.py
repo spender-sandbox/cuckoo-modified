@@ -585,7 +585,7 @@ class Process:
             config.write("shutdown-mutex={0}\n".format(SHUTDOWN_MUTEX))
             config.write("terminate-event={0}{1}\n".format(TERMINATE_EVENT, self.pid))
 
-            if nosleepskip or ("force-sleepskip" not in cfgoptions and len(interest) > 2 and interest[1] != ':' and Process.process_num <= 2):
+            if nosleepskip or ("force-sleepskip" not in cfgoptions and len(interest) > 2 and interest[1] != ':' and interest[0] != '\\' and Process.process_num <= 2):
                 config.write("force-sleepskip=0\n")
 
             if "norefer" not in cfgoptions:
