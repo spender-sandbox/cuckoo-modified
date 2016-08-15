@@ -51,11 +51,12 @@ if enabledconf["mongodb"]:
     from bson.objectid import ObjectId
     results_db = pymongo.MongoClient(settings.MONGO_HOST, settings.MONGO_PORT)[settings.MONGO_DB]
 
+es_as_db = False
 if enabledconf["elasticsearchdb"]:
     from elasticsearch import Elasticsearch
-    es_as_db = True
     essearch = Config("reporting").elasticsearchdb.searchonly
-    if essearch: es_as_db = False 
+    if not essearch:
+        es_as_db = True
     baseidx = Config("reporting").elasticsearchdb.index
     fullidx = baseidx + "-*"
     es = Elasticsearch(hosts = [{
