@@ -288,7 +288,7 @@ def cuckoo_clean():
             log.warning("Unable to drop MongoDB database: %s", mdb)
 
     # Check if ElasticSearch is enabled and delete that data if it is.
-    if cfg.elasticsearchdb and cfg.elasticsearchdb.enabled:
+    if cfg.elasticsearchdb and cfg.elasticsearchdb.enabled and not cfg.elasticsearchdb.searchonly:
         from elasticsearch import Elasticsearch
         delidx = cfg.elasticsearchdb.index + "-*"
         try:
