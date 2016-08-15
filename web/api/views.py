@@ -26,7 +26,7 @@ from lib.cuckoo.common.constants import CUCKOO_ROOT, CUCKOO_VERSION
 from lib.cuckoo.common.quarantine import unquarantine
 from lib.cuckoo.common.saztopcap import saz_to_pcap
 from lib.cuckoo.common.utils import store_temp_file, delete_folder
-from lib.cuckoo.common.utils import convert_to_printable, validate_referer
+from lib.cuckoo.common.utils import convert_to_printable, validate_referrer
 from lib.cuckoo.core.database import Database, Task
 from lib.cuckoo.core.database import TASK_REPORTED
 
@@ -437,7 +437,7 @@ def tasks_create_url(request):
         clock = request.POST.get("clock", None)
         enforce_timeout = bool(request.POST.get("enforce_timeout", False))
         gateway = request.POST.get("gateway",None)
-        referer = validate_referer(request.POST.get("referer",None))
+        referrer = validate_referrer(request.POST.get("referrer",None))
         shrike_url = request.POST.get("shrike_url", None)
         shrike_msg = request.POST.get("shrike_msg", None)
         shrike_sid = request.POST.get("shrike_sid", None)
@@ -473,10 +473,10 @@ def tasks_create_url(request):
                                         ", ".join(vm_list)))}
                 return jsonize(resp, response=True)
 
-        if referer:
+        if referrer:
             if options:
                 options += ","
-            options += "referer=%s" % (referer)
+            options += "referrer=%s" % (referrer)
 
         orig_options = options
 

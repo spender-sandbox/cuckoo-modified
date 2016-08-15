@@ -1043,7 +1043,7 @@ def perform_search(term, value):
         "surimsg" : "suricata.alerts.signature",
         "suriurl" : "suricata.http.uri",
         "suriua" : "suricata.http.ua",
-        "surireferer" : "suricata.http.referrer",
+        "surireferrer" : "suricata.http.referrer",
         "suritlssubject" : "suricata.tls.subject",
         "suritlsissuerdn" : "suricata.tls.issuer",
         "suritlsfingerprint" : "suricata.tls.fingerprint",
