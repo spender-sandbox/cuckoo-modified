@@ -42,8 +42,10 @@ if repconf.mongodb.enabled:
                      settings.MONGO_PORT
                  )[settings.MONGO_DB]
 
-if repconf.elasticsearchdb.enabled:
+es_as_db = False
+if repconf.elasticsearchdb.enabled and not repconf.elasticsearchdb.searchonly:
     from elasticsearch import Elasticsearch
+    es_as_db = True
     baseidx = repconf.elasticsearchdb.index
     fullidx = baseidx + "-*"
     es = Elasticsearch(
@@ -886,7 +888,7 @@ def ext_tasks_search(request):
                         "error_value": "Invalid Option. '%s' is not a valid option." % option}
                 return jsonize(resp, response=True)
 
-        if repconf.elasticsearchdb.enabled:
+        if es_as_db:
             if term == "name":
                 records = es.search(index=fullidx, doc_type="analysis", q="target.file.name: %s" % value)["hits"]["hits"]
             elif term == "type":
@@ -959,7 +961,7 @@ def ext_tasks_search(request):
             for results in records:
                 if repconf.mongodb.enabled:
                     ids.append(results["info"]["id"])
-                if repconf.elasticsearchdb.enabled:
+                if es_as_db:
                     ids.append(results["_source"]["info"]["id"])
             resp = {"error": False, "data": ids}
         else:
@@ -1296,7 +1298,7 @@ def tasks_iocs(request, task_id, detail=None):
     buf = {}
     if repconf.mongodb.get("enabled") and not buf:
         buf = results_db.analysis.find_one({"info.id": int(task_id)})
-    if repconf.elasticsearchdb.get("enabled") and not buf:
+    if es_as_db and not buf:
         tmp = es.search(
                   index=fullidx,
                   doc_type="analysis",

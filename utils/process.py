@@ -29,7 +29,7 @@ if repconf.mongodb.enabled:
     from pymongo import MongoClient
     from pymongo.errors import ConnectionFailure
 
-if repconf.elasticsearchdb.enabled:
+if repconf.elasticsearchdb.enabled and not repconf.elasticsearchdb.searchonly:
     from elasticsearch import Elasticsearch
     baseidx = repconf.elasticsearchdb.index
     fullidx = baseidx + "-*"
@@ -74,7 +74,7 @@ def process(target=None, copy_path=None, task=None, report=False, auto=False):
             conn.close()
             log.debug("Deleted previous MongoDB data for Task %s" % task_id)
 
-        if repconf.elasticsearchdb.enabled:
+        if repconf.elasticsearchdb.enabled and not repconf.elasticsearchdb.searchonly:
             analyses = es.search(
                            index=fullidx,
                            doc_type="analysis",
