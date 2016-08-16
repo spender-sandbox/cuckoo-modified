@@ -5,7 +5,7 @@ libvirt-python
 pymongo
 bottle
 #pefile
-django
+django>=1.7
 chardet
 pygal
 clamd
