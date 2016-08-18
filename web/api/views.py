@@ -26,7 +26,7 @@ from lib.cuckoo.common.constants import CUCKOO_ROOT, CUCKOO_VERSION
 from lib.cuckoo.common.quarantine import unquarantine
 from lib.cuckoo.common.saztopcap import saz_to_pcap
 from lib.cuckoo.common.utils import store_temp_file, delete_folder
-from lib.cuckoo.common.utils import convert_to_printable, validate_referer
+from lib.cuckoo.common.utils import convert_to_printable, validate_referrer
 from lib.cuckoo.core.database import Database, Task
 from lib.cuckoo.core.database import TASK_REPORTED
 
@@ -42,8 +42,10 @@ if repconf.mongodb.enabled:
                      settings.MONGO_PORT
                  )[settings.MONGO_DB]
 
-if repconf.elasticsearchdb.enabled:
+es_as_db = False
+if repconf.elasticsearchdb.enabled and not repconf.elasticsearchdb.searchonly:
     from elasticsearch import Elasticsearch
+    es_as_db = True
     baseidx = repconf.elasticsearchdb.index
     fullidx = baseidx + "-*"
     es = Elasticsearch(
@@ -437,7 +439,7 @@ def tasks_create_url(request):
         clock = request.POST.get("clock", None)
         enforce_timeout = bool(request.POST.get("enforce_timeout", False))
         gateway = request.POST.get("gateway",None)
-        referer = validate_referer(request.POST.get("referer",None))
+        referrer = validate_referrer(request.POST.get("referrer",None))
         shrike_url = request.POST.get("shrike_url", None)
         shrike_msg = request.POST.get("shrike_msg", None)
         shrike_sid = request.POST.get("shrike_sid", None)
@@ -473,10 +475,10 @@ def tasks_create_url(request):
                                         ", ".join(vm_list)))}
                 return jsonize(resp, response=True)
 
-        if referer:
+        if referrer:
             if options:
                 options += ","
-            options += "referer=%s" % (referer)
+            options += "referrer=%s" % (referrer)
 
         orig_options = options
 
@@ -886,7 +888,7 @@ def ext_tasks_search(request):
                         "error_value": "Invalid Option. '%s' is not a valid option." % option}
                 return jsonize(resp, response=True)
 
-        if repconf.elasticsearchdb.enabled:
+        if es_as_db:
             if term == "name":
                 records = es.search(index=fullidx, doc_type="analysis", q="target.file.name: %s" % value)["hits"]["hits"]
             elif term == "type":
@@ -959,7 +961,7 @@ def ext_tasks_search(request):
             for results in records:
                 if repconf.mongodb.enabled:
                     ids.append(results["info"]["id"])
-                if repconf.elasticsearchdb.enabled:
+                if es_as_db:
                     ids.append(results["_source"]["info"]["id"])
             resp = {"error": False, "data": ids}
         else:
@@ -1296,7 +1298,7 @@ def tasks_iocs(request, task_id, detail=None):
     buf = {}
     if repconf.mongodb.get("enabled") and not buf:
         buf = results_db.analysis.find_one({"info.id": int(task_id)})
-    if repconf.elasticsearchdb.get("enabled") and not buf:
+    if es_as_db and not buf:
         tmp = es.search(
                   index=fullidx,
                   doc_type="analysis",

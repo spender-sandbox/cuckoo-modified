@@ -21,7 +21,8 @@ cfg = Config("reporting")
 if not cfg.mongodb.get("enabled") and not cfg.elasticsearchdb.get("enabled"):
     raise Exception("No database backend reporting module is enabled! Please enable either ElasticSearch or MongoDB.")
 
-if cfg.mongodb.get("enabled") and cfg.elasticsearchdb.get("enabled"):
+if cfg.mongodb.get("enabled") and cfg.elasticsearchdb.get("enabled") and \
+    not cfg.elasticsearchdb.get("searchonly"):
     raise Exception("Both database backend reporting modules are enabled. Please only enable ElasticSearch or MongoDB.")
 
 aux_cfg =  Config("auxiliary")

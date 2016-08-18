@@ -17,6 +17,7 @@ from lib.cuckoo.common.abstracts import Report
 from lib.cuckoo.common.constants import CUCKOO_ROOT
 from lib.cuckoo.common.exceptions import CuckooReportError
 from lib.cuckoo.core.database import Database, Task, TASK_REPORTED
+from bson.objectid import ObjectId
 
 log = logging.getLogger(__name__)
 cfg = Config("reporting")
@@ -34,7 +35,7 @@ if cfg.mongodb and cfg.mongodb.enabled:
     except Exception as e:
         log.warning("Unable to connect to MongoDB: %s", str(e))
 
-if cfg.elasticsearchdb and cfg.elasticsearchdb.enabled:
+if cfg.elasticsearchdb and cfg.elasticsearchdb.enabled and not cfg.elasticsearchdb.searchonly:
     from elasticsearch import Elasticsearch
     idx = cfg.elasticsearchdb.index + "-*"
     try:
@@ -203,7 +204,7 @@ class Retention(Report):
                             if cfg.mongodb and cfg.mongodb.enabled:
                                 delete_mongo_data(curtask, lastTask)
                         elif item == "elastic":
-                            if cfg.elasticsearchdb and cfg.elasticsearchdb.enabled:
+                            if cfg.elasticsearchdb and cfg.elasticsearchdb.enabled and not cfg.elasticsearchdb.searchonly:
                                 delete_elastic_data(curtask, lastTask)
                     saveTaskLogged[item] = int(lastTask)
                 else:

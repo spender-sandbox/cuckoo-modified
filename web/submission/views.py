@@ -21,7 +21,7 @@ from django.contrib.auth.decorators import login_required
 sys.path.append(settings.CUCKOO_PATH)
 
 from lib.cuckoo.common.config import Config
-from lib.cuckoo.common.utils import store_temp_file, validate_referer
+from lib.cuckoo.common.utils import store_temp_file, validate_referrer
 from lib.cuckoo.common.quarantine import unquarantine
 from lib.cuckoo.common.saztopcap import saz_to_pcap 
 from lib.cuckoo.core.database import Database
@@ -69,16 +69,16 @@ def index(request):
         custom = request.POST.get("custom", "")
         memory = bool(request.POST.get("memory", False))
         enforce_timeout = bool(request.POST.get("enforce_timeout", False))
-        referer = validate_referer(request.POST.get("referer", None))
+        referrer = validate_referrer(request.POST.get("referrer", None))
         tags = request.POST.get("tags", None)
 
         task_gateways = []
         ipaddy_re = re.compile(r"^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$")
 
-        if referer:
+        if referrer:
             if options:
                 options += ","
-            options += "referer=%s" % (referer)
+            options += "referrer=%s" % (referrer)
 
         if request.POST.get("free"):
             if options:
