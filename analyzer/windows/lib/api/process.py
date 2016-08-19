@@ -588,7 +588,7 @@ class Process:
             if nosleepskip or ("force-sleepskip" not in cfgoptions and len(interest) > 2 and interest[1] != ':' and interest[0] != '\\' and Process.process_num <= 2):
                 config.write("force-sleepskip=0\n")
 
-            if "norefer" not in cfgoptions:
+            if "norefer" not in cfgoptions and "referrer" not in cfgoptions:
                 config.write("referrer={0}\n".format(get_referrer_url(interest)))
 
             simple_optnames = [
@@ -608,6 +608,7 @@ class Process:
                 "hook-type",
                 "exclude-apis",
                 "exclude-dlls",
+                "referrer",
                 ]
             
             for optname in simple_optnames:

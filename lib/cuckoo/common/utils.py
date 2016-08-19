@@ -31,7 +31,7 @@ try:
 except ImportError:
     HAVE_CHARDET = False
 
-def validate_referer(url):
+def validate_referrer(url):
     if not url:
         return None
 
