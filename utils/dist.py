@@ -822,6 +822,9 @@ class NodeRootApi(NodeBaseApi):
         node = Node(name=args["name"], url=args["url"], ht_user=args["ht_user"],
                 ht_pass=args["ht_pass"])
 
+        if Node.query.filter_by(name=args["name"]).first():
+            return dict(success=False, message="Node called %s already exists" % args["name"])
+
         machines = []
         for machine in node.list_machines():
             machines.append(dict(
