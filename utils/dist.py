@@ -117,7 +117,7 @@ class Retriever(object):
         with app.app_context():
             tasks = Task.query.filter_by(retrieved=False, finished=True).all()
             for task in tasks:
-                retrieve.queue.put((task.id, task.task_id, task.node_id, task.main_task_id))
+                self.queue.put((task.id, task.task_id, task.node_id, task.main_task_id))
 
         threads = []
         while True:
