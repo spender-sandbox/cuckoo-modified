@@ -391,13 +391,14 @@ uwsgi config for dist.py - /opt/cuckoo/utils/dist.ini::
         chdir = /opt/cuckoo/utils
         master = true
         mount = /=dist.py
-        processes = 5
+        threads = 5
         manage-script-name = true
         ; if you will use with nginx, comment next line
         socket = 0.0.0.0:9003
         pidfile = /tmp/dist.pid
         protocol=http
         enable-threads = true
+        lazy = true
         timeout = 600
         chmod-socket = 664
         chown-socket = cuckoo:cuckoo
