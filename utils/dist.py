@@ -649,7 +649,6 @@ class StatusThread(threading.Thread):
                                     destination = os.path.join(destination, sample_sha256)
                                     if not os.path.exists(destination):
                                         shutil.move(t.path, destination)
-                                    os.remove(t.path)
                                     # creating link to analysis folder
                                     os.symlink(destination, os.path.join(report_path, "binary"))
                                 except Exception as e:
