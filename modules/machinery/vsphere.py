@@ -291,10 +291,27 @@ class vSphere(Machinery):
             raise CuckooMachineError("Snapshot {0} for machine {1} not found"
                                      .format(name, vm.summary.config.name))
 
-        sg = (s.dataKey for s in vm.layoutEx.snapshot if s.key == snapshot)
-        datakey = next(sg, None)
-        fg = (f.name for f in vm.layoutEx.file if f.key == datakey)
-        filespec = next(fg, None)
+        memorykey = datakey = filespec = None
+        for s in vm.layoutEx.snapshot:
+            if s.key == snapshot:
+                memorykey = s.memoryKey
+                datakey = s.dataKey
+                break
+
+        for f in vm.layoutEx.file:
+            if f.key == memorykey and (f.type == "snapshotMemory" or
+                                       f.type == "suspendMemory"):
+                filespec = f.name
+                break
+
+        if not filespec:
+            for f in vm.layoutEx.file:
+                if f.key == datakey and f.type == "snapshotData":
+                    filespec = f.name
+                    break
+
+        if not filespec:
+            raise CuckooMachineError("Could not find memory snapshot file")
 
         log.info("Downloading memory dump {0} to {1}".format(filespec, path))
 
