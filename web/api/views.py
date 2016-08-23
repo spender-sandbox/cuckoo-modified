@@ -511,7 +511,7 @@ def tasks_create_url(request):
                              timeout=timeout,
                              priority=priority,
                              options=options,
-                             machine=machine,
+                             machine=entry,
                              platform=platform,
                              tags=tags,
                              custom=custom,
