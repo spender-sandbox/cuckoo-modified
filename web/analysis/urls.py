@@ -9,7 +9,7 @@ urlpatterns = [
     url(r"^$", views.index, name='analysis'),
     url(r"^page/(?P<page>\d+)/$", views.index),
     url(r"^(?P<task_id>\d+)/$", views.report, name='report'),
-    url(r"^surialert/(?P<task_id>\d+)/$", views.surialert),
+    url(r"^surialert/(?P<task_id>\d+)/$", views.surialert, name='surialert'),
     url(r"^surihttp/(?P<task_id>\d+)/$", views.surihttp),
     url(r"^suritls/(?P<task_id>\d+)/$", views.suritls),
     url(r"^surifiles/(?P<task_id>\d+)/$",views.surifiles),
