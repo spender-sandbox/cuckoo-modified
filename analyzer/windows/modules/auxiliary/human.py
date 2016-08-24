@@ -32,6 +32,7 @@ CLOSED_OFFICE = False
 def foreach_child(hwnd, lparam):
     # List of buttons labels to click.
     buttons = [
+        # english
         "yes",
         "ok",
         "accept",
@@ -52,16 +53,51 @@ def foreach_child(hwnd, lparam):
         "end",
         "allow access",
         "remind me later",
+        # german
+        "ja",
+        "weiter",
+        "akzeptieren",
+        "ende",
+        "starten",
+        "jetzt starten",
+        "neustarten",
+        "neu starten",
+        "jetzt neu starten",
+        "beenden",
+        "oeffnen",
+        "schliessen",
+        "installation weiterfuhren",
+        "fertig",
+        "beenden",
+        "fortsetzen",
+        "fortfahren",
+        "stimme zu",
+        "zustimmen",
+        "senden",
+        "nicht senden",
+        "speichern",
+        "nicht speichern",
+        "ausfuehren",
+        "spaeter",
+        "einverstanden"
     ]
 
     # List of buttons labels to not click.
     dontclick = [
+        # english
         "check online for a solution",
         "don't run",
         "do not ask again until the next update is available",
         "cancel",
         "do not accept the agreement",
-        "i would like to help make reader even better"
+        "i would like to help make reader even better",
+        # german
+        "abbrechen",
+        "online nach losung suchen",
+        "abbruch",
+        "nicht ausfuehren",
+        "hilfe",
+        "stimme nicht zu"
     ]
 
     classname = create_unicode_buffer(128)
@@ -176,7 +212,7 @@ class Human(Auxiliary, Thread):
 
             # add some random data to the clipboard
             randchars = list("   aaaabcddeeeeeefghhhiiillmnnnooooprrrsssttttuwy")
-            cliplen = random.randint(10,1000)
+            cliplen = random.randint(10, 1000)
             clipval = []
             for i in range(cliplen):
                 clipval.append(randchars[random.randint(0, len(randchars)-1)])
