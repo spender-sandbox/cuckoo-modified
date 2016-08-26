@@ -430,7 +430,7 @@
                         <td>
                             {% if analysis.shrike_msg %}
                                  {% if analysis.status == "reported" %}
-                                     <a href="{% url "analysis.views.shrike" analysis.id %}" target="_blank"><span class="mono">{{analysis.shrike_msg}}</span></a>
+                                     <a href="{% url "shrike" analysis.id %}" target="_blank"><span class="mono">{{analysis.shrike_msg}}</span></a>
                                  {% else %}
                                      <span class="mono">{{analysis.shrike_msg}}</span>
                                  {% endif %}

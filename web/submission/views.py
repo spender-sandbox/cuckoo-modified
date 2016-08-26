@@ -387,7 +387,7 @@ def status(request, task_id):
 
     completed = False
     if task.status == "reported":
-        return redirect('analysis.views.report', task_id=task_id)
+        return redirect('report', task_id=task_id)
 
     status = task.status
     if status == "completed":
