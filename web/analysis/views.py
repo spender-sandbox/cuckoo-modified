@@ -1331,7 +1331,7 @@ def comments(request, task_id):
                         }
                     }
                  )
-        return redirect('analysis.views.report', task_id=task_id)
+        return redirect('report', task_id=task_id)
 
     else:
         return render(request, "error.html",
