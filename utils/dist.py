@@ -439,7 +439,7 @@ class StatusThread(threading.Thread):
         q = Task.query.filter(or_(Task.node_id==None, Task.task_id==None), Task.finished==False)
 
         # Order by task priority and task id.
-        q = q.order_by(-Task.priority, -Task.id)
+        q = q.order_by(-Task.priority, Task.main_task_id)
 
         # Get available node tags
         machines = Machine.query.filter_by(node_id=node.id).all()
