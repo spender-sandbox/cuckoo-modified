@@ -181,7 +181,7 @@ class Retriever(object):
 
                 else:
                     log.debug("Error fetching %s report for task #%d",
-                              "dist", task.task_id)
+                              "dist2", task_id)
 
             except Exception as e:
                 logging.info("Can not fetch dist2 report for Web Task: main_task_id: %d. Error: %s" % (main_task_id, e))
