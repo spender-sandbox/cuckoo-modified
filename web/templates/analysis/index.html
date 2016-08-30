@@ -139,17 +139,17 @@
                             {% endif %}
                             {% if config.expanded_dashboard %}
                                 {% if analysis.suri_http_cnt %}
-                                -->/<a href="{% url "analysis.views.surihttp" analysis.id %}" target="_blank">{{analysis.suri_http_cnt}}</a><!--
+                                -->/<a href="{% url "surihttp" analysis.id %}" target="_blank">{{analysis.suri_http_cnt}}</a><!--
                                 {% else %}
                                 -->/0<!--
                                 {% endif %}
                                 {% if analysis.suri_tls_cnt %}
-                                -->/<a href="{% url "analysis.views.suritls" analysis.id %}" target="_blank">{{analysis.suri_tls_cnt}}</a><!--
+                                -->/<a href="{% url "suritls" analysis.id %}" target="_blank">{{analysis.suri_tls_cnt}}</a><!--
                                 {% else %}
                                 -->/0<!--
                                 {% endif %}
                                 {% if analysis.suri_files_cnt %}
-                                -->/<a href="{% url "analysis.views.surifiles" analysis.id %}" target="_blank">{{analysis.suri_files_cnt}}</a><!--
+                                -->/<a href="{% url "surifiles" analysis.id %}" target="_blank">{{analysis.suri_files_cnt}}</a><!--
                                 {% else %}
                                 -->/0<!--
                                 {% endif %}
@@ -226,7 +226,7 @@
                         <td>
                             {% if analysis.shrike_msg %}
                                  {% if analysis.status == "reported" %}
-                                     <a href="{% url "analysis.views.shrike" analysis.id %}" target="_blank"><span class="mono">{{analysis.shrike_msg}}</span></a>
+                                     <a href="{% url "shrike" analysis.id %}" target="_blank"><span class="mono">{{analysis.shrike_msg}}</span></a>
                                  {% else %}
                                      <span class="mono">{{analysis.shrike_msg}}</span>
                                  {% endif %}
@@ -399,17 +399,17 @@
                                 {% endif %}
                                 {% if config.expanded_dashboard %}
                                     {% if analysis.suri_http_cnt %}
-                                    -->/<a href="{% url "analysis.views.surihttp" analysis.id %}" target="_blank">{{analysis.suri_http_cnt}}</a><!--
+                                    -->/<a href="{% url "surihttp" analysis.id %}" target="_blank">{{analysis.suri_http_cnt}}</a><!--
                                     {% else %}
                                     -->/0<!--
                                     {% endif %}
                                     {% if analysis.suri_tls_cnt %}
-                                    -->/<a href="{% url "analysis.views.suritls" analysis.id %}" target="_blank">{{analysis.suri_tls_cnt}}</a><!--
+                                    -->/<a href="{% url "suritls" analysis.id %}" target="_blank">{{analysis.suri_tls_cnt}}</a><!--
                                     {% else %}
                                     -->/0<!--
                                     {% endif %}
                                     {% if analysis.suri_files_cnt %}
-                                    -->/<a href="{% url "analysis.views.surifiles" analysis.id %}" target="_blank">{{analysis.suri_files_cnt}}</a><!--
+                                    -->/<a href="{% url "surifiles" analysis.id %}" target="_blank">{{analysis.suri_files_cnt}}</a><!--
                                     {% else %}
                                     -->/0<!--
                                     {% endif %}
@@ -486,7 +486,7 @@
                         <td>
                             {% if analysis.shrike_msg %}
                                  {% if analysis.status == "reported" %}
-                                     <a href="{% url "analysis.views.shrike" analysis.id %}" target="_blank"><span class="mono">{{analysis.shrike_msg}}</span></a>
+                                     <a href="{% url "shrike" analysis.id %}" target="_blank"><span class="mono">{{analysis.shrike_msg}}</span></a>
                                  {% else %}
                                      <span class="mono">{{analysis.shrike_msg}}</span>
                                  {% endif %}
@@ -643,7 +643,7 @@
                             {% if config.expanded_dashboard %}
                                 {% if analysis.suri_http_cnt %}
                                 -->
-                            /<a href="{% url "analysis.views.surihttp" analysis.id %}" target="_blank">{{analysis.suri_http_cnt}}</a>
+                            /<a href="{% url "surihttp" analysis.id %}" target="_blank">{{analysis.suri_http_cnt}}</a>
                             <!--
                             {% else %}
                             -->
@@ -652,7 +652,7 @@
                             {% endif %}
                             {% if analysis.suri_tls_cnt %}
                             -->
-                            /<a href="{% url "analysis.views.suritls" analysis.id %}" target="_blank">{{analysis.suri_tls_cnt}}</a>
+                            /<a href="{% url "suritls" analysis.id %}" target="_blank">{{analysis.suri_tls_cnt}}</a>
                             <!--
                             {% else %}
                             -->
@@ -661,7 +661,7 @@
                             {% endif %}
                             {% if analysis.suri_files_cnt %}
                             -->
-                            /<a href="{% url "analysis.views.surifiles" analysis.id %}" target="_blank">{{analysis.suri_files_cnt}}</a>
+                            /<a href="{% url "surifiles" analysis.id %}" target="_blank">{{analysis.suri_files_cnt}}</a>
                             <!--
                             {% else %}
                             -->
@@ -723,7 +723,7 @@
                     <td>
                         {% if analysis.shrike_msg %}
                         {% if analysis.status == "reported" %}
-                        <a href="{% url "analysis.views.shrike" analysis.id %}" target="_blank"><span class="mono">{{analysis.shrike_msg}}</span></a>
+                        <a href="{% url "shrike" analysis.id %}" target="_blank"><span class="mono">{{analysis.shrike_msg}}</span></a>
                         {% else %}
                         <span class="mono">{{analysis.shrike_msg}}</span>
                         {% endif %}
