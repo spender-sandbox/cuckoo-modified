@@ -1355,7 +1355,7 @@ def tasks_iocs(request, task_id, detail=None):
         data["network"]["hosts"] = buf["network"]["hosts"]
         data["network"]["domains"] = buf["network"]["domains"]
     data["network"]["ids"] = {}
-    if "suricata" in buf.keys():
+    if "suricata" in buf.keys() and isinstance(buf["suricata"], dict):
         data["network"]["ids"]["totalalerts"] = len(buf["suricata"]["alerts"])
         data["network"]["ids"]["alerts"] = buf["suricata"]["alerts"]
         data["network"]["ids"]["http"] = buf["suricata"]["http"]
