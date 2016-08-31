@@ -368,7 +368,6 @@ With "config", for example you have file "/opt/cuckoo/utils/api.ini" with this c
         master = true
         mount = /=api.py
         processes = 5
-        workers = 5
         manage-script-name = true
         socket = 0.0.0.0:8090
         pidfile = /tmp/api.pid
@@ -392,6 +391,7 @@ uwsgi config for dist.py - /opt/cuckoo/utils/dist.ini::
         master = true
         mount = /=dist.py
         threads = 5
+        workers = 1
         manage-script-name = true
         ; if you will use with nginx, comment next line
         socket = 0.0.0.0:9003
