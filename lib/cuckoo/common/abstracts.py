@@ -1276,10 +1276,11 @@ class Signature(object):
         @return: True/False
         """
         res = False
-        for alert in self.results.get("suricata", {}).get("alerts", []):
-            if re.findall(pattern, alert.get("signature", ""), re.I):
-                res = True
-                break
+        if isinstance(self.results.get("suricata", {}), dict):
+            for alert in self.results.get("suricata", {}).get("alerts", []):
+                if re.findall(pattern, alert.get("signature", ""), re.I):
+                    res = True
+                    break
         return res
 
     def add_match(self, process, type, match):
