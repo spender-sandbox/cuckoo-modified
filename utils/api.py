@@ -250,6 +250,13 @@ def tasks_delete(task_id):
         if db.delete_task(task_id):
             delete_folder(os.path.join(CUCKOO_ROOT, "storage",
                                        "analyses", "%d" % task_id))
+            if FULL_DB:
+                task = results_db.analysis.find_one({"info.id": task_id})
+                for processes in task.get("behavior", {}).get("processes", []):
+                    [results_db.calls.remove(call) for call in processes.get("calls", [])]
+
+                results_db.analysis.remove({"info.id": task_id})
+
             response["status"] = "OK"
         else:
             return HTTPError(500, "An error occurred while trying to "
@@ -306,7 +313,7 @@ def tasks_report(task_id, report_format="json"):
                 if bzf["type"] == "+" and filedir in bzf["files"]:
                     tar.add(os.path.join(srcdir, filedir), arcname=filedir)
 
-            if report_format.lower() == "dist" and FULL_DB: 
+            if report_format.lower() == "dist" and FULL_DB:
                 buf = results_db.analysis.find_one({"info.id": task_id})
                 tarinfo = tarfile.TarInfo("mongo.json")
                 buf_dumped = json_util.dumps(buf)
