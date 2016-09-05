@@ -250,12 +250,12 @@ def tasks_delete(task_id):
         if db.delete_task(task_id):
             delete_folder(os.path.join(CUCKOO_ROOT, "storage",
                                        "analyses", "%d" % task_id))
+            if FULL_DB:
+                task = results_db.analysis.find_one({"info.id": task_id})
+                for processes in task.get("behavior", {}).get("processes", []):
+                    [results_db.calls.remove(call) for call in processes.get("calls", [])]
 
-            task = results_db.analysis.find_one({"info.id": task_id})
-            for processes in task.get("behavior", {}).get("processes", []):
-                [results_db.calls.remove(call) for call in processes.get("calls", [])]
-
-            results_db.analysis.remove({"info.id": task_id})
+                results_db.analysis.remove({"info.id": task_id})
 
             response["status"] = "OK"
         else:
