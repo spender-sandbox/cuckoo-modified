@@ -118,12 +118,19 @@ def tasks_create_url():
     shrike_msg = request.forms.get("shrike_msg", None)
     shrike_sid = request.forms.get("shrike_sid", None)
     shrike_refer = request.forms.get("shrike_refer", None)
-
-    if int(memory):
-        memory = True
     enforce_timeout = request.forms.get("enforce_timeout", False)
-    if int(enforce_timeout):
-        enforce_timeout = True
+
+    try:
+        if int(memory):
+            memory = True
+    except:
+        pass
+    try:
+        if int(enforce_timeout):
+            enforce_timeout = True
+    except:
+        pass
+
     clock = request.forms.get("clock", None)
 
     task_id = db.add_url(
