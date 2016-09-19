@@ -879,8 +879,7 @@ class Analyzer:
         """Run analysis.
         @return: operation status.
         """
-        self.prepare()
-
+        
         log.debug("Starting analyzer from: %s", os.getcwd())
         log.debug("Storing results at: %s", PATHS["root"])
         log.debug("Pipe server name: %s", PIPE)
@@ -1148,9 +1147,11 @@ if __name__ == "__main__":
     try:
         # Initialize the main analyzer class.
         analyzer = Analyzer()
+        analyzer.prepare()
+        completion_key = analyzer.get_completion_key()
+        
         # Run it and wait for the response.
         success = analyzer.run()
-        completion_key = analyzer.get_completion_key()
 
     # This is not likely to happen.
     except KeyboardInterrupt:

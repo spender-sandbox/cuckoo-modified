@@ -554,6 +554,28 @@ class Database(object):
             session.close()
 
     @classlock
+    def update_clock(self, task_id):
+        session = self.Session()
+        try:
+            row = session.query(Task).get(task_id)
+
+            if not row:
+                return
+
+            if row.clock == datetime.utcfromtimestamp(0):
+                if row.category == "file":
+                    row.clock = datetime.utcnow() + timedelta(days=self.cfg.cuckoo.daydelta)
+                else:
+                    row.clock = datetime.utcnow()
+                session.commit()
+            return row.clock
+        except SQLAlchemyError as e:
+            log.debug("Database error setting clock: {0}".format(e))
+            session.rollback()
+        finally:
+            session.close()
+
+    @classlock
     def set_status(self, task_id, status):
         """Set task status.
         @param task_id: task identifier
@@ -953,17 +975,11 @@ class Database(object):
                     task.clock = datetime.strptime(clock, "%m-%d-%Y %H:%M:%S")
                 except ValueError:
                     log.warning("The date you specified has an invalid format, using current timestamp.")
-                    task.clock = datetime.utcnow()
+                    task.clock = datetime.utcfromtimestamp(0)
             else:
                 task.clock = clock
-        elif isinstance(obj, File):
-            try:
-                clocktime = datetime.utcnow() + timedelta(days=self.cfg.cuckoo.daydelta)
-                task.clock = clocktime
-            except:
-                pass
         else:
-            task.clock = datetime.utcnow()
+            task.clock = datetime.utcfromtimestamp(0)
 
         session.add(task)
 
