@@ -933,7 +933,7 @@ class Database(object):
 
             # force a special tag for 64-bit binaries to prevent them from being
             # analyzed by default on VM types that can't handle them
-            if "PE32+" in file_type:
+            if "PE32+" in file_type and not machine:
                 if tags:
                     tags += ",64_bit"
                 else:
