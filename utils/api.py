@@ -86,13 +86,13 @@ def tasks_create_file():
     shrike_sid = request.forms.get("shrike_sid", None)
     shrike_refer = request.forms.get("shrike_refer", None)
 
-    if memory.upper() == 'FALSE':
+    if memory.upper() == 'FALSE' or memory == '0':
         memory = False
     else:
         memory = True
 
     enforce_timeout = request.forms.get("enforce_timeout", 'False')
-    if enforce_timeout.upper() == 'FALSE':
+    if enforce_timeout.upper() == 'FALSE' or enforce_timeout == '0':
         enforce_timeout = False
     else:
         enforce_timeout = True
