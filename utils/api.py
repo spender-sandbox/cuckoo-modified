@@ -86,10 +86,10 @@ def tasks_create_file():
     shrike_sid = request.forms.get("shrike_sid", None)
     shrike_refer = request.forms.get("shrike_refer", None)
 
-    if int(memory):
+    if memory:
         memory = True
     enforce_timeout = request.forms.get("enforce_timeout", False)
-    if int(enforce_timeout):
+    if enforce_timeout:
         enforce_timeout = True
 
     temp_file_path = store_temp_file(data.file.read(), data.filename)
