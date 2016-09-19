@@ -250,7 +250,8 @@ def main():
                     return False
 
                 json = response.json()
-                task_ids = [ json["task_id"] ]
+                task_ids = [ json.get("task_ids",None) ]
+
             else:
                 if args.unique:
                     sha256 = File(file_path).get_sha256()
