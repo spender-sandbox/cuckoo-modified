@@ -79,17 +79,22 @@ def tasks_create_file():
     platform = request.forms.get("platform", "")
     tags = request.forms.get("tags", None)
     custom = request.forms.get("custom", "")
-    memory = request.forms.get("memory", False)
+    memory = request.forms.get("memory", 'False')
     clock = request.forms.get("clock", None)
     shrike_url = request.forms.get("shrike_url", None)
     shrike_msg = request.forms.get("shrike_msg", None)
     shrike_sid = request.forms.get("shrike_sid", None)
     shrike_refer = request.forms.get("shrike_refer", None)
 
-    if int(memory):
+    if memory.upper() == 'FALSE' or memory == '0':
+        memory = False
+    else:
         memory = True
-    enforce_timeout = request.forms.get("enforce_timeout", False)
-    if int(enforce_timeout):
+
+    enforce_timeout = request.forms.get("enforce_timeout", 'False')
+    if enforce_timeout.upper() == 'FALSE' or enforce_timeout == '0':
+        enforce_timeout = False
+    else:
         enforce_timeout = True
 
     temp_file_path = store_temp_file(data.file.read(), data.filename)
