@@ -443,8 +443,8 @@ class PipeHandler(Thread):
                             MONITORED_DCOM = True
                             dcom_pid = pid_from_service_name("DcomLaunch")
                             if dcom_pid:
-                                add_critical_pid(dcom_pid)
                                 servproc = Process(pid=dcom_pid,suspended=False)
+                                servproc.set_critical()
                                 filepath = servproc.get_filepath()
                                 servproc.inject(dll=DEFAULT_DLL, interest=filepath, nosleepskip=True)
                                 LASTINJECT_TIME = datetime.now()
@@ -457,8 +457,8 @@ class PipeHandler(Thread):
 
                         bits_pid = pid_from_service_name("BITS")
                         if bits_pid:
-                            add_critical_pid(bits_pid)
                             servproc = Process(pid=bits_pid,suspended=False)
+                            servproc.set_critical()
                             filepath = servproc.get_filepath()
                             servproc.inject(dll=DEFAULT_DLL, interest=filepath, nosleepskip=True)
                             LASTINJECT_TIME = datetime.now()
