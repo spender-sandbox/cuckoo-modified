@@ -1328,7 +1328,7 @@ def tasks_iocs(request, task_id, detail=None):
     del data["info"]["custom"]
     # The machines key won't exist in cases where an x64 binary is submitted
     # when there are no x64 machines.
-    if "machine" in data["info"]:
+    if "machine" in data["info"] and data["info"]["machine"]:
         del data["info"]["machine"]["manager"]
         del data["info"]["machine"]["label"]
         del data["info"]["machine"]["id"]
