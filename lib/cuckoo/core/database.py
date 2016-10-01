@@ -18,7 +18,7 @@ from lib.cuckoo.common.demux import demux_sample
 
 try:
     from sqlalchemy import create_engine, Column, event
-    from sqlalchemy import Integer, String, Boolean, DateTime, Enum
+    from sqlalchemy import Integer, String, Boolean, DateTime, Enum, func
     from sqlalchemy import ForeignKey, Text, Index, Table
     from sqlalchemy.ext.declarative import declarative_base
     from sqlalchemy.exc import SQLAlchemyError, IntegrityError
@@ -878,7 +878,7 @@ class Database(object):
     def add(self, obj, timeout=0, package="", options="", priority=1,
             custom="", machine="", platform="", tags=None,
             memory=False, enforce_timeout=False, clock=None,
-            shrike_url=None, shrike_msg=None, 
+            shrike_url=None, shrike_msg=None,
             shrike_sid = None, shrike_refer=None, parent_id=None):
         """Add a task to database.
         @param obj: object to add (File or URL).
@@ -997,7 +997,7 @@ class Database(object):
 
     def add_path(self, file_path, timeout=0, package="", options="",
                  priority=1, custom="", machine="", platform="", tags=None,
-                 memory=False, enforce_timeout=False, clock=None, shrike_url=None, 
+                 memory=False, enforce_timeout=False, clock=None, shrike_url=None,
                  shrike_msg=None, shrike_sid = None, shrike_refer=None, parent_id=None):
         """Add a task to database from file path.
         @param file_path: sample path.
@@ -1065,7 +1065,7 @@ class Database(object):
     @classlock
     def add_pcap(self, file_path, timeout=0, package="", options="", priority=1,
                 custom="", machine="", platform="", tags=None, memory=False,
-                enforce_timeout=False, clock=None, shrike_url=None, shrike_msg=None, 
+                enforce_timeout=False, clock=None, shrike_url=None, shrike_msg=None,
                 shrike_sid = None, shrike_refer=None, parent_id=None):
         return self.add(PCAP(file_path), timeout, package, options, priority,
                         custom, machine, platform, tags, memory,
@@ -1075,7 +1075,7 @@ class Database(object):
     @classlock
     def add_url(self, url, timeout=0, package="", options="", priority=1,
                 custom="", machine="", platform="", tags=None, memory=False,
-                enforce_timeout=False, clock=None, shrike_url=None, shrike_msg=None, 
+                enforce_timeout=False, clock=None, shrike_url=None, shrike_msg=None,
                 shrike_sid = None, shrike_refer=None, parent_id=None):
         """Add a task to database from url.
         @param url: url.
@@ -1169,7 +1169,7 @@ class Database(object):
             return []
         finally:
             session.close()
-            
+
     @classlock
     def list_tasks(self, limit=None, details=False, category=None,
                    offset=None, status=None, sample_id=None, not_status=None,
@@ -1224,6 +1224,21 @@ class Database(object):
             return []
         finally:
             session.close()
+
+    def minmax_tasks(self):
+         """Find tasks minimum and maximum
+         @return: unix timestamps of minimum and maximum
+         """
+         session = self.Session()
+         try:
+             _min = session.query(func.min(Task.started_on).label("min")).first()
+             _max = session.query(func.max(Task.completed_on).label("max")).first()
+             return int(_min[0].strftime("%s")), int(_max[0].strftime("%s"))
+         except SQLAlchemyError as e:
+             log.debug("Database error counting tasks: {0}".format(e))
+             return 0
+         finally:
+             session.close()
 
     @classlock
     def get_file_types(self):
