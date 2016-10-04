@@ -31,7 +31,7 @@ demux_extensions_list = [
 def demux_office(filename, password):
     retlist = []
 
-    options = Config()
+    options = Config("auxiliary")
     tmp_path = options.cuckoo.get("tmppath", "/tmp")
     decryptor = options.msoffice.get("decryptor", None)
 
