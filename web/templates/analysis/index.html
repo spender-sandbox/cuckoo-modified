@@ -164,7 +164,7 @@
                                 {% else %}
                                 -->/0<!--
                                 {% endif %}
-                                {% if analysis.suri_files_cnt %}
+                                {% if analysis.suricata.files|length %}
                                 -->/<a href="{% url "surifiles" analysis.id %}" target="_blank">{{analysis.suricata.files|length}}</a><!--
                                 {% else %}
                                 -->/0<!--
