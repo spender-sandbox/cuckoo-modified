@@ -164,8 +164,8 @@
                                 {% else %}
                                 -->/0<!--
                                 {% endif %}
-                                {% if analysis.suricata.files|length %}
-                                -->/<a href="{% url "surifiles" analysis.id %}" target="_blank">{{analysis.suricata.files|length}}</a><!--
+                                {% if analysis.suri_file_cnt %}
+                                -->/<a href="{% url "surifiles" analysis.id %}" target="_blank">{{analysis.suri_file_cnt}}</a><!--
                                 {% else %}
                                 -->/0<!--
                                 {% endif %}
@@ -424,8 +424,8 @@
                                     {% else %}
                                     -->/0<!--
                                     {% endif %}
-                                    {% if analysis.suri_files_cnt %}
-                                    -->/<a href="{% url "surifiles" analysis.id %}" target="_blank">{{analysis.suri_files_cnt}}</a><!--
+                                    {% if analysis.suri_file_cnt %}
+                                    -->/<a href="{% url "surifiles" analysis.id %}" target="_blank">{{analysis.suri_file_cnt}}</a><!--
                                     {% else %}
                                     -->/0<!--
                                     {% endif %}
@@ -675,9 +675,9 @@
                             /0
                             <!--
                             {% endif %}
-                            {% if analysis.suri_files_cnt %}
+                            {% if analysis.suri_file_cnt %}
                             -->
-                            /<a href="{% url "surifiles" analysis.id %}" target="_blank">{{analysis.suri_files_cnt}}</a>
+                            /<a href="{% url "surifiles" analysis.id %}" target="_blank">{{analysis.suri_file_cnt}}</a>
                             <!--
                             {% else %}
                             -->
