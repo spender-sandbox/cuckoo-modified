@@ -39,40 +39,56 @@
             <table class="table table-striped" style="table-layout: fixed;">
                 <thead>
                 <tr>
-                    <th width="5%">ID</th>
-                    <th width="12%">Timestamp</th>
-                    <th width="37%">Filename</th>
-                    <th width="20%">MD5</th>
                     {% if config.expanded_dashboard %}
-                    <th width="2.5%">PKG</th>
+                      <th width="5%">ID</th>
+                      <th width="10%">Timestamp</th>
+                      <th width="15%">Filename</th>
+                      <th width="15%">MD5</th>
+                      <th width="5%">PKG</th>
+                      {% if config.moloch %}
+                      <th width="5%">Moloch</th>
+                      {% endif %}
+                      {% if config.display_office_martians %}
+                      <th width="5%">Martians</th>
+                      {% endif %}
+                      {% if config.suricata %}
+                      <th width="10%">SuriAlert/HTTP/TLS/Files</th>
+                      {% endif %}
+                      {% if config.virustotal %}
+                      <th width="5%">VT</th>
+                      {% endif %}
+                      <th width="5%">MalScore</th>
+                      <th width="10%">MalFamily</th>
+                      <th width="5%">PCAP</th>
+                      <th width="10%">ClamAV</th>
+                      <th width="5%">Custom</th>
+                      {% if config.display_shrike %}
+                      <th width="5%">Shrike</th>
+                      {% endif %}
+                      <th width="5%" style="text-align: right;">Status</th>
+                    {% else %}
+                      <th width="5%">ID</th>
+                      <th width="12%">Timestamp</th>
+                      <th width="37%">Filename</th>
+                      <th width="20%">MD5</th>
+                      {% if config.moloch %}
+                      <th width="5%">Moloch</th>
+                      {% endif %}
+                      {% if config.display_office_martians %}
+                      <th width="5%">Martians</th>
+                      {% endif %}
+                      {% if config.suricata %}
+                      <th width="7%">SuriAlert</th>
+                      {% endif %}
+                      {% if config.virustotal %}
+                      <th width="5%">VT</th>
+                      {% endif %}
+                      <th width="5%">MalScore</th>
+                      {% if config.display_shrike %}
+                      <th width="5%">Shrike</th>
+                      {% endif %}
+                      <th width="6%" style="text-align: right;">Status</th>
                     {% endif %}
-                    {% if config.moloch %}
-                    <th width="5%">Moloch</th>
-                    {% endif %}
-                    {% if config.display_office_martians %}
-                    <th width="5%">Martians</th>
-                    {% endif %}
-                    {% if config.suricata %}
-                    <th width="7%">SuriAlert
-                        {% if config.expanded_dashboard %}
-                        /HTTP/TLS/Files
-                        {% endif %}
-                    </th>
-                    {% endif %}
-                    {% if config.virustotal %}
-                    <th width="5%">VT</th>
-                    {% endif %}
-                    <th width="5%">MalScore</th>
-                    {% if config.expanded_dashboard %}
-                    <th width="4%">MalFamily</th>
-                    <th width="3%">PCAP</th>
-                    <th width="5%">ClamAV</th>
-                    <th width="10%">Custom</th>
-                    {% endif %}
-                    {% if config.display_shrike %}
-                    <th width="5%">Shrike</th>
-                    {% endif %}
-                    <th width="6%" style="text-align: right;">Status</th>
                 </tr>
                 </thead>
                 <tbody>
