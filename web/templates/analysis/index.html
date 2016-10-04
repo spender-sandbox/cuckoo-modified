@@ -52,7 +52,7 @@
                       <th width="5%">Martians</th>
                       {% endif %}
                       {% if config.suricata %}
-                      <th width="10%">SuriAlert/HTTP/TLS/Files</th>
+                      <th width="10%">Suricata Alerts/HTTP/TLS/Files</th>
                       {% endif %}
                       {% if config.virustotal %}
                       <th width="5%">VT</th>
@@ -165,7 +165,7 @@
                                 -->/0<!--
                                 {% endif %}
                                 {% if analysis.suri_files_cnt %}
-                                -->/<a href="{% url "surifiles" analysis.id %}" target="_blank">{{analysis.suri_files_cnt}}</a><!--
+                                -->/<a href="{% url "surifiles" analysis.id %}" target="_blank">{{analysis.suricata.files|length}}</a><!--
                                 {% else %}
                                 -->/0<!--
                                 {% endif %}
