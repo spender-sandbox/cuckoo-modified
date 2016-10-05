@@ -7,6 +7,7 @@ import subprocess
 import tempfile
 import gzip
 import tarfile
+import logging
 from bz2 import BZ2File
 from zipfile import ZipFile
 
@@ -20,6 +21,8 @@ from lib.cuckoo.common.config import Config
 from lib.cuckoo.common.objects import File
 from lib.cuckoo.common.email_utils import find_attachments_in_email
 from lib.cuckoo.common.office.msgextract import Message
+
+log = logging.getLogger()
 
 demux_extensions_list = [
         "", ".exe", ".dll", ".com", ".jar", ".pdf", ".msi", ".bin", ".scr", ".zip", ".tar", ".gz", ".tgz", ".rar", ".htm", ".html", ".hta",
@@ -38,10 +41,26 @@ def demux_office(filename, password):
 
     if decryptor and os.path.exists(decryptor):
         basename = os.path.basename(filename)
-        target_path = os.path.join(tmp_path, basename)
+        target_path = os.path.join(tmp_path, "cuckoo-msoffice", basename)
 
-        if subprocess.call([decryptor, "-p", password, "-d", filename, target_path]) == 0:
+        log.debug("Attempting to decrypt document to %s" % target_path)
+
+        try:
+            result =  subprocess.call([decryptor, "-p", password, "-d", filename, target_path]):
+        except:
+            log.error("Failed to execute msoffice decryptor")
+
+        if result == 0:
+            log.debug("Document decrypted successfully")
             retlist.append(target_path)
+        elif result == 1:
+            log.warn("Document format not supported by msoffice decryptor")
+        elif result == 2:
+            log.warn("Document is not password protected")
+        elif result == 3:
+            log.warn("Incorrect msoffice password")
+        else:
+            log.warn("Unknown error running msoffice decryptor")
 
     if not retlist:
         retlist.append(filename)
