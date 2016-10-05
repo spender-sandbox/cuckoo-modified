@@ -7,7 +7,6 @@ import subprocess
 import tempfile
 import gzip
 import tarfile
-import logging
 from bz2 import BZ2File
 from zipfile import ZipFile
 
@@ -31,6 +30,7 @@ demux_extensions_list = [
         ".ppt", ".pot", ".pps", ".pptx", ".pptm", ".potx", ".potm", ".ppam", ".ppsx", ".ppsm", ".sldx", ".sldm", ".wsf",
     ]
 
+
 def demux_office(filename, password):
     retlist = []
 
@@ -41,26 +41,17 @@ def demux_office(filename, password):
 
     if decryptor and os.path.exists(decryptor):
         basename = os.path.basename(filename)
-        target_path = os.path.join(tmp_path, "cuckoo-msoffice", basename)
-
-        log.debug("Attempting to decrypt document to %s" % target_path)
+        target_path = os.path.join(tmp_path, "msoffice-crypt-tmp")
+        if not os.path.exists(target_path):
+            os.mkdir(target_path)
+        decrypted_name = tempfile.mktemp(suffix=basename, prefix="decrypted", dir=target_path)
 
         try:
-            result =  subprocess.call([decryptor, "-p", password, "-d", filename, target_path])
+            result = subprocess.call([decryptor, "-p", password, "-d", filename, decrypted_name])
+            if result == 0:
+                retlist.append(decrypted_name)
         except:
-            log.error("Failed to execute msoffice decryptor")
-
-        if result == 0:
-            log.debug("Document decrypted successfully")
-            retlist.append(target_path)
-        elif result == 1:
-            log.warn("Document format not supported by msoffice decryptor")
-        elif result == 2:
-            log.warn("Document is not password protected")
-        elif result == 3:
-            log.warn("Incorrect msoffice password")
-        else:
-            log.warn("Unknown error running msoffice decryptor")
+            pass
 
     if not retlist:
         retlist.append(filename)
