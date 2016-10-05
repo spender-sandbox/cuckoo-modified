@@ -606,7 +606,8 @@
                   {% if config.expanded_dashboard %}
                     <th width="5%">ID</th>
                     <th width="10%">Timestamp</th>
-                    <th width="35%">Filename</th>
+                    <th width="20%">Filename</th>
+                    <th width="15%">MD5</th>
                     {% if config.moloch %}
                     <th width="5%">Moloch</th>
                     {% endif %}
@@ -678,41 +679,28 @@
                     <td>
                         <span class="mono">
                             {% if analysis.suri_alert_cnt %}
-                            <a href="{% url "surialert" analysis.id %}" target="_blank">{{analysis.suri_alert_cnt}}</a>
-                            <!--
+                            <a href="{% url "surialert" analysis.id %}" target="_blank">{{analysis.suri_alert_cnt}}</a><!--
                             {% else %}
                             0<!--
                             {% endif %}
                             {% if config.expanded_dashboard %}
                                 {% if analysis.suri_http_cnt %}
-                                -->
-                            /<a href="{% url "surihttp" analysis.id %}" target="_blank">{{analysis.suri_http_cnt}}</a>
-                            <!--
-                            {% else %}
-                            -->
-                            /0
-                            <!--
-                            {% endif %}
-                            {% if analysis.suri_tls_cnt %}
-                            -->
-                            /<a href="{% url "suritls" analysis.id %}" target="_blank">{{analysis.suri_tls_cnt}}</a>
-                            <!--
-                            {% else %}
-                            -->
-                            /0
-                            <!--
-                            {% endif %}
-                            {% if analysis.suri_file_cnt %}
-                            -->
-                            /<a href="{% url "surifiles" analysis.id %}" target="_blank">{{analysis.suri_file_cnt}}</a>
-                            <!--
-                            {% else %}
-                            -->
-                            /0
-                            <!--
+                                -->/<a href="{% url "surihttp" analysis.id %}" target="_blank">{{analysis.suri_http_cnt}}</a><!--
+                                {% else %}
+                                -->/0<!--
                                 {% endif %}
-                            {% endif %}
-                            -->
+                                {% if analysis.suri_tls_cnt %}
+                                -->/<a href="{% url "suritls" analysis.id %}" target="_blank">{{analysis.suri_tls_cnt}}</a><!--
+                                {% else %}
+                                -->/0<!--
+                                {% endif %}
+                                {% if analysis.suri_file_cnt %}
+                                -->/<a href="{% url "surifiles" analysis.id %}" target="_blank">{{analysis.suri_file_cnt}}</a><!--
+                                {% else %}
+                                -->/0<!--
+                                {% endif %}
+                           {% endif %}
+                           -->
                         </span>
                     </td>
                     {% endif %}
