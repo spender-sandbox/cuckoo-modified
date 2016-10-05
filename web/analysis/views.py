@@ -591,7 +591,7 @@ def suritls(request,task_id):
 @require_safe
 @conditional_login_required(login_required, settings.WEB_AUTHENTICATION)
 def surifiles(request,task_id):
-    report = results_db.analysis.find_one({"info.id": int(task_id)},{"suricata.files": 1},sort=[("_id", pymongo.DESCENDING)])
+    report = results_db.analysis.find_one({"info.id": int(task_id)},{"info.id": 1,"suricata.files": 1},sort=[("_id", pymongo.DESCENDING)])
     if not report:
         return render(request, "error.html",
                                   {"error": "The specified analysis does not exist"})
