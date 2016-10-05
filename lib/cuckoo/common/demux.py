@@ -46,7 +46,7 @@ def demux_office(filename, password):
         log.debug("Attempting to decrypt document to %s" % target_path)
 
         try:
-            result =  subprocess.call([decryptor, "-p", password, "-d", filename, target_path]):
+            result =  subprocess.call([decryptor, "-p", password, "-d", filename, target_path])
         except:
             log.error("Failed to execute msoffice decryptor")
 
