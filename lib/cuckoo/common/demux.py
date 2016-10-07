@@ -42,7 +42,7 @@ def demux_office(filename, password):
         target_path = os.path.join(tmp_path, "msoffice-crypt-tmp")
         if not os.path.exists(target_path):
             os.mkdir(target_path)
-        decrypted_name = tempfile.mktemp(suffix="-"+basename, prefix="decrypted-", dir=target_path)
+        decrypted_name = os.path.join(target_path, basename)
 
         try:
             result = subprocess.call([decryptor, "-p", password, "-d", filename, decrypted_name])
