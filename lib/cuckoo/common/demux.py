@@ -28,6 +28,7 @@ demux_extensions_list = [
         ".ppt", ".pot", ".pps", ".pptx", ".pptm", ".potx", ".potm", ".ppam", ".ppsx", ".ppsm", ".sldx", ".sldm", ".wsf",
     ]
 
+
 def demux_office(filename, password):
     retlist = []
 
@@ -38,10 +39,17 @@ def demux_office(filename, password):
 
     if decryptor and os.path.exists(decryptor):
         basename = os.path.basename(filename)
-        target_path = os.path.join(tmp_path, basename)
+        target_path = os.path.join(tmp_path, "msoffice-crypt-tmp")
+        if not os.path.exists(target_path):
+            os.mkdir(target_path)
+        decrypted_name = tempfile.mktemp(suffix="-"+basename, prefix="decrypted-", dir=target_path)
 
-        if subprocess.call([decryptor, "-p", password, "-d", filename, target_path]) == 0:
-            retlist.append(target_path)
+        try:
+            result = subprocess.call([decryptor, "-p", password, "-d", filename, decrypted_name])
+            if result == 0:
+                retlist.append(decrypted_name)
+        except:
+            pass
 
     if not retlist:
         retlist.append(filename)
