@@ -447,7 +447,7 @@ def gen_moloch_from_suri_http(suricata):
             if e.has_key("uri") and e["uri"]:
                 e["moloch_http_uri_url"] = settings.MOLOCH_BASE + "?date=-1&expression=http.uri" + quote("\x3d\x3d\x22%s\x22" % (e["uri"].encode("utf8")),safe='')
             if e.has_key("ua") and e["ua"]:
-                e["moloch_http_ua_url"] = settings.MOLOCH_BASE + "?date=-1&expression=http.user-agent" + quote("\x3d\x3d\x22%s\x22" % (e["ua"]),safe='')
+                e["moloch_http_ua_url"] = settings.MOLOCH_BASE + "?date=-1&expression=http.user-agent" + quote("\x3d\x3d\x22%s\x22" % (e["ua"].encode("utf8")),safe='')
             if e.has_key("method") and e["method"]:
                 e["moloch_http_method_url"] = settings.MOLOCH_BASE + "?date=-1&expression=http.method" + quote("\x3d\x3d\x22%s\x22" % (e["method"]),safe='')
     return suricata
