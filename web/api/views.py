@@ -25,6 +25,7 @@ from lib.cuckoo.common.config import Config
 from lib.cuckoo.common.constants import CUCKOO_ROOT, CUCKOO_VERSION
 from lib.cuckoo.common.quarantine import unquarantine
 from lib.cuckoo.common.saztopcap import saz_to_pcap
+from lib.cuckoo.common.exceptions import CuckooDemuxError
 from lib.cuckoo.common.utils import store_temp_file, delete_folder
 from lib.cuckoo.common.utils import convert_to_printable, validate_referrer
 from lib.cuckoo.core.database import Database, Task
@@ -300,7 +301,8 @@ def tasks_create_file(request):
                     path = tmp_path
 
                 for entry in task_machines:
-                    task_ids_new = db.demux_sample_and_add_to_db(file_path=path,
+                    try:
+                        task_ids_new = db.demux_sample_and_add_to_db(file_path=path,
                                           package=package,
                                           timeout=timeout,
                                           priority=priority,
@@ -317,6 +319,11 @@ def tasks_create_file(request):
                                           shrike_sid=shrike_sid,
                                           shrike_refer=shrike_refer
                                           )
+                    except CuckooDemuxError as e:
+                        resp = {"error": True,
+                                "error_value": e}
+                        return jsonize(resp, response=True)
+
                     if task_ids_new:
                         task_ids.extend(task_ids_new)
         else:
