@@ -369,8 +369,10 @@ class Process:
             self.h_process = process_info.hProcess
             self.thread_id = process_info.dwThreadId
             self.h_thread = process_info.hThread
+            if args:
+                args = args.encode("utf-8", errors="replace")
             log.info("Successfully executed process from path \"%s\" with "
-                     "arguments \"%s\" with pid %d", path, args or "", self.pid)
+                     "arguments \"%s\" with pid %d", path.encode("utf-8", errors="replace"), args or "", self.pid)
             if kernel_analysis:
                 return self.kernel_analyze()
             return True
