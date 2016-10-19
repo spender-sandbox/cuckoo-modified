@@ -20,6 +20,7 @@ from lib.cuckoo.common.config import Config
 from lib.cuckoo.common.objects import File
 from lib.cuckoo.common.email_utils import find_attachments_in_email
 from lib.cuckoo.common.office.msgextract import Message
+from lib.cuckoo.common.exceptions import CuckooDemuxError
 
 demux_extensions_list = [
         "", ".exe", ".dll", ".com", ".jar", ".pdf", ".msi", ".bin", ".scr", ".zip", ".tar", ".gz", ".tgz", ".rar", ".htm", ".html", ".hta",
@@ -36,6 +37,7 @@ def demux_office(filename, password):
     aux_options = Config("auxiliary")
     tmp_path = options.cuckoo.get("tmppath", "/tmp")
     decryptor = aux_options.msoffice.get("decryptor", None)
+    result = 0
 
     if decryptor and os.path.exists(decryptor):
         basename = os.path.basename(filename)
@@ -46,10 +48,15 @@ def demux_office(filename, password):
 
         try:
             result = subprocess.call([decryptor, "-p", password, "-d", filename, decrypted_name])
-            if result == 0:
-                retlist.append(decrypted_name)
         except:
             pass
+
+        if result == 0 or result == 2:
+            retlist.append(decrypted_name)
+        elif result == 1:
+            raise CuckooDemuxError("MS Office decryptor: unsupported document type")
+        elif result == 3:
+            raise CuckooDemuxError("MS Office decryptor: bad password")
 
     if not retlist:
         retlist.append(filename)
