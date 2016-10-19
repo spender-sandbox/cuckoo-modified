@@ -57,6 +57,8 @@ def demux_office(filename, password):
             raise CuckooDemuxError("MS Office decryptor: unsupported document type")
         elif result == 3:
             raise CuckooDemuxError("MS Office decryptor: bad password")
+    else:
+        raise CuckooDemuxError("MS Office decryptor binary not found")
 
     if not retlist:
         retlist.append(filename)
