@@ -107,16 +107,9 @@ def demux_zip(filename, options):
 
                 for extfile in extracted:
                     try:
-                        extractname = archive.extract(extfile, path=tmp_dir, pwd=password)
+                        retlist.append(archive.extract(extfile, path=tmp_dir, pwd=password))
                     except:
-                        extractname = archive.extract(extfile, path=tmp_dir)
-                    newextractname = extractname
-                    try:
-                        os.rename(extractname, extractname.encode("utf-8", errors="replace"))
-                        newextractname = extractname.encode("utf-8", errors="replace")
-                    except:
-                        pass
-                    retlist.append(newextractname)
+                        retlist.append(archive.extract(extfile, path=tmp_dir))
     except:
         pass
 
@@ -176,17 +169,10 @@ def demux_rar(filename, options):
                     # so we have to make it up ourselves
                     try:
                         archive.extract(extfile, path=tmp_dir, pwd=password)
-                        extractname = os.path.join(tmp_dir, extfile.replace("\\", "/"))
+                        retlist.append(os.path.join(tmp_dir, extfile.replace("\\", "/")))
                     except:
                         archive.extract(extfile, path=tmp_dir)
-                        extractname = os.path.join(tmp_dir, extfile.replace("\\", "/"))
-                    newextractname = extractname
-                    try:
-                        os.rename(extractname, extractname.encode("utf-8", errors="replace"))
-                        newextractname = extractname.encode("utf-8", errors="replace")
-                    except:
-                        pass
-                    retlist.append(newextractname)
+                        retlist.append(os.path.join(tmp_dir, extfile.replace("\\", "/")))
     except:
         pass
 
@@ -233,7 +219,7 @@ def demux_tar(filename, options):
 
                 for extfile in extracted:
                     fobj = archive.extractfile(extfile)
-                    outpath = os.path.join(tmp_dir, extfile.name.encode("utf-8", errors="replace"))
+                    outpath = os.path.join(tmp_dir, extfile.name)
                     outfile = open(outpath, "wb")
                     outfile.write(fobj.read())
                     fobj.close()
