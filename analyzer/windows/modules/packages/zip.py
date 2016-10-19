@@ -109,13 +109,13 @@ class Zip(Package):
                         break
                 # Default to the first one if none found
                 file_name = file_name if file_name else zipinfos[0].filename
-                log.debug("Missing file option, auto executing: {0}".format(file_name.encode("utf-8", errors="replace")))
+                log.debug("Missing file option, auto executing: {0}".format(file_name))
             else:
                 raise CuckooPackageError("Empty ZIP archive")
 
 
         file_path = os.path.join(root, file_name)
-        log.debug("file_name: \"%s\"" % (file_name.encode("utf-8", errors="replace")))
+        log.debug("file_name: \"%s\"" % (file_name))
         if file_name.lower().endswith(".lnk"):
             cmd_path = self.get_path("cmd.exe")
             cmd_args = "/c start /wait \"\" \"{0}\"".format(file_path)
