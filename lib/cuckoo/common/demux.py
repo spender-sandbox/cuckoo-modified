@@ -308,7 +308,7 @@ def demux_sample(filename, package, options):
     magic = File(filename).get_type()
 
     # if file is an Office doc and password is supplied, try to decrypt the doc
-    if "Microsoft" in magic or "Composite Document File" in magic:
+    if "Microsoft" in magic or "Composite Document File" in magic or "CDFV2 Encrypted" in magic:
         password = None
         if "password=" in options:
             fields = options.split(",")
