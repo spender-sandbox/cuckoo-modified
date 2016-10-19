@@ -12,6 +12,7 @@
                     <th>Started</th>
                     <th>Completed</th>
                     <th>Duration</th>
+                    <th>Options</th>
                     <th>Log</th>
                 </tr>
             </thead>
@@ -21,6 +22,7 @@
                     <td>{{analysis.info.started}}</td>
                     <td>{{analysis.info.ended}}</td>
                     <td>{{analysis.info.duration}} seconds</td>
+                    <td><a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion" href="#options">Show Options</a></td>
                     <td><a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion" href="#info-log">Show Log</a></td>
                 </tr>
             </tbody>
@@ -34,6 +36,9 @@
         {% endfor %}
         </ul>
     {% endif %}
+    <div id="options" class="collapse">
+        <pre>{{analysis.info.options}}</pre>
+    </div>
     <div id="info-log" class="collapse">
         <pre>{{analysis.debug.log}}</pre>
     </div>
