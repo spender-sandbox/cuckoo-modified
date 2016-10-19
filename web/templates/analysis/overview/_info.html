@@ -12,6 +12,9 @@
                     <th>Started</th>
                     <th>Completed</th>
                     <th>Duration</th>
+                    {% if analysis.info.options %}
+                        <th>Options</th>
+                    {% endif %}
                     <th>Log</th>
                 </tr>
             </thead>
@@ -21,6 +24,9 @@
                     <td>{{analysis.info.started}}</td>
                     <td>{{analysis.info.ended}}</td>
                     <td>{{analysis.info.duration}} seconds</td>
+                    {% if analysis.info.options %}
+                        <td><a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion" href="#options">Show Options</a></td>
+                    {% endif %}
                     <td><a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion" href="#info-log">Show Log</a></td>
                 </tr>
             </tbody>
@@ -33,6 +39,11 @@
             <li class="text-danger"><b>Error:</b> {{error}}</li>
         {% endfor %}
         </ul>
+    {% endif %}
+    {% if analysis.info.options %}
+        <div id="options" class="collapse">
+            <pre>{% for key, val in analysis.info.options.items %}{{ key }} = {{ val }}<br>{% endfor %}</pre>
+        </div>
     {% endif %}
     <div id="info-log" class="collapse">
         <pre>{{analysis.debug.log}}</pre>
