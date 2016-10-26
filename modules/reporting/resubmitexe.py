@@ -118,7 +118,7 @@ class ReSubmitExtractedEXE(Report):
                                   timeout=200,
                                   options=self.task_options,
                                   priority=1,
-                                  machine=self.machine,
+                                  machine=self.machine or "",
                                   platform=None,
                                   custom=self.task_custom,
                                   memory=False,
