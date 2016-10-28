@@ -1760,7 +1760,7 @@ def tasks_procmemory(request, task_id, pid="all"):
         resp = {"error": True, "error_value": "Method not allowed"}
         return jsonize(resp, response=True)
 
-    if not apiconf.procmemory.get("enabled"):
+    if not apiconf.taskprocmemory.get("enabled"):
         resp = {"error": True,
                 "error_value": "Process memory download API is disabled"}
         return jsonize(resp, response=True)
