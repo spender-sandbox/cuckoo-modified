@@ -106,6 +106,11 @@ def index(request):
                 options += ","
             options += "kernel_analysis=yes"   
 
+        if request.POST.get("norefer"):
+            if options:
+                options += ","
+            options += "norefer=1"
+
         orig_options = options
 
         if gateway and gateway.lower() == "all":
