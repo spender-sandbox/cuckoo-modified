@@ -3,7 +3,6 @@
 # See the file 'docs/LICENSE' for copying permission.
 
 import json
-from lib.cuckoo.common.utils import store_temp_file
 import lib.cuckoo.common.office.olefile as olefile
 import lib.cuckoo.common.office.vbadeobf as vbadeobf
 import lib.cuckoo.common.decoders.darkcomet as darkcomet
@@ -14,16 +13,16 @@ import lib.cuckoo.common.decoders.qrat as qrat
 import logging
 import os
 import re
+import requests
 import math
 import array
 import base64
 import hashlib
 
-from datetime import datetime, timedelta
 from lib.cuckoo.common.icon import PEGroupIconDir
 from PIL import Image
 from StringIO import StringIO
-from datetime import datetime, date, time
+from datetime import datetime, date, time, timedelta
 from subprocess import Popen, PIPE
 import struct
 
@@ -74,7 +73,7 @@ from lib.cuckoo.common.office.olevba import detect_patterns
 from lib.cuckoo.common.office.olevba import detect_suspicious
 from lib.cuckoo.common.office.olevba import filter_vba
 from lib.cuckoo.common.office.olevba import VBA_Parser
-from lib.cuckoo.common.utils import convert_to_printable
+from lib.cuckoo.common.utils import convert_to_printable, store_temp_file
 from lib.cuckoo.common.pdftools.pdfid import PDFiD, PDFiD2JSON
 from lib.cuckoo.common.peepdf.PDFCore import PDFParser
 from lib.cuckoo.common.peepdf.JSAnalysis import analyseJS
@@ -1225,6 +1224,32 @@ class URL(object):
         else:
             self.domain = ""
 
+    def parse_json_in_javascript(self, data=str(), ignore_nest_level=0):
+        nest_count = 0 - ignore_nest_level
+        string_buf = str()
+        json_buf = list()
+        json_data = list()
+        for character in data:
+            if character == "{":
+                nest_count += 1
+            if nest_count > 0:
+                string_buf += character
+            if character == "}":
+                nest_count -= 1
+            if nest_count == 0 and len(string_buf):
+                json_buf.append(string_buf)
+                string_buf = str()
+
+        if json_buf:
+            for data in json_buf:
+                if len(data) > 4:
+                    json_data.append(json.loads(data))
+            return json_data
+
+        return []
+
+
+
     def run(self):
         results = {}
         if self.domain:
@@ -1280,6 +1305,21 @@ class URL(object):
                          "\n    ".join(w["name_servers"]),
                          "\n    ".join(w["referral_url"]))
             results["url"]["whois"] = output
+
+        if self.domain == "bit.ly":
+            resp = requests.get(self.url+"+")
+            soup = bs4.BeautifulSoup(resp.text, "html.parser")
+            output = list()
+            for script in [x.extract() for x in soup.find_all("script")]:
+                if script.contents:
+                    content = script.contents[0]
+                    if "long_url_no_protocol" in content:
+                        output = self.parse_json_in_javascript(content, 1)
+
+            if output:
+                results["url"]["bitly"] = {k: v for d in output for k, v in d.items()}
+                newtime = datetime.fromtimestamp(int(results["url"]["bitly"]["created_at"]))
+                results["url"]["bitly"]["created_at"] = newtime.strftime("%Y-%m-%d %H:%M:%S") + " GMT"
 
         return results
 
