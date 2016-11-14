@@ -1242,7 +1242,7 @@ def tasks_report(request, task_id, report_format="json"):
             elif report_format == "maec" or report_format == "metadata":
                 content = "text/xml"
                 ext = "xml"
-            elif export_format == "pdf":
+            elif report_format == "pdf":
                 content = "application/pdf"
                 ext = "pdf"
             fname = "%s_report.%s" % (task_id, ext)
