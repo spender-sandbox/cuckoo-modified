@@ -93,6 +93,9 @@ def demux_zip(filename, options):
                 # avoid obvious bombs
                 if info.file_size > 100 * 1024 * 1024 or not info.file_size:
                     continue
+                # ignore empty filenames
+                if not info.filename:
+                    continue
                 # ignore directories
                 if info.filename.endswith("/"):
                     continue
@@ -148,6 +151,9 @@ def demux_rar(filename, options):
             for info in infolist:
                 # avoid obvious bombs
                 if info.file_size > 100 * 1024 * 1024 or not info.file_size:
+                    continue
+                # ignore empty filenames
+                if not info.filename:
                     continue
                 # ignore directories
                 if info.filename.endswith("\\"):

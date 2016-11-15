@@ -24,6 +24,10 @@ class Zip(Package):
              ("SystemRoot", "system32", "cmd.exe"),
              ("SystemRoot", "system32", "wscript.exe"),
             ]
+
+    def filtered_namelist(self, archive):
+        return [x for x in archive.namelist() if x]
+
     def extract_zip(self, zip_path, extract_path, password, recursion_depth):
         """Extracts a nested ZIP file.
         @param zip_path: ZIP path
@@ -42,19 +46,19 @@ class Zip(Package):
         # Extraction.
         with ZipFile(zip_path, "r") as archive:
             try:
-                archive.extractall(path=extract_path, pwd=password)
+                archive.extractall(path=extract_path, members=self.filtered_namelist(archive), pwd=password)
             except BadZipfile:
                 raise CuckooPackageError("Invalid Zip file")
             except RuntimeError:
                 try:
-                    archive.extractall(path=extract_path, pwd="infected")
+                    archive.extractall(path=extract_path, members=self.filtered_namelist(archive), pwd="infected")
                 except RuntimeError as e:
                     raise CuckooPackageError("Unable to extract Zip file: "
                                              "{0}".format(e))
             finally:
                 if recursion_depth < 4:
                     # Extract nested archives.
-                    for name in archive.namelist():
+                    for name in self.filtered_namelist(archive):
                         if name.endswith(".zip"):
                             # Recurse.
                             try:
@@ -72,7 +76,7 @@ class Zip(Package):
         with ZipFile(zip_path, "r") as archive:
             try:
                 # Test if zip file contains a file named as itself.
-                for name in archive.namelist():
+                for name in self.filtered_namelist(archive):
                     if name == os.path.basename(zip_path):
                         return True
                 return False
