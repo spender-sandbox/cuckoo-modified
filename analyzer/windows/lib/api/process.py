@@ -546,7 +546,7 @@ class Process:
             else:
                 dll = CUCKOOMON32_NAME
         else:
-            os.path.join("dll", dll)
+            dll = os.path.join("dll", dll)
 
         dll = os.path.join(os.getcwd(), dll)
 
