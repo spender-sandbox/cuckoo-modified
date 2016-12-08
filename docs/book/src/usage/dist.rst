@@ -192,10 +192,8 @@ or::
 
     $ ./dist.py --node NAME --disable
 
-Submit a new analysis task without any special requirements (e.g., using
-Cuckoo ``tags``, a particular machine, etc)::
-
-    $ curl http://localhost:9003/task -F file=@/path/to/sample.exe -F tags=Tag1
+Submit a new analysis task 
+    The method of submission is always the same: by rest api or via web-gui , both only pointing on the "master node".
 
 Get the report of a task should be requested throw master node integrated /api/ or api.py
 
