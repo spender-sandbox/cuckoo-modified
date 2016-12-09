@@ -735,6 +735,8 @@ class Database(object):
             if tags:
                 for tag in tags:
                     machines = machines.filter(Machine.tags.any(name=tag.name))
+            else:
+                machines = machines.filter(~Machine.tags.any(name="noauto"))
 
             # Check if there are any machines that satisfy the
             # selection requirements.
