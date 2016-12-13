@@ -118,7 +118,7 @@ def handle_techniques(line, **opts):
     line = re.sub(r'"""([A-F0-9]{2,})"""', decode_hex, line)
     line = re.sub(r'"""([\w_+=/]{2,})"""', decode_base64, line)
     line = re.sub(r'(?i)Chr[A-Z$]\(Asc[A-Z$](.+?)\)\)', r"\1", line)
-    line = re.sub(r'(?i)Asc[A-Z$]\("""(\w)\w*"""\)', lambda m: ord(m.group(1)), line)
+    line = re.sub(r'(?i)Asc[A-Z$]\("""(\w)\w*"""\)', lambda m: str(ord(m.group(1))), line)
     line = re.sub(r'(?i)((?:Chr[A-Z$]?\(\d+\)\s*&?\s*)+)', decode_chr, line)
     line = re.sub(r'(?i)\b%s\s*\(\w+\("""(.+?)"""\),\s*\w+\("""(.+?)"""' % enc_func_name, decrypt_func, line)
     line = re.sub(r'(?i)\b%s\((?:""")?(.+?)(?:""")?,\s*(?:""")?(.+?)(?:""")?\)' % enc_func_name, decrypt_func, line)
