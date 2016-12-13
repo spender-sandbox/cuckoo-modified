@@ -463,6 +463,10 @@ re_nothex_check = re.compile(r'[G-Zg-z]')
 # TODO: set whitespaces according to VBA
 # TODO: merge extended lines before parsing
 
+# Enable PackRat for better performance:
+# (see https://pythonhosted.org/pyparsing/pyparsing.ParserElement-class.html#enablePackrat)
+ParserElement.enablePackrat()
+
 # VBA identifier chars (from MS-VBAL 3.3.5)
 vba_identifier_chars = alphanums + '_'
 
