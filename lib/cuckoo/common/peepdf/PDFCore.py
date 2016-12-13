@@ -7689,6 +7689,10 @@ class PDFParser :
             lines.append(content)
         return lines
     
+    def adjustCharCounterAndReturn(self, counterAdjust, ret):
+        self.charCounter += counterAdjust
+        return ret
+
     def readObject(self, content, objectType = None, forceMode = False, looseMode = False):
         '''
             Method to parse the raw body of the PDF file and obtain PDFObject instances
@@ -7712,7 +7716,7 @@ class PDFParser :
             else:
                 if isForceMode:
                     pdfFile.addError('Unknown object type while parsing object')
-                    return (-1,'Unknown object type')
+                    return self.adjustCharCounterAndReturn(oldCounter, (-1,'Unknown object type'))
                 else:
                     sys.exit('Error: Unknown object type!!')
         else:
@@ -7731,7 +7735,7 @@ class PDFParser :
                     if streamFound:
                         ret = self.readUntilSymbol(content, 'stream')
                         if ret[0] == -1:
-                            return ret
+                            return self.adjustCharCounterAndReturn(oldCounter, ret)
                         auxDict = ret[1]
                         self.readSymbol(content, 'stream', False)
                         self.readUntilEndOfLine(content)
@@ -7745,7 +7749,7 @@ class PDFParser :
                             self.readSymbol(content, 'endstream')
                         ret = self.createPDFStream(dictContent, stream)
                         if ret[0] == -1:
-                            return ret
+                            return self.adjustCharCounterAndReturn(oldCounter, ret)
                         pdfObject = ret[1]
                         break
                     else:
@@ -7753,7 +7757,7 @@ class PDFParser :
                             self.readSymbol(content, delim[1])
                             ret = self.createPDFDictionary(dictContent)
                             if ret[0] == -1:
-                                return ret
+                                return self.adjustCharCounterAndReturn(oldCounter, ret)
                             pdfObject = ret[1]
                         else:
                             pdfObject = PDFDictionary(content)
@@ -7786,7 +7790,7 @@ class PDFParser :
                         self.readSymbol(content, delim[1])
                         ret = self.createPDFArray(arrayContent)
                         if ret[0] == -1:
-                            return ret
+                            return self.adjustCharCounterAndReturn(oldCounter, ret)
                         pdfObject = ret[1]
                     else:
                         pdfObject = PDFArray(content)
@@ -7803,7 +7807,7 @@ class PDFParser :
                         self.readSpaces(content)
                         pdfObject = self.readObject(content[self.charCounter:],objectType)
                     else:
-                        return ret
+                        return self.adjustCharCounterAndReturn(oldCounter, ret)
                     break
         else:
             if content[0] == 't' or content[0] == 'f':
@@ -7817,16 +7821,14 @@ class PDFParser :
                 ret,genNumber = self.readUntilNotRegularChar(content)
                 ret = self.readSymbol(content, 'R')
                 if ret[0] == -1:
-                    return ret
+                    return self.adjustCharCounterAndReturn(oldCounter, ret)
                 pdfObject = PDFReference(id, genNumber)
             elif re.findall('^([-+]?\.?\d{1,15}\.?\d{0,15})', content, re.DOTALL) != []:
                 ret,num = self.readUntilNotRegularChar(content)
                 pdfObject = PDFNum(num)
             else:
-                self.charCounter += oldCounter
-                return (-1,'Object not found')
-        self.charCounter += oldCounter
-        return (0,pdfObject)
+                return self.adjustCharCounterAndReturn(oldCounter, (-1,'Object not found'))
+        return self.adjustCharCounterAndReturn(oldCounter, (0,pdfObject))
 
     def readSpaces(self, string):
         '''
