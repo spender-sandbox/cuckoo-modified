@@ -1488,7 +1488,7 @@ class Static(Processing):
                 static = PortableExecutable(self.file_path, self.results).run()
                 if static and "Mono" in thetype:
                     static.update(DotNETExecutable(self.file_path, self.results).run())
-            elif "PDF" in thetype or self.task["target"].endswith(".pdf"):
+            elif "PDF" in thetype or self.task["target"].endswith(".pdf") or package == "pdf":
                 static = PDF(self.file_path).run()
             elif package in ("doc", "ppt", "xls"):
                 static = Office(self.file_path).run()
