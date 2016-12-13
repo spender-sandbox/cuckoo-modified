@@ -7798,7 +7798,10 @@ class PDFParser :
                     break
                 elif delim[2] == 'name':
                     ret,raw = self.readUntilNotRegularChar(content)
-                    pdfObject = PDFName(raw)
+                    if ret == 0:
+                        pdfObject = PDFName(raw)
+                    else:
+                        return self.adjustCharCounterAndReturn(oldCounter, ret)
                     break
                 elif delim[2] == 'comment':
                     ret = self.readUntilEndOfLine(content)
