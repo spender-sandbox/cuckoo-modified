@@ -7797,9 +7797,9 @@ class PDFParser :
                         pdfObject.addError('Closing delimiter not found in array object')
                     break
                 elif delim[2] == 'name':
-                    ret,raw = self.readUntilNotRegularChar(content)
-                    if ret == 0:
-                        pdfObject = PDFName(raw)
+                    ret = self.readUntilNotRegularChar(content)
+                    if ret[0] == 0:
+                        pdfObject = PDFName(ret[1])
                     else:
                         return self.adjustCharCounterAndReturn(oldCounter, ret)
                     break
