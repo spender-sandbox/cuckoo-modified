@@ -1181,7 +1181,21 @@ def pretty_print_arg(category, api_name, arg_name, arg_val):
         if val:
             res.append("0x{0:08x}".format(val))
         return "|".join(res)
-
+    elif api_name == "NtDuplicateObject" and arg_name == "Options":
+        val = int(arg_val, 16)
+        res = []
+        if val & 0x00000001:
+            res.append("DUPLICATE_CLOSE_SOURCE")
+            val &= ~0x00000001
+        if val & 0x00000002:
+            res.append("DUPLICATE_SAME_ACCESS")
+            val &= ~0x00000002
+        if val & 0x00000004:
+            res.append("DUPLICATE_SAME_ATTRIBUTES")
+            val &= ~0x00000004
+        if val:
+            res.append("0x{0:08x}".format(val))
+        return "|".join(res)
     elif api_name == "InternetSetOptionA" and arg_name == "Option":
         val = int(arg_val, 16)
         return {
