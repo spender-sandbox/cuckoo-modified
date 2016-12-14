@@ -117,10 +117,6 @@ class ElasticsearchDB(Report):
                         # in the Django view
                         report["shots"].append(shot_file.replace(".jpg", ""))
 
-            # Other info we want Quick access to from the web UI
-            if results.has_key("virustotal") and results["virustotal"] and results["virustotal"].has_key("positives") and results["virustotal"].has_key("total"):
-                report["virustotal_summary"] = "%s/%s" % (results["virustotal"]["positives"],results["virustotal"]["total"])
-
             if results.has_key("suricata") and results["suricata"]:
                 if results["suricata"].has_key("tls") and len(results["suricata"]["tls"]) > 0:
                     report["suri_tls_cnt"] = len(results["suricata"]["tls"])
@@ -138,6 +134,9 @@ class ElasticsearchDB(Report):
             report["summary"] = results.get("behavior", {}).get("summary")
             report["network"] = results.get("network")
             report["virustotal"] = results.get("virustotal")
+
+        # Other info we want Quick access to from the web UI
+        if results.has_key("virustotal") and results["virustotal"] and results["virustotal"].has_key("positives") and results["virustotal"].has_key("total"):
             report["virustotal_summary"] = "%s/%s" % (results["virustotal"]["positives"],results["virustotal"]["total"])
 
         # Store the report and retrieve its object id.
