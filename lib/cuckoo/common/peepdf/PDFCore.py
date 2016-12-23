@@ -7653,6 +7653,7 @@ class PDFParser :
             match = regExp.search(content)
             lastidx = 0
             lastobjbody = None
+            lasthead = None
             while match:
                 if lastobjbody:
                     matchingObjects.append((lastobjbody, lasthead))
