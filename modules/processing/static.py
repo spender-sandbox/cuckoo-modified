@@ -676,7 +676,7 @@ class PortableExecutable(object):
         except AttributeError:
             return None
 
-        return datetime.fromtimestamp(pe_timestamp).strftime("%Y-%m-%d %H:%M:%S")
+        return datetime.utcfromtimestamp(pe_timestamp).strftime("%Y-%m-%d %H:%M:%S")
 
     def _get_guest_digital_signers(self):
         retdata = dict()
