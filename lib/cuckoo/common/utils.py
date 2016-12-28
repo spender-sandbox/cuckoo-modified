@@ -1497,7 +1497,7 @@ def get_vt_consensus(namelist):
         "agent",
         "nsis",
         "generickd",
-        "genericgb"
+        "genericgb",
         "behaveslike",
         "heur",
         "inject2",
