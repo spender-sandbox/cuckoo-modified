@@ -24,6 +24,6 @@ It offers a number of advantages over the upstream Cuckoo:
 + Hundreds of other bugfixes
 
 For more information on the initial set of changes, see:
-http://www.accuvant.com/blog/improving-reliability-of-sandbox-results
+https://www.optiv.com/blog/improving-reliability-of-sandbox-results
 
 If you want to contribute to development, feel free to submit a pull request.
