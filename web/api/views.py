@@ -789,17 +789,17 @@ def tasks_search(request, md5=None, sha1=None, sha256=None):
                 return jsonize(resp, response=True)
 
             sample = db.find_sample(sha256=sha256)
+
+        resp["data"] = []
+
         if sample:
             sid = sample.to_dict()["id"]
-            resp["data"] = list()
             tasks = db.list_tasks(sample_id=sid)
             for task in tasks:
                 buf = task.to_dict()
                 # Remove path information, just grab the file name
                 buf["target"] = buf["target"].split("/")[-1]
                 resp["data"].append(buf)
-        else:
-            resp = {"data": [], "error": False}
 
     return jsonize(resp, response=True)
 
@@ -1180,13 +1180,14 @@ def tasks_status(request, task_id):
                 "error_value": "Task status API is disabled"}
         return jsonize(resp, response=True)
 
-    status = db.view_task(task_id).to_dict()["status"]
-    if not status:
+    task = db.view_task(task_id)
+    if not task:
         resp = {"error": True,
                 "error_value": "Task does not exist"}
-    else:
-        resp = {"error": False,
-                "data": status}
+        return jsonize(resp, response=True)
+        
+    status = task.to_dict()["status"]
+    resp = {"error": False, "data": status}
 
     return jsonize(resp, response=True)
 
@@ -1881,18 +1882,31 @@ def get_files(request, stype, value):
         return jsonize(resp, response=True)
 
     if stype == "md5":
-        file_hash = db.find_sample(md5=value).to_dict()["sha256"]
+        db_sample = db.find_sample(md5=value)
     elif stype == "sha1":
-        file_hash = db.find_sample(sha1=value).to_dict()["sha256"]
+        db_sample = db.find_sample(sha1=value)
     elif stype == "task":
         check = validate_task(value)
         if check["error"]:
             return jsonize(check, response=True)
 
         sid = db.view_task(value).to_dict()["sample_id"]
-        file_hash = db.view_sample(sid).to_dict()["sha256"]
+        db_sample = db.view_sample(sid)
     elif stype == "sha256":
         file_hash = value
+    else:
+        resp = {"error": True,
+                "error_value": "Sample type %s not supported" % stype}
+        return jsonize(resp, response=True)
+
+    if not db_sample and stype != "sha256":
+        resp = {"error": True,
+                "error_value": "Sample %s was not found" % value}
+        return jsonize(resp, response=True)
+
+    if db_sample:
+        file_hash = db_sample.to_dict()["sha256"]
+
     sample = os.path.join(CUCKOO_ROOT, "storage", "binaries", file_hash)
     if os.path.exists(sample):
         mime = "application/octet-stream"
@@ -1906,7 +1920,7 @@ def get_files(request, stype, value):
     else:
         resp = {"error": True,
                 "error_value": "Sample %s was not found" % file_hash}
-        return jsonize(file_hash, response=True)
+        return jsonize(resp, response=True)
 
 if apiconf.machinelist.get("enabled"):
     raterps = apiconf.machinelist.get("rps")
