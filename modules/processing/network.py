@@ -81,7 +81,7 @@ class Pcap:
         self.http_requests = OrderedDict()
         # List containing all DNS requests.
         self.dns_requests = OrderedDict()
-        self.dns_answers = set()
+        self.dns_answers = {}
         # List containing all SMTP requests.
         self.smtp_requests = []
         # Reconstruncted SMTP flow.
@@ -388,8 +388,12 @@ class Pcap:
             reqtuple = query["type"], query["request"]
             if reqtuple not in self.dns_requests:
                 self.dns_requests[reqtuple] = query
-            new_answers = set((i["type"], i["data"]) for i in query["answers"]) - self.dns_answers
-            self.dns_answers.update(new_answers)
+            new_answers = set((i["type"], i["data"]) for i in query["answers"])
+            if reqtuple not in self.dns_answers:
+                self.dns_answers[reqtuple] = new_answers
+            else:
+                new_answers = new_answers - self.dns_answers[reqtuple]
+                self.dns_answers[reqtuple].update(new_answers)
             self.dns_requests[reqtuple]["answers"] += [dict(type=i[0], data=i[1]) for i in new_answers]
 
         return True
