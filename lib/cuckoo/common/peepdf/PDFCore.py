@@ -7639,7 +7639,7 @@ class PDFParser :
             This function returns an array of raw indirect objects of the PDF file given the raw body.
             @param content: string with the raw content of the PDF body.
             @param looseMode: boolean specifies if the parsing process should search for the endobj tag or not.
-            @return matchingObjects: array of tuples (object_content,object_header).
+            @return matchingObjects: array of tuples (object_header+object_content,object_header).
         '''
         global pdfFile
         matchingObjects = []
@@ -7656,14 +7656,14 @@ class PDFParser :
             lasthead = None
             while match:
                 if lastobjbody:
-                    matchingObjects.append((lastobjbody, lasthead))
+                    matchingObjects.append((lasthead + lastobjbody, lasthead))
                 lasthead = match.group(0)
                 lastidx += match.end()
                 match = regExp.search(content[lastidx:])
                 if match:
                     lastobjbody = content[lastidx:lastidx+match.start()]
             if lasthead:
-                matchingObjects.append((content[lastidx:], lasthead))
+                matchingObjects.append((lasthead + content[lastidx:], lasthead))
         return matchingObjects
         
     def getLines(self, content):
