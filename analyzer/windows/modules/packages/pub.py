@@ -3,6 +3,7 @@
 # See the file 'docs/LICENSE' for copying permission.
 
 from lib.common.abstracts import Package
+import os
 
 from _winreg import (OpenKey, CreateKeyEx, SetValueEx, CloseKey, QueryInfoKey, EnumKey,
         EnumValue, HKEY_LOCAL_MACHINE, HKEY_CURRENT_USER, KEY_SET_VALUE, KEY_READ,
