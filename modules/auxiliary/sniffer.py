@@ -18,6 +18,10 @@ log = logging.getLogger(__name__)
 
 
 class Sniffer(Auxiliary):
+    def __init__(self):
+        Auxiliary.__init__(self)
+        self.proc = None
+        
     def start(self):
         # Get updated machine info
         self.machine = self.db.view_machine_by_label(self.machine.label)
