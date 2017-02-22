@@ -50,6 +50,11 @@ class PUB(Package):
             CloseKey(key)
 
     def start(self, path):
-         self.set_keys()
-         publisher = self.get_path_glob("Microsoft Office Publisher")
-         return self.execute(publisher, "/o \"%s\"" % path, path)
+        self.set_keys()
+        publisher = self.get_path_glob("Microsoft Office Publisher")
+
+        if not path.endswith(".pub"):
+            os.rename(path, path + ".pub")
+            path += ".pub"
+
+        return self.execute(publisher, "/o \"%s\"" % path, path)

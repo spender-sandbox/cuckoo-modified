@@ -146,6 +146,7 @@
     <Compile Include="analyzer\windows\modules\packages\js.py" />
     <Compile Include="analyzer\windows\modules\packages\msg.py" />
     <Compile Include="analyzer\windows\modules\packages\eml.py" />
+    <Compile Include="analyzer\windows\modules\packages\pub.py" />
     <Compile Include="analyzer\windows\modules\packages\rar.py" />
     <Compile Include="analyzer\windows\modules\packages\regsvr.py" />
     <Compile Include="analyzer\windows\modules\packages\firefox.py" />
