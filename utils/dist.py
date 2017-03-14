@@ -689,6 +689,9 @@ class StatusThread(threading.Thread):
                             db.session.commit()
                             db.session.refresh(t)
 
+                    if status_count.get(node.name, {}).get("reseted", False) is True:
+                        status_count[node.name]["reseted"] = False
+
     def run(self):
 
         global queue
@@ -750,8 +753,12 @@ class StatusThread(threading.Thread):
 
                         continue
 
-                    status_count.setdefault(node.name, 0)
-                    status_count[node.name] += 1
+                    status_count.setdefault(node.name, dict())
+                    status_count[node.name].setdefault("count", 0)
+                    #this required for the correct RESET_LASTCHECK work
+                    status_count[node.name].setdefault("reseted", False)
+
+                    status_count[node.name]["count"] += 1
 
                     failed_count[node.name] = 0
                     log.debug("Status.. %s -> %s", node.name, status)
@@ -775,7 +782,7 @@ class StatusThread(threading.Thread):
                         status["pending"] == 0 and \
                         status["running"] == 0 and \
                         status["completed"] == 0 and \
-                        status_count[node.name] < RESET_LASTCHECK:
+                        status_count[node.name]["count"] < RESET_LASTCHECK and status_count[node.name]["reseted"] is False:
 
                         node.last_check = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
@@ -784,9 +791,10 @@ class StatusThread(threading.Thread):
                     # fetched, and therefore we reset the "last_check"
                     # parameter when more than 10 tasks have not been fetched,
                     # thus preventing running out of diskspace.
-                    if status and status_count[node.name] > RESET_LASTCHECK:
+                    if status and status_count[node.name]["count"] > RESET_LASTCHECK:
                         node.last_check = None
-                        status_count[node.name] = 0
+                        status_count[node.name]["count"] = 0
+                        status_count[node.name]["reseted"] = True
 
                     # The last_check field of each node object has been
                     # updated as well as the finished field for each task that
