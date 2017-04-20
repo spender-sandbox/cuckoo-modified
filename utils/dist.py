@@ -111,6 +111,40 @@ class Retriever(object):
         thread.daemon = True
         thread.start()
 
+        thread = threading.Thread(target=self.fetcher, args=())
+        thread.daemon = True
+        thread.start()
+
+    def fetcher(self):
+        """ Method that runs forever """
+        with app.app_context():
+            threads_fetcher = []
+            while True:
+                time.sleep(10)
+                for node in Node.query.filter_by(enabled=True).all():
+                    # Fetch the latest reports.
+                    if node.name == "master":
+                        continue
+
+                    if status_count[node.name]["retrieve"] is False:
+                        continue
+
+                    if node.last_check:
+                        last_check = int(node.last_check.strftime("%s"))
+                    else:
+                        last_check = 0
+
+                    for task in node.fetch_tasks("reported", since=last_check):
+                        if len(threads_fetcher) < self.threads_number:
+                            thread = threading.Thread(target=self.fetch_latest_reports, args=(task, node))
+                            thread.start()
+                            threads_fetcher.append(thread)
+
+                        else:
+                            for thread in threads_fetcher:
+                                if not thread.isAlive():
+                                    thread.join()
+                                    threads_fetcher.remove(thread)
     def starter(self):
         """ Method that runs forever """
         with app.app_context():
@@ -118,26 +152,134 @@ class Retriever(object):
             for task in tasks:
                 self.queue.put((task.id, task.task_id, task.node_id, task.main_task_id))
 
-        threads = []
-        while True:
-            if not self.queue.empty() and len(threads) < self.threads_number:
-                dist_id, task_id, node_id, main_task_id = self.queue.get()
-                thread = threading.Thread(target=self.downloader, args=(dist_id, task_id, node_id, main_task_id))
-                thread.start()
+            threads = []
+            while True:
 
-                threads.append(thread)
+                if not self.queue.empty() and len(threads) < self.threads_number:
+                    dist_id, task_id, node_id, main_task_id = self.queue.get()
+                    thread = threading.Thread(target=self.downloader, args=(dist_id, task_id, node_id, main_task_id))
+                    thread.start()
 
-            else:
-                time.sleep(10)
-                for thread in threads:
-                    if not thread.isAlive():
-                        thread.join()
-                        threads.remove(thread)
+                    threads.append(thread)
+
+                else:
+                    time.sleep(10)
+                    for thread in threads:
+                        if not thread.isAlive():
+                            thread.join()
+                            threads.remove(thread)
+
+    # This should be executed as external thread as it generates bottle neck
+    def fetch_latest_reports(self, task, node):
+
+        with app.app_context():
+            try:
+                log.debug(task)
+                finished = False
+                q = Task.query.filter_by(node_id=node.id, task_id=task["id"], finished=False)
+                # In the case that a Cuckoo node has been reset over time it's
+                # possible that there are multiple combinations of
+                # node-id/task-id, in this case we take the last one available.
+                # (This makes it possible to re-setup a Cuckoo node).
+                t = q.order_by(Task.id.desc()).first()
+                if t is None:
+                    tf = Task.query.filter_by(retrieved=False, finished=True).order_by(Task.id.asc()).first()
+                    if tf is not None and tf.finished:
+                        log.debug("addding to dist2 retriever")
+                        if (tf.id, tf.task_id, tf.node_id, tf.main_task_id) not in self.queue.queue:
+                            self.queue.put((tf.id, tf.task_id, tf.node_id, tf.main_task_id))
+                    else:
+                        # sometime it not deletes tasks in slaves of some fails or something
+                        # this will do the trick
+                        self.remove_from_slave(None, node, task.get("id"))
+                    return
+                log.debug("Going to fetch dist report for: {}".format(t.task_id))
+                # Fetch each requested report.
+                report = node.get_report(t.task_id, "dist", stream=True)
+                if report is None or report.status_code != 200:
+                    log.debug("Error fetching %s report for task #%d",
+                                "distributed", t.task_id)
+                    return
+                temp_f = ''
+                for chunk in report.iter_content(chunk_size=1024*1024):
+                    temp_f += chunk
+                report_path = os.path.join(CUCKOO_ROOT, "storage", "analyses", "{}".format(t.main_task_id))
+                if not os.path.isdir(report_path):
+                    os.makedirs(report_path)
+                if temp_f:
+                    # will be stored to mongo db only
+                    # we don't need it as file
+                    if HAVE_MONGO:
+                        try:
+                                fileobj = StringIO.StringIO(temp_f)
+                                file = tarfile.open(fileobj=fileobj, mode="r:bz2") # errorlevel=0
+                                report_mongo = ""
+                                report_mongo = file.extractfile("mongo.json")
+                                report_mongo = report_mongo.read()
+                                report_mongo = loads(report_mongo)
+
+                                to_extract = file.getmembers()
+                                to_extract = [to_extract.remove(file_inside)
+                                                if file_inside.name == 'mongo.json' else file_inside
+                                                for file_inside in to_extract]
+                                to_extract = filter(None, to_extract)
+
+                                # Ignore mongo.json, it will loaded only into memory
+                                file.extractall(report_path, members=to_extract)
+
+                                if reporting_conf.mongodb.enabled:
+                                    report = ""
+                                    try:
+                                        with open(os.path.join(report_path, "reports", "report.json"), "r") as f:
+                                            report = loads(f.read())
+                                    except Exception as e:
+                                        log.error(e)
+                                        report = {}
+
+                                    if report_mongo:# and report:
+                                        # move file here from slaves
+                                        retrieve.queue.put((t.id, t.task_id, t.node_id, t.main_task_id))
+
+                                        self.do_mongo(report_mongo, report, t, node)
+                                        if reporting_conf.elasticsearchdb.searchonly and reporting_conf.elasticsearchdb.enabled:
+                                            self.do_es(report, t)
+                                        finished = True
+
+                                        try:
+                                            sample = open(t.path, "rb").read()
+                                            sample_sha256 = hashlib.sha256(sample).hexdigest()
+                                            destination = os.path.join(CUCKOO_ROOT, "storage", "binaries")
+                                            if not os.path.exists(destination):
+                                                os.mkdir(destination)
+
+                                            destination = os.path.join(destination, sample_sha256)
+                                            if not os.path.exists(destination):
+                                                shutil.move(t.path, destination)
+                                            # creating link to analysis folder
+                                            os.symlink(destination, os.path.join(report_path, "binary"))
+                                        except Exception as e:
+                                            logging.error(e)
+
+                                    # closing StringIO objects
+                                    fileobj.close()
+                        except Exception as e:
+                            log.info("Exception: %s" % e)
+                            if os.path.exists(os.path.join(report_path, "reports", "report.json")):
+                                os.remove(os.path.join(report_path, "reports", "report.json"))
+                        del temp_f
+                    if finished:
+                        t.finished = True
+                        db.session.commit()
+                        db.session.refresh(t)
+                    if status_count.get(node.name, {}).get("reseted", False) is True:
+                        status_count[node.name]["reseted"] = False
+            except Exception as e:
+                log.error(e)
 
     def downloader(self, dist_id, task_id, node_id, main_task_id):
         with app.app_context():
             try:
-
+                log.debug("Trying to retrieve task_id: {}, from task_id: {}, dist_id: {}, main_task_id: {}".format(dist_id, task_id, node_id, main_task_id))
                 report = ReportApi().get(dist_id, "dist2", True, True)
 
                 if report and report.status_code == 200:
@@ -162,22 +304,8 @@ class Retriever(object):
 
                         db.session.commit()
                         db.session.refresh(t)
+                        self.remove_from_slave(t)
 
-                        # Delete the task and all its associated files.
-                        # (It will still remain in the nodes' database, though.)
-                        if reporting_conf.distributed.remove_task_on_slave:
-                            node = Node.query.filter_by(id = t.node_id)
-                            node = node.first()
-                            if node:
-                                try:
-                                    url = os.path.join(node.url, "tasks", "delete", "%d" % t.task_id)
-                                    logging.info("Removing task id: {0} - from node: {1}".format(t.task_id, node.name))
-                                    return requests.get(url,
-                                                        auth = HTTPBasicAuth(node.ht_user, node.ht_pass),
-                                                        verify = False).status_code == 200
-                                except Exception as e:
-                                    log.critical("Error deleting task (task #%d, node %s): %s",
-                                                 t.task_id, node.name, e)
 
                 else:
                     log.debug("Error fetching %s report for task #%d",
@@ -187,11 +315,130 @@ class Retriever(object):
                 logging.info("Can not fetch dist2 report for Web Task: main_task_id: %d. Error: %s" % (main_task_id, e))
                 if e == "404: Not Found":
                     t.retrieved = True
+                    t.finished = True
                     db.session.commit()
                     db.session.refresh(t)
+                    self.remove_from_slave(t)
 
 
         return
+
+    def remove_from_slave(self, t, node = False, task_id = False):
+        # Delete the task and all its associated files.
+        # (It will still remain in the nodes' database, though.)
+        if reporting_conf.distributed.remove_task_on_slave:
+            if node is False:
+                node = Node.query.filter_by(id = t.node_id)
+                node = node.first()
+            if task_id is False:
+                task_id = t.task_id
+            if node:
+                try:
+                    url = os.path.join(node.url, "tasks", "delete", "%d" % task_id)
+                    logging.info("Removing task id: {0} - from node: {1}".format(task_id, node.name))
+                    return requests.get(url,
+                                        auth = HTTPBasicAuth(node.ht_user, node.ht_pass),
+                                        verify = False).status_code == 200
+                except Exception as e:
+                    log.critical("Error deleting task (task #%d, node %s): %s",
+                                    task_id, node.name, e)
+
+    def do_es(self, results, t):
+        if HAVE_ELASTICSEARCH:
+            try:
+                es = Elasticsearch(
+                    hosts = [{
+                        'host': reporting_conf.elasticsearchdb.host,
+                        'port': reporting_conf.elasticsearchdb.port,
+                    }],
+                    timeout = 60
+                )
+            except Exception as e:
+                logging.error("Cannot connect to ElasticSearch DB")
+                return
+
+            try:
+                index_prefix  = reporting_conf.elasticsearchdb.index
+
+                idxdate = results["info"]["started"].split(" ")[0]
+                index_name = '{0}-{1}'.format(index_prefix, idxdate)
+            except Exception as e:
+                log.info("Failed to set ES index: %s" % e)
+
+            try:
+                report = {}
+                report["task_id"] = t.main_task_id
+                report["info"]    = results.get("info")
+                report["target"]  = results.get("target")
+                report["summary"] = results.get("behavior", {}).get("summary")
+                report["network"] = results.get("network")
+                report["virustotal"] = results.get("virustotal")
+                report["virustotal_summary"] = "%s/%s" % ( results.get("virustotal", {}).get("positives") , \
+                                                           results.get("virustotal", {}).get("total") )
+            except Exception as e:
+                log.info("Failed to create ES entry: %s" % e)
+
+            # Store the report and retrieve its object id.
+            es.index(index=index_name, doc_type="analysis", id=t.main_task_id, body=report)
+
+    def do_mongo(self, report_mongo, report, t, node):
+
+        """This fucntion will store behavior and webgui report without reprocess"""
+        if HAVE_MONGO:
+            try:
+                conn = MongoClient(reporting_conf.mongodb.host, reporting_conf.mongodb.port)
+                mongo_db = conn[reporting_conf.mongodb.db]
+            except ConnectionFailure:
+                raise CuckooReportError("Cannot connect to MongoDB")
+                return
+
+        if  "processes" in report.get("behavior", {}):
+            new_processes = []
+
+            for process in report.get("behavior", {}).get("processes", []):
+                new_process = dict(process)
+
+                chunk = []
+                chunks_ids = []
+                # Loop on each process call.
+                for index, call in enumerate(process["calls"]):
+                    # If the chunk size is 100 or if the loop is completed then
+                    # store the chunk in MongoDB.
+                    if len(chunk) == 100:
+                        to_insert = {"pid": process["process_id"],
+                                     "calls": chunk}
+                        chunk_id = mongo_db.calls.insert(to_insert)
+                        chunks_ids.append(chunk_id)
+                        # Reset the chunk.
+                        chunk = []
+
+                    # Append call to the chunk.
+                    chunk.append(call)
+
+                # Store leftovers.
+                if chunk:
+                    to_insert = {"pid": process["process_id"], "calls": chunk}
+                    chunk_id = mongo_db.calls.insert(to_insert)
+                    chunks_ids.append(chunk_id)
+
+                # Add list of chunks.
+                new_process["calls"] = chunks_ids
+                new_processes.append(new_process)
+
+            # Store the results in the report.
+            report_mongo["behavior"]["processes"] = new_processes
+
+        #patch info.id to have the same id as in main db
+        report_mongo["info"]["id"] = t.main_task_id
+        mongo_db.analysis.save(report_mongo)
+
+        # set complated_on time
+        main_db.set_status(t.main_task_id, TASK_COMPLETED)
+        # set reported time
+        main_db.set_status(t.main_task_id, TASK_REPORTED)
+
+        conn.close()
+
 
 class StringList(db.TypeDecorator):
     """List of comma-separated strings as field."""
@@ -299,7 +546,7 @@ class Node(db.Model):
                 # Zip files preprocessed, so only one id
                 if r and r.status_code == 200 and "task_ids" in r.json() and len(r.json()["task_ids"]) > 0:
                     task.task_id = r.json()["task_ids"][0]
-                    log.info(task.task_id)
+                    log.info("Submitted task to slave: {}".format(task.task_id))
                 else:
                     return
 
@@ -480,218 +727,6 @@ class StatusThread(threading.Thread):
             for task in q.limit(pend_tasks_num).all():
                 node.submit_task(task)
 
-    def do_es(self, results, t):
-        if HAVE_ELASTICSEARCH:
-            try:
-                es = Elasticsearch(
-                    hosts = [{
-                        'host': reporting_conf.elasticsearchdb.host,
-                        'port': reporting_conf.elasticsearchdb.port,
-                    }],
-                    timeout = 60
-                )
-            except Exception as e:
-                logging.error("Cannot connect to ElasticSearch DB")
-                return
-
-            try:
-                index_prefix  = reporting_conf.elasticsearchdb.index
-
-                idxdate = results["info"]["started"].split(" ")[0]
-                index_name = '{0}-{1}'.format(index_prefix, idxdate)
-            except Exception as e:
-                log.info("Failed to set ES index: %s" % e)
-
-            try:
-                report = {}
-                report["task_id"] = t.main_task_id
-                report["info"]    = results.get("info")
-                report["target"]  = results.get("target")
-                report["summary"] = results.get("behavior", {}).get("summary")
-                report["network"] = results.get("network")
-                report["virustotal"] = results.get("virustotal")
-                report["virustotal_summary"] = "%s/%s" % ( results.get("virustotal", {}).get("positives") , \
-                                                           results.get("virustotal", {}).get("total") )
-            except Exception as e:
-                log.info("Failed to create ES entry: %s" % e)
-
-            # Store the report and retrieve its object id.
-            es.index(index=index_name, doc_type="analysis", id=t.main_task_id, body=report)
-
-    def do_mongo(self, report_mongo, report, t, node):
-
-        """This fucntion will store behavior and webgui report without reprocess"""
-
-        if HAVE_MONGO and "processes" in report.get("behavior", {}):
-            try:
-                conn = MongoClient(reporting_conf.mongodb.host, reporting_conf.mongodb.port)
-                mongo_db = conn[reporting_conf.mongodb.db]
-            except ConnectionFailure:
-                raise CuckooReportError("Cannot connect to MongoDB")
-                return
-
-            new_processes = []
-
-            for process in report.get("behavior", {}).get("processes", []):
-                new_process = dict(process)
-
-                chunk = []
-                chunks_ids = []
-                # Loop on each process call.
-                for index, call in enumerate(process["calls"]):
-                    # If the chunk size is 100 or if the loop is completed then
-                    # store the chunk in MongoDB.
-                    if len(chunk) == 100:
-                        to_insert = {"pid": process["process_id"],
-                                     "calls": chunk}
-                        chunk_id = mongo_db.calls.insert(to_insert)
-                        chunks_ids.append(chunk_id)
-                        # Reset the chunk.
-                        chunk = []
-
-                    # Append call to the chunk.
-                    chunk.append(call)
-
-                # Store leftovers.
-                if chunk:
-                    to_insert = {"pid": process["process_id"], "calls": chunk}
-                    chunk_id = mongo_db.calls.insert(to_insert)
-                    chunks_ids.append(chunk_id)
-
-                # Add list of chunks.
-                new_process["calls"] = chunks_ids
-                new_processes.append(new_process)
-
-            # Store the results in the report.
-            report_mongo["behavior"]["processes"] = new_processes
-
-        #patch info.id to have the same id as in main db
-        report_mongo["info"]["id"] = t.main_task_id
-        mongo_db.analysis.save(report_mongo)
-
-        # set complated_on time
-        main_db.set_status(t.main_task_id, TASK_COMPLETED)
-        # set reported time
-        main_db.set_status(t.main_task_id, TASK_REPORTED)
-
-        conn.close()
-
-    def fetch_latest_reports(self):
-
-        with app.app_context():
-
-            while True:
-                for node in Node.query.filter_by(enabled=True).all():
-                    # Fetch the latest reports.
-                    if node.name == "master":
-                        continue
-
-                    if node.last_check:
-                        last_check = int(node.last_check.strftime("%s"))
-                    else:
-                        last_check = 0
-
-                    for task in node.fetch_tasks("reported", since=last_check):
-                        finished = False
-                        q = Task.query.filter_by(node_id=node.id, task_id=task["id"], finished=False)
-                        # In the case that a Cuckoo node has been reset over time it's
-                        # possible that there are multiple combinations of
-                        # node-id/task-id, in this case we take the last one available.
-                        # (This makes it possible to re-setup a Cuckoo node).
-                        t = q.order_by(Task.id.desc()).first()
-
-                        if t is None:
-                            continue
-
-                        # Update the last_check value of the Node for the next iteration.
-                        completed_on = datetime.strptime(task["completed_on"],
-                                                         "%Y-%m-%d %H:%M:%S")
-                        if not node.last_check or completed_on > node.last_check:
-                            node.last_check = completed_on
-
-                        # Fetch each requested report.
-                        report = node.get_report(t.task_id, "dist",
-                                                         stream=True)
-                        if report is None or report.status_code != 200:
-                            log.debug("Error fetching %s report for task #%d",
-                                      "distributed", t.task_id)
-                            continue
-
-                        temp_f = ''
-                        for chunk in report.iter_content(chunk_size=1024*1024):
-                            temp_f += chunk
-
-                        report_path = os.path.join(CUCKOO_ROOT, "storage", "analyses", "{}".format(t.main_task_id))
-                        if not os.path.isdir(report_path):
-                            os.makedirs(report_path)
-
-                        if temp_f:
-                            # will be stored to mongo db only
-                            # we don't need it as file
-                            if HAVE_MONGO:
-                                try:
-                                    fileobj = StringIO.StringIO(temp_f)
-                                    file = tarfile.open(fileobj=fileobj, mode="r:bz2") # errorlevel=0
-                                    report_mongo = ""
-                                    report_mongo = file.extractfile("mongo.json")
-                                    report_mongo = report_mongo.read()
-                                    report_mongo = loads(report_mongo)
-
-                                    to_extract = file.getmembers()
-                                    to_extract = [to_extract.remove(file_inside)
-                                                    if file_inside.name == 'mongo.json' else file_inside
-                                                    for file_inside in to_extract]
-                                    to_extract = filter(None, to_extract)
-
-                                    # Ignore mongo.json, it will loaded only into memory
-                                    file.extractall(report_path, members=to_extract)
-
-                                    if reporting_conf.mongodb.enabled:
-                                        report = ""
-
-                                        with open(os.path.join(report_path, "reports", "report.json"), "r") as f:
-                                            report = loads(f.read())
-
-                                        if report_mongo and report:
-                                            self.do_mongo(report_mongo, report, t, node)
-                                            if reporting_conf.elasticsearchdb.searchonly and reporting_conf.elasticsearchdb.enabled:
-                                                self.do_es(report, t)
-                                            finished = True
-
-                                            # move file here from slaves
-                                            retrieve.queue.put((t.id, t.task_id, t.node_id, t.main_task_id))
-
-                                            try:
-                                                sample = open(t.path, "rb").read()
-                                                sample_sha256 = hashlib.sha256(sample).hexdigest()
-                                                destination = os.path.join(CUCKOO_ROOT, "storage", "binaries")
-                                                if not os.path.exists(destination):
-                                                    os.mkdir(destination)
-
-                                                destination = os.path.join(destination, sample_sha256)
-                                                if not os.path.exists(destination):
-                                                    shutil.move(t.path, destination)
-                                                # creating link to analysis folder
-                                                os.symlink(destination, os.path.join(report_path, "binary"))
-                                            except Exception as e:
-                                                logging.error(e)
-
-                                    # closing StringIO objects
-                                    fileobj.close()
-
-                                except Exception as e:
-                                    log.info("Exception: %s" % e)
-
-                            del temp_f
-
-                        if finished:
-                            t.finished = True
-                            db.session.commit()
-                            db.session.refresh(t)
-
-                    if status_count.get(node.name, {}).get("reseted", False) is True:
-                        status_count[node.name]["reseted"] = False
-
     def run(self):
 
         global queue
@@ -700,6 +735,7 @@ class StatusThread(threading.Thread):
         global STATUSES
         global RESET_LASTCHECK
         MINIMUMQUEUE = dict()
+
         # run once
         with app.app_context():
             # handle another user case,
@@ -711,14 +747,15 @@ class StatusThread(threading.Thread):
             elif Machine.query.filter_by(node_id=master.id).count() == 0:
                 master_storage_only = True
 
-            # This should be executed as external thread as it generates bottle neck
-            thread = threading.Thread(target=self.fetch_latest_reports, args=())
-            thread.daemon = True
-            thread.start()
-
             #MINIMUMQUEUE but per Node depending of number vms
             for node in Node.query.filter_by(enabled=True).all():
                 MINIMUMQUEUE[node.name] = Machine.query.filter_by(node_id=node.id).count()
+                status_count.setdefault(node.name, dict())
+                status_count[node.name].setdefault("count", 0)
+                #this required for the correct RESET_LASTCHECK work
+                status_count[node.name].setdefault("reseted", False)
+                #this will reduce number of requests to slaves if there no tasks
+                status_count[node.name].setdefault("retrieve", False)
 
         threads_number = 5
         if reporting_conf.distributed.retriever_threads:
@@ -730,11 +767,10 @@ class StatusThread(threading.Thread):
 
         retrieve = Retriever(queue, threads_number, app)
         retrieve.background()
-
+        statuses = {}
         while RUNNING:
             with app.app_context():
                 start = datetime.now()
-                statuses = {}
 
                 # Request a status update on all Cuckoo nodes.
                 for node in Node.query.filter_by(enabled=True).all():
@@ -753,18 +789,11 @@ class StatusThread(threading.Thread):
 
                         continue
 
-                    status_count.setdefault(node.name, dict())
-                    status_count[node.name].setdefault("count", 0)
-                    #this required for the correct RESET_LASTCHECK work
-                    status_count[node.name].setdefault("reseted", False)
-
                     status_count[node.name]["count"] += 1
 
                     failed_count[node.name] = 0
                     log.debug("Status.. %s -> %s", node.name, status)
-
                     statuses[node.name] = status
-
                     # If - master only used for storage, not check master queue
                     # elif -  master also analyze samples, check master queue
                     # send tasks to slaves if master queue has extra tasks(pending)
@@ -774,17 +803,27 @@ class StatusThread(threading.Thread):
                          status["pending"] < MINIMUMQUEUE[node.name]:
                         self.submit_tasks(node, MINIMUMQUEUE[node.name] - status["pending"])
 
-                    status = node.status()
+                    if node.last_check:
+                        last_check = int(node.last_check.strftime("%s"))
+                    else:
+                        last_check = 0
+
+                    #status = node.status()
 
                     # This required to speedup data retrieve
                     # on nodes with high number of tasks
-                    if node.last_check is None and \
-                        status["pending"] == 0 and \
+                    if status["pending"] == 0 and \
                         status["running"] == 0 and \
                         status["completed"] == 0 and \
-                        status_count[node.name]["count"] < RESET_LASTCHECK and status_count[node.name]["reseted"] is False:
+                        status["reported"] == 0:
+                        if node.last_check is None and \
+                            status_count[node.name]["count"] < RESET_LASTCHECK and status_count[node.name]["reseted"] is False:
 
-                        node.last_check = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                            node.last_check = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+                        status_count[node.name]["retrieve"] = False
+                    else:
+                        status_count[node.name]["retrieve"] = True
 
                     # We just fetched all the "latest" tasks. However, it is
                     # for some reason possible that some reports are never
@@ -794,7 +833,6 @@ class StatusThread(threading.Thread):
                     if status and status_count[node.name]["count"] > RESET_LASTCHECK:
                         node.last_check = None
                         status_count[node.name]["count"] = 0
-                        status_count[node.name]["reseted"] = True
 
                     # The last_check field of each node object has been
                     # updated as well as the finished field for each task that
@@ -910,6 +948,7 @@ class TaskBaseApi(RestResource):
         self._parser.add_argument("memory", type=str, default="0")
         self._parser.add_argument("clock", type=int)
         self._parser.add_argument("enforce_timeout", type=bool, default=False)
+
 
 class ReportingBaseApi(RestResource):
     def __init__(self, *args, **kwargs):
@@ -1117,8 +1156,7 @@ if __name__ == "__main__":
         p.error("Configure conf/reporting.conf distributed section please")
 else:
     # this allows run it with gunicorn/uwsgi
-    logging.basicConfig(level=logging.DEBUG)
-
+    log.setLevel(logging.DEBUG)
     if not os.path.isdir(reporting_conf.distributed.samples_directory):
         os.makedirs(reporting_conf.distributed.samples_directory)
 
