@@ -1,3 +1,5 @@
+As of 4/26/2017 I'm handing this repo off to others to fork and continue if they wish.  Thanks to doomedraven, KillerInstinct, kevross33, SeanKim77, jgajek, keithjjones, pashashocky, Shane-Carr, seanthegeek, garanews, and all the other contributors I forgot to mention.
+
 This fork aims to continue the work of the heavily modified version of [Cuckoo Sandbox](http://www.cuckoosandbox.org) provided under the GPL by Optiv, Inc.
 
 It offers a number of advantages over the upstream Cuckoo:
